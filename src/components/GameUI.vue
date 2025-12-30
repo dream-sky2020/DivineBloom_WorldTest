@@ -46,7 +46,12 @@
                 Encyclopedia System
               </button>
               <button disabled>Battle System (WIP)</button>
-              <button disabled>World Map (WIP)</button>
+              <button 
+                :class="{ active: currentSystem === 'world-map' }" 
+                @click="currentSystem = 'world-map'"
+              >
+                World Map System
+              </button>
             </div>
           </div>
 
@@ -68,14 +73,16 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import ListMenuSystem from './systems/ListMenuSystem.vue';
 import ShopSystem from './systems/ShopSystem.vue';
 import EncyclopediaSystem from './systems/EncyclopediaSystem.vue';
+import WorldMapSystem from './systems/WorldMapSystem.vue';
 
-const currentSystem = ref('list-menu');
+const currentSystem = ref('world-map'); // 默认改为地图方便测试，或保持 'list-menu'
 
 const activeSystemComponent = computed(() => {
   switch (currentSystem.value) {
     case 'list-menu': return ListMenuSystem;
     case 'shop': return ShopSystem;
     case 'encyclopedia': return EncyclopediaSystem;
+    case 'world-map': return WorldMapSystem;
     default: return ListMenuSystem;
   }
 });

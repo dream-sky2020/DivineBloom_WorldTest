@@ -46,6 +46,7 @@
     <div class="content-area">
       <!-- 使用通用组件 -->
       <GameDataGrid 
+        class="flex-grow-grid"
         :items="displayItems" 
         :mode="viewMode" 
         :columns="viewMode === 'icon' ? 8 : 4" 
@@ -207,8 +208,13 @@ const handleSelect = (item) => {
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden; /* 防止子元素溢出 */
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.flex-grow-grid {
+  flex: 1;
+  min-height: 0; /* 关键：允许 flex 子项缩小以触发内部滚动 */
 }
 
 /* Description Panel */

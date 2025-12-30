@@ -133,7 +133,8 @@ const handleSelect = (index, item) => {
   display: grid;
   gap: 1rem;
   overflow-y: auto;
-  padding: 0.5rem; 
+  padding: 0.5rem;
+  align-content: start; /* 确保内容不足时靠上对齐，而不是分散在整个高度 */
 }
 
 .grid-item {
