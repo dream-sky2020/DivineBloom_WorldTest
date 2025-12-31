@@ -35,16 +35,16 @@
         <!-- 属性面板 -->
         <div class="stats-panel">
           <div class="panel-header border-bottom">
-            <span class="header-title">Stats</span>
+            <span class="header-title" v-t="'panels.status'"></span>
             <span class="header-sub">Lv. 45 Warrior</span>
           </div>
           <div class="stats-grid">
-            <div class="stat-row"><span class="label">ATK</span> <span class="value">1,250 <span class="diff-positive">(+45)</span></span></div>
-            <div class="stat-row"><span class="label">DEF</span> <span class="value">890</span></div>
-            <div class="stat-row"><span class="label">M.ATK</span> <span class="value">420</span></div>
-            <div class="stat-row"><span class="label">M.DEF</span> <span class="value">650</span></div>
-            <div class="stat-row"><span class="label">AGI</span> <span class="value">330</span></div>
-            <div class="stat-row"><span class="label">LUCK</span> <span class="value">120</span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.atk'"></span> <span class="value">1,250 <span class="diff-positive">(+45)</span></span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.def'"></span> <span class="value">890</span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.matk'"></span> <span class="value">420</span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.mdef'"></span> <span class="value">650</span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.agi'"></span> <span class="value">330</span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.luck'"></span> <span class="value">120</span></div>
           </div>
         </div>
 
@@ -98,9 +98,9 @@
         <!-- 列表头部 -->
         <div class="list-header">
           <h3 class="list-title">
-            <span>⚔️</span> Select Weapon
+            <span>⚔️</span> <span v-t="'equipment.selectWeapon'"></span>
           </h3>
-          <div class="item-count-label">3 Items Available</div>
+          <div class="item-count-label">3 <span v-t="'equipment.itemsAvailable'"></span></div>
         </div>
 
         <!-- 物品列表 -->
@@ -112,7 +112,7 @@
             <div class="item-details">
               <div class="item-top-row">
                 <span class="item-name text-blue">Blazing Sword</span>
-                <span class="equipped-badge">EQUIPPED</span>
+                <span class="equipped-badge" v-t="'equipment.equipped'"></span>
               </div>
               <div class="item-sub-info">ATK +120 | Fire Element</div>
             </div>
@@ -156,16 +156,16 @@
         <!-- 底部详情 (选中新装备的预览) -->
         <div class="detail-footer">
           <div class="comparison-box">
-            <div class="footer-label">Comparison</div>
+            <div class="footer-label" v-t="'equipment.comparison'"></div>
             <div class="comparison-row">
               <div class="comp-item">
-                <span class="label">ATK:</span> 
+                <span class="label" v-t="'stats.atk'"></span>: 
                 <span class="val-old">120</span> 
                 <span class="arrow">→</span> 
                 <span class="val-new diff-positive">175</span>
               </div>
               <div class="comp-item">
-                <span class="label">Weight:</span> 
+                <span class="label" v-t="'equipment.weight'"></span>: 
                 <span class="val-old">5.0</span> 
                 <span class="arrow">→</span> 
                 <span class="val-new diff-negative">8.5</span>

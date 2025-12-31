@@ -7,10 +7,10 @@
 export const charactersDb = {
   1: {
     id: 1,
-    name: "Alphen",
-    role: "Swordsman",
-    element: "Fire",
-    weaponType: "Sword",
+    name: "characters.1.name",
+    role: "roles.swordsman",
+    element: "elements.fire",
+    weaponType: "weapons.sword",
     initialStats: {
       hp: 500,
       mp: 50,
@@ -19,14 +19,14 @@ export const charactersDb = {
       mag: 8,
       spd: 10
     },
-    description: "A mysterious swordsman who has lost his memories and ability to feel pain. Wields a blazing sword."
+    description: "characters.1.description"
   },
   2: {
     id: 2,
-    name: "Shionne",
-    role: "Gunner",
-    element: "Fire", // Also uses astral energy
-    weaponType: "Rifle",
+    name: "characters.2.name",
+    role: "roles.gunner",
+    element: "elements.fire", // Also uses astral energy
+    weaponType: "weapons.rifle",
     initialStats: {
       hp: 380,
       mp: 120,
@@ -35,14 +35,14 @@ export const charactersDb = {
       mag: 20,
       spd: 14
     },
-    description: "A woman afflicted with 'Thorns' that cause pain to anyone she touches. An excellent marksman and healer."
+    description: "characters.2.description"
   },
   3: {
     id: 3,
-    name: "Rinwell",
-    role: "Mage",
-    element: "Wind/Light",
-    weaponType: "Book",
+    name: "characters.3.name",
+    role: "roles.mage",
+    element: "elements.windLight",
+    weaponType: "weapons.book",
     initialStats: {
       hp: 300,
       mp: 200,
@@ -51,14 +51,14 @@ export const charactersDb = {
       mag: 25,
       spd: 12
     },
-    description: "A young mage who is the last of her clan. Can cast powerful astral artes but is physically weak."
+    description: "characters.3.description"
   },
   4: {
     id: 4,
-    name: "Law",
-    role: "Brawler",
-    element: "Light",
-    weaponType: "Gauntlets",
+    name: "characters.4.name",
+    role: "roles.brawler",
+    element: "elements.light",
+    weaponType: "weapons.gauntlets",
     initialStats: {
       hp: 550,
       mp: 60,
@@ -67,7 +67,6 @@ export const charactersDb = {
       mag: 5,
       spd: 18
     },
-    description: "A hot-blooded martial artist who fights with his fists and feet. Exceptionally fast and hits hard."
+    description: "characters.4.description"
   }
 };
-

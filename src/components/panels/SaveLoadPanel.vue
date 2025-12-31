@@ -12,10 +12,10 @@
         >
           <div class="card-header">
             <span class="card-icon">{{ slot.data ? '💾' : '📦' }}</span>
-            <span class="card-name">File {{ String(index + 1).padStart(2, '0') }}</span>
+            <span class="card-name">{{ $t('saveLoad.file') }} {{ String(index + 1).padStart(2, '0') }}</span>
           </div>
           <div class="card-footer">
-            <span class="card-info">{{ slot.data ? slot.data.timestamp.split(' ')[0] : 'Empty' }}</span>
+            <span class="card-info">{{ slot.data ? slot.data.timestamp.split(' ')[0] : $t('saveLoad.empty') }}</span>
           </div>
           <div v-if="selectedSlot === index" class="selection-triangle"></div>
         </div>
@@ -32,15 +32,15 @@
              </div>
              <div class="detail-stats">
                 <div class="stat-row">
-                  <span class="stat-label">Level</span>
+                  <span class="stat-label" v-t="'saveLoad.level'"></span>
                   <span class="stat-value">{{ currentSlotData.level }}</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">Gold</span>
+                  <span class="stat-label" v-t="'saveLoad.gold'"></span>
                   <span class="stat-value gold">{{ currentSlotData.gold }} G</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">Date</span>
+                  <span class="stat-label" v-t="'saveLoad.date'"></span>
                   <span class="stat-value">{{ currentSlotData.timestamp }}</span>
                 </div>
              </div>
@@ -49,7 +49,7 @@
         <div v-else class="empty-detail">
            <div class="detail-icon-box empty">📦</div>
            <div class="detail-info-box">
-              <h3 class="location-title text-muted">Empty Slot</h3>
+              <h3 class="location-title text-muted" v-t="'common.emptySlot'"></h3>
               <p class="desc-body">No data saved in this slot.</p>
            </div>
         </div>
@@ -62,21 +62,21 @@
         class="action-btn danger" 
         :disabled="!currentSlotData" 
         @click="deleteSave"
+        v-t="'saveLoad.delete'"
       >
-        DELETE
       </button>
       <button 
         class="action-btn primary" 
         @click="saveGame"
+        v-t="'saveLoad.save'"
       >
-        SAVE
       </button>
       <button 
         class="action-btn success" 
         :disabled="!currentSlotData" 
         @click="loadGame"
+        v-t="'saveLoad.load'"
       >
-        LOAD
       </button>
     </div>
   </div>

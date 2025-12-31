@@ -1,5 +1,5 @@
 <script setup>
-import GameUI from './components/GameUI.vue';
+import GameUI from '@/components/pages/GameUI.vue';
 </script>
 
 <template>

@@ -10,7 +10,7 @@
           :class="{ active: currentTab === tab }"
           @click="currentTab = tab"
         >
-          {{ tab }}
+          {{ getTabLabel(tab) }}
         </div>
       </div>
 
@@ -20,7 +20,7 @@
           class="toggle-btn" 
           :class="{ active: viewMode === 'list' }" 
           @click="viewMode = 'list'"
-          title="List View"
+          :title="$t('inventory.views.list')"
         >
           ☰
         </button>
@@ -28,7 +28,7 @@
           class="toggle-btn" 
           :class="{ active: viewMode === 'simple' }" 
           @click="viewMode = 'simple'"
-          title="Card View"
+          :title="$t('inventory.views.card')"
         >
           📄
         </button>
@@ -36,7 +36,7 @@
           class="toggle-btn" 
           :class="{ active: viewMode === 'icon' }" 
           @click="viewMode = 'icon'"
-          title="Grid View"
+          :title="$t('inventory.views.grid')"
         >
           🧩
         </button>
@@ -68,10 +68,10 @@
           </template>
           <template v-else>
             <div class="desc-header">
-               <h3 class="desc-title text-muted">Empty Slot</h3>
+               <h3 class="desc-title text-muted" v-t="'common.emptySlot'"></h3>
             </div>
             <p class="desc-body text-muted">No item selected.</p>
-          </template>
+          </template>>
         </div>
       </div>
     </div>
@@ -80,13 +80,26 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import GameDataGrid from './GameDataGrid.vue';
-import { useInventoryStore } from '../stores/inventory';
+import { useI18n } from 'vue-i18n';
+import GameDataGrid from '@/components/ui/GameDataGrid.vue';
+import { useInventoryStore } from '@/stores/inventory';
 
+const { t } = useI18n();
 const store = useInventoryStore();
 
 const tabs = ['All', 'Consumables', 'Weapons', 'Armor', 'Key Items'];
 const currentTab = ref('All');
+
+const getTabLabel = (tab) => {
+  const map = {
+    'All': 'inventory.tabs.all',
+    'Consumables': 'itemTypes.consumable',
+    'Weapons': 'itemTypes.weapon',
+    'Armor': 'itemTypes.armor',
+    'Key Items': 'itemTypes.keyItem'
+  };
+  return map[tab] ? t(map[tab]) : tab;
+};
 const viewMode = ref('simple'); // 'simple' or 'icon' or 'list'
 const selectedIndex = ref(0);
 

@@ -8,11 +8,11 @@
             <!-- 金币/时间 -->
             <div class="info-box">
                 <div class="info-row border-bottom">
-                    <span class="info-label">Gold</span>
+                    <span class="info-label" v-t="'listMenu.gold'"></span>
                     <span class="info-value gold-text">54,300 G</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Time</span>
+                    <span class="info-label" v-t="'listMenu.time'"></span>
                     <span class="info-value">12:45:03</span>
                 </div>
             </div>
@@ -26,7 +26,7 @@
                   :class="{ active: currentPanel === item.id }"
                   @click="currentPanel = item.id"
                 >
-                    <span>{{ item.label }}</span>
+                    <span v-t="item.labelKey"></span>
                     <span v-if="currentPanel === item.id" class="arrow">▶</span>
                 </div>
             </div>
@@ -43,22 +43,22 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import InventoryPanel from '../InventoryPanel.vue';
-import CharacterPanel from '../CharacterPanel.vue';
-import EquipmentPanel from '../EquipmentPanel.vue';
-import SkillsPanel from '../SkillsPanel.vue';
-import ThankPanel from '../ThankPanel.vue';
-import SystemPanel from '../SystemPanel.vue';
-import SaveLoadPanel from '../SaveLoadPanel.vue';
+import InventoryPanel from '@/components/panels/InventoryPanel.vue';
+import CharacterPanel from '@/components/panels/CharacterPanel.vue';
+import EquipmentPanel from '@/components/panels/EquipmentPanel.vue';
+import SkillsPanel from '@/components/panels/SkillsPanel.vue';
+import ThankPanel from '@/components/panels/ThankPanel.vue';
+import SystemPanel from '@/components/panels/SystemPanel.vue';
+import SaveLoadPanel from '@/components/panels/SaveLoadPanel.vue';
 
 const menuItems = [
-  { id: 'items', label: 'ITEMS', component: InventoryPanel },
-  { id: 'equip', label: 'EQUIP', component: EquipmentPanel },
-  { id: 'skills', label: 'SKILLS', component: SkillsPanel },
-  { id: 'status', label: 'STATUS', component: CharacterPanel },
-  { id: 'thank', label: 'THANK', component: ThankPanel },
-  { id: 'data', label: 'DATA', component: SaveLoadPanel },
-  { id: 'system', label: 'SYSTEM', component: SystemPanel },
+  { id: 'items', labelKey: 'panels.inventory', component: InventoryPanel },
+  { id: 'equip', labelKey: 'panels.equipment', component: EquipmentPanel },
+  { id: 'skills', labelKey: 'panels.skills', component: SkillsPanel },
+  { id: 'status', labelKey: 'panels.status', component: CharacterPanel },
+  { id: 'thank', labelKey: 'panels.thank', component: ThankPanel },
+  { id: 'data', labelKey: 'panels.data', component: SaveLoadPanel },
+  { id: 'system', labelKey: 'menu.settings', component: SystemPanel },
 ];
 
 const currentPanel = ref('items');

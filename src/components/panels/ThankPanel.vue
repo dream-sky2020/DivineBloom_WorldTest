@@ -1,11 +1,11 @@
 <template>
   <div class="panel-container">
     <div class="thank-card">
-      <h2 class="title">CREDITS</h2>
+      <h2 class="title" v-t="'thank.title'"></h2>
       
       <div class="credits-list">
         <div class="credit-section">
-          <h3 class="section-title">Development Team</h3>
+          <h3 class="section-title" v-t="'thank.devTeam'"></h3>
           <div class="contributor-row">
             <span class="role">Lead Developer</span>
             <span class="name">Collaborator A</span>
@@ -21,7 +21,7 @@
         </div>
 
         <div class="credit-section">
-          <h3 class="section-title">Special Thanks</h3>
+          <h3 class="section-title" v-t="'thank.specialThanks'"></h3>
           <div class="contributor-row">
             <span class="role">Testing</span>
             <span class="name">Collaborator D</span>
@@ -33,9 +33,7 @@
         </div>
       </div>
       
-      <div class="footer-message">
-        Thank you for playing!
-      </div>
+      <div class="footer-message" v-t="'thank.footer'"></div>
     </div>
   </div>
 </template>

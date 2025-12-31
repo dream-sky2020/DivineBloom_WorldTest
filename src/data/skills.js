@@ -12,102 +12,101 @@ export const skillsDb = {
   // Physical Skills
   101: {
     id: 101,
-    name: "Slash",
-    type: "Active",
-    category: "Physical",
+    name: "skills.101.name",
+    type: "skillTypes.active",
+    category: "skillCategories.physical",
     icon: "⚔️",
     cost: "5 MP",
-    subText: "Basic Attack",
-    description: "A swift slash with a weapon. Deals 100% Physical Damage to a single enemy."
+    subText: "skills.101.subText",
+    description: "skills.101.description"
   },
   102: {
     id: 102,
-    name: "Power Strike",
-    type: "Active",
-    category: "Physical",
+    name: "skills.102.name",
+    type: "skillTypes.active",
+    category: "skillCategories.physical",
     icon: "💥",
     cost: "15 MP",
-    subText: "Heavy Damage",
-    description: "A powerful charged attack. Deals 200% Physical Damage but has a chance to miss."
+    subText: "skills.102.subText",
+    description: "skills.102.description"
   },
 
   // Magic Skills
   201: {
     id: 201,
-    name: "Fireball",
-    type: "Active",
-    category: "Magic",
-    element: "Fire",
+    name: "skills.201.name",
+    type: "skillTypes.active",
+    category: "skillCategories.magic",
+    element: "elements.fire",
     icon: "🔥",
     cost: "10 MP",
-    subText: "Fire Dmg",
-    description: "Hurls a ball of fire at an enemy. Inflicts Fire Damage and may cause Burn."
+    subText: "skills.201.subText",
+    description: "skills.201.description"
   },
   202: {
     id: 202,
-    name: "Ice Shard",
-    type: "Active",
-    category: "Magic",
-    element: "Ice",
+    name: "skills.202.name",
+    type: "skillTypes.active",
+    category: "skillCategories.magic",
+    element: "elements.ice",
     icon: "❄️",
     cost: "12 MP",
-    subText: "Ice Dmg",
-    description: "Shoots sharp icicles. Deals Ice Damage and lowers target Speed."
+    subText: "skills.202.subText",
+    description: "skills.202.description"
   },
   203: {
     id: 203,
-    name: "Thunder",
-    type: "Active",
-    category: "Magic",
-    element: "Lightning",
+    name: "skills.203.name",
+    type: "skillTypes.active",
+    category: "skillCategories.magic",
+    element: "elements.lightning",
     icon: "⚡",
     cost: "25 MP",
-    subText: "AoE Lightning",
-    description: "Calls down lightning to strike all enemies. Moderate Lightning Damage."
+    subText: "skills.203.subText",
+    description: "skills.203.description"
   },
 
   // Support Skills
   301: {
     id: 301,
-    name: "Heal",
-    type: "Active",
-    category: "Support",
+    name: "skills.301.name",
+    type: "skillTypes.active",
+    category: "skillCategories.support",
     icon: "💚",
     cost: "20 MP",
-    subText: "Restore HP",
-    description: "Restores a moderate amount of HP to a single ally."
+    subText: "skills.301.subText",
+    description: "skills.301.description"
   },
   302: {
     id: 302,
-    name: "Protect",
-    type: "Active",
-    category: "Support",
+    name: "skills.302.name",
+    type: "skillTypes.active",
+    category: "skillCategories.support",
     icon: "🛡️",
     cost: "30 MP",
-    subText: "Buff DEF",
-    description: "Increases an ally's Physical Defense for 3 turns."
+    subText: "skills.302.subText",
+    description: "skills.302.description"
   },
 
   // Passive Skills
   401: {
     id: 401,
-    name: "Iron Skin",
-    type: "Passive",
-    category: "Passive",
+    name: "skills.401.name",
+    type: "skillTypes.passive",
+    category: "skillCategories.passive",
     icon: "🦾",
     cost: "--",
-    subText: "DEF Up",
-    description: "Permanently increases Physical Defense by 10%."
+    subText: "skills.401.subText",
+    description: "skills.401.description"
   },
   402: {
     id: 402,
-    name: "Mana Flow",
-    type: "Passive",
-    category: "Passive",
+    name: "skills.402.name",
+    type: "skillTypes.passive",
+    category: "skillCategories.passive",
     icon: "💧",
     cost: "--",
-    subText: "MP Regen",
-    description: "Regenerates 5% of Max MP at the end of each turn."
+    subText: "skills.402.subText",
+    description: "skills.402.description"
   }
 };
-

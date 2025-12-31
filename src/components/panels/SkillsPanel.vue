@@ -25,7 +25,7 @@
     <div class="loadout-panel">
       <!-- 主动技能槽 -->
       <div class="loadout-section">
-        <h3 class="section-title">Active Skills</h3>
+        <h3 class="section-title" v-t="'skillTypes.active'"></h3>
         <div class="skills-row">
           <!-- Slot 1 -->
           <div class="skill-slot equipped-active group hover-effect">
@@ -55,7 +55,7 @@
 
       <!-- 被动技能槽 -->
       <div class="loadout-section">
-        <h3 class="section-title">Passive Skills</h3>
+        <h3 class="section-title" v-t="'skillTypes.passive'"></h3>
         <div class="skills-row">
           <!-- Slot 1 -->
           <div class="skill-slot passive-active rounded-circle group hover-effect">
@@ -76,9 +76,9 @@
     <!-- 过滤器 Tabs -->
     <div class="filter-bar">
       <div class="filter-tabs">
-        <div class="tab active">All Skills</div>
-        <div class="tab">Active</div>
-        <div class="tab">Passive</div>
+        <div class="tab active" v-t="'skills.tabs.all'"></div>
+        <div class="tab" v-t="'skillTypes.active'"></div>
+        <div class="tab" v-t="'skillTypes.passive'"></div>
       </div>
     </div>
 
@@ -98,10 +98,10 @@
             </div>
           </div>
           <div class="card-footer">
-            <span class="type-text text-blue">Active</span>
+            <span class="type-text text-blue" v-t="'skillTypes.active'"></span>
             <span class="cost-text text-blue-bold">15 MP</span>
           </div>
-          <div class="equipped-tag text-yellow">EQUIPPED</div>
+          <div class="equipped-tag text-yellow" v-t="'skills.equipped'"></div>
         </div>
 
         <!-- Active: Ice Shard (Equipped) -->
@@ -187,11 +187,11 @@
             <div class="card-icon-box grayscale">☠️</div>
             <div class="card-info">
               <div class="card-title locked-text">Doom</div>
-              <div class="card-sub">Locked (Lv. 50)</div>
+              <div class="card-sub">{{ $t('skills.locked') }} (Lv. 50)</div>
             </div>
           </div>
           <div class="card-footer">
-            <span class="type-text locked-text">Active</span>
+            <span class="type-text locked-text" v-t="'skillTypes.active'"></span>
             <span class="cost-text locked-text">?? MP</span>
           </div>
           <div class="lock-overlay">🔒</div>
@@ -229,8 +229,8 @@
           </div>
         </div>
         <div class="desc-actions">
-          <button class="action-btn btn-red">Unequip</button>
-          <button class="action-btn btn-slate">Upgrade</button>
+          <button class="action-btn btn-red" v-t="'skills.unequip'"></button>
+          <button class="action-btn btn-slate" v-t="'skills.upgrade'"></button>
         </div>
       </div>
 

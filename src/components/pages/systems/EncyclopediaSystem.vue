@@ -4,7 +4,7 @@
       
       <!-- Top Navigation Tabs -->
       <div class="tabs-header">
-        <h2 class="system-title">Encyclopedia</h2>
+        <h2 class="system-title" v-t="'panels.encyclopedia'"></h2>
         <div class="tabs-group">
           <button 
             v-for="tab in tabs" 
@@ -49,16 +49,16 @@
               </div>
               
               <div class="description-box">
-                <h4>Description</h4>
-                <p>{{ selectedItem.description || 'No description available.' }}</p>
+                <h4 v-t="'encyclopedia.description'"></h4>
+                <p v-t="selectedItem.description"></p>
               </div>
 
               <!-- Character Specific Stats Preview -->
               <div v-if="currentTab === 'characters' && selectedItem.initialStats" class="stats-preview">
-                 <h4>Base Stats</h4>
+                 <h4 v-t="'encyclopedia.baseStats'"></h4>
                  <div class="stats-grid">
                    <div v-for="(val, stat) in selectedItem.initialStats" :key="stat" class="stat-item">
-                     <span class="stat-label">{{ stat.toUpperCase() }}</span>
+                     <span class="stat-label" v-t="`stats.${stat}`"></span>
                      <span class="stat-val">{{ val }}</span>
                    </div>
                  </div>
@@ -77,18 +77,21 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import GameDataGrid from '../GameDataGrid.vue';
-import { charactersDb } from '../../data/characters.js';
-import { itemsDb } from '../../data/items.js';
-import { statusDb } from '../../data/status.js';
-import { skillsDb } from '../../data/skills.js';
+import { useI18n } from 'vue-i18n';
+import GameDataGrid from '@/components/ui/GameDataGrid.vue';
+import { charactersDb } from '@/data/characters.js';
+import { itemsDb } from '@/data/items.js';
+import { statusDb } from '@/data/status.js';
+import { skillsDb } from '@/data/skills.js';
 
-const tabs = [
-  { id: 'characters', label: 'Characters' },
-  { id: 'items', label: 'Items' },
-  { id: 'skills', label: 'Skills' },
-  { id: 'status', label: 'Status' }
-];
+const { t } = useI18n();
+
+const tabs = computed(() => [
+  { id: 'characters', label: 'Characters' }, // 保留英文或者添加 dedicated key
+  { id: 'items', label: t('panels.inventory') },
+  { id: 'skills', label: t('panels.skills') },
+  { id: 'status', label: t('panels.status') }
+]);
 
 const currentTab = ref('characters');
 const selectedIndex = ref(0);
@@ -175,8 +178,8 @@ const onItemSelect = (item) => {
 // Helpers
 const getSubtitle = (item) => {
   if (!item) return '';
-  if (currentTab.value === 'characters') return item.role;
-  return item.subText || item.type;
+  if (currentTab.value === 'characters') return t(item.role);
+  return t(item.subText || item.type);
 };
 
 const detailProperties = computed(() => {
@@ -185,28 +188,28 @@ const detailProperties = computed(() => {
   
   if (currentTab.value === 'characters') {
     return {
-      'Element': i.element,
-      'Weapon': i.weaponType,
-      'Role': i.role
+      [t('labels.element')]: t(i.element),
+      [t('labels.weapon')]: t(i.weaponType),
+      [t('labels.role')]: t(i.role)
     };
   }
   if (currentTab.value === 'items') {
     return {
-      'Type': i.type,
-      'Effect': i.subText
+      [t('labels.type')]: t(i.type),
+      [t('labels.effect')]: t(i.subText)
     };
   }
   if (currentTab.value === 'skills') {
     return {
-      'Category': i.category,
-      'Cost': i.cost,
-      'Type': i.type
+      [t('labels.category')]: t(i.category),
+      [t('labels.cost')]: i.cost, 
+      [t('labels.type')]: t(i.type)
     };
   }
   if (currentTab.value === 'status') {
     return {
-      'Type': i.type,
-      'Effect': i.subText
+      [t('labels.type')]: t(i.type),
+      [t('labels.effect')]: t(i.subText)
     };
   }
   return {};

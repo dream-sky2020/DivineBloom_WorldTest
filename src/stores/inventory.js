@@ -1,7 +1,7 @@
 // src/stores/inventory.js
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { itemsDb } from '../data/items';
+import { itemsDb } from '@/data/items';
 
 export const useInventoryStore = defineStore('inventory', () => {
   // State: 仅存储物品 ID 和数量

@@ -1,7 +1,7 @@
 // src/stores/audio.js
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
-import { audioManager } from '../utils/AudioManager';
+import { audioManager } from '@/utils/AudioManager';
 
 export const useAudioStore = defineStore('audio', () => {
   // 状态：使用 0-100 的整数，方便滑块控制

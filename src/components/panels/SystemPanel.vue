@@ -7,7 +7,15 @@
         
         <!-- Audio Section -->
         <div class="settings-section">
-          <h3 class="section-title">AUDIO</h3>
+          <h3 class="section-title">{{ $t('system.volume') }}</h3>
+
+          <div class="setting-row">
+            <span class="setting-label">{{ $t('system.language') }}</span>
+            <div class="toggle-group">
+                <button :class="{ active: $i18n.locale === 'en' }" @click="$i18n.locale = 'en'">ENG</button>
+                <button :class="{ active: $i18n.locale === 'zh' }" @click="$i18n.locale = 'zh'">中文</button>
+            </div>
+          </div>
           
           <div class="setting-row">
             <span class="setting-label">Master Volume</span>
@@ -30,19 +38,19 @@
 
         <!-- Gameplay Section -->
         <div class="settings-section">
-          <h3 class="section-title">GAMEPLAY</h3>
+          <h3 class="section-title" v-t="'systemSettings.gameplay'"></h3>
           
           <div class="setting-row">
-            <span class="setting-label">Text Speed</span>
+            <span class="setting-label" v-t="'systemSettings.textSpeed'"></span>
              <div class="toggle-group">
-                <button :class="{ active: settings.textSpeed === 'slow' }" @click="settings.textSpeed = 'slow'">Slow</button>
-                <button :class="{ active: settings.textSpeed === 'normal' }" @click="settings.textSpeed = 'normal'">Normal</button>
-                <button :class="{ active: settings.textSpeed === 'fast' }" @click="settings.textSpeed = 'fast'">Fast</button>
+                <button :class="{ active: settings.textSpeed === 'slow' }" @click="settings.textSpeed = 'slow'" v-t="'systemSettings.speeds.slow'"></button>
+                <button :class="{ active: settings.textSpeed === 'normal' }" @click="settings.textSpeed = 'normal'" v-t="'systemSettings.speeds.normal'"></button>
+                <button :class="{ active: settings.textSpeed === 'fast' }" @click="settings.textSpeed = 'fast'" v-t="'systemSettings.speeds.fast'"></button>
              </div>
           </div>
           
           <div class="setting-row">
-            <span class="setting-label">Auto Save</span>
+            <span class="setting-label" v-t="'systemSettings.autoSave'"></span>
             <label class="switch">
               <input type="checkbox" v-model="settings.autoSave">
               <span class="slider round"></span>
@@ -52,7 +60,7 @@
         
          <!-- Actions -->
         <div class="action-buttons">
-            <button class="sys-btn danger">To Title</button>
+            <button class="sys-btn danger" v-t="'systemSettings.toTitle'"></button>
         </div>
 
       </div>
@@ -62,7 +70,7 @@
 
 <script setup>
 import { reactive, onMounted } from 'vue';
-import { useAudioStore } from '../stores/audio';
+import { useAudioStore } from '@/stores/audio';
 
 const audioStore = useAudioStore();
 

@@ -10,61 +10,60 @@ export const statusDb = {
   // Debuffs
   1: {
     id: 1,
-    name: "Poison",
-    type: "Debuff",
+    name: "status.1.name",
+    type: "statusTypes.debuff",
     icon: "☠️",
-    subText: "DoT",
-    description: "Takes damage at the start of each turn. Persists after battle."
+    subText: "status.1.subText",
+    description: "status.1.description"
   },
   2: {
     id: 2,
-    name: "Burn",
-    type: "Debuff",
+    name: "status.2.name",
+    type: "statusTypes.debuff",
     icon: "🔥",
-    subText: "DoT",
-    description: "Takes Fire damage each turn. Lowers Attack power."
+    subText: "status.2.subText",
+    description: "status.2.description"
   },
   3: {
     id: 3,
-    name: "Freeze",
-    type: "Debuff",
+    name: "status.3.name",
+    type: "statusTypes.debuff",
     icon: "🧊",
-    subText: "Stun",
-    description: "Cannot act. Taking Physical damage will shatter the ice and deal double damage."
+    subText: "status.3.subText",
+    description: "status.3.description"
   },
   4: {
     id: 4,
-    name: "Paralysis",
-    type: "Debuff",
+    name: "status.4.name",
+    type: "statusTypes.debuff",
     icon: "⚡",
-    subText: "Chance Stun",
-    description: "25% chance to be unable to act each turn."
+    subText: "status.4.subText",
+    description: "status.4.description"
   },
 
   // Buffs
   101: {
     id: 101,
-    name: "Regen",
-    type: "Buff",
+    name: "status.101.name",
+    type: "statusTypes.buff",
     icon: "✨",
-    subText: "Heal",
-    description: "Restores a small amount of HP at the start of each turn."
+    subText: "status.101.subText",
+    description: "status.101.description"
   },
   102: {
     id: 102,
-    name: "Attack Up",
-    type: "Buff",
+    name: "status.102.name",
+    type: "statusTypes.buff",
     icon: "⚔️",
-    subText: "ATK +",
-    description: "Increases Physical Attack power."
+    subText: "status.102.subText",
+    description: "status.102.description"
   },
   103: {
     id: 103,
-    name: "Haste",
-    type: "Buff",
+    name: "status.103.name",
+    type: "statusTypes.buff",
     icon: "⏩",
-    subText: "SPD +",
-    description: "Increases Speed, allowing turns to come around faster."
+    subText: "status.103.subText",
+    description: "status.103.description"
   }
 };
-

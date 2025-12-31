@@ -22,12 +22,12 @@
         </div>
         
         <!-- Hover Tooltip for Icon Mode -->
-        <div v-if="hoveredIndex === index && item && !item.isEmpty" class="hover-tooltip">
+          <div v-if="hoveredIndex === index && item && !item.isEmpty" class="hover-tooltip">
           <div class="tooltip-header">
-            <span class="tooltip-title">{{ item.name }}</span>
-            <span v-if="item.subText" class="tooltip-sub">{{ item.subText }}</span>
+            <span class="tooltip-title">{{ t(item.name) }}</span>
+            <span v-if="item.subText" class="tooltip-sub">{{ t(item.subText) }}</span>
           </div>
-          <div class="tooltip-body">{{ item.description }}</div>
+          <div class="tooltip-body">{{ t(item.description) }}</div>
         </div>
       </template>
 
@@ -37,12 +37,12 @@
           <div class="list-left">
             <span class="list-icon">{{ item?.icon || '📦' }}</span>
             <div class="list-info-group">
-              <span class="list-title">{{ item?.name || 'Empty Slot' }}</span>
-              <span v-if="item?.subText" class="list-sub">{{ item.subText }}</span>
+              <span class="list-title">{{ item?.name ? t(item.name) : t('common.emptySlot') }}</span>
+              <span v-if="item?.subText" class="list-sub">{{ t(item.subText) }}</span>
             </div>
           </div>
           <div class="list-right">
-            <span class="list-value">{{ item?.footerRight || (item?.isEmpty ? '--' : '') }}</span>
+            <span class="list-value">{{ item?.footerRight ? t(item.footerRight) : (item?.isEmpty ? '--' : '') }}</span>
           </div>
         </div>
         <div v-if="selectedIndex === index" class="selection-bar"></div>
@@ -52,11 +52,11 @@
       <template v-else-if="mode === 'simple'">
         <div class="card-header">
           <span class="card-icon">{{ item?.icon || '📦' }}</span>
-          <span class="card-title">{{ item?.name || 'Empty Slot' }}</span>
+          <span class="card-title">{{ item?.name ? t(item.name) : t('common.emptySlot') }}</span>
         </div>
         <div class="card-footer">
-          <span class="footer-left">{{ item?.footerLeft || (item?.isEmpty ? '---' : '') }}</span>
-          <span class="footer-right">{{ item?.footerRight || (item?.isEmpty ? '--' : '') }}</span>
+          <span class="footer-left">{{ item?.footerLeft ? t(item.footerLeft) : (item?.isEmpty ? '---' : '') }}</span>
+          <span class="footer-right">{{ item?.footerRight ? t(item.footerRight) : (item?.isEmpty ? '--' : '') }}</span>
         </div>
         <div v-if="selectedIndex === index" class="selection-triangle"></div>
       </template>
@@ -69,14 +69,14 @@
           </div>
           <div class="card-info">
              <div class="card-title" :class="{ 'text-yellow': item?.highlight }">
-               {{ item?.name || 'Unknown' }}
+               {{ item?.name ? t(item.name) : t('common.unknown') }}
              </div>
-             <div class="card-sub">{{ item?.subText || '---' }}</div>
+             <div class="card-sub">{{ item?.subText ? t(item.subText) : '---' }}</div>
           </div>
         </div>
         <div class="card-footer">
-          <span class="footer-left" :class="item?.footerLeftClass">{{ item?.footerLeft || '--' }}</span>
-          <span class="footer-right" :class="item?.footerRightClass">{{ item?.footerRight || '--' }}</span>
+          <span class="footer-left" :class="item?.footerLeftClass">{{ item?.footerLeft ? t(item.footerLeft) : '--' }}</span>
+          <span class="footer-right" :class="item?.footerRightClass">{{ item?.footerRight ? t(item.footerRight) : '--' }}</span>
         </div>
         <div v-if="item?.tag" class="status-tag">{{ item.tag }}</div>
         <div v-if="item?.isLocked" class="lock-overlay">🔒</div>
@@ -89,6 +89,9 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
   items: {

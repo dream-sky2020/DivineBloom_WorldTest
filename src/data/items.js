@@ -13,163 +13,163 @@ export const itemsDb = {
   // Consumables (1000-1999)
   1001: {
     id: 1001,
-    name: "Potion",
-    type: "Consumable",
+    name: "items.1001.name",
+    type: "itemTypes.consumable",
     icon: "🧪",
-    subText: "Restores 50 HP",
-    footerLeft: "Restores HP",
-    description: "A basic medicinal brew made from herbs. Restores a small amount of health. Essential for any adventurer."
+    subText: "items.1001.subText",
+    footerLeft: "items.1001.footerLeft",
+    description: "items.1001.description"
   },
   1002: {
     id: 1002,
-    name: "High Potion",
-    type: "Consumable",
+    name: "items.1002.name",
+    type: "itemTypes.consumable",
     icon: "🧪",
-    subText: "Restores 150 HP",
-    footerLeft: "Restores HP++",
-    description: "A potent medicinal brew. Restores a moderate amount of health."
+    subText: "items.1002.subText",
+    footerLeft: "items.1002.footerLeft",
+    description: "items.1002.description"
   },
   1003: {
     id: 1003,
-    name: "Ether",
-    type: "Consumable",
+    name: "items.1003.name",
+    type: "itemTypes.consumable",
     icon: "🧪",
-    subText: "Restores 20 MP",
-    footerLeft: "Restores MP",
-    description: "A magical liquid that restores mental energy. Slightly bitter taste."
+    subText: "items.1003.subText",
+    footerLeft: "items.1003.footerLeft",
+    description: "items.1003.description"
   },
   1004: {
     id: 1004,
-    name: "Antidote",
-    type: "Consumable",
+    name: "items.1004.name",
+    type: "itemTypes.consumable",
     icon: "🌱",
-    subText: "Cures Poison",
-    footerLeft: "Cures Poison",
-    description: "An herbal antidote used to treat poison. Works instantly."
+    subText: "items.1004.subText",
+    footerLeft: "items.1004.footerLeft",
+    description: "items.1004.description"
   },
   1005: {
     id: 1005,
-    name: "Tent",
-    type: "Consumable",
+    name: "items.1005.name",
+    type: "itemTypes.consumable",
     icon: "⛺",
-    subText: "Full Party Restore",
-    footerLeft: "Full Rest",
-    description: "A portable shelter. Allows the entire party to rest and fully recover HP and MP at save points."
+    subText: "items.1005.subText",
+    footerLeft: "items.1005.footerLeft",
+    description: "items.1005.description"
   },
   1006: {
     id: 1006,
-    name: "Phoenix Down",
-    type: "Consumable",
+    name: "items.1006.name",
+    type: "itemTypes.consumable",
     icon: "🪶",
-    subText: "Revive",
-    footerLeft: "Revive Ally",
-    description: "Tail feather of a legendary bird. Revives a KO'd ally with small amount of HP."
+    subText: "items.1006.subText",
+    footerLeft: "items.1006.footerLeft",
+    description: "items.1006.description"
   },
 
   // Weapons (2000-2999)
   2001: {
     id: 2001,
-    name: "Iron Sword",
-    type: "Weapon",
+    name: "items.2001.name",
+    type: "itemTypes.weapon",
     icon: "⚔️",
-    subText: "ATK +15",
-    footerLeft: "Basic Sword",
-    description: "A standard issue iron sword. Reliable and sturdy."
+    subText: "items.2001.subText",
+    footerLeft: "items.2001.footerLeft",
+    description: "items.2001.description"
   },
   2002: {
     id: 2002,
-    name: "Steel Saber",
-    type: "Weapon",
+    name: "items.2002.name",
+    type: "itemTypes.weapon",
     icon: "🗡️",
-    subText: "ATK +35",
-    footerLeft: "Sharp Edge",
-    description: "A sharp blade forged from steel. Cuts through light armor with ease."
+    subText: "items.2002.subText",
+    footerLeft: "items.2002.footerLeft",
+    description: "items.2002.description"
   },
   2003: {
     id: 2003,
-    name: "Mythril Dagger",
-    type: "Weapon",
+    name: "items.2003.name",
+    type: "itemTypes.weapon",
     icon: "🗡️",
-    subText: "ATK +25, SPD +5",
-    footerLeft: "Lightweight",
-    description: "A beautifully crafted dagger made of Mythril. Very light and easy to handle."
+    subText: "items.2003.subText",
+    footerLeft: "items.2003.footerLeft",
+    description: "items.2003.description"
   },
   2004: {
     id: 2004,
-    name: "Wooden Staff",
-    type: "Weapon",
+    name: "items.2004.name",
+    type: "itemTypes.weapon",
     icon: "🦯",
-    subText: "MAG +10",
-    footerLeft: "Mage Tool",
-    description: "A simple staff carved from oak. Channels magical energy slightly."
+    subText: "items.2004.subText",
+    footerLeft: "items.2004.footerLeft",
+    description: "items.2004.description"
   },
 
   // Armor (3000-3999)
   3001: {
     id: 3001,
-    name: "Leather Vest",
-    type: "Armor",
+    name: "items.3001.name",
+    type: "itemTypes.armor",
     icon: "👕",
-    subText: "DEF +10",
-    footerLeft: "Light Armor",
-    description: "A vest made of tanned leather. Offers basic protection."
+    subText: "items.3001.subText",
+    footerLeft: "items.3001.footerLeft",
+    description: "items.3001.description"
   },
   3002: {
     id: 3002,
-    name: "Chainmail",
-    type: "Armor",
+    name: "items.3002.name",
+    type: "itemTypes.armor",
     icon: "🛡️",
-    subText: "DEF +25",
-    footerLeft: "Medium Armor",
-    description: "Armor made of interlocking metal rings. Good protection against slashing attacks."
+    subText: "items.3002.subText",
+    footerLeft: "items.3002.footerLeft",
+    description: "items.3002.description"
   },
   3003: {
     id: 3003,
-    name: "Silk Robe",
-    type: "Armor",
+    name: "items.3003.name",
+    type: "itemTypes.armor",
     icon: "👘",
-    subText: "DEF +5, MAG +15",
-    footerLeft: "Mage Armor",
-    description: "A robe woven from enchanted silk. Boosts magical power but offers little physical protection."
+    subText: "items.3003.subText",
+    footerLeft: "items.3003.footerLeft",
+    description: "items.3003.description"
   },
 
   // Accessories (4000-4999)
   4001: {
     id: 4001,
-    name: "Power Ring",
-    type: "Accessory",
+    name: "items.4001.name",
+    type: "itemTypes.accessory",
     icon: "💍",
-    subText: "STR +5",
-    footerLeft: "Strength",
-    description: "A ring set with a red gemstone. The wearer feels a surge of strength."
+    subText: "items.4001.subText",
+    footerLeft: "items.4001.footerLeft",
+    description: "items.4001.description"
   },
   4002: {
     id: 4002,
-    name: "Protect Ring",
-    type: "Accessory",
+    name: "items.4002.name",
+    type: "itemTypes.accessory",
     icon: "💍",
-    subText: "DEF +5",
-    footerLeft: "Defense",
-    description: "A ring set with a blue gemstone. It emits a faint protective aura."
+    subText: "items.4002.subText",
+    footerLeft: "items.4002.footerLeft",
+    description: "items.4002.description"
   },
 
   // Key Items (9000-9999)
   9001: {
     id: 9001,
-    name: "World Map",
-    type: "Key Item",
+    name: "items.9001.name",
+    type: "itemTypes.keyItem",
     icon: "🗺️",
-    subText: "Dahna Region",
-    footerLeft: "Navigation",
-    description: "A detailed map of the known world. Essential for travel."
+    subText: "items.9001.subText",
+    footerLeft: "items.9001.footerLeft",
+    description: "items.9001.description"
   },
   9002: {
     id: 9002,
-    name: "Rusty Key",
-    type: "Key Item",
+    name: "items.9002.name",
+    type: "itemTypes.keyItem",
     icon: "🗝️",
-    subText: "Old Iron Key",
-    footerLeft: "Unlocks Door",
-    description: "An old, rusty key found in the ruins. It might open a nearby door."
+    subText: "items.9002.subText",
+    footerLeft: "items.9002.footerLeft",
+    description: "items.9002.description"
   }
 };

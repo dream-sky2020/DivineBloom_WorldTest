@@ -10,27 +10,27 @@
         
         <div class="stats-grid">
           <div class="stat-row">
-            <span class="stat-label">HP</span>
+            <span class="stat-label" v-t="'stats.hp'"></span>
             <span class="stat-value hp-text">4500 / 4500</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">MP</span>
+            <span class="stat-label" v-t="'stats.mp'"></span>
             <span class="stat-value mp-text">320 / 320</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">STR</span>
+            <span class="stat-label" v-t="'stats.atk'"></span>
             <span class="stat-value">85</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">DEF</span>
+            <span class="stat-label" v-t="'stats.def'"></span>
             <span class="stat-value">62</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">MAG</span>
+            <span class="stat-label" v-t="'stats.matk'"></span>
             <span class="stat-value">40</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">SPD</span>
+            <span class="stat-label" v-t="'stats.agi'"></span>
             <span class="stat-value">55</span>
           </div>
         </div>

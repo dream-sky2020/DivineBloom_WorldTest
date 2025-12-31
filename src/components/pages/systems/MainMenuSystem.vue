@@ -2,10 +2,10 @@
   <div class="main-menu-overlay">
     <div class="content-container">
       <div class="title-section">
-        <h1 class="main-title">神彩怒放</h1>
+        <h1 class="main-title" v-t="'mainMenu.title'"></h1>
         <div class="sub-title-container">
-          <h2 class="sub-title prefix">~序~</h2>
-          <h2 class="sub-title main">惡性饥寒</h2>
+          <h2 class="sub-title prefix" v-t="'mainMenu.subTitlePrefix'"></h2>
+          <h2 class="sub-title main" v-t="'mainMenu.subTitleMain'"></h2>
         </div>
       </div>
 
@@ -18,21 +18,21 @@
           @click="handleMenuClick(item)"
           @mouseenter="audioStore.playHover()"
         >
-          <span class="btn-text">{{ item.label }}</span>
+          <span class="btn-text" v-t="item.labelKey"></span>
           <span class="btn-subtext">{{ item.subLabel }}</span>
         </button>
       </div>
     </div>
     
     <div class="footer">
-      <p>Copyright © 2024 Developer</p>
+      <p v-t="'mainMenu.copyright'"></p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { inject, onMounted } from 'vue';
-import { useAudioStore } from '../../stores/audio';
+import { useAudioStore } from '@/stores/audio';
 
 const emit = defineEmits(['change-system']);
 const audioStore = useAudioStore();
@@ -47,10 +47,10 @@ onMounted(() => {
 // 这里暂时只用 console.log 模拟
 
 const menuItems = [
-  { id: 'start', label: '开始', subLabel: 'START', disabled: false, target: 'world-map' },
-  { id: 'continue', label: '继续', subLabel: 'CONTINUE', disabled: false, target: 'world-map' }, // 暂时也都去地图
-  { id: 'encyclopedia', label: '图鉴', subLabel: 'GALLERY', disabled: false, target: 'encyclopedia' },
-  { id: 'settings', label: '设置', subLabel: 'SETTINGS', disabled: false, target: null }
+  { id: 'start', labelKey: 'menu.start', subLabel: 'START', disabled: false, target: 'world-map' },
+  { id: 'continue', labelKey: 'menu.continue', subLabel: 'CONTINUE', disabled: false, target: 'world-map' }, // 暂时也都去地图
+  { id: 'encyclopedia', labelKey: 'panels.encyclopedia', subLabel: 'GALLERY', disabled: false, target: 'encyclopedia' },
+  { id: 'settings', labelKey: 'menu.settings', subLabel: 'SETTINGS', disabled: false, target: null }
 ];
 
 const handleMenuClick = (item) => {

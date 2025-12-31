@@ -5,7 +5,7 @@
       <div id="game-canvas">
           <!-- 背景层 (Global Background) -->
           <div class="background-layer">
-              <h1 class="placeholder-text">Game Scene Placeholder</h1>
+              <h1 class="placeholder-text" v-t="'common.unknown'"></h1>
           </div>
 
           <!-- Dynamic System Component -->
@@ -24,51 +24,87 @@
     <!-- Viewport 2: Developer Dashboard -->
     <div class="dev-panel-section">
       <div class="dev-container">
-        <h2 class="dev-title">Developer Operations Panel</h2>
+        <h2 class="dev-title" v-t="'dev.title'"></h2>
         
         <div class="dev-grid">
           <div class="dev-card">
-            <h3>System Switcher</h3>
+            <h3 v-t="'dev.systemSwitcher'"></h3>
             <div class="btn-group">
               <button 
                 :class="{ active: currentSystem === 'main-menu' }" 
                 @click="currentSystem = 'main-menu'"
+                v-t="'dev.systems.mainMenu'"
               >
-                Main Menu (Start Screen)
               </button>
               <button 
                 :class="{ active: currentSystem === 'list-menu' }" 
                 @click="currentSystem = 'list-menu'"
+                v-t="'dev.systems.listMenu'"
               >
-                Menu System (ListMenu)
               </button>
               <button 
                 :class="{ active: currentSystem === 'shop' }" 
                 @click="currentSystem = 'shop'"
+                v-t="'dev.systems.shop'"
               >
-                Shop System
               </button>
               <button 
                 :class="{ active: currentSystem === 'encyclopedia' }" 
                 @click="currentSystem = 'encyclopedia'"
+                v-t="'dev.systems.encyclopedia'"
               >
-                Encyclopedia System
               </button>
-              <button disabled>Battle System (WIP)</button>
+              <button disabled v-t="'dev.systems.battle'"></button>
               <button 
                 :class="{ active: currentSystem === 'world-map' }" 
                 @click="currentSystem = 'world-map'"
+                v-t="'dev.systems.worldMap'"
               >
-                World Map System
               </button>
             </div>
           </div>
 
           <div class="dev-card">
-            <h3>Debug Actions</h3>
+            <h3 v-t="'dev.debugActions'"></h3>
             <div class="btn-group">
-               <button @click="addGold">Add 1000 Gold</button>
-               <button @click="logState">Log State</button>
+               <button @click="addGold" v-t="'dev.actions.addGold'"></button>
+               <button @click="logState" v-t="'dev.actions.logState'"></button>
+            </div>
+          </div>
+
+          <div class="dev-card">
+            <h3 v-t="'system.language'"></h3>
+            <div class="btn-group">
+              <button 
+                :class="{ active: $i18n.locale === 'zh' }" 
+                @click="setLanguage('zh')"
+              >
+                简体中文
+              </button>
+              <button 
+                :class="{ active: $i18n.locale === 'zh-TW' }" 
+                @click="setLanguage('zh-TW')"
+              >
+                繁體中文
+              </button>
+              <button 
+                :class="{ active: $i18n.locale === 'en' }" 
+                @click="setLanguage('en')"
+              >
+                English
+              </button>
+              <button 
+                :class="{ active: $i18n.locale === 'ja' }" 
+                @click="setLanguage('ja')"
+              >
+                日本語
+              </button>
+              <button 
+                :class="{ active: $i18n.locale === 'ko' }" 
+                @click="setLanguage('ko')"
+              >
+                한국어
+              </button>
             </div>
           </div>
         </div>
@@ -79,12 +115,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import MainMenuSystem from './systems/MainMenuSystem.vue';
-import ListMenuSystem from './systems/ListMenuSystem.vue';
-import ShopSystem from './systems/ShopSystem.vue';
-import EncyclopediaSystem from './systems/EncyclopediaSystem.vue';
-import WorldMapSystem from './systems/WorldMapSystem.vue';
+import { useI18n } from 'vue-i18n';
+import MainMenuSystem from '@/components/pages/systems/MainMenuSystem.vue';
+import ListMenuSystem from '@/components/pages/systems/ListMenuSystem.vue';
+import ShopSystem from '@/components/pages/systems/ShopSystem.vue';
+import EncyclopediaSystem from '@/components/pages/systems/EncyclopediaSystem.vue';
+import WorldMapSystem from '@/components/pages/systems/WorldMapSystem.vue';
 
+const { locale } = useI18n();
 const currentSystem = ref('main-menu'); // Default to Main Menu
 
 const activeSystemComponent = computed(() => {
@@ -147,6 +185,10 @@ const addGold = () => {
 
 const logState = () => {
   console.log('Current System:', currentSystem.value);
+};
+
+const setLanguage = (lang) => {
+  locale.value = lang;
 };
 </script>
 
