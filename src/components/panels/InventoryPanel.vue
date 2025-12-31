@@ -61,17 +61,17 @@
         <div class="desc-text-box">
           <template v-if="selectedItem && !selectedItem.isEmpty">
             <div class="desc-header">
-              <h3 class="desc-title">{{ selectedItem.name }}</h3>
-              <span class="desc-sub">{{ selectedItem.subText }}</span>
+              <h3 class="desc-title">{{ getLocalizedText(selectedItem.name) }}</h3>
+              <span class="desc-sub">{{ getLocalizedText(selectedItem.subText) }}</span>
             </div>
-            <p class="desc-body">{{ selectedItem.description }}</p>
+            <p class="desc-body">{{ getLocalizedText(selectedItem.description) }}</p>
           </template>
           <template v-else>
             <div class="desc-header">
                <h3 class="desc-title text-muted" v-t="'common.emptySlot'"></h3>
             </div>
             <p class="desc-body text-muted">No item selected.</p>
-          </template>>
+          </template>
         </div>
       </div>
     </div>
@@ -84,8 +84,16 @@ import { useI18n } from 'vue-i18n';
 import GameDataGrid from '@/components/ui/GameDataGrid.vue';
 import { useInventoryStore } from '@/stores/inventory';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const store = useInventoryStore();
+
+const getLocalizedText = (input) => {
+  if (!input) return '';
+  if (typeof input === 'object') {
+    return input[locale.value] || input['en'] || input['zh'] || Object.values(input)[0] || '';
+  }
+  return t(input);
+};
 
 const tabs = ['All', 'Consumables', 'Weapons', 'Armor', 'Key Items'];
 const currentTab = ref('All');
