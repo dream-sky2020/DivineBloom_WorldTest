@@ -7,28 +7,28 @@
         <div class="credit-section">
           <h3 class="section-title" v-t="'thank.devTeam'"></h3>
           <div class="contributor-row">
-            <span class="role">Lead Developer</span>
-            <span class="name">Collaborator A</span>
+            <span class="role" v-t="'thank.roles.devAndDesign'"></span>
+            <span class="name">陆梦龙</span>
           </div>
           <div class="contributor-row">
-            <span class="role">UI/UX Design</span>
-            <span class="name">Collaborator B</span>
+            <span class="role" v-t="'thank.roles.artist'"></span>
+            <span class="name">冷光明</span>
           </div>
           <div class="contributor-row">
-            <span class="role">Game Logic</span>
-            <span class="name">Collaborator C</span>
-          </div>
-        </div>
-
-        <div class="credit-section">
-          <h3 class="section-title" v-t="'thank.specialThanks'"></h3>
-          <div class="contributor-row">
-            <span class="role">Testing</span>
-            <span class="name">Collaborator D</span>
+            <span class="role" v-t="'thank.roles.artist'"></span>
+            <span class="name">井响鸩</span>
           </div>
           <div class="contributor-row">
-            <span class="role">Support</span>
-            <span class="name">Collaborator E</span>
+            <span class="role" v-t="'thank.roles.artist'"></span>
+            <span class="name">鼻屎拌饭加个蛋</span>
+          </div>
+          <div class="contributor-row">
+            <span class="role" v-t="'thank.roles.artist'"></span>
+            <span class="name">是拍黄瓜呀</span>
+          </div>
+          <div class="contributor-row">
+            <span class="role" v-t="'thank.roles.artist'"></span>
+            <span class="name">唐幽洛</span>
           </div>
         </div>
       </div>

@@ -21,6 +21,10 @@ export const skillsDb = {
     },
     type: "skillTypes.active",
     category: "skillCategories.physical",
+    targetType: "enemy",
+    effects: [
+      { type: "damage", value: 1.5, scaling: "atk" }
+    ],
     icon: "⚔️",
     cost: "5 MP",
     subText: {
@@ -49,6 +53,10 @@ export const skillsDb = {
     },
     type: "skillTypes.active",
     category: "skillCategories.physical",
+    targetType: "allEnemies",
+    effects: [
+      { type: "damage", value: 0.8, scaling: "atk" }
+    ],
     icon: "💥",
     cost: "15 MP",
     subText: {
@@ -80,6 +88,10 @@ export const skillsDb = {
     type: "skillTypes.active",
     category: "skillCategories.magic",
     element: "elements.fire",
+    targetType: "enemy",
+    effects: [
+      { type: "damage", value: 1.3, scaling: "mag", element: "elements.fire" }
+    ],
     icon: "🔥",
     cost: "10 MP",
     subText: {
@@ -109,6 +121,10 @@ export const skillsDb = {
     type: "skillTypes.active",
     category: "skillCategories.magic",
     element: "elements.ice",
+    targetType: "enemy",
+    effects: [
+      { type: "damage", value: 1.2, scaling: "mag", element: "elements.ice" }
+    ],
     icon: "❄️",
     cost: "12 MP",
     subText: {
@@ -138,6 +154,10 @@ export const skillsDb = {
     type: "skillTypes.active",
     category: "skillCategories.magic",
     element: "elements.lightning",
+    targetType: "allEnemies",
+    effects: [
+      { type: "damage", value: 1.1, scaling: "mag", element: "elements.lightning" }
+    ],
     icon: "⚡",
     cost: "25 MP",
     subText: {
@@ -168,6 +188,10 @@ export const skillsDb = {
     },
     type: "skillTypes.active",
     category: "skillCategories.support",
+    targetType: "ally",
+    effects: [
+      { type: "heal", value: 500 }
+    ],
     icon: "💚",
     cost: "20 MP",
     subText: {
@@ -196,6 +220,10 @@ export const skillsDb = {
     },
     type: "skillTypes.active",
     category: "skillCategories.support",
+    targetType: "allAllies",
+    effects: [
+      { type: "buff", stat: "def", value: 1.5, duration: 3 }
+    ],
     icon: "🛡️",
     cost: "30 MP",
     subText: {
@@ -211,6 +239,38 @@ export const skillsDb = {
       en: 'Temporarily increases defense for all allies.',
       ja: '短時間、味方全員の防御力を高める。',
       ko: '짧은 시간 동안 아군 전체의 방어력을 높인다.'
+    }
+  },
+  303: {
+    id: 303,
+    name: {
+      zh: '复活术',
+      'zh-TW': '復活術',
+      en: 'Resurrection',
+      ja: 'レイズ',
+      ko: '부활'
+    },
+    type: "skillTypes.active",
+    category: "skillCategories.support",
+    targetType: "deadAlly",
+    effects: [
+      { type: "revive", value: 0.2 }
+    ],
+    icon: "✨",
+    cost: "40 MP",
+    subText: {
+      zh: '复活队友',
+      'zh-TW': '復活隊友',
+      en: 'Revive Ally',
+      ja: '蘇生',
+      ko: '아군 부활'
+    },
+    description: {
+      zh: '复活一名倒下的队友并恢复少量生命值。',
+      'zh-TW': '復活一名倒下的隊友並恢復少量生命值。',
+      en: 'Revives a fallen ally with a small amount of HP.',
+      ja: '倒れた仲間を蘇生し、HPを少量回復する。',
+      ko: '쓰러진 아군을 부활시키고 소량의 HP를 회복시킨다.'
     }
   },
 

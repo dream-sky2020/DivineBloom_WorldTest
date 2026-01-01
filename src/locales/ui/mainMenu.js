@@ -21,11 +21,11 @@ export default {
     ko: 'Vicious Hunger'
   },
   copyright: {
-    zh: '版权所有 © 2024 开发者',
-    'zh-TW': '版權所有 © 2024 開發者',
-    en: 'Copyright © 2024 Developer',
-    ja: 'Copyright © 2024 Developer',
-    ko: 'Copyright © 2024 Developer'
+    zh: '版权所有 © 2024 陆梦龙',
+    'zh-TW': '版權所有 © 2024 陸夢龍',
+    en: 'Copyright © 2024 Lu Menglong',
+    ja: 'Copyright © 2024 Lu Menglong',
+    ko: 'Copyright © 2024 Lu Menglong'
   }
 }
 

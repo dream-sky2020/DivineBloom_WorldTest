@@ -26,6 +26,34 @@ export default {
     en: 'Gauntlets',
     ja: '籠手',
     ko: '건틀릿'
+  },
+  spear: {
+    zh: '长枪',
+    'zh-TW': '長槍',
+    en: 'Spear',
+    ja: '槍',
+    ko: '창'
+  },
+  jade: {
+    zh: '宝玉',
+    'zh-TW': '寶玉',
+    en: 'Jade',
+    ja: '宝玉',
+    ko: '옥'
+  },
+  scroll: {
+    zh: '卷轴',
+    'zh-TW': '卷軸',
+    en: 'Scroll',
+    ja: '巻物',
+    ko: '두루마리'
+  },
+  scimitar: {
+    zh: '弯刀',
+    'zh-TW': '彎刀',
+    en: 'Scimitar',
+    ja: 'シミター',
+    ko: '시미터'
   }
 }
 

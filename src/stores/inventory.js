@@ -12,6 +12,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     { id: 1003, count: 1 },
     { id: 1004, count: 5 },
     { id: 1005, count: 1 },
+    { id: 1006, count: 5 },
     { id: 2001, count: 1 },
     { id: 3001, count: 1 },
     { id: 9001, count: 1 }
@@ -50,7 +51,7 @@ export const useInventoryStore = defineStore('inventory', () => {
         ...dbItem,
         count: slot.count,
         footerRight: `x${slot.count}`, // GameDataGrid 需要的字段
-        
+
         // 映射 type 到 tab 分类
         category: mapTypeToCategory(dbItem.type)
       };

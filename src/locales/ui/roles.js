@@ -26,6 +26,41 @@ export default {
     en: 'Brawler',
     ja: '格闘家',
     ko: '격투가'
+  },
+  lancer: {
+    zh: '骑士',
+    'zh-TW': '騎士',
+    en: 'Lancer',
+    ja: 'ランサー',
+    ko: '랜서'
+  },
+  mimic: {
+    zh: '拟态者',
+    'zh-TW': '擬態者',
+    en: 'Mimic',
+    ja: 'ミミック',
+    ko: '미믹'
+  },
+  storyteller: {
+    zh: '讲述者',
+    'zh-TW': '講述者',
+    en: 'Storyteller',
+    ja: '語り部',
+    ko: '이야기꾼'
+  },
+  emperor: {
+    zh: '皇帝',
+    'zh-TW': '皇帝',
+    en: 'Emperor',
+    ja: '皇帝',
+    ko: '황제'
+  },
+  king: {
+    zh: '国王',
+    'zh-TW': '國王',
+    en: 'King',
+    ja: '王',
+    ko: '국왕'
   }
 }
 

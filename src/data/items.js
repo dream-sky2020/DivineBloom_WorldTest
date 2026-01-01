@@ -21,6 +21,10 @@ export const itemsDb = {
       ko: '포션'
     },
     type: "itemTypes.consumable",
+    targetType: "ally",
+    effects: [
+      { type: "heal", value: 50 }
+    ],
     icon: "🧪",
     subText: {
       zh: 'HP +50',
@@ -48,6 +52,10 @@ export const itemsDb = {
       ko: '하이 포션'
     },
     type: "itemTypes.consumable",
+    targetType: "ally",
+    effects: [
+      { type: "heal", value: 200 }
+    ],
     icon: "🧪",
     subText: {
       zh: 'HP +200',
@@ -75,6 +83,10 @@ export const itemsDb = {
       ko: '에테르'
     },
     type: "itemTypes.consumable",
+    targetType: "ally",
+    effects: [
+      { type: "recoverMp", value: 50 }
+    ],
     icon: "🧪",
     subText: {
       zh: 'MP +50',
@@ -102,6 +114,10 @@ export const itemsDb = {
       ko: '해독초'
     },
     type: "itemTypes.consumable",
+    targetType: "ally",
+    effects: [
+      { type: "cureStatus", status: "poison" }
+    ],
     icon: "🌱",
     subText: {
       zh: '治疗中毒',
@@ -129,6 +145,10 @@ export const itemsDb = {
       ko: '텐트'
     },
     type: "itemTypes.consumable",
+    targetType: "allAllies",
+    effects: [
+      { type: "fullRestore" }
+    ],
     icon: "⛺",
     subText: {
       zh: '完全恢复',
@@ -156,6 +176,10 @@ export const itemsDb = {
       ko: '피닉스의 깃털'
     },
     type: "itemTypes.consumable",
+    targetType: "deadAlly",
+    effects: [
+      { type: "revive", value: 0.2 }
+    ],
     icon: "🪶",
     subText: {
       zh: '复活',
@@ -171,6 +195,37 @@ export const itemsDb = {
       en: 'Revives a KO\'d ally.',
       ja: '戦闘不能の仲間を蘇生する。',
       ko: '전투 불능이 된 동료를 부활시킨다.'
+    }
+  },
+  1007: {
+    id: 1007,
+    name: {
+      zh: '火焰炸弹',
+      'zh-TW': '火焰炸彈',
+      en: 'Fire Bomb',
+      ja: 'ファイアボム',
+      ko: '화염 폭탄'
+    },
+    type: "itemTypes.consumable",
+    targetType: "enemy",
+    effects: [
+      { type: "damage", element: "fire", value: 300 }
+    ],
+    icon: "💣",
+    subText: {
+      zh: '火焰伤害',
+      'zh-TW': '火焰傷害',
+      en: 'Fire Dmg',
+      ja: '炎ダメージ',
+      ko: '화염 피해'
+    },
+    footerLeft: "itemTypes.consumable",
+    description: {
+      zh: '对一名敌人造成固定的火焰伤害。',
+      'zh-TW': '對一名敵人造成固定的火焰傷害。',
+      en: 'Deals fixed fire damage to one enemy.',
+      ja: '敵単体に固定の炎ダメージを与える。',
+      ko: '적 한 명에게 고정 화염 피해를 준다.'
     }
   },
 

@@ -54,7 +54,12 @@
                 v-t="'dev.systems.encyclopedia'"
               >
               </button>
-              <button disabled v-t="'dev.systems.battle'"></button>
+              <button 
+                :class="{ active: currentSystem === 'battle' }" 
+                @click="currentSystem = 'battle'"
+                v-t="'dev.systems.battle'"
+              >
+              </button>
               <button 
                 :class="{ active: currentSystem === 'world-map' }" 
                 @click="currentSystem = 'world-map'"
@@ -121,6 +126,7 @@ import ListMenuSystem from '@/components/pages/systems/ListMenuSystem.vue';
 import ShopSystem from '@/components/pages/systems/ShopSystem.vue';
 import EncyclopediaSystem from '@/components/pages/systems/EncyclopediaSystem.vue';
 import WorldMapSystem from '@/components/pages/systems/WorldMapSystem.vue';
+import BattleSystem from '@/components/pages/systems/BattleSystem.vue';
 
 const { locale } = useI18n();
 const currentSystem = ref('main-menu'); // Default to Main Menu
@@ -132,6 +138,7 @@ const activeSystemComponent = computed(() => {
     case 'shop': return ShopSystem;
     case 'encyclopedia': return EncyclopediaSystem;
     case 'world-map': return WorldMapSystem;
+    case 'battle': return BattleSystem;
     default: return MainMenuSystem;
   }
 });

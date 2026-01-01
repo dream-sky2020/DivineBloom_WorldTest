@@ -26,6 +26,22 @@ export default {
     en: 'Thank you for playing!',
     ja: 'プレイありがとうございました！',
     ko: '플레이해 주셔서 감사합니다!'
+  },
+  roles: {
+    artist: {
+      zh: '画师',
+      'zh-TW': '繪師',
+      en: 'Artist',
+      ja: 'イラスト',
+      ko: '아티스트'
+    },
+    devAndDesign: {
+      zh: '程序 & 关卡设计',
+      'zh-TW': '程式 & 關卡設計',
+      en: 'Dev & Design',
+      ja: '開発 & デザイン',
+      ko: '개발 & 디자인'
+    }
   }
 }
 
