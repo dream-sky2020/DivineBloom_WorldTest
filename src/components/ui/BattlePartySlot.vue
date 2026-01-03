@@ -70,30 +70,56 @@
          }"
          @click.stop="onCharacterClick(slot.back)"
     >
-       <div class="card-mini-header">
-        <span class="char-name" :class="{ 'name-dead': slot.back.currentHp <= 0 }">{{ getLocalizedName(slot.back.name) }}</span>
-      </div>
-      <div class="card-mini-content">
-         <div class="mini-avatar" :style="{ backgroundColor: getRoleColor(slot.back.role) }"></div>
-         <div class="mini-stats">
-           <div class="mini-bar hp" :style="{ width: (slot.back.currentHp / slot.back.maxHp * 100) + '%' }"></div>
-           <div class="mini-bar mp" :style="{ width: (slot.back.currentMp / slot.back.maxMp * 100) + '%' }"></div>
-           <!-- Back Row ATB Bar (Overcharge) -->
-           <div class="mini-bar-container atb-container" :class="getATBContainerClass(slot.back.atb)">
-               <div 
-                  class="mini-bar atb" 
-                  :class="[
-                      getATBColorClass(slot.back.atb), 
-                      { 
-                          'glow-effect': (slot.back.atb || 0) >= 100,
-                          'no-transition': (slot.back.atb || 0) > 0 && (slot.back.atb || 0) % 100 < 10
-                      }
-                  ]"
-                  :style="{ width: getATBWidth(slot.back.atb) + '%' }"
-                ></div>
+       <!-- Top Row: Name -->
+       <div class="back-card-header">
+           <span class="char-name" :class="{ 'name-dead': slot.back.currentHp <= 0 }">{{ getLocalizedName(slot.back.name) }}</span>
+       </div>
+
+       <div class="back-card-main-content">
+           <!-- Left: Avatar -->
+           <div class="back-card-avatar">
+              <div class="mini-avatar large" :style="{ backgroundColor: getRoleColor(slot.back.role) }">
+                 {{ slot.back.name.en ? slot.back.name.en.charAt(0) : '' }}
+              </div>
            </div>
-         </div>
-      </div>
+
+           <!-- Right: Info -->
+           <div class="back-card-info">
+              <!-- Stats -->
+              <div class="back-card-stats">
+                <div class="mini-bar hp" :style="{ width: (slot.back.currentHp / slot.back.maxHp * 100) + '%' }"></div>
+                <div class="mini-bar mp" :style="{ width: (slot.back.currentMp / slot.back.maxMp * 100) + '%' }"></div>
+                <!-- Back Row ATB Bar (Overcharge) -->
+                <div class="mini-bar-container atb-container" :class="getATBContainerClass(slot.back.atb)">
+                    <div 
+                       class="mini-bar atb" 
+                       :class="[
+                           getATBColorClass(slot.back.atb), 
+                           { 
+                               'glow-effect': (slot.back.atb || 0) >= 100,
+                               'no-transition': (slot.back.atb || 0) > 0 && (slot.back.atb || 0) % 100 < 10
+                           }
+                       ]"
+                       :style="{ width: getATBWidth(slot.back.atb) + '%' }"
+                     ></div>
+                </div>
+              </div>
+           </div>
+       </div>
+
+       <!-- Status Effects (Separate Row) -->
+       <div class="back-card-status-row">
+          <div 
+            v-for="st in slot.back.statusEffects" 
+            :key="st.id" 
+            class="status-icon mini"
+            :class="getStatusClass(st.id)" 
+            :title="getStatusTooltip(st)"
+          >
+              <GameIcon :name="getStatusIcon(st.id)" />
+              <span class="status-duration">{{ st.duration }}</span>
+          </div>
+       </div>
     </div>
     <div class="empty-back-slot" v-else>
       <span class="placeholder-text">{{ t('battle.noBackup') }}</span>
@@ -341,15 +367,39 @@ const onCharacterClick = (character) => {
 
 /* Back Row Card (Reserve) */
 .back-card {
-  height: 100px;
+  height: 140px;
   background: rgba(15, 23, 42, 0.9);
   border: 2px solid #475569;
   border-radius: 12px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.back-card-header {
+  height: 28px;
+  background: rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
   align-items: center;
-  padding: 0.5rem;
-  gap: 0.5rem;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.back-card-header .char-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.back-card-main-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    gap: 1rem;
+    flex: 1;
+    justify-content: center; 
 }
 
 .name-dead {
@@ -358,7 +408,7 @@ const onCharacterClick = (character) => {
 }
 
 .empty-back-slot {
-  height: 100px;
+  height: 140px;
   border: 2px dashed #334155;
   border-radius: 12px;
   display: flex;
@@ -367,30 +417,41 @@ const onCharacterClick = (character) => {
   color: #475569;
 }
 
-.card-mini-header .char-name {
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.card-mini-content {
+.back-card-avatar {
   display: flex;
-  gap: 0.5rem;
+  justify-content: center;
   align-items: center;
-  flex: 1;
+  height: 100%; /* Match parent height */
 }
 
-.mini-avatar {
-  width: 40px;
-  height: 40px;
+.mini-avatar.large {
+  width: 40px;  /* Reduced from 60px */
+  height: 40px; /* Reduced from 60px */
   border-radius: 50%;
   background: #64748b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem; /* Reduced font size */
+  font-weight: bold;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
 }
 
-.mini-stats {
+.back-card-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.back-card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center; /* Center vertically */
+  height: 100%;
 }
 
 .mini-bar {
@@ -413,6 +474,36 @@ const onCharacterClick = (character) => {
 .mini-bar.atb {
     height: 100%;
     transition: width 0.1s linear;
+}
+
+.back-card-status-row {
+    height: 30px;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 0.75rem;
+    gap: 4px;
+}
+
+.back-card-status {
+    /* Removed old class style if no longer needed, or keep for compatibility */
+    display: none; 
+}
+
+.status-icon.mini {
+    width: 20px;
+    height: 20px;
+    font-size: 0.5rem;
+}
+
+.status-icon.mini .status-duration {
+    width: 10px;
+    height: 10px;
+    font-size: 0.5rem;
+    bottom: -3px;
+    right: -3px;
 }
 
 /* ATB Colors & Glows */

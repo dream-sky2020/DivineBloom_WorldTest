@@ -18,7 +18,7 @@ export const charactersDb = {
     element: "elements.fire",
     weaponType: "weapons.sword",
     initialStats: {
-      hp: 500,
+      hp: 1500,
       mp: 50,
       str: 18,
       def: 12,
@@ -47,7 +47,7 @@ export const charactersDb = {
     element: "elements.fire", // Also uses astral energy
     weaponType: "weapons.rifle",
     initialStats: {
-      hp: 380,
+      hp: 1380,
       mp: 120,
       str: 14,
       def: 10,
@@ -76,7 +76,7 @@ export const charactersDb = {
     element: "elements.windLight",
     weaponType: "weapons.book",
     initialStats: {
-      hp: 300,
+      hp: 1300,
       mp: 200,
       str: 6,
       def: 8,
@@ -105,7 +105,7 @@ export const charactersDb = {
     element: "elements.light",
     weaponType: "weapons.gauntlets",
     initialStats: {
-      hp: 550,
+      hp: 1550,
       mp: 60,
       str: 22,
       def: 10,
@@ -307,7 +307,7 @@ export const charactersDb = {
       ja: 'イビティアン',
       ko: '이비천'
     },
-    role: "roles.god",
+    role: "roles.god_slayer",
     element: "elements.water",
     weaponType: "weapons.scythe",
     isBoss: true,
@@ -322,11 +322,11 @@ export const charactersDb = {
     },
     skills: [103, 204, 205],
     description: {
-      zh: '掌控疫病与恩赐的神明，试图通过平等的死亡赋予众生救赎。',
-      'zh-TW': '掌控疫病與恩賜的神明，試圖通過平等的死亡賦予眾生救贖。',
-      en: 'The god controlling plague and grace, attempting to grant salvation through equal death.',
-      ja: '疫病と恩恵を司る神。',
-      ko: '역병과 은총을 관장하는 신.'
+      zh: '屠灭所有神明的非人神。',
+      'zh-TW': '屠滅所有神明的非人神。',
+      en: 'A non-human god who slaughters all deities.',
+      ja: 'すべての神を屠る非人の神。',
+      ko: '모든 신을 학살하는 비인간 신.'
     }
   }
 };

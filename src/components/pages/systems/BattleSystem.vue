@@ -242,12 +242,12 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 100px;
+  gap: 20px;
 }
 
 /* Party Zone */
 .party-zone {
-  height: 500px;
+  height: 600px;
   padding: 2rem;
   display: flex;
   justify-content: center;

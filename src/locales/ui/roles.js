@@ -68,6 +68,13 @@ export default {
     en: 'God Slayer',
     ja: 'ゴッドスレイヤー',
     ko: '신을 죽이는 자'
+  },
+  god: {
+    zh: '神',
+    'zh-TW': '神',
+    en: 'God',
+    ja: '神',
+    ko: '신'
   }
 }
 

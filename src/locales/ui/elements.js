@@ -13,6 +13,13 @@ export default {
     ja: '氷',
     ko: '얼음'
   },
+  water: {
+    zh: '水',
+    'zh-TW': '水',
+    en: 'Water',
+    ja: '水',
+    ko: '물'
+  },
   lightning: {
     zh: '雷',
     'zh-TW': '雷',

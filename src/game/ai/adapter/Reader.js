@@ -32,12 +32,15 @@ export class BattleReader {
             .map(slot => slot.front);
     }
 
-    // Get all dead front-row players
+    // Get all dead players (front and back row)
     getDeadPlayers() {
         if (!this._party) return [];
-        return this._party
-            .filter(slot => slot.front && slot.front.currentHp <= 0)
-            .map(slot => slot.front);
+        const dead = [];
+        this._party.forEach(slot => {
+            if (slot.front && slot.front.currentHp <= 0) dead.push(slot.front);
+            if (slot.back && slot.back.currentHp <= 0) dead.push(slot.back);
+        });
+        return dead;
     }
 
     // Get random alive target
