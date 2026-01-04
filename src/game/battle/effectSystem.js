@@ -1,6 +1,6 @@
 import { statusDb } from '@/data/status';
-import { calculateDamage, applyDamage, applyHeal } from './mechanics';
-import { applyStatus, removeStatus } from './status';
+import { calculateDamage, applyDamage, applyHeal } from './damageSystem';
+import { applyStatus, removeStatus } from './statusSystem';
 
 export const processEffect = (effect, target, actor, skill = null, context, silent = false, previousResult = 0) => {
     const { log, partySlots } = context;

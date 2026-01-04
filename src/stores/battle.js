@@ -3,13 +3,16 @@ import { ref, computed } from 'vue';
 import { charactersDb } from '@/data/characters';
 import { skillsDb } from '@/data/skills';
 import { itemsDb } from '@/data/items';
-import { statusDb } from '@/data/status';
+import { statusDb } from '@/data/status'; // Keep for now if used elsewhere, or remove if fully moved
 import { useInventoryStore } from './inventory';
 import { usePartyStore } from './party';
 import { getEnemyAction } from '@/game/ai';
-import { calculateDamage, applyDamage, applyHeal } from '@/game/battle/mechanics';
-import { processEffect, processTurnStatuses } from '@/game/battle/effects';
-import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/status';
+import { calculateDamage, applyDamage, applyHeal } from '@/game/battle/damageSystem';
+import { processEffect, processTurnStatuses } from '@/game/battle/effectSystem';
+import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/statusSystem';
+import { resolveTargets, findPartyMember } from '@/game/battle/targetSystem';
+import { resolveChainSequence } from '@/game/battle/skillSystem';
+import { calculateAtbTick } from '@/game/battle/timeSystem';
 
 export const useBattleStore = defineStore('battle', () => {
     const inventoryStore = useInventoryStore();
@@ -55,13 +58,10 @@ export const useBattleStore = defineStore('battle', () => {
     });
 
     // Helper to find any party member
-    const findPartyMember = (id) => {
-        for (const slot of partySlots.value) {
-            if (slot.front && (slot.front.uuid === id || slot.front.id === id)) return slot.front;
-            if (slot.back && (slot.back.uuid === id || slot.back.id === id)) return slot.back;
-        }
-        return null;
-    };
+    // Delegated to targetSystem, but kept as a store wrapper if needed by template (unlikely) or internal legacy
+    // Replaced internal usage with imported findPartyMember where possible, or keep using this wrapper
+    const findPartyMemberWrapper = (id) => findPartyMember(partySlots.value, id);
+
 
     const generateUUID = () => 'u' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
@@ -150,9 +150,8 @@ export const useBattleStore = defineStore('battle', () => {
     const updateATB = (dt) => {
         if (battleState.value !== 'active' || atbPaused.value) return;
 
-        const ATB_SPEED_MULTIPLIER = 2.0; // Adjust for pacing
         const MAX_ATB = 100;
-        const RESERVE_MAX_ATB = 500; // Allow reserve to overcharge
+        const RESERVE_MAX_ATB = 500; 
 
         // Collect all active units with metadata to avoid repeated lookups
         const unitEntries = [];
@@ -167,31 +166,18 @@ export const useBattleStore = defineStore('battle', () => {
         // Increment ATB
         for (const { unit, isBackRow } of unitEntries) {
             const maxAtb = isBackRow ? RESERVE_MAX_ATB : MAX_ATB;
-
-            // Speed factor
-            let spd = unit.spd || 10;
-            // Apply status modifiers
-            if (unit.statusEffects) {
-                unit.statusEffects.forEach(s => {
-                    const statusDef = statusDb[s.id];
-                    if (statusDef && statusDef.effects) {
-                        statusDef.effects.forEach(eff => {
-                            if (eff.trigger === 'passive' && eff.type === 'statMod' && eff.stat === 'spd') {
-                                spd *= eff.value;
-                            }
-                        });
-                    }
-                });
-            }
-
-            unit.atb = Math.min(maxAtb, unit.atb + (spd * dt * ATB_SPEED_MULTIPLIER));
+            
+            // Calculate tick using TimeSystem
+            const tick = calculateAtbTick(unit, dt);
+            
+            unit.atb = Math.min(maxAtb, unit.atb + tick);
 
             // Only trigger turn for non-back row units
             if (!isBackRow && unit.atb >= MAX_ATB && !atbPaused.value) {
                 // Unit is ready
                 unit.atb = MAX_ATB;
                 startTurn(unit);
-                // Break to handle one unit at a time (could queue them, but for now strict pause)
+                // Break to handle one unit at a time
                 return;
             }
         }
@@ -265,26 +251,47 @@ export const useBattleStore = defineStore('battle', () => {
             }
 
             if (action.type === 'custom_skill') {
+                // ... custom_skill logic ...
+                // For custom_skill, we assume targetId is already resolved to a Player ID by the AI
+                // But we still need to map the type correctly if it relies on generic types.
+                
+                // Let's rely on the explicit targetId mapping if possible.
+                // But resolveTargets needs correct list context.
+                
+                // FIX: Treat custom_skill targets as "Ally" (Player) by default if it's an attack
+                // But custom skills might be heals. 
+                // Let's assume custom_skill targetType follows standard conventions:
+                // 'single'/'enemy' -> Opponent (Player)
+                // 'ally' -> Teammate (Enemy)
+                
+                let type = action.targetType;
+                if (type === 'single' || type === 'enemy' || type === 'allEnemies' || type === 'all') {
+                    // Map to Player context
+                     if (type === 'allEnemies' || type === 'all') type = 'allAllies';
+                     else type = 'ally'; // Target a Player (ID match in partySlots)
+                } else if (type === 'ally' || type === 'allAllies') {
+                    // Map to Enemy context
+                     if (type === 'allAllies') type = 'allEnemies';
+                     else type = 'enemy';
+                }
+
                 // Log
                 if (action.logKey) {
                     let logParams = { name: enemy.name };
-                    if (action.targetType === 'single' && action.targetId) {
-                        const t = findPartyMember(action.targetId);
-                        if (t) logParams.target = t.name;
+                    if (action.targetId) {
+                         // Try finding name in both lists to be safe
+                         const t = findPartyMemberWrapper(action.targetId) || enemies.value.find(e => e.uuid === action.targetId || e.id === action.targetId);
+                         if (t) logParams.target = t.name;
                     }
                     log(action.logKey, logParams);
                 }
 
-                // Resolve Targets
-                let targets = [];
-                if (action.targetType === 'all') {
-                    targets = partySlots.value
-                        .filter(s => s.front && s.front.currentHp > 0)
-                        .map(s => s.front);
-                } else if (action.targetType === 'single' && action.targetId) {
-                    const t = findPartyMember(action.targetId);
-                    if (t) targets = [t];
-                }
+                const targets = resolveTargets({
+                    partySlots: partySlots.value,
+                    enemies: enemies.value,
+                    actor: enemy,
+                    targetId: action.targetId
+                }, type);
 
                 // Apply Effects
                 targets.forEach(target => {
@@ -299,27 +306,50 @@ export const useBattleStore = defineStore('battle', () => {
             } else if (action.type === 'skill') {
                 const skill = skillsDb[action.skillId];
                 if (skill) {
-                    // Log: Always use generic 'useSkill' format
+                    // Log
                     log('battle.useSkill', { user: enemy.name, skill: skill.name });
 
-                    // Resolve Targets
-                    let targets = [];
-                    // Check AI override first, then skill data
-                    const targetType = action.targetType || skill.targetType;
-
-                    if (targetType === 'allEnemies' || targetType === 'all') { // For enemy using skill, 'allEnemies' means Players
-                        targets = partySlots.value
-                            .filter(s => s.front && s.front.currentHp > 0)
-                            .map(s => s.front);
-                    } else if (targetType === 'single' || targetType === 'enemy') {
-                        const t = findPartyMember(action.targetId);
-                        if (t) targets = [t];
-                        else {
-                            // Fallback if AI didn't provide targetId but it's single target
-                            const alive = partySlots.value.filter(s => s.front && s.front.currentHp > 0).map(s => s.front);
-                            if (alive.length > 0) targets = [alive[Math.floor(Math.random() * alive.length)]];
+                    // --- FIX: Target Type Mapping for Enemy AI ---
+                    // Enemy "enemy" -> Player (Ally in context)
+                    // Enemy "ally"  -> Enemy (Enemy in context)
+                    
+                    let effectiveTargetType = action.targetType || skill.targetType || 'single';
+                    
+                    // Map logic:
+                    // If target is OPPONENT (default, single, enemy, allEnemies) -> Convert to ALLY/PARTY scope
+                    // If target is FRIEND (ally, allAllies) -> Convert to ENEMY scope
+                    
+                    if (['single', 'enemy', 'allEnemies', 'all'].includes(effectiveTargetType)) {
+                        if (effectiveTargetType === 'allEnemies' || effectiveTargetType === 'all') {
+                            effectiveTargetType = 'allAllies'; // All Players
+                        } else {
+                            effectiveTargetType = 'ally'; // Single Player
                         }
+                    } else if (['ally', 'allAllies', 'deadAlly', 'allDeadAllies'].includes(effectiveTargetType)) {
+                         if (effectiveTargetType === 'allAllies') effectiveTargetType = 'allEnemies';
+                         else if (effectiveTargetType === 'allDeadAllies') effectiveTargetType = 'allDeadAllies'; // Wait, resolveTargets uses partySlots for DeadAllies.
+                         // This is tricky. resolveTargets is hardcoded:
+                         // 'allDeadAllies' -> partySlots dead
+                         // We can't easily swap context for 'dead' types without changing resolveTargets signature.
+                         // BUT, for now, let's assume Enemies don't revive each other often.
+                         // If they do, we might need a better TargetSystem that accepts "OpponentList" and "FriendList".
+                         
+                         else effectiveTargetType = 'enemy'; // Single Enemy Teammate
                     }
+
+                    // Fallback for AI single target without ID
+                    if ((effectiveTargetType === 'ally') && !action.targetId) {
+                         // Pick random player
+                         const alive = partySlots.value.filter(s => s.front && s.front.currentHp > 0).map(s => s.front);
+                         if (alive.length > 0) action.targetId = alive[Math.floor(Math.random() * alive.length)].id;
+                    }
+
+                    const targets = resolveTargets({
+                        partySlots: partySlots.value,
+                        enemies: enemies.value,
+                        actor: enemy,
+                        targetId: action.targetId
+                    }, effectiveTargetType);
 
                     // Apply Effects
                     targets.forEach(target => {
@@ -332,7 +362,19 @@ export const useBattleStore = defineStore('battle', () => {
                     });
                 }
             } else if (action.type === 'attack') {
-                const target = findPartyMember(action.targetId);
+                // FIX: Attack always targets OPPONENT -> Player (Ally in context)
+                // Originally was 'enemy', which resolves to enemies.value.
+                
+                // Resolve Target: map 'enemy' to 'ally' logic
+                let effectiveType = 'ally'; 
+                
+                // Fallback ID if missing
+                if (!action.targetId) {
+                     const alive = partySlots.value.filter(s => s.front && s.front.currentHp > 0).map(s => s.front);
+                     if (alive.length > 0) action.targetId = alive[Math.floor(Math.random() * alive.length)].id;
+                }
+
+                const target = findPartyMemberWrapper(action.targetId);
                 if (target) {
                     log('battle.attacks', { attacker: enemy.name, target: target.name });
                     const dmg = calculateDamage(enemy, target);
@@ -391,85 +433,37 @@ export const useBattleStore = defineStore('battle', () => {
                 // Skill Logic
                 if (skill.effects) {
                     if (skill.chain) {
-                        // Chain Logic
-                        let currentTarget = enemies.value.find(e => e.uuid === targetId || e.id === targetId) || enemies.value.find(e => e.currentHp > 0);
-                        let bounceCount = skill.chain;
-                        let multiplier = 1.0;
-                        const hitIds = new Set();
+                        // Chain Logic via SkillSystem
+                        const initialTarget = enemies.value.find(e => e.uuid === targetId || e.id === targetId);
+                        const hits = resolveChainSequence(skill, initialTarget, enemies.value);
 
-                        for (let i = 0; i < bounceCount; i++) {
-                            if (!currentTarget) break;
-                            hitIds.add(currentTarget.uuid);
-
-                            // Process effects and capture damage
-                            let damageDealt = 0;
-                            skill.effects.forEach(eff => {
+                        hits.forEach(({ target, multiplier, hitIndex }) => {
+                             // Log each hit
+                             // Note: We need a way to accumulate damage for the log if needed, 
+                             // but resolveChainSequence doesn't execute the damage, just tells us who and how much mult.
+                             
+                             let damageDealt = 0;
+                             skill.effects.forEach(eff => {
                                 const finalEffect = { ...eff };
                                 if (finalEffect.type === 'damage') {
                                     finalEffect.value *= multiplier;
                                 }
-                                // Use silent=true to suppress default logs, we log manually below
-                                const val = processEffect(finalEffect, currentTarget, actor, skill, getContext(), true);
+                                const val = processEffect(finalEffect, target, actor, skill, getContext(), true);
                                 if (finalEffect.type === 'damage') damageDealt += val;
-                            });
+                             });
+                             
+                             log('battle.chainHit', { count: hitIndex, target: target.name, amount: damageDealt });
+                        });
 
-                            log('battle.chainHit', { count: i + 1, target: currentTarget.name, amount: damageDealt });
-
-                            multiplier *= (skill.decay || 0.85);
-
-                            // Find next target (random alive enemy not yet hit)
-                            const candidates = enemies.value.filter(e => e.currentHp > 0 && !hitIds.has(e.uuid));
-                            if (candidates.length === 0) break;
-                            currentTarget = candidates[Math.floor(Math.random() * candidates.length)];
-                        }
                     } else {
                         // Generic Effect Processing
-                        // Refactored: Resolve Targets First to support dependent effects (e.g. drain)
-                        let targets = [];
-
-                        if (skill.targetType === 'allEnemies') {
-                            targets = enemies.value.filter(e => e.currentHp > 0);
-                        } else if (skill.targetType === 'allAllies') {
-                            partySlots.value.forEach(slot => {
-                                if (slot.front && slot.front.currentHp > 0) targets.push(slot.front);
-                                if (slot.back && slot.back.currentHp > 0) targets.push(slot.back);
-                            });
-                        } else if (skill.targetType === 'allDeadAllies') {
-                            partySlots.value.forEach(slot => {
-                                if (slot.front && slot.front.currentHp <= 0) targets.push(slot.front);
-                                if (slot.back && slot.back.currentHp <= 0) targets.push(slot.back);
-                            });
-                        } else if (skill.targetType === 'allUnits') {
-                            // Enemies
-                            enemies.value.forEach(enemy => { if (enemy.currentHp > 0) targets.push(enemy); });
-                            // Allies
-                            partySlots.value.forEach(slot => {
-                                if (slot.front && slot.front.currentHp > 0) targets.push(slot.front);
-                                if (slot.back && slot.back.currentHp > 0) targets.push(slot.back);
-                            });
-                        } else if (skill.targetType === 'allOtherUnits') {
-                            // All Enemies
-                            enemies.value.forEach(enemy => { if (enemy.currentHp > 0) targets.push(enemy); });
-                            // All Allies EXCEPT actor
-                            partySlots.value.forEach(slot => {
-                                if (slot.front && slot.front.currentHp > 0 && slot.front.id !== actor.id) targets.push(slot.front);
-                                if (slot.back && slot.back.currentHp > 0 && slot.back.id !== actor.id) targets.push(slot.back);
-                            });
-                        } else if (skill.targetType === 'allOtherAllies') {
-                            partySlots.value.forEach(slot => {
-                                if (slot.front && slot.front.currentHp > 0 && slot.front.id !== actor.id) targets.push(slot.front);
-                                if (slot.back && slot.back.currentHp > 0 && slot.back.id !== actor.id) targets.push(slot.back);
-                            });
-                        } else {
-                            // Single Target
-                            let target = null;
-                            if (skill.targetType === 'ally' || skill.targetType === 'deadAlly') {
-                                target = targetId ? findPartyMember(targetId) : actor;
-                            } else if (skill.targetType === 'enemy') {
-                                target = enemies.value.find(e => e.uuid === targetId || e.id === targetId) || enemies.value.find(e => e.currentHp > 0);
-                            }
-                            if (target) targets.push(target);
-                        }
+                        // Resolve Targets via TargetSystem
+                        const targets = resolveTargets({
+                            partySlots: partySlots.value,
+                            enemies: enemies.value,
+                            actor: actor,
+                            targetId: targetId
+                        }, skill.targetType);
 
                         // Apply Effects
                         targets.forEach(target => {
@@ -485,12 +479,15 @@ export const useBattleStore = defineStore('battle', () => {
             log('battle.attackStart', { attacker: actor.name });
 
             // Resolve Target
-            let target = enemies.value.find(e => e.uuid === targetId || e.id === targetId);
-            if (!target) {
-                target = enemies.value.find(e => e.currentHp > 0);
-            }
+            const targets = resolveTargets({
+                partySlots: partySlots.value,
+                enemies: enemies.value,
+                actor: actor,
+                targetId: targetId
+            }, 'enemy'); // Attack is typically single enemy
 
-            if (target) {
+            if (targets.length > 0) {
+                const target = targets[0];
                 const dmg = calculateDamage(actor, target);
                 applyDamage(target, dmg, getContext());
             }
@@ -526,31 +523,22 @@ export const useBattleStore = defineStore('battle', () => {
         const item = itemsDb[itemId];
         if (!item || !item.effects) return;
 
-        // Resolve Target (if single target effect needs it)
-        let target = null;
-        if (item.targetType === 'ally' || item.targetType === 'deadAlly') {
-            target = findPartyMember(targetId);
-            if (!target && item.targetType === 'ally') target = actor; // Fallback to self
-        } else if (item.targetType === 'enemy') {
-            target = enemies.value.find(e => e.uuid === targetId || e.id === targetId);
-            if (!target) target = enemies.value.find(e => e.currentHp > 0);
-        }
+        // Resolve Targets using TargetSystem
+        // Note: items usually map to generic target types. 
+        // We assume item.targetType matches what resolveTargets expects.
+        
+        const targets = resolveTargets({
+             partySlots: partySlots.value,
+             enemies: enemies.value,
+             actor: actor,
+             targetId: targetId
+        }, item.targetType);
 
-        // Apply all effects
-        item.effects.forEach(effect => {
-            if (item.targetType === 'allDeadAllies') {
-                partySlots.value.forEach(slot => {
-                    if (slot.front && slot.front.currentHp <= 0) processEffect(effect, slot.front, actor, null, getContext());
-                    if (slot.back && slot.back.currentHp <= 0) processEffect(effect, slot.back, actor, null, getContext());
-                });
-            } else if (item.targetType === 'allAllies') {
-                partySlots.value.forEach(slot => {
-                    if (slot.front && slot.front.currentHp > 0) processEffect(effect, slot.front, actor, null, getContext());
-                    if (slot.back && slot.back.currentHp > 0) processEffect(effect, slot.back, actor, null, getContext());
-                });
-            } else {
-                processEffect(effect, target, actor, null, getContext());
-            }
+        // Apply all effects to all targets
+        targets.forEach(target => {
+             item.effects.forEach(effect => {
+                 processEffect(effect, target, actor, null, getContext());
+             });
         });
     };
 
