@@ -13,20 +13,24 @@ export class MainScene {
    * @param {Function} [onEncounter] - Callback when player encounters enemy
    * @param {object} [initialState] - Saved state to restore
    * @param {string} [mapId] - ID of the map to load
+   * @param {string} [entryId] - Entry point ID (e.g. 'default', 'from_village')
+   * @param {Function} [onSwitchMap] - Callback when player enters portal
    */
-  constructor(engine, onEncounter, initialState = null, mapId = 'demo_plains') {
+  constructor(engine, onEncounter, initialState = null, mapId = 'demo_plains', entryId = 'default', onSwitchMap = null) {
     this.engine = engine
     this.onEncounter = onEncounter
+    this.onSwitchMap = onSwitchMap
     this.player = new Player(engine)
 
     // Load Map Data
     this.currentMap = maps[mapId] || maps['demo_plains']
+    this.entryId = entryId
 
     // Map Enemies
     this.mapEnemies = []
 
     if (initialState && initialState.isInitialized) {
-      this._restoreState(initialState)
+      this.restore(initialState)
     } else {
       this._initMap()
     }
@@ -38,30 +42,42 @@ export class MainScene {
   }
 
   _initMap() {
-    // Set Player Spawn
-    if (this.currentMap.spawnPoint) {
-      this.player.pos.x = this.currentMap.spawnPoint.x
-      this.player.pos.y = this.currentMap.spawnPoint.y
+    // Set Player Spawn from Entry Point
+    let spawn = this.currentMap.spawnPoint
+    if (this.currentMap.entryPoints && this.currentMap.entryPoints[this.entryId]) {
+      spawn = this.currentMap.entryPoints[this.entryId]
+    }
+    
+    if (spawn) {
+      this.player.pos.x = spawn.x
+      this.player.pos.y = spawn.y
     }
     this._spawnEnemies()
   }
 
-  _restoreState(state) {
+  serialize() {
+    return {
+      isInitialized: true,
+      playerPos: this.player.toData(),
+      enemies: this.mapEnemies.map(e => e.toData())
+    }
+  }
+
+  restore(state) {
     // Restore Player
     if (state.playerPos) {
-      this.player.pos.x = state.playerPos.x
-      this.player.pos.y = state.playerPos.y
+      this.player.restore(state.playerPos)
     }
 
     // Restore Enemies
     if (state.enemies) {
-      this.mapEnemies = state.enemies.map(data => {
-        return new MapEnemy(this.engine, data.x, data.y, data.battleGroup, {
-          player: this.player,
-          ...data.options
-        })
-      })
+      this.mapEnemies = state.enemies.map(data => 
+        MapEnemy.fromData(this.engine, data, { player: this.player })
+      )
     }
+    
+    // Rebuild entities list if needed (constructor does it too, but good for safety if called later)
+    this.entities = [this.player, ...this.mapEnemies]
   }
 
   _spawnEnemies() {
@@ -112,10 +128,28 @@ export class MainScene {
 
     // Check Collisions
     this._checkEncounters()
+    this._checkPortals()
 
     // 摄像机跟随玩家 (简单示例)
     // this.engine.renderer.setCamera(this.player.pos.x - 400, 0)
     this.engine.renderer.setCamera(0, 0)
+  }
+
+  _checkPortals() {
+    if (!this.onSwitchMap || !this.currentMap.portals) return
+
+    const p = this.player.pos
+    // Simple AABB for portals
+    // Player is a point, portal is a rect
+    for (const portal of this.currentMap.portals) {
+      if (p.x >= portal.x && p.x <= portal.x + portal.w &&
+          p.y >= portal.y && p.y <= portal.y + portal.h) {
+        
+        console.log('Portal Triggered!', portal)
+        this.onSwitchMap(portal.targetMapId, portal.targetEntryId)
+        return
+      }
+    }
   }
 
   _checkEncounters() {
@@ -163,6 +197,14 @@ export class MainScene {
     this.entities.forEach(ent => {
       if (ent.draw) ent.draw(renderer)
     })
+
+    // Draw Portals (Visual Feedback)
+    if (this.currentMap.portals) {
+      this.currentMap.portals.forEach(p => {
+        // Semi-transparent cyan glow
+        renderer.drawRect(p.x, p.y, p.w, p.h, 'rgba(34, 211, 238, 0.3)')
+      })
+    }
   }
 
   /**

@@ -66,61 +66,84 @@ onMounted(async () => {
   // Handle Battle Result (Victory/Flee)
   if (battleStore.lastBattleResult) {
     const { result, enemyUuid } = battleStore.lastBattleResult
-    if (worldStore.enemies) {
-      if (result === 'victory') {
-        worldStore.enemies = worldStore.enemies.filter(e => e.options.uuid !== enemyUuid)
-      } else if (result === 'flee') {
-        const enemy = worldStore.enemies.find(e => e.options.uuid === enemyUuid)
-        if (enemy) {
-          enemy.options.isStunned = true
-          enemy.options.stunnedTimer = 3.0 // 3 seconds stun
-        }
-      }
-    }
+    worldStore.applyBattleResult(result, enemyUuid)
     battleStore.lastBattleResult = null
   }
 
-  // 2. 初始化场景
-  // 传入遇敌回调
-  const initialState = worldStore.isInitialized ? {
-    isInitialized: true,
-    playerPos: worldStore.playerPos,
-    enemies: worldStore.enemies
-  } : null
+  // 2. 初始化场景逻辑封装
+  const initScene = async (mapId, entryId = 'default') => {
+    // 销毁旧场景（如果有）
+    // 目前 MainScene 没有 destroy 方法，GC 会自动回收，但如果有定时器需要清理
+    
+    // 如果是切换地图，需要先加载数据
+    if (mapId !== worldStore.currentMapId) {
+      worldStore.loadMap(mapId)
+    }
 
-  const mainScene = new MainScene(gameEngine, (enemyGroup, enemyUuid) => {
-      console.log('Enter Battle!', enemyGroup)
-      // 1. Pause Engine (optional, but good practice)
-      gameEngine.stop()
+    const initialState = worldStore.currentMapState
 
-      // 2. Init Battle Data
-      battleStore.initBattle(enemyGroup, enemyUuid)
-
-      // 3. Switch UI
-      emit('change-system', 'battle')
-  }, initialState)
-  scene.value = mainScene
-  
-  // 3. 加载资源
-  await mainScene.load()
-
-  // 4. 绑定循环
-  gameEngine.onUpdate = (dt) => {
-    mainScene.update(dt)
-    syncUI() // 同步数据给 Vue
+    const mainScene = new MainScene(
+      gameEngine, 
+      // 战斗回调
+      (enemyGroup, enemyUuid) => {
+        console.log('Enter Battle!', enemyGroup)
+        gameEngine.stop()
+        battleStore.initBattle(enemyGroup, enemyUuid)
+        emit('change-system', 'battle')
+      },
+      // 初始状态
+      initialState,
+      // 地图ID
+      worldStore.currentMapId,
+      // 入口ID
+      entryId,
+      // 切换地图回调
+      async (targetMapId, targetEntryId) => {
+        console.log(`Switching Map: ${targetMapId} @ ${targetEntryId}`)
+        
+        // 1. 保存当前状态
+        worldStore.saveState(scene.value)
+        
+        // 2. 暂停一下（可选转场动画）
+        
+        // 3. 重新加载场景
+        await initScene(targetMapId, targetEntryId)
+      }
+    )
+    
+    scene.value = mainScene
+    
+    // 加载资源
+    await mainScene.load()
+    
+    // 更新循环绑定（闭包引用了新的 mainScene）
+    gameEngine.onUpdate = (dt) => {
+      if (scene.value === mainScene) { // 确保只更新当前场景
+        mainScene.update(dt)
+        syncUI()
+      }
+    }
+    
+    gameEngine.onDraw = (renderer) => {
+      if (scene.value === mainScene) {
+        mainScene.draw(renderer)
+      }
+    }
   }
-  
-  gameEngine.onDraw = (renderer) => {
-    mainScene.draw(renderer)
-  }
+
+  // 初始加载
+  // 如果是从战斗返回，不需要指定 entryId (null)，使用保存的位置
+  // 如果是首次进入，使用默认
+  const startEntryId = worldStore.currentMapState ? null : 'default'
+  await initScene(worldStore.currentMapId, startEntryId)
 
   // 5. 启动
   gameEngine.start()
 })
 
 onUnmounted(() => {
-  if (scene.value && scene.value.player) {
-    worldStore.saveState(scene.value.player, scene.value.mapEnemies)
+  if (scene.value) {
+    worldStore.saveState(scene.value)
   }
 
   if (engine.value) {

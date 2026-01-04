@@ -25,37 +25,39 @@ class WanderState extends EnemyState {
   }
 
   update(dt) {
-    // 1. Check Vision
-    const dist = this.enemy.getDistToPlayer()
-    if (this.enemy.canSeePlayer(dist)) {
-      // 视线内，增加怀疑值
-      // 增加速度：如果有suspicionTime，则按比例增加，否则直接满
-      // 距离越近，增长越快 (可选优化)
-      const fillRate = this.enemy.suspicionTime > 0 ? (1.0 / this.enemy.suspicionTime) : Infinity
-
-      this.enemy.suspicion += fillRate * dt
-
-      // 视觉反馈：变色或进度条由外部 draw 处理
-
-      if (this.enemy.suspicion >= 1.0) {
-        // 怀疑值满，切换状态
-        this.enemy.suspicion = 1.0 // Clamp
-        if (this.enemy.aiType === 'chase') {
-          this.enemy.changeState('chase')
-          return
-        } else if (this.enemy.aiType === 'flee') {
-          this.enemy.changeState('flee')
-          return
+    // 1. Check Vision (Only if NOT pure wanderer)
+    if (this.enemy.aiType !== 'wander') {
+      const dist = this.enemy.getDistToPlayer()
+      if (this.enemy.canSeePlayer(dist)) {
+        // 视线内，增加怀疑值
+        // 增加速度：如果有suspicionTime，则按比例增加，否则直接满
+        // 距离越近，增长越快 (可选优化)
+        const fillRate = this.enemy.suspicionTime > 0 ? (1.0 / this.enemy.suspicionTime) : Infinity
+  
+        this.enemy.suspicion += fillRate * dt
+  
+        // 视觉反馈：变色或进度条由外部 draw 处理
+  
+        if (this.enemy.suspicion >= 1.0) {
+          // 怀疑值满，切换状态
+          this.enemy.suspicion = 1.0 // Clamp
+          if (this.enemy.aiType === 'chase') {
+            this.enemy.changeState('chase')
+            return
+          } else if (this.enemy.aiType === 'flee') {
+            this.enemy.changeState('flee')
+            return
+          }
+        }
+      } else {
+        // 玩家离开视线，缓慢减少怀疑值
+        if (this.enemy.suspicion > 0) {
+          this.enemy.suspicion -= dt * 0.5 // 2秒清空
+          if (this.enemy.suspicion < 0) this.enemy.suspicion = 0
         }
       }
-    } else {
-      // 玩家离开视线，缓慢减少怀疑值
-      if (this.enemy.suspicion > 0) {
-        this.enemy.suspicion -= dt * 0.5 // 2秒清空
-        if (this.enemy.suspicion < 0) this.enemy.suspicion = 0
-      }
     }
-
+    
     // 2. Wander Logic
     // 如果正在产生怀疑（suspicion > 0），是否应该停止移动？
     // 通常敌人疑惑时会停下来观察。
@@ -320,6 +322,40 @@ export class MapEnemy {
     this.changeState('stunned')
   }
 
+  toData() {
+    return {
+      x: this.pos.x,
+      y: this.pos.y,
+      battleGroup: this.battleGroup,
+      options: {
+        uuid: this.uuid,
+        isStunned: this.isStunned,
+        stunnedTimer: this.states.stunned ? this.states.stunned.duration : 0,
+        aiType: this.aiType,
+        visionRadius: this.visionRadius,
+        visionType: this.visionType,
+        // Convert radians back to degrees
+        visionAngle: Math.round(this.visionAngle * (180 / Math.PI)),
+        visionProximity: this.visionProximity,
+        speed: this.speed,
+        minYRatio: this.minYRatio,
+        suspicionTime: this.suspicionTime
+      }
+    }
+  }
+
+  /**
+   * @param {GameEngine} engine 
+   * @param {object} data - Data from toData()
+   * @param {object} [context] - Runtime context (e.g. { player })
+   */
+  static fromData(engine, data, context = {}) {
+    return new MapEnemy(engine, data.x, data.y, data.battleGroup, {
+      ...data.options,
+      ...context
+    })
+  }
+
   getDistToPlayer() {
     if (!this.player) return Infinity
     const dx = this.player.pos.x - this.pos.x
@@ -386,7 +422,7 @@ export class MapEnemy {
     // We can let state handle this, or keep it common. 
     // Let's keep common but check state.
 
-    if (this.currentState !== this.states.stunned) {
+    if (this.currentState !== this.states.stunned && this.aiType !== 'wander') {
       this._drawVision(ctx)
     }
 

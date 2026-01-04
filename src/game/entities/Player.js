@@ -23,6 +23,19 @@ export class Player {
     this._initResources()
   }
 
+  toData() {
+    return {
+      x: this.pos.x,
+      y: this.pos.y
+    }
+  }
+
+  restore(data) {
+    if (!data) return
+    this.pos.x = data.x
+    this.pos.y = data.y
+  }
+
   async _initResources() {
     // 这里可以是具体的资源加载逻辑，或者在 Scene 层统一加载
     // 为了独立性，Player 可以定义自己需要的 Sprite
