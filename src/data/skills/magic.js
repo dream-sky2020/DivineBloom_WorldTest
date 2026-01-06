@@ -180,5 +180,49 @@ export default {
       ja: '敵1体を蘇生し、毒、火傷、麻痺、凍結、出血、ステータス低下を含む地獄の状態異常を20ターン付与する。',
       ko: '적 한 명을 부활시키고 중독, 화상, 마비, 동결, 출혈 및 능력치 감소를 포함한 지옥의 상태이상을 20턴 동안 부여한다.'
     }
+  },
+
+  206: {
+    id: 206,
+    name: {
+      zh: '流星火雨',
+      'zh-TW': '流星火雨',
+      en: 'Meteor Shower',
+      ja: 'メテオシャワー',
+      ko: '메테오 샤워'
+    },
+    type: "skillTypes.active",
+    category: "skillCategories.magic",
+    element: "elements.fire",
+    targetType: "allEnemies",
+    effects: [
+      {
+        type: "damage",
+        value: 0.25, // 单次伤害较低
+        scaling: "mag",
+        element: "elements.fire",
+        minTimes: 4,
+        maxTimes: 8,
+        minOffset: -0.1,
+        maxOffset: 0.1
+      },
+      { type: "applyStatus", status: 2, duration: 3, chance: 0.7 } // Burn
+    ],
+    icon: "icon_fire_rain", // 假设有这个图标，如果没有可以回退到 icon_fire
+    cost: "60 MP",
+    subText: {
+      zh: '全体多段/火焰',
+      'zh-TW': '全體多段/火焰',
+      en: 'AoE Multi-Hit Fire',
+      ja: '全体ランダム炎',
+      ko: '전체 랜덤 화염'
+    },
+    description: {
+      zh: '召唤无数流星轰击战场，对全体敌人造成4到8次随机数量的火焰伤害。',
+      'zh-TW': '召喚無數流星轟擊戰場，對全體敵人造成4到8次隨機數量的火焰傷害。',
+      en: 'Summons a shower of meteors, dealing fire damage to all enemies 4 to 8 times randomly.',
+      ja: '無数の隕石を召喚し、敵全体に4〜8回のランダムな火属性ダメージを与える。',
+      ko: '무수히 많은 유성을 소환하여 적 전체에게 4~8회의 무작위 화염 피해를 입힌다.'
+    }
   }
 }

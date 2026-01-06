@@ -11,7 +11,7 @@ import { calculateDamage, applyDamage, applyHeal } from '@/game/battle/damageSys
 import { processEffect, processTurnStatuses } from '@/game/battle/effectSystem';
 import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/statusSystem';
 import { resolveTargets, findPartyMember } from '@/game/battle/targetSystem';
-import { resolveChainSequence } from '@/game/battle/skillSystem';
+import { resolveChainSequence, resolveRandomSequence } from '@/game/battle/skillSystem';
 import { calculateAtbTick } from '@/game/battle/timeSystem';
 
 export const useBattleStore = defineStore('battle', () => {
@@ -53,7 +53,7 @@ export const useBattleStore = defineStore('battle', () => {
 
     const adjustBoost = (delta) => {
         if (!activeUnit.value || !activeUnit.value.isPlayer) return;
-        
+
         let newLevel;
         if (delta === 'reset') {
             newLevel = 0;
@@ -63,7 +63,7 @@ export const useBattleStore = defineStore('battle', () => {
 
         const maxBoost = 3; // Max BP usage per turn constraint
         const currentEnergy = activeUnit.value.energy || 0;
-        
+
         // Clamp between 0 and min(currentEnergy, maxBoost)
         newLevel = Math.max(0, Math.min(newLevel, currentEnergy, maxBoost));
         boostLevel.value = newLevel;
@@ -392,7 +392,7 @@ export const useBattleStore = defineStore('battle', () => {
             consumedEnergy = boostLevel.value;
             log('battle.energyConsume', { name: actor.name, energy: consumedEnergy });
         }
-        
+
         // Context with energy multiplier
         const actionContext = { ...getContext(), energyMult };
 
@@ -466,6 +466,21 @@ export const useBattleStore = defineStore('battle', () => {
                             });
 
                             log('battle.chainHit', { count: hitIndex, target: target.name, amount: damageDealt });
+                        });
+
+                    } else if (skill.randomHits) {
+                        // Random Sequence Logic
+                        const hits = resolveRandomSequence(skill, enemies.value);
+
+                        hits.forEach(({ target, hitIndex }) => {
+                            let damageDealt = 0;
+                            skill.effects.forEach(eff => {
+                                const val = processEffect(eff, target, actor, skill, actionContext, true);
+                                if (eff.type === 'damage') damageDealt += val;
+                            });
+
+                            // Use specific log key for random hits
+                            log('battle.randomHit', { count: hitIndex, target: target.name, amount: damageDealt });
                         });
 
                     } else {

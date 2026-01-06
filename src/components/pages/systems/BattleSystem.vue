@@ -174,8 +174,8 @@ const selectSkill = (skill) => {
     if (skill.targetType === 'ally' || skill.targetType === 'deadAlly' || skill.targetType === 'enemy') {
         // Requires Selection
         pendingAction.value = { type: 'skill', skillId: skill.id, targetType: skill.targetType };
-    } else if (skill.targetType === 'allDeadAllies' || skill.targetType === 'allAllies' || skill.targetType === 'allUnits' || skill.targetType === 'allOtherUnits' || skill.targetType === 'allOtherAllies') {
-         // Instant Cast (Mass Revive / Mass Heal / Global / Multi-Target)
+    } else if (skill.targetType === 'allDeadAllies' || skill.targetType === 'allAllies' || skill.targetType === 'allUnits' || skill.targetType === 'allOtherUnits' || skill.targetType === 'allOtherAllies' || skill.targetType === 'randomEnemy') {
+         // Instant Cast (Mass Revive / Mass Heal / Global / Multi-Target / Random)
          battleStore.playerAction('skill', skill.id);
     } else {
         // Instant Cast (Self, AoE, etc.)

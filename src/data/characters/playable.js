@@ -12,14 +12,14 @@ export default {
     element: "elements.fire",
     weaponType: "weapons.sword",
     initialStats: {
-      hp: 4500,
+      hp: 14500,
       mp: 50,
       str: 18,
       def: 12,
       mag: 8,
       spd: 10
     },
-    skills: [101, 306],
+    skills: [101, 104, 105, 106, 206, 306],
     description: {
       zh: '擅长使用火焰剑技的战士。',
       'zh-TW': '擅長使用火焰劍技的戰士。',
@@ -41,14 +41,14 @@ export default {
     element: "elements.fire", // Also uses astral energy
     weaponType: "weapons.rifle",
     initialStats: {
-      hp: 3380,
+      hp: 13380,
       mp: 120,
       str: 14,
       def: 10,
       mag: 20,
       spd: 14
     },
-    skills: [102, 306],
+    skills: [102, 105, 106, 206, 306],
     description: {
       zh: '拥有爆炸性火力的远程攻击者。',
       'zh-TW': '擁有爆炸性火力的遠程攻擊者。',
@@ -70,14 +70,14 @@ export default {
     element: "elements.windLight",
     weaponType: "weapons.book",
     initialStats: {
-      hp: 3300,
+      hp: 13300,
       mp: 200,
       str: 6,
       def: 8,
       mag: 25,
       spd: 12
     },
-    skills: [203, 204, 306],
+    skills: [203, 204, 206, 306],
     description: {
       zh: '精通风与光属性魔法的大师。',
       'zh-TW': '精通風與光屬性魔法的大師。',
@@ -99,14 +99,14 @@ export default {
     element: "elements.light",
     weaponType: "weapons.gauntlets",
     initialStats: {
-      hp: 4550,
+      hp: 14550,
       mp: 60,
       str: 22,
       def: 10,
       mag: 5,
       spd: 18
     },
-    skills: [101, 103, 302, 305, 306],
+    skills: [101, 103, 104, 105, 106, 302, 305, 306],
     description: {
       zh: '受到光之祝福的近战格斗家。',
       'zh-TW': '受到光之祝福的近戰格鬥家。',
@@ -128,14 +128,14 @@ export default {
     element: "elements.blood",
     weaponType: "weapons.spear",
     initialStats: {
-      hp: 5600,
+      hp: 15600,
       mp: 80,
       str: 24,
       def: 14,
       mag: 5,
       spd: 16
     },
-    skills: [101, 103, 306, 401],
+    skills: [101, 103, 104, 105, 106, 206, 306, 401],
     description: {
       zh: '为赎罪而战的堂吉诃德家族末裔，能够使用“绯红日花”的力量。',
       'zh-TW': '為贖罪而戰的堂吉訶德家族末裔，能夠使用“緋紅日花”的力量。',
@@ -157,14 +157,14 @@ export default {
     element: "elements.void",
     weaponType: "weapons.jade",
     initialStats: {
-      hp: 3400,
+      hp: 13400,
       mp: 150,
       str: 10,
       def: 10,
       mag: 18,
       spd: 12
     },
-    skills: [101, 102, 103, 201, 202, 203, 204, 301, 302, 303, 304, 305, 306, 401, 402],
+    skills: [101, 102, 103, 104, 105, 106, 201, 202, 203, 204, 206, 301, 302, 303, 304, 305, 306, 401, 402],
     description: {
       zh: '通过通灵宝玉重获新生的少年，拥有兼容一切力量的体质。',
       'zh-TW': '通過通靈寶玉重獲新生的少年，擁有兼容一切力量的體質。',
@@ -186,14 +186,14 @@ export default {
     element: "elements.time",
     weaponType: "weapons.scroll",
     initialStats: {
-      hp: 3350,
+      hp: 13350,
       mp: 220,
       str: 5,
       def: 8,
       mag: 26,
       spd: 15
     },
-    skills: [103, 201, 202, 203, 204, 301, 303, 306,],
+    skills: [103, 104, 105, 106, 201, 202, 203, 204, 206, 301, 303, 306,],
     description: {
       zh: '“虚假生命”的守护者，手持轮回书卷，守护着空心人的幸福。',
       'zh-TW': '“虛假生命”的守護者，手持輪迴書卷，守護著空心人的幸福。',

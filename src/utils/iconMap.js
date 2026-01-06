@@ -35,6 +35,7 @@ export const iconMap = {
   icon_slash: "⚔️", // 可以复用 icon_sword，但区分语意更好
   icon_impact: "💥",
   icon_fire: "🔥",
+  icon_fire_rain: "☄️",
   icon_ice: "❄️",
   icon_lightning: "⚡",
   icon_heal: "💚",

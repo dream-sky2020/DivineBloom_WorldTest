@@ -146,6 +146,16 @@ export const resolveTargets = ({ partySlots, enemies, actor, targetId }, targetT
             targets.push(actor);
             break;
 
+        case 'randomEnemy':
+            {
+                const alive = getAlive(oppTeamUnits);
+                if (alive.length > 0) {
+                    const r = Math.floor(Math.random() * alive.length);
+                    targets.push(alive[r]);
+                }
+            }
+            break;
+
         // --- Global Targeting ---
         case 'allUnits':
             targets.push(...getAlive(myTeamUnits), ...getAlive(oppTeamUnits));

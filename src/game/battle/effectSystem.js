@@ -4,7 +4,7 @@ import { applyStatus, removeStatus } from './statusSystem';
 
 const applyRandomOffset = (value, effect, logName = '') => {
     if (!effect) return value;
-    
+
     const hasMin = typeof effect.minOffset === 'number';
     const hasMax = typeof effect.maxOffset === 'number';
 
@@ -21,8 +21,8 @@ const applyRandomOffset = (value, effect, logName = '') => {
         console.error(`Skill Config Error: maxOffset (${maxOffset}) must be greater than 0 when minOffset is undefined.`, logName);
         return value;
     } else if (minOffset >= maxOffset) {
-         console.error(`Skill Config Error: minOffset (${minOffset}) must be less than maxOffset (${maxOffset})`, logName);
-         return value;
+        console.error(`Skill Config Error: minOffset (${minOffset}) must be less than maxOffset (${maxOffset})`, logName);
+        return value;
     }
 
     const range = maxOffset - minOffset;
@@ -30,10 +30,8 @@ const applyRandomOffset = (value, effect, logName = '') => {
     return Math.floor(value * (1.0 + offset));
 };
 
-export const processEffect = (effect, target, actor, skill = null, context, silent = false, previousResult = 0) => {
+const _executeSingleEffect = (effect, target, actor, skill, context, silent, previousResult) => {
     const { log, partySlots, energyMult } = context;
-
-    if (!effect) return 0;
 
     // Use energy multiplier from context if available, default to 1
     const multiplier = energyMult || 1.0;
@@ -152,12 +150,12 @@ export const processEffect = (effect, target, actor, skill = null, context, sile
                     if (target.statusEffects) {
                         const idsToRemove = [];
                         target.statusEffects.forEach(status => {
-                             const statusDef = statusDb[status.id];
-                             if (statusDef && statusDef.type === 'statusTypes.debuff') {
-                                 idsToRemove.push(status.id);
-                             }
+                            const statusDef = statusDb[status.id];
+                            if (statusDef && statusDef.type === 'statusTypes.debuff') {
+                                idsToRemove.push(status.id);
+                            }
                         });
-                        
+
                         idsToRemove.forEach(id => {
                             removeStatus(target, id, context, silent);
                         });
@@ -207,6 +205,30 @@ export const processEffect = (effect, target, actor, skill = null, context, sile
     return 0;
 };
 
+export const processEffect = (effect, target, actor, skill = null, context, silent = false, previousResult = 0) => {
+    if (!effect) return 0;
+
+    let times = effect.times || 1;
+
+    // Handle random range (minTimes/maxTimes)
+    if (effect.minTimes && effect.maxTimes && effect.maxTimes >= effect.minTimes) {
+        times = Math.floor(Math.random() * (effect.maxTimes - effect.minTimes + 1)) + effect.minTimes;
+    }
+
+    let totalResult = 0;
+
+    for (let i = 0; i < times; i++) {
+        // Accumulate result (e.g. total damage)
+        totalResult += _executeSingleEffect(effect, target, actor, skill, context, silent, previousResult);
+
+        // Note: previousResult for the NEXT iteration is not updated here. 
+        // Typically multi-hit skills apply the same logic each time.
+        // If we needed chaining (e.g. each hit increases next dmg), we'd need more complex logic.
+    }
+
+    return totalResult;
+};
+
 export const processTurnStatuses = (character, context) => {
     const { log } = context;
 
@@ -243,4 +265,3 @@ export const processTurnStatuses = (character, context) => {
         }
     }
 };
-
