@@ -14,7 +14,7 @@ export default {
     element: "elements.fire",
     targetType: "enemy",
     effects: [
-      { type: "damage", value: 1.3, scaling: "mag", element: "elements.fire" }
+      { type: "damage", value: 1.3, scaling: "mag", element: "elements.fire", minOffset: -0.1, maxOffset: 0.1 }
     ],
     icon: "icon_fire",
     cost: "10 MP",
@@ -47,7 +47,7 @@ export default {
     element: "elements.ice",
     targetType: "enemy",
     effects: [
-      { type: "damage", value: 1.2, scaling: "mag", element: "elements.ice" },
+      { type: "damage", value: 1.2, scaling: "mag", element: "elements.ice", minOffset: -0.1, maxOffset: 0.1 },
       { type: "applyStatus", status: 3, chance: 0.2, duration: 1 }, // Freeze
       { type: "applyStatus", status: 6, chance: 0.3, duration: 3 }  // Slow
     ],
@@ -85,7 +85,7 @@ export default {
     chain: 3, // Bounce 3 times
     decay: 0.85, // 85% damage per bounce
     effects: [
-      { type: "damage", value: 1.1, scaling: "mag", element: "elements.lightning" },
+      { type: "damage", value: 1.1, scaling: "mag", element: "elements.lightning", minOffset: -0.1, maxOffset: 0.1 },
       { type: "applyStatus", status: 4, chance: 0.3, duration: 2 }
     ],
     icon: "icon_lightning",
@@ -119,7 +119,7 @@ export default {
     element: "elements.water",
     targetType: "allUnits",
     effects: [
-      { type: "plague_rain", value: 200 }, // Heal effect
+      { type: "plague_rain", value: 200, minOffset: -0.1, maxOffset: 0.1 }, // Heal effect
       { type: "applyStatus", status: 1, duration: 3, chance: 0.5 },   // Poison
       { type: "applyStatus", status: 101, duration: 3, chance: 0.5 }  // Regen
     ],
@@ -182,4 +182,3 @@ export default {
     }
   }
 }
-

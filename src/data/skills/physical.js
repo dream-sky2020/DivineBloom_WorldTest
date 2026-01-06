@@ -13,7 +13,7 @@ export default {
         category: "skillCategories.physical",
         targetType: "enemy",
         effects: [
-            { type: "damage", value: 1.5, scaling: "atk" },
+            { type: "damage", value: 1.5, scaling: "atk", minOffset: -0.1, maxOffset: 0.1 },
             { type: "applyStatus", status: 5, chance: 0.3, duration: 3 }
         ],
         icon: "icon_sword",
@@ -46,7 +46,7 @@ export default {
         category: "skillCategories.physical",
         targetType: "allEnemies",
         effects: [
-            { type: "damage", value: 0.8, scaling: "atk" },
+            { type: "damage", value: 0.8, scaling: "atk", minOffset: -0.1, maxOffset: 0.1 },
             { type: "applyStatus", status: 5, chance: 0.2, duration: 2 }
         ],
         icon: "icon_impact",
@@ -79,7 +79,7 @@ export default {
         category: "skillCategories.physical",
         targetType: "allOtherUnits",
         effects: [
-            { type: "damage", value: 1.2, scaling: "atk" },
+            { type: "damage", value: 1.2, scaling: "atk", minOffset: -0.1, maxOffset: 0.1 },
             { type: "applyStatus", status: 1, chance: 0.4, duration: 3 }, // Poison
             { type: "applyStatus", status: 6, chance: 0.4, duration: 3 }, // Slow
             { type: "applyStatus", status: 5, chance: 0.4, duration: 3 }  // Bleed
@@ -102,4 +102,3 @@ export default {
         }
     }
 }
-

@@ -83,9 +83,33 @@ export const calculateDamage = (attacker, defender, skill = null, effect = null,
         rawDmg *= 0.5;
     }
 
-    // Add some randomness +/- 10%
-    const variance = (Math.random() * 0.2) + 0.9;
-    return Math.floor(rawDmg * variance * 10); // Adjusted scaling
+    // Add some randomness based on data config
+    let finalMultiplier = 1.0;
+    
+    // Check if minOffset or maxOffset are defined
+    const hasMin = effect && typeof effect.minOffset === 'number';
+    const hasMax = effect && typeof effect.maxOffset === 'number';
+
+    if (hasMin || hasMax) {
+        const minOffset = hasMin ? effect.minOffset : 0;
+        const maxOffset = hasMax ? effect.maxOffset : 0;
+
+        // Validation Checks
+        if (hasMin && !hasMax && minOffset >= 0) {
+            console.error(`Skill Config Error: minOffset (${minOffset}) must be less than 0 when maxOffset is undefined.`);
+        } else if (!hasMin && hasMax && maxOffset <= 0) {
+            console.error(`Skill Config Error: maxOffset (${maxOffset}) must be greater than 0 when minOffset is undefined.`);
+        } else if (minOffset >= maxOffset) {
+             console.error(`Skill Config Error: minOffset (${minOffset}) must be less than maxOffset (${maxOffset})`);
+        } else {
+            // Calculate Variance
+            const range = maxOffset - minOffset;
+            const offset = minOffset + Math.random() * range;
+            finalMultiplier = 1.0 + offset;
+        }
+    }
+
+    return Math.floor(rawDmg * finalMultiplier * 10); // Adjusted scaling
 };
 
 /**

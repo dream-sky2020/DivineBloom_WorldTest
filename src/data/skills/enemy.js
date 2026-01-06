@@ -9,7 +9,7 @@ export default {
     element: "elements.lightning",
     targetType: "single", // AI Logic overrides this usually, but good to have
     effects: [
-      { type: "damage", value: 1.6, scaling: "mag", element: "elements.lightning" },
+      { type: "damage", value: 1.6, scaling: "mag", element: "elements.lightning", minOffset: -0.7 },
       { type: "applyStatus", status: 4, duration: 2, chance: 1.0 } // Paralysis
     ]
   },
@@ -21,9 +21,9 @@ export default {
     element: "elements.ice",
     targetType: "allEnemies",
     effects: [
-      { type: "damage", value: 1.3, scaling: "mag", element: "elements.ice" },
+      { type: "damage", value: 1.3, scaling: "mag", element: "elements.ice", minOffset: -0.7 },
       { type: "applyStatus", status: 3, duration: 1, chance: 0.3 }, // Freeze
-      { type: "applyStatus", status: 6, duration: 3, chance: 0.5 }  // Slow
+      { type: "applyStatus", status: 6, duration: 3, chance: 0.1 }  // Slow
     ]
   },
 
@@ -35,8 +35,8 @@ export default {
     category: "skillCategories.physical",
     targetType: "single",
     effects: [
-      { type: "damage", value: 1.5, scaling: "str" },
-      { type: "applyStatus", status: 5, duration: 3 } // Bleed
+      { type: "damage", value: 1.5, scaling: "str", minOffset: -0.5 },
+      { type: "applyStatus", status: 5, chance: 0.3,duration: 3 } // Bleed
     ]
   },
   1004: {
@@ -46,8 +46,8 @@ export default {
     category: "skillCategories.physical",
     targetType: "allEnemies",
     effects: [
-      { type: "damage", value: 1.0, scaling: "str" },
-      { type: "applyStatus", status: 5, duration: 3 } // Bleed
+      { type: "damage", value: 1.0, scaling: "str", minOffset: -0.7 },
+      { type: "applyStatus", status: 5, chance: 0.3, duration: 3 } // Bleed
     ]
   },
 
@@ -60,8 +60,8 @@ export default {
     element: "elements.fire",
     targetType: "single",
     effects: [
-      { type: "damage", value: 1.8, scaling: "str", element: "elements.fire" },
-      { type: "applyStatus", status: 2, duration: 3 } // Burn
+      { type: "damage", value: 1.8, scaling: "str", element: "elements.fire", minOffset: -0.5 },
+      { type: "applyStatus", status: 2, chance: 0.3, duration: 3 } // Burn
     ]
   },
   1006: {
@@ -72,8 +72,8 @@ export default {
     element: "elements.fire",
     targetType: "allEnemies",
     effects: [
-      { type: "damage", value: 1.2, scaling: "mag", element: "elements.fire" },
-      { type: "applyStatus", status: 2, duration: 3 } // Burn
+      { type: "damage", value: 1.2, scaling: "mag", element: "elements.fire", minOffset: -0.7 },
+      { type: "applyStatus", status: 2, chance: 0.3, duration: 3 } // Burn
     ]
   },
 
@@ -85,7 +85,7 @@ export default {
     category: "skillCategories.physical",
     targetType: "single",
     effects: [
-      { type: "damage", value: 1.1, scaling: "str" },
+      { type: "damage", value: 1.1, scaling: "str", minOffset: -0.5 },
       { type: "applyStatus", status: 6, chance: 0.3, duration: 2 } // Slow
     ],
     icon: "icon_slime",
@@ -98,8 +98,8 @@ export default {
     category: "skillCategories.physical",
     targetType: "single",
     effects: [
-      { type: "damage", value: 1.2, scaling: "str" },
-      { type: "heal", value: 0.5, scaling: "damage_dealt", target: "self" } 
+      { type: "damage", value: 1.2, scaling: "str", minOffset: -0.5 },
+      { type: "heal", value: 0.5, scaling: "damage_dealt", target: "self", minOffset: -0.5 } 
       // Drain logic handled in effects? Or just simple heal
       // For now, let's just do damage + self heal separately if system doesn't support drain.
       // Assuming simple damage for now, or maybe add drain type later.
@@ -116,7 +116,7 @@ export default {
     category: "skillCategories.physical",
     targetType: "single",
     effects: [
-      { type: "damage", value: 1.3, scaling: "str" },
+      { type: "damage", value: 1.3, scaling: "str", minOffset: -0.5 },
       { type: "applyStatus", status: 5, chance: 0.4, duration: 2 } // Bleed
     ],
     icon: "icon_claw",
@@ -129,11 +129,10 @@ export default {
     category: "skillCategories.physical",
     targetType: "single",
     effects: [
-      { type: "damage", value: 1.0, scaling: "def" }, // Scales with Def
+      { type: "damage", value: 1.0, scaling: "def", minOffset: -0.5 }, // Scales with Def
       { type: "applyStatus", status: 3, chance: 0.3, duration: 1 } // Freeze (used as Stun)
     ],
     icon: "icon_shield_bash",
     cost: "10 MP"
   }
 }
-

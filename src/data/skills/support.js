@@ -13,7 +13,7 @@ export default {
         category: "skillCategories.support",
         targetType: "ally",
         effects: [
-            { type: "heal", value: 500 }
+            { type: "heal", value: 500, minOffset: -0.1, maxOffset: 0.1 }
         ],
         icon: "icon_heal",
         cost: "20 MP",
@@ -142,7 +142,7 @@ export default {
         category: "skillCategories.support",
         targetType: "allAllies",
         effects: [
-            { type: "heal_all", value: 500 }
+            { type: "heal_all", value: 500, minOffset: -0.1, maxOffset: 0.1 }
         ],
         icon: "icon_heal_all",
         cost: "45 MP",
@@ -194,4 +194,3 @@ export default {
         }
     }
 }
-

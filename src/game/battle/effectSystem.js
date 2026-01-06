@@ -2,6 +2,34 @@ import { statusDb } from '@/data/status';
 import { calculateDamage, applyDamage, applyHeal } from './damageSystem';
 import { applyStatus, removeStatus } from './statusSystem';
 
+const applyRandomOffset = (value, effect, logName = '') => {
+    if (!effect) return value;
+    
+    const hasMin = typeof effect.minOffset === 'number';
+    const hasMax = typeof effect.maxOffset === 'number';
+
+    if (!hasMin && !hasMax) return value;
+
+    const minOffset = hasMin ? effect.minOffset : 0;
+    const maxOffset = hasMax ? effect.maxOffset : 0;
+
+    // Validation Checks
+    if (hasMin && !hasMax && minOffset >= 0) {
+        console.error(`Skill Config Error: minOffset (${minOffset}) must be less than 0 when maxOffset is undefined.`, logName);
+        return value;
+    } else if (!hasMin && hasMax && maxOffset <= 0) {
+        console.error(`Skill Config Error: maxOffset (${maxOffset}) must be greater than 0 when minOffset is undefined.`, logName);
+        return value;
+    } else if (minOffset >= maxOffset) {
+         console.error(`Skill Config Error: minOffset (${minOffset}) must be less than maxOffset (${maxOffset})`, logName);
+         return value;
+    }
+
+    const range = maxOffset - minOffset;
+    const offset = minOffset + Math.random() * range;
+    return Math.floor(value * (1.0 + offset));
+};
+
 export const processEffect = (effect, target, actor, skill = null, context, silent = false, previousResult = 0) => {
     const { log, partySlots, energyMult } = context;
 
@@ -27,6 +55,9 @@ export const processEffect = (effect, target, actor, skill = null, context, sile
                 }
                 // Apply Energy Multiplier to Heals too? Usually yes for "Effectiveness"
                 amount *= multiplier;
+
+                // Apply Random Variance
+                amount = applyRandomOffset(amount, effect);
 
                 return applyHeal(target, amount, context, silent);
             }
@@ -82,6 +113,7 @@ export const processEffect = (effect, target, actor, skill = null, context, sile
                     // Fixed damage
                     dmg = Number(effect.value) || 0;
                     dmg *= multiplier; // Apply multiplier
+                    dmg = applyRandomOffset(dmg, effect);
                 }
 
                 // Final Safety Check
@@ -164,6 +196,7 @@ export const processEffect = (effect, target, actor, skill = null, context, sile
                 if (effect.scaling === 'maxHp') {
                     amount = Math.floor(target.maxHp * amount);
                 }
+                amount = applyRandomOffset(amount, effect);
 
                 return applyHeal(target, amount, context, silent);
             }
