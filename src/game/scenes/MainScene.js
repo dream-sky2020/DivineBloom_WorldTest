@@ -1,5 +1,6 @@
 import { Player } from '@/game/entities/Player'
 import { MapEnemy } from '@/game/entities/MapEnemy'
+import { NPC } from '@/game/entities/NPC'
 import { clearWorld, world } from '@/game/ecs/world'
 import { MovementSystem } from '@/game/ecs/systems/MovementSystem'
 import { InputSystem } from '@/game/ecs/systems/InputSystem'
@@ -7,7 +8,8 @@ import { ConstraintSystem } from '@/game/ecs/systems/ConstraintSystem'
 import { RenderSystem } from '@/game/ecs/systems/RenderSystem'
 import { EnemyAISystem } from '@/game/ecs/systems/EnemyAISystem'
 import { InteractionSystem } from '@/game/ecs/systems/InteractionSystem'
-// import { maps } from '@/data/maps' // No longer needed directly here
+import { getAssetPath, PlayerConfig } from '@/data/assets'
+import { Visuals } from '@/data/visuals'
 
 /**
  * @typedef {import('@/game/GameEngine').GameEngine} GameEngine
@@ -17,20 +19,24 @@ import { InteractionSystem } from '@/game/ecs/systems/InteractionSystem'
 export class MainScene {
   /**
    * @param {GameEngine} engine 
-   * @param {Function} [onEncounter] - Callback when player encounters enemy
-   * @param {object} [initialState] - Saved state to restore
-   * @param {object} [mapData] - Loaded map data object (NOT ID string)
-   * @param {string} [entryId] - Entry point ID (e.g. 'default', 'from_village')
-   * @param {Function} [onSwitchMap] - Callback when player enters portal
+   * @param {Function} [onEncounter]
+   * @param {object} [initialState]
+   * @param {object} [mapData]
+   * @param {string} [entryId]
+   * @param {Function} [onSwitchMap]
+   * @param {Function} [onInteract]
    */
-  constructor(engine, onEncounter, initialState = null, mapData = null, entryId = 'default', onSwitchMap = null) {
+  constructor(engine, onEncounter, initialState = null, mapData = null, entryId = 'default', onSwitchMap = null, onInteract = null) {
     // Clear ECS world on scene init to prevent stale entities
     clearWorld()
 
     this.engine = engine
     this.onEncounter = onEncounter
     this.onSwitchMap = onSwitchMap
-    this.player = new Player(engine)
+    this.onInteract = onInteract
+
+    // Pass player config from assets
+    this.player = new Player(engine, PlayerConfig)
 
     // Load Map Data
     this.currentMap = mapData || {} // Fallback empty
@@ -38,11 +44,16 @@ export class MainScene {
 
     // Map Enemies
     this.mapEnemies = []
+    // Map NPCs
+    this.npcs = []
 
     // Static Cache Layer
     this.staticLayer = null
     this.lastCacheWidth = 0
     this.lastCacheHeight = 0
+
+    // Time delta for animation
+    this.lastDt = 0.016
 
     if (initialState && initialState.isInitialized) {
       this.restore(initialState)
@@ -51,7 +62,7 @@ export class MainScene {
     }
 
     // 统一实体列表
-    this.entities = [this.player, ...this.mapEnemies]
+    this.entities = [this.player, ...this.mapEnemies, ...this.npcs]
 
     this.isLoaded = false
   }
@@ -68,6 +79,7 @@ export class MainScene {
       this.player.pos.y = spawn.y
     }
     this._spawnEnemies()
+    this._spawnNPCs()
   }
 
   serialize() {
@@ -94,8 +106,11 @@ export class MainScene {
       )
     }
 
-    // Rebuild entities list if needed (constructor does it too, but good for safety if called later)
-    this.entities = [this.player, ...this.mapEnemies]
+    // Restore NPCs (Respawn from map data as they are static for now)
+    this._spawnNPCs()
+
+    // Rebuild entities list if needed
+    this.entities = [this.player, ...this.mapEnemies, ...this.npcs]
   }
 
   _spawnEnemies() {
@@ -127,10 +142,53 @@ export class MainScene {
     })
   }
 
+  _spawnNPCs() {
+    this.npcs.forEach(n => n.destroy && n.destroy())
+    this.npcs = []
+    if (!this.currentMap || !this.currentMap.npcs) return
+
+    this.currentMap.npcs.forEach(data => {
+      const npc = new NPC(this.engine, data.x, data.y, data)
+      this.npcs.push(npc)
+    })
+  }
+
   async load() {
-    // 统一加载资源
-    const sheetUrl = this._buildTinySpriteSheetDataURL()
-    await this.engine.textures.load('sheet', sheetUrl)
+    // 使用新的 AssetManager 批量加载
+    // 我们不需要手动一个个 load('player', path) 了
+    // 而是收集当前场景所有 Entity 用到的 visualId
+
+    const requiredVisuals = new Set()
+
+    // 1. Player
+    requiredVisuals.add('hero')
+
+    // 2. NPCs
+    if (this.currentMap && this.currentMap.npcs) {
+      this.currentMap.npcs.forEach(n => {
+        // 假设 map 数据里写的是 spriteId='npc_guide'，这个 key 正好也是 Visuals 的 key
+        // 为了兼容旧代码，如果没有 spriteId 默认用 'npc_guide'
+        const vid = n.spriteId || 'npc_guide'
+        requiredVisuals.add(vid)
+      })
+    }
+
+    // 3. Enemies
+    // 默认 MapEnemy 使用 'enemy_slime'，除非有覆盖
+    requiredVisuals.add('enemy_slime')
+
+    // 4. Map Background
+    if (this.currentMap.backgroundId) {
+      // 背景图作为普通 Texture 加载
+      const bgPath = getAssetPath(this.currentMap.backgroundId)
+      if (bgPath) {
+        await this.engine.assets.loadTexture(this.currentMap.backgroundId)
+      }
+    }
+
+    // 执行批量加载
+    console.log('Preloading visuals:', Array.from(requiredVisuals))
+    await this.engine.assets.preloadVisuals(Array.from(requiredVisuals), Visuals)
 
     // Pre-render background
     this._refreshStaticLayer()
@@ -143,6 +201,7 @@ export class MainScene {
    */
   update(dt) {
     if (!this.isLoaded) return
+    this.lastDt = dt
 
     // 1. Check Resize & Update Bounds
     if (this.lastCacheWidth !== this.engine.width || this.lastCacheHeight !== this.engine.height) {
@@ -157,13 +216,14 @@ export class MainScene {
 
     // Check Collisions / Interactions
     InteractionSystem.update({
+      input: this.engine.input,
       onEncounter: this.onEncounter,
       onSwitchMap: this.onSwitchMap,
+      onInteract: this.onInteract,
       portals: this.currentMap.portals
     })
 
     // 摄像机跟随玩家 (简单示例)
-    // this.engine.renderer.setCamera(this.player.pos.x - 400, 0)
     this.engine.renderer.setCamera(0, 0)
   }
 
@@ -199,11 +259,8 @@ export class MainScene {
 
     // 2. 绘制所有实体 (ECS RenderSystem)
     // RenderSystem handles Y-sorting and drawing
-    RenderSystem.update(renderer)
-
-    // Note: Entities with 'render' component are drawn by RenderSystem.
-    // Legacy entities (if any) without 'render' but with 'draw' would be skipped here unless we keep the loop.
-    // For now, Player and MapEnemy are migrated, so we assume all entities are in ECS.
+    // 我们把 update(dt) 获取到的时间传给 RenderSystem 用于播放动画
+    RenderSystem.update(renderer, this.lastDt)
 
     // Draw Portals (Visual Feedback)
     if (this.currentMap.portals) {
@@ -269,20 +326,4 @@ export class MainScene {
     this.lastCacheWidth = width
     this.lastCacheHeight = height
   }
-
-  // 辅助：生成资源 URL
-  _buildTinySpriteSheetDataURL() {
-    const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-      <rect width="32" height="32" fill="none"/>
-      <ellipse cx="16" cy="26" rx="9" ry="4" fill="rgba(0,0,0,0.25)"/>
-      <circle cx="16" cy="10" r="6" fill="#0f172a"/>
-      <rect x="11" y="16" width="10" height="10" rx="2" fill="#ef4444"/>
-      <rect x="9" y="20" width="4" height="7" rx="1" fill="#ef4444"/>
-      <rect x="19" y="20" width="4" height="7" rx="1" fill="#ef4444"/>
-    </svg>`
-    const encoded = encodeURIComponent(svg)
-    return `data:image/svg+xml;charset=utf-8,${encoded}`
-  }
 }
-

@@ -5,6 +5,7 @@ import zhTW from './locales/zh-TW'
 import ja from './locales/ja'
 import ko from './locales/ko'
 import ui from './locales/ui'
+import dialogue from './locales/dialogue'
 
 // Helper to transform "Key -> Locale -> Text" to "Locale -> Key -> Text"
 function transformUiToMessages(uiData) {
@@ -15,13 +16,13 @@ function transformUiToMessages(uiData) {
     for (const key in currentObj) {
       const value = currentObj[key];
       // Check if this value is a translation leaf (contains locale keys)
-      const isLeaf = typeof value === 'object' && value !== null && 
+      const isLeaf = typeof value === 'object' && value !== null &&
         supportedLocales.some(locale => locale in value);
 
       if (isLeaf) {
         for (const locale in value) {
           if (!messages[locale]) messages[locale] = {};
-          
+
           let currentLevel = messages[locale];
           for (let i = 0; i < path.length; i++) {
             const pathKey = path[i];
@@ -55,15 +56,20 @@ function deepMerge(target, source) {
 }
 
 const uiMessages = transformUiToMessages(ui);
+// Transform dialogue messages separately but with 'dialogue' prefix context if needed, 
+// or just merge them. Assuming dialogue structure is similar to ui (Key -> Locale -> Text).
+// But wait, the file we moved was exporting `dialogue: { ...keys }` ?
+// Let's check the file content structure.
+const dialogueMessages = transformUiToMessages({ dialogue: dialogue });
 
 // Merge existing locale files with the new ui messages
 // We start with the existing files as base, and overwrite/extend with ui.js content
 const messages = {
-  en: deepMerge(en, uiMessages.en),
-  zh: deepMerge(zh, uiMessages.zh),
-  'zh-TW': deepMerge(zhTW, uiMessages['zh-TW']),
-  ja: deepMerge(ja, uiMessages.ja),
-  ko: deepMerge(ko, uiMessages.ko)
+  en: deepMerge(deepMerge(en, uiMessages.en), dialogueMessages.en),
+  zh: deepMerge(deepMerge(zh, uiMessages.zh), dialogueMessages.zh),
+  'zh-TW': deepMerge(deepMerge(zhTW, uiMessages['zh-TW']), dialogueMessages['zh-TW']),
+  ja: deepMerge(deepMerge(ja, uiMessages.ja), dialogueMessages.ja),
+  ko: deepMerge(deepMerge(ko, uiMessages.ko), dialogueMessages.ko)
 };
 
 const i18n = createI18n({

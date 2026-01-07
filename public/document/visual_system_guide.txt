@@ -1,0 +1,135 @@
+================================================================================
+                              视觉系统架构与开发指南
+================================================================================
+
+1. 核心架构概述
+--------------------------------------------------------------------------------
+本项目采用 "数据驱动 (Data-Driven)" 的 ECS 渲染架构。
+显示逻辑 (RenderSystem) 与 游戏逻辑 (Entities) 彻底解耦。
+
+- 实体 (Entity): 不再直接持有 Image 对象或 Canvas 绘图代码，只持有数据组件 (visual, aiConfig)。
+- 资源 (AssetManager): 统一管理图片的加载、缓存和失败处理。
+- 数据 (Visuals.js): 集中定义所有角色的图集切片、动画帧、锚点等视觉参数。
+- 渲染 (RenderSystem): 无状态的渲染管线，负责读取组件数据并绘制到屏幕。
+
+2. 模块组成
+--------------------------------------------------------------------------------
+
+[A] 数据定义层
+    - src/data/assets.js     -> 资源注册表 (Key -> 文件路径)
+    - src/data/visuals.js    -> 视觉定义表 (VisualID -> 切片/动画配置)
+
+[B] 资源管理层
+    - src/game/managers/AssetManager.js -> 负责加载图片、预加载场景资源
+
+[C] 逻辑组件层 (ECS)
+    - visual 组件: { id: 'hero', state: 'walk', frameIndex: 0, timer: 0 }
+    - aiConfig 组件: 定义视野半径、角度等 (用于渲染视野)
+    - aiState 组件: 定义当前 AI 状态 (chase, stunned) (用于渲染 UI 图标)
+
+[D] 渲染管线层 (RenderSystem)
+    - src/game/ecs/systems/RenderSystem.js -> 主渲染循环，分层绘制
+    - src/game/utils/renderUtils.js        -> 纯函数绘图工具库 (绘制扇形视野、惊叹号等)
+
+3. 渲染管线流程 (Render Pipeline)
+--------------------------------------------------------------------------------
+RenderSystem.update(renderer, dt) 的执行流程如下：
+
+[阶段 1: 准备]
+    1. 收集所有带有 visual 组件的实体。
+    2. 更新所有实体的动画状态 (累加 dt -> 切换 frameIndex)。
+    3. 按 Y 轴坐标对实体进行排序 (Y-Sorting)，确保遮挡关系正确。
+
+[阶段 2: 绘制底层 (Layer 1 - Bottom)]
+    - 遍历实体，检查 aiConfig 组件。
+    - 调用 drawVision() 绘制敌人视野扇形/圆形。
+    - 这一层通常绘制在角色脚下（地面上）。
+
+[阶段 3: 绘制实体层 (Layer 2 - Entity)]
+    - 遍历排序后的实体。
+    - 读取 visual.id -> 查表 Visuals.js -> 获取当前帧坐标 (sx, sy, sw, sh)。
+    - 调用 renderer.drawSprite() 绘制角色/物体本身。
+
+[阶段 4: 绘制顶层 (Layer 3 - UI/Overlay)]
+    - 遍历实体，检查 aiState 组件。
+    - 若 state == 'chase' -> 调用 drawAlert() (惊叹号)。
+    - 若 state == 'stunned' -> 调用 drawStunned() (眩晕星星+读条)。
+    - 若 suspicion > 0 -> 调用 drawSuspicion() (问号+进度条)。
+    - 这一层绘制在所有物体之上，不参与 Y 排序遮挡。
+
+4. 开发指南：如何添加新角色/动画
+--------------------------------------------------------------------------------
+
+[步骤 1] 添加图片文件
+    将图片 (如 boss_dragon.png) 放入 public/assets/characters/ 目录。
+
+[步骤 2] 注册资源路径
+    打开 src/data/assets.js，添加 Key-Value 映射：
+    export const AssetManifest = {
+        ...,
+        'boss_dragon_img': '/assets/characters/boss_dragon.png'
+    }
+
+[步骤 3] 定义视觉参数
+    打开 src/data/visuals.js，添加视觉配置：
+    export const Visuals = {
+        ...,
+        'boss_dragon': {
+            assetId: 'boss_dragon_img', // 对应上面的 Key
+            layout: { 
+                type: 'grid', 
+                cols: 4, rows: 1,       // 假设是 4x1 的图集
+                width: 64, height: 64   // 单格尺寸
+            },
+            anchor: { x: 0.5, y: 1.0 }, // 脚底中心
+            animations: {
+                'idle': { frames: [0], speed: 0 },
+                'walk': { frames: [0, 1, 2, 3], speed: 8, loop: true },
+                'attack': { frames: [0, 2], speed: 12, loop: false }
+            }
+        }
+    }
+
+[步骤 4] 在代码中使用
+    在创建实体 (MapEnemy 或 NPC) 时，指定 visualId：
+
+    // MapEnemy.js 或 场景配置中
+    new MapEnemy(engine, x, y, group, {
+        spriteId: 'boss_dragon', // 对应 Visuals 中的 Key
+        scale: 1.5
+    })
+
+    // 或者在运行时切换状态
+    entity.visual.state = 'attack'
+    entity.visual.frameIndex = 0 // 重置帧
+
+5. 开发指南：如何添加新的 UI 标记 (如 沉默图标)
+--------------------------------------------------------------------------------
+
+[步骤 1] 在 renderUtils.js 中添加绘制函数
+    export function drawSilenceIcon(ctx, pos) {
+        ctx.drawImage(silenceImg, pos.x, pos.y - 50)
+    }
+
+[步骤 2] 在 RenderSystem.js 的 Layer 3 中挂载
+    // inside RenderSystem.update loop
+    if (entity.aiState.isSilenced) {
+        drawSilenceIcon(ctx, entity.position)
+    }
+
+6. 常见问题 (FAQ)
+--------------------------------------------------------------------------------
+Q: 为什么图片显示红点/红圈？
+A: 说明 AssetManager 加载图片失败，或者 Visuals.js 中引用的 assetId 不存在。检查 assets.js 路径是否正确。
+
+Q: 动画不动？
+A: 检查 RenderSystem.update(renderer, dt) 调用时是否传入了有效的 dt (时间增量)。
+
+Q: 视野挡住了玩家的头？
+A: 确保 drawVision 放在 Layer 1 (Bottom)，而 drawSprite 放在 Layer 2 (Entity)。
+
+Q: 新加的图集切片位置不对？
+A: 检查 Visuals.js 中的 layout 配置 (cols, rows) 是否与图片实际网格一致。
+
+================================================================================
+

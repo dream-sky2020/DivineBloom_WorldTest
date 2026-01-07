@@ -69,6 +69,13 @@ export default {
       en: 'World Map System',
       ja: 'ワールドマップ',
       ko: '월드 맵'
+    },
+    dialogue: {
+      zh: '对话系统',
+      'zh-TW': '對話系統',
+      en: 'Dialogue System',
+      ja: '会話システム',
+      ko: '대화 시스템'
     }
   },
   actions: {

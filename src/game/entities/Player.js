@@ -1,58 +1,41 @@
-import { makeSprite } from '@/game/GameEngine'
 import { world } from '@/game/ecs/world'
 
 /**
  * @typedef {import('@/game/GameEngine').GameEngine} GameEngine
- * @typedef {import('@/game/GameEngine').Renderer2D} Renderer2D
  */
 
 export class Player {
   /**
    * @param {GameEngine} engine 
+   * @param {object} [config]
    */
-  constructor(engine) {
+  constructor(engine, config = {}) {
     this.engine = engine
 
     // Create ECS Entity
     this.entity = world.add({
       position: { x: 200, y: 260 },
       velocity: { x: 0, y: 0 },
-      // Add stats required by InputSystem
       speed: 200,
       fastSpeed: 320,
-      // InputSystem checks for 'input' tag
       input: true,
       player: true,
-      // Initialize bounds with engine dimensions to prevent clamping to (0,0) on first frame
       bounds: {
-        minX: 0,
-        maxX: engine.width || 9999,
-        minY: 0,
-        maxY: engine.height || 9999
+        minX: 0, maxX: engine.width || 9999,
+        minY: 0, maxY: engine.height || 9999
       },
-      // RenderSystem Data
-      render: {
-        spriteId: 'sheet', // Texture ID
-        // We can put spriteDef props here if we want dynamic sprite switching
-        sx: 0, sy: 0, sw: 32, sh: 32,
-        ax: 0.5, ay: 1.0,
-        scale: 2
+
+      // --- 新视觉系统 ---
+      visual: {
+        id: 'hero',         // 对应 Visuals.js
+        state: 'idle',      // 当前动作状态
+        frameIndex: 0,      // 当前帧
+        timer: 0,           // 动画计时器
+        scale: config.scale || 0.7 // 缩放覆盖
       }
     })
 
-    // 状态数据 - Link directly to ECS component
     this.pos = this.entity.position
-
-    this.spriteId = 'hero_idle'
-    this.scale = 2
-
-    // speed/fastSpeed are now on the entity, but we keep refs here if old code uses them
-    // or just rely on the entity.
-    this.speed = 200
-    this.fastSpeed = 320
-
-    // 初始化资源
-    this._initResources()
   }
 
   toData() {
@@ -75,21 +58,5 @@ export class Player {
     }
   }
 
-  async _initResources() {
-    // 这里可以是具体的资源加载逻辑，或者在 Scene 层统一加载
-    // 为了独立性，Player 可以定义自己需要的 Sprite
-    // 注意：实际项目中，资源通常由 AssetManager 统一预加载，这里简化处理
-  }
-
-  _clampPosition() {
-    // Deprecated: Logic moved to ConstraintSystem
-  }
-
-  /**
-   * @param {Renderer2D} renderer 
-   */
-  // draw(renderer) {
-  //   Deprecated: Moved to RenderSystem
-  // }
+  // draw() 方法已移除，完全由 RenderSystem 接管
 }
-

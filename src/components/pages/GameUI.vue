@@ -72,6 +72,12 @@
                 v-t="'dev.systems.worldMap'"
               >
               </button>
+              <button 
+                :class="{ active: currentSystem === 'dialogue' }" 
+                @click="currentSystem = 'dialogue'"
+                v-t="'dev.systems.dialogue'"
+              >
+              </button>
             </div>
           </div>
 
@@ -135,6 +141,7 @@ import ShopSystem from '@/components/pages/systems/ShopSystem.vue';
 import EncyclopediaSystem from '@/components/pages/systems/EncyclopediaSystem.vue';
 import WorldMapSystem from '@/components/pages/systems/WorldMapSystem.vue';
 import BattleSystem from '@/components/pages/systems/BattleSystem.vue';
+import DialogueSystem from '@/components/pages/systems/DialogueSystem.vue';
 
 const { locale } = useI18n();
 const settingsStore = useSettingsStore();
@@ -149,6 +156,7 @@ const activeSystemComponent = computed(() => {
     case 'encyclopedia': return EncyclopediaSystem;
     case 'world-map': return WorldMapSystem;
     case 'battle': return BattleSystem;
+    case 'dialogue': return DialogueSystem;
     default: return MainMenuSystem;
   }
 });

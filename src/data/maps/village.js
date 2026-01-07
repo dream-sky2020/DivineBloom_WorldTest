@@ -1,7 +1,7 @@
 export const village = {
     id: 'village',
     name: 'Peaceful Village',
-    
+
     constraints: {
         minYRatio: 0.35
     },
@@ -15,13 +15,13 @@ export const village = {
     portals: [
         {
             // 左侧边缘 -> 回 Demo
-            x: 0, y: 0, w: 20, h: 600, 
+            x: 0, y: 0, w: 20, h: 600,
             targetMapId: 'demo_plains',
             targetEntryId: 'from_village'
         },
         {
             // 右侧边缘 -> 去森林
-            x: 780, y: 0, w: 20, h: 600, 
+            x: 780, y: 0, w: 20, h: 600,
             targetMapId: 'forest',
             targetEntryId: 'from_village'
         }
@@ -36,13 +36,24 @@ export const village = {
         ]
     },
 
+    npcs: [
+        {
+            x: 400, y: 300,
+            config: {
+                spriteId: 'npc_elder',
+                dialogueId: 'elder_test', // Corresponds to dialoguesDb['elder_test']
+                range: 60
+            }
+        }
+    ],
+
     spawners: [
         {
             // 村庄里只有一些温和的史莱姆
             enemyIds: [201],
             count: 3,
             area: { x: 200, y: 400, w: 400, h: 200 },
-            options: { aiType: 'wander', visionRadius: 80, speed: 40 }
+            options: { aiType: 'wander', visionRadius: 80, speed: 40, scale: 0.6 }
         }
     ]
 }
