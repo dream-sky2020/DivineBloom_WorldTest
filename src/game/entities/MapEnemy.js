@@ -1,249 +1,84 @@
 import { makeSprite } from '@/game/GameEngine'
+import { world } from '@/game/ecs/world'
 
 /**
  * @typedef {import('@/game/GameEngine').GameEngine} GameEngine
  * @typedef {import('@/game/GameEngine').Renderer2D} Renderer2D
  */
 
-// --- States ---
+// --- Color Cache Helper ---
+const colorCache = new Map()
 
-class EnemyState {
-  constructor(enemy) {
-    this.enemy = enemy
-  }
-  enter() { }
-  exit() { }
-  update(dt) { }
-  draw(renderer) { }
+function getRgb(hex) {
+  if (!hex) return { r: 0, g: 0, b: 0 }
+  if (colorCache.has(hex)) return colorCache.get(hex)
+  
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  const val = result 
+    ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+    : { r: 0, g: 0, b: 0 }
+  
+  colorCache.set(hex, val)
+  return val
 }
 
-class WanderState extends EnemyState {
-  enter() {
-    this.enemy.colorHex = '#eab308' // Yellow
-    // 重置怀疑值
-    this.enemy.suspicion = 0
-  }
+// --- Vision Cache Helper ---
+const visionCache = new Map()
 
-  update(dt) {
-    // 1. Check Vision (Only if NOT pure wanderer)
-    if (this.enemy.aiType !== 'wander') {
-      const dist = this.enemy.getDistToPlayer()
-      if (this.enemy.canSeePlayer(dist)) {
-        // 视线内，增加怀疑值
-        // 增加速度：如果有suspicionTime，则按比例增加，否则直接满
-        // 距离越近，增长越快 (可选优化)
-        const fillRate = this.enemy.suspicionTime > 0 ? (1.0 / this.enemy.suspicionTime) : Infinity
+function getCachedVision(type, r, angle, prox, color, isAlert) {
+  // Round params to avoid cache explosion on tiny float diffs
+  const rInt = Math.ceil(r)
+  const angleKey = angle.toFixed(2)
+  const proxInt = Math.ceil(prox)
+  const key = `${type}_${rInt}_${angleKey}_${proxInt}_${color}_${isAlert ? 1 : 0}`
   
-        this.enemy.suspicion += fillRate * dt
+  if (visionCache.has(key)) return visionCache.get(key)
   
-        // 视觉反馈：变色或进度条由外部 draw 处理
+  // Create off-screen canvas
+  const canvas = document.createElement('canvas')
+  const pad = 4 // padding for stroke/anti-aliasing
+  const size = rInt * 2 + pad * 2
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
   
-        if (this.enemy.suspicion >= 1.0) {
-          // 怀疑值满，切换状态
-          this.enemy.suspicion = 1.0 // Clamp
-          if (this.enemy.aiType === 'chase') {
-            this.enemy.changeState('chase')
-            return
-          } else if (this.enemy.aiType === 'flee') {
-            this.enemy.changeState('flee')
-            return
-          }
-        }
-      } else {
-        // 玩家离开视线，缓慢减少怀疑值
-        if (this.enemy.suspicion > 0) {
-          this.enemy.suspicion -= dt * 0.5 // 2秒清空
-          if (this.enemy.suspicion < 0) this.enemy.suspicion = 0
-        }
-      }
-    }
+  const cx = size / 2
+  const cy = size / 2
+  
+  const rgb = getRgb(color)
+  const alpha = isAlert ? 0.15 : 0.05
+  const fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`
+  // Only stroke if alert
+  const strokeStyle = isAlert ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.5)` : undefined
+  
+  ctx.fillStyle = fillStyle
+  if (strokeStyle) {
+    ctx.lineWidth = 2
+    ctx.strokeStyle = strokeStyle
+  }
+  
+  ctx.beginPath()
+  // Draw shapes pointing RIGHT (0 radians) to align with standard rotation
+  if (type === 'circle') {
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  } else if (type === 'cone' || type === 'hybrid') {
+    const half = angle / 2
+    ctx.moveTo(cx, cy)
+    ctx.arc(cx, cy, r, -half, half)
+    ctx.lineTo(cx, cy)
     
-    // 2. Wander Logic
-    // 如果正在产生怀疑（suspicion > 0），是否应该停止移动？
-    // 通常敌人疑惑时会停下来观察。
-    if (this.enemy.suspicion > 0) {
-      this.enemy.moveDir.x = 0
-      this.enemy.moveDir.y = 0
-      // 面向玩家 (Optional: 让敌人转向玩家观察)
-      if (this.enemy.player) {
-        const dx = this.enemy.player.pos.x - this.enemy.pos.x
-        const dy = this.enemy.player.pos.y - this.enemy.pos.y
-        const angle = Math.atan2(dy, dx)
-        this.enemy.facing.x = Math.cos(angle)
-        this.enemy.facing.y = Math.sin(angle)
-      }
-      return // Skip normal wander movement
-    }
-
-    this.enemy.moveTimer -= dt
-    if (this.enemy.moveTimer <= 0) {
-      this.enemy.moveTimer = 2 + Math.random() * 2
-      const angle = Math.random() * Math.PI * 2
-      this.enemy.moveDir.x = Math.cos(angle)
-      this.enemy.moveDir.y = Math.sin(angle)
-
-      if (Math.random() < 0.3) {
-        this.enemy.moveDir.x = 0
-        this.enemy.moveDir.y = 0
-      }
+    if (type === 'hybrid') {
+      // Draw proximity circle
+      ctx.moveTo(cx + prox, cy)
+      ctx.arc(cx, cy, prox, 0, Math.PI * 2)
     }
   }
-
-  draw(renderer) {
-    // 绘制问号或怀疑进度
-    if (this.enemy.suspicion > 0) {
-      const ctx = renderer.ctx
-      const cx = this.enemy.pos.x
-      const cy = this.enemy.pos.y - 35
-
-      // Draw "?"
-      ctx.save()
-      ctx.font = 'bold 20px Arial'
-      ctx.fillStyle = '#eab308' // Yellow
-      ctx.textAlign = 'center'
-      ctx.fillText('?', cx, cy)
-
-      // Draw Bar if has time
-      if (this.enemy.suspicionTime > 0) {
-        const barW = 20
-        const barH = 4
-
-        ctx.fillStyle = '#1f2937'
-        ctx.fillRect(cx - barW / 2, cy + 5, barW, barH)
-
-        ctx.fillStyle = '#eab308'
-        ctx.fillRect(cx - barW / 2 + 1, cy + 6, (barW - 2) * this.enemy.suspicion, barH - 2)
-      }
-      ctx.restore()
-    }
-  }
-}
-
-class ChaseState extends EnemyState {
-  enter() {
-    this.enemy.colorHex = '#ef4444' // Red
-    this.alertAnim = 0.5 // Show "!" for 0.5s
-  }
-
-  update(dt) {
-    if (this.alertAnim > 0) this.alertAnim -= dt
-
-    const dist = this.enemy.getDistToPlayer()
-
-    // Give up if too far (vision radius * 1.5)
-    if (dist > this.enemy.visionRadius * 1.5) {
-      this.enemy.changeState('wander')
-      return
-    }
-
-    if (!this.enemy.player) return
-
-    // Move towards player
-    const dx = this.enemy.player.pos.x - this.enemy.pos.x
-    const dy = this.enemy.player.pos.y - this.enemy.pos.y
-    const angle = Math.atan2(dy, dx)
-
-    this.enemy.moveDir.x = Math.cos(angle)
-    this.enemy.moveDir.y = Math.sin(angle)
-  }
-
-  draw(renderer) {
-    // Draw "!"
-    if (this.alertAnim > 0) {
-      const ctx = renderer.ctx
-      ctx.save()
-      ctx.font = 'bold 24px Arial'
-      ctx.fillStyle = '#ef4444'
-      ctx.textAlign = 'center'
-      // Bounce effect
-      const yOffset = Math.sin(this.alertAnim * 20) * 5
-      ctx.fillText('!', this.enemy.pos.x, this.enemy.pos.y - 35 - yOffset)
-      ctx.restore()
-    }
-  }
-}
-
-class FleeState extends EnemyState {
-  enter() {
-    this.enemy.colorHex = '#3b82f6' // Blue
-  }
-
-  update(dt) {
-    const dist = this.enemy.getDistToPlayer()
-    if (dist > this.enemy.visionRadius * 1.5) {
-      this.enemy.changeState('wander')
-      return
-    }
-
-    if (!this.enemy.player) return
-
-    const dx = this.enemy.player.pos.x - this.enemy.pos.x
-    const dy = this.enemy.player.pos.y - this.enemy.pos.y
-    const angle = Math.atan2(dy, dx)
-
-    // Move opposite
-    this.enemy.moveDir.x = -Math.cos(angle)
-    this.enemy.moveDir.y = -Math.sin(angle)
-  }
-}
-
-class StunnedState extends EnemyState {
-  constructor(enemy, duration = 3.0) {
-    super(enemy)
-    this.duration = duration
-    this.starAngle = 0
-  }
-
-  enter() {
-    this.enemy.moveDir = { x: 0, y: 0 }
-    this.enemy.colorHex = '#9ca3af' // Grayish
-  }
-
-  update(dt) {
-    this.duration -= dt
-    this.starAngle += dt * 4 // Rotate stars
-
-    if (this.duration <= 0) {
-      this.enemy.isStunned = false // Sync property
-      this.enemy.changeState('wander')
-    }
-  }
-
-  draw(renderer) {
-    const ctx = renderer.ctx
-    const cx = this.enemy.pos.x
-    const cy = this.enemy.pos.y - 25 // Above head
-
-    // Draw 3 spinning stars
-    ctx.save()
-    ctx.fillStyle = '#fbbf24' // Gold
-    for (let i = 0; i < 3; i++) {
-      const angle = this.starAngle + (i * (Math.PI * 2 / 3))
-      const sx = cx + Math.cos(angle) * 12
-      const sy = cy + Math.sin(angle) * 4 // Flattened ellipse orbit
-
-      // Draw star (simple diamond)
-      ctx.beginPath()
-      ctx.moveTo(sx, sy - 3)
-      ctx.lineTo(sx + 3, sy)
-      ctx.lineTo(sx, sy + 3)
-      ctx.lineTo(sx - 3, sy)
-      ctx.fill()
-    }
-
-    // Draw Timer Bar
-    const barW = 24
-    const barH = 4
-    const pct = Math.max(0, this.duration / 3.0) // Assuming max 3s for bar
-
-    ctx.fillStyle = '#1f2937'
-    ctx.fillRect(cx - barW / 2, cy - 15, barW, barH)
-
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(cx - barW / 2 + 1, cy - 14, (barW - 2) * pct, barH - 2)
-
-    ctx.restore()
-  }
+  
+  ctx.fill()
+  if (strokeStyle) ctx.stroke()
+  
+  visionCache.set(key, canvas)
+  return canvas
 }
 
 // --- Main Class ---
@@ -258,11 +93,8 @@ export class MapEnemy {
    */
   constructor(engine, x, y, battleGroup, options = {}) {
     this.engine = engine
-    this.pos = { x, y }
-    this.battleGroup = battleGroup || []
-
+    
     // Config
-    this.player = options.player || null
     this.aiType = options.aiType || 'wander'
     this.visionRadius = options.visionRadius || 120
     this.visionType = options.visionType || 'circle'
@@ -270,76 +102,94 @@ export class MapEnemy {
     this.visionProximity = options.visionProximity || 40
     this.speed = options.speed || 80
     this.minYRatio = options.minYRatio || 0.35
-
-    // Suspicion Config
-    // 0 = Instant trigger, > 0 = seconds to fill suspicion
     this.suspicionTime = options.suspicionTime || 0
-
-    // Persistence
     this.uuid = options.uuid || Math.random().toString(36).substr(2, 9)
-
-    // State Machine
-    this.states = {
-      wander: new WanderState(this),
-      chase: new ChaseState(this),
-      flee: new FleeState(this),
-      stunned: new StunnedState(this)
-    }
-
-    this.currentState = this.states.wander // Default
-    this.colorHex = '#eab308'
-
-    // Runtime Props
-    this.suspicion = 0.0 // 0.0 to 1.0
-
-    // Internal Props
-    this.moveTimer = 0
-    this.moveDir = { x: 0, y: 0 }
-    this.facing = { x: 1, y: 0 }
-    this.radius = 20
-
-    // Stun Initialization
     this.isStunned = options.isStunned || false
-    if (this.isStunned) {
-      this.states.stunned.duration = options.stunnedTimer || 3.0
-      this.changeState('stunned')
-    } else {
-      this.changeState('wander')
-    }
+    const stunnedTimer = options.stunnedTimer || 3.0
+
+    // Create ECS Entity
+    this.entity = world.add({
+      position: { x, y },
+      velocity: { x: 0, y: 0 },
+      enemy: true,
+      // Initialize bounds with engine dimensions to prevent clamping to (0,0) on first frame
+      bounds: { 
+        minX: 0, 
+        maxX: engine.width || 9999, 
+        minY: 0, 
+        maxY: engine.height || 9999 
+      },
+      render: {
+          // Custom draw callback for hybrid migration
+          onDraw: (renderer, entity) => this.draw(renderer)
+      },
+      // AI Components
+      aiConfig: {
+        type: this.aiType,
+        visionRadius: this.visionRadius,
+        visionType: this.visionType,
+        visionAngle: this.visionAngle,
+        visionProximity: this.visionProximity,
+        speed: this.speed,
+        suspicionTime: this.suspicionTime,
+        minYRatio: this.minYRatio
+      },
+      aiState: {
+        state: this.isStunned ? 'stunned' : 'wander',
+        timer: this.isStunned ? stunnedTimer : 0,
+        suspicion: 0,
+        moveDir: { x: 0, y: 0 },
+        facing: { x: 1, y: 0 },
+        colorHex: '#eab308',
+        alertAnim: 0,
+        starAngle: 0,
+        justEntered: true
+      }
+    })
+
+    // Link pos to ECS component
+    this.pos = this.entity.position
+
+    this.battleGroup = battleGroup || []
 
     this.scale = 2
   }
 
-  changeState(name) {
-    if (this.currentState) this.currentState.exit()
-    this.currentState = this.states[name]
-    if (this.currentState) this.currentState.enter()
+  stun(duration = 3.0) {
+    if (this.entity) {
+      this.entity.aiState.state = 'stunned'
+      this.entity.aiState.timer = duration
+      this.entity.aiState.justEntered = true
+    }
   }
 
-  stun(duration = 3.0) {
-    this.isStunned = true
-    this.states.stunned.duration = duration
-    this.changeState('stunned')
+  destroy() {
+    if (this.entity) {
+      world.remove(this.entity)
+      this.entity = null
+    }
   }
 
   toData() {
+    // Read from ECS components
+    const { aiState, aiConfig } = this.entity
     return {
       x: this.pos.x,
       y: this.pos.y,
       battleGroup: this.battleGroup,
       options: {
         uuid: this.uuid,
-        isStunned: this.isStunned,
-        stunnedTimer: this.states.stunned ? this.states.stunned.duration : 0,
-        aiType: this.aiType,
-        visionRadius: this.visionRadius,
-        visionType: this.visionType,
+        isStunned: aiState.state === 'stunned',
+        stunnedTimer: aiState.state === 'stunned' ? aiState.timer : 0,
+        aiType: aiConfig.type,
+        visionRadius: aiConfig.visionRadius,
+        visionType: aiConfig.visionType,
         // Convert radians back to degrees
-        visionAngle: Math.round(this.visionAngle * (180 / Math.PI)),
-        visionProximity: this.visionProximity,
-        speed: this.speed,
-        minYRatio: this.minYRatio,
-        suspicionTime: this.suspicionTime
+        visionAngle: Math.round(aiConfig.visionAngle * (180 / Math.PI)),
+        visionProximity: aiConfig.visionProximity,
+        speed: aiConfig.speed,
+        minYRatio: aiConfig.minYRatio,
+        suspicionTime: aiConfig.suspicionTime
       }
     }
   }
@@ -355,143 +205,183 @@ export class MapEnemy {
       ...context
     })
   }
-
-  getDistToPlayer() {
-    if (!this.player) return Infinity
-    const dx = this.player.pos.x - this.pos.x
-    const dy = this.player.pos.y - this.pos.y
-    return Math.sqrt(dx * dx + dy * dy)
-  }
-
-  canSeePlayer(dist) {
-    if (!this.player) return false
-    // Always see if very close (touching)
-    if (dist < 30) return true
-
-    if (dist > this.visionRadius) return false
-
-    if (this.visionType === 'circle') return true
-
-    if (this.visionType === 'hybrid') {
-      if (dist <= this.visionProximity) return true
-    }
-
-    if (this.visionType === 'cone' || this.visionType === 'hybrid') {
-      const dx = this.player.pos.x - this.pos.x
-      const dy = this.player.pos.y - this.pos.y
-      const nx = dx / (dist || 1)
-      const ny = dy / (dist || 1)
-      const dot = nx * this.facing.x + ny * this.facing.y
-      const threshold = Math.cos(this.visionAngle / 2)
-      return dot >= threshold
-    }
-    return false
-  }
+  
+  // NOTE: getDistToPlayer and canSeePlayer logic moved to EnemyAISystem.
+  // We keep update() only to sync bounds (dynamic resizing).
+  // The state machine logic is gone.
 
   update(dt) {
-    // Delegate to State
-    if (this.currentState) {
-      this.currentState.update(dt)
-    }
-
-    // Common Physics
-    const lenSq = this.moveDir.x * this.moveDir.x + this.moveDir.y * this.moveDir.y
-    if (lenSq > 0.001) {
-      const len = Math.sqrt(lenSq)
-      this.facing.x = this.moveDir.x / len
-      this.facing.y = this.moveDir.y / len
-    }
-
-    this.pos.x += this.moveDir.x * this.speed * dt
-    this.pos.y += this.moveDir.y * this.speed * dt
-
-    this._clampPosition()
+    this._updateBounds()
   }
 
-  _clampPosition() {
-    const { width, height } = this.engine
-    const minY = height * this.minYRatio
-    this.pos.x = Math.max(0, Math.min(width, this.pos.x))
-    this.pos.y = Math.max(minY, Math.min(height, this.pos.y))
+  _updateBounds() {
+    if (this.entity && this.entity.bounds) {
+        const { width, height } = this.engine
+        const minY = height * this.entity.aiConfig.minYRatio // Use config from component
+        this.entity.bounds.minX = 0
+        this.entity.bounds.maxX = width
+        this.entity.bounds.minY = minY
+        this.entity.bounds.maxY = height
+    }
   }
 
   draw(renderer) {
     const ctx = renderer.ctx
-
-    // 1. Draw Vision Cone (Only if active/chasing)
-    // We can let state handle this, or keep it common. 
-    // Let's keep common but check state.
-
-    if (this.currentState !== this.states.stunned && this.aiType !== 'wander') {
-      this._drawVision(ctx)
+    const { aiState, aiConfig } = this.entity
+    
+    // Optimization: Draw Vision Cone less frequently or simplify
+    // We can skip drawing vision for wanderers if they are far, or simplify to circle
+    if (aiState.state !== 'stunned' && aiConfig.type !== 'wander') {
+      // Cull vision drawing if completely off-screen (already handled by RenderSystem partially, but vision is large)
+      // RenderSystem culls based on position point, but vision extends radius.
+      // We should rely on RenderSystem's culling margin (150px) which covers most vision radii.
+      this._drawVision(ctx, aiState, aiConfig)
     }
 
     // 2. Draw Sprite/Body
-    // Use stored colorHex
-    const colorRgba = (a) => {
-      // Hex to RGB conversion
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(this.colorHex);
-      return result ?
-        `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${a})` :
-        `rgba(0,0,0,${a})`;
-    }
-
+    // Optimization: Avoid regex and string concatenation per frame per entity
+    // We already have cached RGB, but string building `rgba(...)` is still somewhat expensive in tight loops.
+    // Ideally we should cache the full style string in aiState when color changes, but let's stick to this for now.
+    
     const img = this.engine.textures.get('sheet')
     if (img) {
-      renderer.drawCircle(this.pos.x, this.pos.y, 12, colorRgba(0.4))
+      // Use pre-built semi-transparent color string if possible or just use a fixed shadow color
+      // Shadow
+      // renderer.drawCircle(this.pos.x, this.pos.y, 12, `rgba(0,0,0,0.2)`) 
+      
       const spr = makeSprite({
         imageId: 'sheet',
         sx: 0, sy: 0, sw: 32, sh: 32,
         ax: 0.5, ay: 1.0
       })
 
-      // If stunned, flash or tint? 
-      // Canvas simple tinting is hard, let's just use the base circle color for now
       renderer.drawSprite(img, spr, this.pos, this.scale)
     } else {
-      renderer.drawCircle(this.pos.x, this.pos.y - 16, 14, this.colorHex)
+      // Fallback
+      renderer.drawCircle(this.pos.x, this.pos.y - 16, 14, aiState.colorHex)
     }
 
-    // 3. State Specific Visuals (Stars, !, etc)
-    if (this.currentState) {
-      this.currentState.draw(renderer)
+    // 3. State Specific Visuals
+    if (aiState.suspicion > 0) {
+       this._drawSuspicion(renderer, aiState, aiConfig)
+    }
+    
+    if (aiState.state === 'chase') {
+       this._drawAlert(renderer, aiState)
+    }
+    
+    if (aiState.state === 'stunned') {
+       this._drawStunned(renderer, aiState)
     }
   }
 
-  _drawVision(ctx) {
-    const currentAngle = Math.atan2(this.facing.y, this.facing.x)
+  _drawVision(ctx, aiState, aiConfig) {
+    const { facing } = aiState
+    const { visionRadius, visionType, visionProximity, visionAngle } = aiConfig
+    
+    // Optimization: Early return if context is missing or radius is tiny
+    if (!ctx || visionRadius <= 1) return
 
-    // Hex to RGB helper for vision style
-    const getStyle = (alpha) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(this.colorHex);
-      return result ?
-        `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})` :
-        `rgba(0,0,0,${alpha})`;
-    }
+    const isAlert = (aiState.state === 'chase')
+
+    // Get cached off-screen canvas
+    const img = getCachedVision(
+      visionType,
+      visionRadius,
+      visionAngle,
+      visionProximity,
+      aiState.colorHex,
+      isAlert
+    )
+
+    if (!img) return
+
+    const currentAngle = Math.atan2(facing.y, facing.x)
 
     ctx.save()
-    // Alert state (Chase) makes vision brighter
-    const isAlert = (this.currentState === this.states.chase)
+    // Translate to enemy position
+    ctx.translate(this.pos.x, this.pos.y)
+    // Rotate to facing direction
+    ctx.rotate(currentAngle)
+    
+    // Draw the cached image centered
+    // The image was created with size = radius*2 + padding
+    // And the shape is centered in that image.
+    ctx.drawImage(img, -img.width / 2, -img.height / 2)
+    
+    ctx.restore()
+  }
 
-    ctx.fillStyle = getStyle(isAlert ? 0.15 : 0.05)
-    ctx.strokeStyle = isAlert ? getStyle(0.5) : 'transparent'
+  _drawSuspicion(renderer, aiState, aiConfig) {
+      const ctx = renderer.ctx
+      const cx = this.pos.x
+      const cy = this.pos.y - 35
 
-    ctx.beginPath()
-    if (this.visionType === 'cone' || this.visionType === 'hybrid') {
-      const half = this.visionAngle / 2
-      ctx.moveTo(this.pos.x, this.pos.y)
-      ctx.arc(this.pos.x, this.pos.y, this.visionRadius, currentAngle - half, currentAngle + half)
-      ctx.lineTo(this.pos.x, this.pos.y)
+      // Draw "?"
+      ctx.save()
+      ctx.font = 'bold 20px Arial'
+      ctx.fillStyle = '#eab308' // Yellow
+      ctx.textAlign = 'center'
+      ctx.fillText('?', cx, cy)
 
-      if (this.visionType === 'hybrid') {
-        ctx.moveTo(this.pos.x + this.visionProximity, this.pos.y)
-        ctx.arc(this.pos.x, this.pos.y, this.visionProximity, 0, Math.PI * 2)
+      // Draw Bar if has time
+      if (aiConfig.suspicionTime > 0) {
+        const barW = 20
+        const barH = 4
+
+        ctx.fillStyle = '#1f2937'
+        ctx.fillRect(cx - barW / 2, cy + 5, barW, barH)
+
+        ctx.fillStyle = '#eab308'
+        ctx.fillRect(cx - barW / 2 + 1, cy + 6, (barW - 2) * aiState.suspicion, barH - 2)
       }
-    } else {
-      ctx.arc(this.pos.x, this.pos.y, this.visionRadius, 0, Math.PI * 2)
+      ctx.restore()
+  }
+
+  _drawAlert(renderer, aiState) {
+    if (aiState.alertAnim > 0) {
+      const ctx = renderer.ctx
+      ctx.save()
+      ctx.font = 'bold 24px Arial'
+      ctx.fillStyle = '#ef4444'
+      ctx.textAlign = 'center'
+      // Bounce effect
+      const yOffset = Math.sin(aiState.alertAnim * 20) * 5
+      ctx.fillText('!', this.pos.x, this.pos.y - 35 - yOffset)
+      ctx.restore()
     }
-    ctx.fill()
-    if (isAlert) ctx.stroke()
+  }
+
+  _drawStunned(renderer, aiState) {
+    const ctx = renderer.ctx
+    const cx = this.pos.x
+    const cy = this.pos.y - 25 
+
+    ctx.save()
+    ctx.fillStyle = '#fbbf24' // Gold
+    for (let i = 0; i < 3; i++) {
+      const angle = aiState.starAngle + (i * (Math.PI * 2 / 3))
+      const sx = cx + Math.cos(angle) * 12
+      const sy = cy + Math.sin(angle) * 4
+      
+      ctx.beginPath()
+      ctx.moveTo(sx, sy - 3)
+      ctx.lineTo(sx + 3, sy)
+      ctx.lineTo(sx, sy + 3)
+      ctx.lineTo(sx - 3, sy)
+      ctx.fill()
+    }
+
+    const barW = 24
+    const barH = 4
+    const pct = Math.max(0, aiState.timer / 3.0) 
+
+    ctx.fillStyle = '#1f2937'
+    ctx.fillRect(cx - barW / 2, cy - 15, barW, barH)
+
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(cx - barW / 2 + 1, cy - 14, (barW - 2) * pct, barH - 2)
+
     ctx.restore()
   }
 }

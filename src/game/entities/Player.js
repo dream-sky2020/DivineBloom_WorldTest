@@ -1,4 +1,5 @@
 import { makeSprite } from '@/game/GameEngine'
+import { world } from '@/game/ecs/world'
 
 /**
  * @typedef {import('@/game/GameEngine').GameEngine} GameEngine
@@ -12,10 +13,41 @@ export class Player {
   constructor(engine) {
     this.engine = engine
     
-    // 状态数据
-    this.pos = { x: 200, y: 260 }
+    // Create ECS Entity
+    this.entity = world.add({
+      position: { x: 200, y: 260 },
+      velocity: { x: 0, y: 0 },
+      // Add stats required by InputSystem
+      speed: 200,
+      fastSpeed: 320,
+      // InputSystem checks for 'input' tag
+      input: true,
+      player: true,
+      // Initialize bounds with engine dimensions to prevent clamping to (0,0) on first frame
+      bounds: { 
+        minX: 0, 
+        maxX: engine.width || 9999, 
+        minY: 0, 
+        maxY: engine.height || 9999 
+      },
+      // RenderSystem Data
+      render: {
+          spriteId: 'sheet', // Texture ID
+          // We can put spriteDef props here if we want dynamic sprite switching
+          sx: 0, sy: 0, sw: 32, sh: 32,
+          ax: 0.5, ay: 1.0,
+          scale: 2
+      }
+    })
+
+    // 状态数据 - Link directly to ECS component
+    this.pos = this.entity.position
+    
     this.spriteId = 'hero_idle'
     this.scale = 2
+    
+    // speed/fastSpeed are now on the entity, but we keep refs here if old code uses them
+    // or just rely on the entity.
     this.speed = 200
     this.fastSpeed = 320
 
@@ -36,6 +68,13 @@ export class Player {
     this.pos.y = data.y
   }
 
+  destroy() {
+    if (this.entity) {
+      world.remove(this.entity)
+      this.entity = null
+    }
+  }
+
   async _initResources() {
     // 这里可以是具体的资源加载逻辑，或者在 Scene 层统一加载
     // 为了独立性，Player 可以定义自己需要的 Sprite
@@ -46,68 +85,31 @@ export class Player {
    * @param {number} dt 
    */
   update(dt) {
-    const keys = this.engine.input
-    const isFast = keys.isDown('ShiftLeft') || keys.isDown('ShiftRight')
-    const currentSpeed = isFast ? this.fastSpeed : this.speed
-
-    let dx = 0
-    let dy = 0
-
-    if (keys.isDown('KeyW') || keys.isDown('ArrowUp')) dy -= 1
-    if (keys.isDown('KeyS') || keys.isDown('ArrowDown')) dy += 1
-    if (keys.isDown('KeyA') || keys.isDown('ArrowLeft')) dx -= 1
-    if (keys.isDown('KeyD') || keys.isDown('ArrowRight')) dx += 1
-
-    // 归一化，防止斜向移动过快
-    if (dx !== 0 && dy !== 0) {
-      const inv = 1 / Math.sqrt(2)
-      dx *= inv
-      dy *= inv
+    // Input handling is now done by InputSystem
+    // Physics integration is done by MovementSystem
+    // Boundary constraints are done by ConstraintSystem
+    
+    // We update the bounds dynamically because they might depend on map size (which is in engine)
+    // In a pure ECS, bounds would be set once on map load, but here we sync it.
+    if (this.entity && this.entity.bounds) {
+        const { width, height } = this.engine
+        const minY = height * 0.35
+        this.entity.bounds.minX = 0
+        this.entity.bounds.maxX = width
+        this.entity.bounds.minY = minY
+        this.entity.bounds.maxY = height
     }
-
-    // 应用移动
-    this.pos.x += dx * currentSpeed * dt
-    this.pos.y += dy * currentSpeed * dt
-
-    // 边界限制 (调用 Engine 里的宽高信息)
-    this._clampPosition()
   }
 
   _clampPosition() {
-    const { width, height } = this.engine
-    // 假设 0.35 是地面起始线 (来自原来的 drawGround)
-    const minY = height * 0.35
-    
-    this.pos.x = Math.max(0, Math.min(width, this.pos.x))
-    this.pos.y = Math.max(minY, Math.min(height, this.pos.y))
+    // Deprecated: Logic moved to ConstraintSystem
   }
 
   /**
    * @param {Renderer2D} renderer 
    */
-  draw(renderer) {
-    // 获取 sprite 定义
-    // 注意：这里假设 sprites 已经在外部或 Scene 中注册，或者我们可以传进来
-    // 为了简单，我们暂时在这里硬编码或假设 Scene 会处理 SpriteRegistry
-    // 但更好的方式是 Player 自己知道怎么画自己
-    
-    // 获取图像
-    // 假设 'sheet' 已经加载
-    const img = this.engine.textures.get('sheet')
-    
-    if (img) {
-      // 临时定义 sprite，或者从统一配置读取
-      const spr = makeSprite({ 
-        imageId: 'sheet', 
-        sx: 0, sy: 0, sw: 32, sh: 32, 
-        ax: 0.5, ay: 1.0 
-      })
-      
-      renderer.drawSprite(img, spr, this.pos, this.scale)
-    } else {
-      // Fallback
-      renderer.drawCircle(this.pos.x, this.pos.y - 16, 14, '#ef4444')
-    }
-  }
+  // draw(renderer) {
+  //   Deprecated: Moved to RenderSystem
+  // }
 }
 

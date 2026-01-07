@@ -9,6 +9,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "miniplex": "^2.0.0",
         "pinia": "^3.0.4",
         "vue": "^3.4.0",
         "vue-i18n": "^9.14.5"

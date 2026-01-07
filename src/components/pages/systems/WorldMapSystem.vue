@@ -38,17 +38,31 @@ const scene = shallowRef(null)
 // 专门用于 UI 展示的响应式数据
 const debugInfo = ref({ x: 0, y: 0, lastInput: '' })
 
+let frameCount = 0
 function syncUI() {
+  // Throttle: Update UI only every 10 frames (~6 times per second)
+  frameCount++
+  if (frameCount % 10 !== 0) return
+
   if (!scene.value || !engine.value) return
   
   const player = scene.value.player
   
   // Count chasing enemies
-  const chasingCount = scene.value.mapEnemies 
-    ? scene.value.mapEnemies.filter(e => e.aiType === 'chase' && e.state === 'alert').length
-    : 0
+  // Optimized: Use reduce instead of filter to avoid array allocation
+  let chasingCount = 0
+  if (scene.value.mapEnemies) {
+      const enemies = scene.value.mapEnemies
+      for (let i = 0; i < enemies.length; i++) {
+          const e = enemies[i]
+          // Check aiState instead of direct property if needed, but assuming compatibility
+          if (e.entity && e.entity.aiState && e.entity.aiState.state === 'chase') {
+              chasingCount++
+          }
+      }
+  }
 
-  // 每帧同步一次数据到 UI (Vue 的响应式系统足够快，处理单纯的文本更新没问题)
+  // Update Reactive State
   debugInfo.value = {
     x: player.pos.x,
     y: player.pos.y,

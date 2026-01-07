@@ -22,9 +22,23 @@ export class TextureStore {
     const p = new Promise((resolve, reject) => {
       const img = new Image()
       img.onload = () => {
-        this.images.set(id, img)
+        // 性能优化：强制将图片（特别是 SVG）光栅化为位图 (Canvas)
+        // 这可以彻底消除 SVG 在每帧渲染时的解析/重绘开销
+        if (img.width && img.height) {
+          const offCanvas = document.createElement('canvas')
+          offCanvas.width = img.width
+          offCanvas.height = img.height
+          const offCtx = offCanvas.getContext('2d')
+          offCtx.drawImage(img, 0, 0)
+          
+          this.images.set(id, offCanvas)
+          resolve(offCanvas)
+        } else {
+          // Fallback if dimensions are missing
+          this.images.set(id, img)
+          resolve(img)
+        }
         this.loading.delete(id)
-        resolve(img)
       }
       img.onerror = (e) => {
         this.loading.delete(id)
@@ -76,6 +90,8 @@ export class Renderer2D {
   }
 
   begin(w, h) {
+    this.width = w
+    this.height = h
     const ctx = this.ctx
     ctx.clearRect(0, 0, w, h)
     ctx.fillStyle = this.clearColor

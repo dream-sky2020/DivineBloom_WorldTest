@@ -1,5 +1,11 @@
 import { Player } from '@/game/entities/Player'
 import { MapEnemy } from '@/game/entities/MapEnemy'
+import { clearWorld } from '@/game/ecs/world'
+import { MovementSystem } from '@/game/ecs/systems/MovementSystem'
+import { InputSystem } from '@/game/ecs/systems/InputSystem'
+import { ConstraintSystem } from '@/game/ecs/systems/ConstraintSystem'
+import { RenderSystem } from '@/game/ecs/systems/RenderSystem'
+import { EnemyAISystem } from '@/game/ecs/systems/EnemyAISystem'
 // import { maps } from '@/data/maps' // No longer needed directly here
 
 /**
@@ -17,6 +23,9 @@ export class MainScene {
    * @param {Function} [onSwitchMap] - Callback when player enters portal
    */
   constructor(engine, onEncounter, initialState = null, mapData = null, entryId = 'default', onSwitchMap = null) {
+    // Clear ECS world on scene init to prevent stale entities
+    clearWorld()
+
     this.engine = engine
     this.onEncounter = onEncounter
     this.onSwitchMap = onSwitchMap
@@ -71,6 +80,9 @@ export class MainScene {
 
     // Restore Enemies
     if (state.enemies) {
+      // Cleanup existing entities
+      this.mapEnemies.forEach(e => e.destroy && e.destroy())
+      
       this.mapEnemies = state.enemies.map(data => 
         MapEnemy.fromData(this.engine, data, { player: this.player })
       )
@@ -81,6 +93,8 @@ export class MainScene {
   }
 
   _spawnEnemies() {
+    // Cleanup existing entities to prevent ECS leaks
+    this.mapEnemies.forEach(e => e.destroy && e.destroy())
     this.mapEnemies = []
     if (!this.currentMap || !this.currentMap.spawners) return
 
@@ -120,6 +134,12 @@ export class MainScene {
    */
   update(dt) {
     if (!this.isLoaded) return
+
+    // Run ECS Systems
+    InputSystem.update(dt, this.engine.input)
+    EnemyAISystem.update(dt)
+    MovementSystem.update(dt)
+    ConstraintSystem.update(dt)
 
     // 更新所有实体
     this.entities.forEach(ent => {
@@ -190,13 +210,13 @@ export class MainScene {
 
     if (!this.isLoaded) return
 
-    // 2. 绘制所有实体
-    // 简单的 Y-sort (根据 Y 轴排序，实现遮挡关系)
-    this.entities.sort((a, b) => a.pos.y - b.pos.y)
+    // 2. 绘制所有实体 (ECS RenderSystem)
+    // RenderSystem handles Y-sorting and drawing
+    RenderSystem.update(renderer)
 
-    this.entities.forEach(ent => {
-      if (ent.draw) ent.draw(renderer)
-    })
+    // Note: Entities with 'render' component are drawn by RenderSystem.
+    // Legacy entities (if any) without 'render' but with 'draw' would be skipped here unless we keep the loop.
+    // For now, Player and MapEnemy are migrated, so we assume all entities are in ECS.
 
     // Draw Portals (Visual Feedback)
     if (this.currentMap.portals) {
