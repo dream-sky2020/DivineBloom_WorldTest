@@ -12,12 +12,12 @@ const colorCache = new Map()
 function getRgb(hex) {
   if (!hex) return { r: 0, g: 0, b: 0 }
   if (colorCache.has(hex)) return colorCache.get(hex)
-  
+
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  const val = result 
+  const val = result
     ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
     : { r: 0, g: 0, b: 0 }
-  
+
   colorCache.set(hex, val)
   return val
 }
@@ -31,9 +31,9 @@ function getCachedVision(type, r, angle, prox, color, isAlert) {
   const angleKey = angle.toFixed(2)
   const proxInt = Math.ceil(prox)
   const key = `${type}_${rInt}_${angleKey}_${proxInt}_${color}_${isAlert ? 1 : 0}`
-  
+
   if (visionCache.has(key)) return visionCache.get(key)
-  
+
   // Create off-screen canvas
   const canvas = document.createElement('canvas')
   const pad = 4 // padding for stroke/anti-aliasing
@@ -41,22 +41,22 @@ function getCachedVision(type, r, angle, prox, color, isAlert) {
   canvas.width = size
   canvas.height = size
   const ctx = canvas.getContext('2d')
-  
+
   const cx = size / 2
   const cy = size / 2
-  
+
   const rgb = getRgb(color)
   const alpha = isAlert ? 0.15 : 0.05
   const fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`
   // Only stroke if alert
   const strokeStyle = isAlert ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.5)` : undefined
-  
+
   ctx.fillStyle = fillStyle
   if (strokeStyle) {
     ctx.lineWidth = 2
     ctx.strokeStyle = strokeStyle
   }
-  
+
   ctx.beginPath()
   // Draw shapes pointing RIGHT (0 radians) to align with standard rotation
   if (type === 'circle') {
@@ -66,17 +66,17 @@ function getCachedVision(type, r, angle, prox, color, isAlert) {
     ctx.moveTo(cx, cy)
     ctx.arc(cx, cy, r, -half, half)
     ctx.lineTo(cx, cy)
-    
+
     if (type === 'hybrid') {
       // Draw proximity circle
       ctx.moveTo(cx + prox, cy)
       ctx.arc(cx, cy, prox, 0, Math.PI * 2)
     }
   }
-  
+
   ctx.fill()
   if (strokeStyle) ctx.stroke()
-  
+
   visionCache.set(key, canvas)
   return canvas
 }
@@ -93,7 +93,7 @@ export class MapEnemy {
    */
   constructor(engine, x, y, battleGroup, options = {}) {
     this.engine = engine
-    
+
     // Config
     this.aiType = options.aiType || 'wander'
     this.visionRadius = options.visionRadius || 120
@@ -112,16 +112,23 @@ export class MapEnemy {
       position: { x, y },
       velocity: { x: 0, y: 0 },
       enemy: true,
+
+      // Interaction System Data
+      interaction: {
+        battleGroup: battleGroup || [],
+        uuid: this.uuid
+      },
+
       // Initialize bounds with engine dimensions to prevent clamping to (0,0) on first frame
-      bounds: { 
-        minX: 0, 
-        maxX: engine.width || 9999, 
-        minY: 0, 
-        maxY: engine.height || 9999 
+      bounds: {
+        minX: 0,
+        maxX: engine.width || 9999,
+        minY: 0,
+        maxY: engine.height || 9999
       },
       render: {
-          // Custom draw callback for hybrid migration
-          onDraw: (renderer, entity) => this.draw(renderer)
+        // Custom draw callback for hybrid migration
+        onDraw: (renderer, entity) => this.draw(renderer)
       },
       // AI Components
       aiConfig: {
@@ -150,9 +157,14 @@ export class MapEnemy {
     // Link pos to ECS component
     this.pos = this.entity.position
 
-    this.battleGroup = battleGroup || []
-
     this.scale = 2
+
+    // Optimization: Cache sprite definition to avoid GC
+    this.spriteDef = makeSprite({
+      imageId: 'sheet',
+      sx: 0, sy: 0, sw: 32, sh: 32,
+      ax: 0.5, ay: 1.0
+    })
   }
 
   stun(duration = 3.0) {
@@ -172,13 +184,13 @@ export class MapEnemy {
 
   toData() {
     // Read from ECS components
-    const { aiState, aiConfig } = this.entity
+    const { aiState, aiConfig, interaction } = this.entity
     return {
       x: this.pos.x,
       y: this.pos.y,
-      battleGroup: this.battleGroup,
+      battleGroup: interaction.battleGroup,
       options: {
-        uuid: this.uuid,
+        uuid: interaction.uuid,
         isStunned: aiState.state === 'stunned',
         stunnedTimer: aiState.state === 'stunned' ? aiState.timer : 0,
         aiType: aiConfig.type,
@@ -205,30 +217,17 @@ export class MapEnemy {
       ...context
     })
   }
-  
+
   // NOTE: getDistToPlayer and canSeePlayer logic moved to EnemyAISystem.
   // We keep update() only to sync bounds (dynamic resizing).
   // The state machine logic is gone.
 
-  update(dt) {
-    this._updateBounds()
-  }
-
-  _updateBounds() {
-    if (this.entity && this.entity.bounds) {
-        const { width, height } = this.engine
-        const minY = height * this.entity.aiConfig.minYRatio // Use config from component
-        this.entity.bounds.minX = 0
-        this.entity.bounds.maxX = width
-        this.entity.bounds.minY = minY
-        this.entity.bounds.maxY = height
-    }
-  }
+  // update() removed for GC optimization. Bounds are handled by MainScene.
 
   draw(renderer) {
     const ctx = renderer.ctx
     const { aiState, aiConfig } = this.entity
-    
+
     // Optimization: Draw Vision Cone less frequently or simplify
     // We can skip drawing vision for wanderers if they are far, or simplify to circle
     if (aiState.state !== 'stunned' && aiConfig.type !== 'wander') {
@@ -242,20 +241,15 @@ export class MapEnemy {
     // Optimization: Avoid regex and string concatenation per frame per entity
     // We already have cached RGB, but string building `rgba(...)` is still somewhat expensive in tight loops.
     // Ideally we should cache the full style string in aiState when color changes, but let's stick to this for now.
-    
+
     const img = this.engine.textures.get('sheet')
     if (img) {
       // Use pre-built semi-transparent color string if possible or just use a fixed shadow color
       // Shadow
       // renderer.drawCircle(this.pos.x, this.pos.y, 12, `rgba(0,0,0,0.2)`) 
-      
-      const spr = makeSprite({
-        imageId: 'sheet',
-        sx: 0, sy: 0, sw: 32, sh: 32,
-        ax: 0.5, ay: 1.0
-      })
 
-      renderer.drawSprite(img, spr, this.pos, this.scale)
+      // Optimization: Use cached spriteDef
+      renderer.drawSprite(img, this.spriteDef, this.pos, this.scale)
     } else {
       // Fallback
       renderer.drawCircle(this.pos.x, this.pos.y - 16, 14, aiState.colorHex)
@@ -263,22 +257,22 @@ export class MapEnemy {
 
     // 3. State Specific Visuals
     if (aiState.suspicion > 0) {
-       this._drawSuspicion(renderer, aiState, aiConfig)
+      this._drawSuspicion(renderer, aiState, aiConfig)
     }
-    
+
     if (aiState.state === 'chase') {
-       this._drawAlert(renderer, aiState)
+      this._drawAlert(renderer, aiState)
     }
-    
+
     if (aiState.state === 'stunned') {
-       this._drawStunned(renderer, aiState)
+      this._drawStunned(renderer, aiState)
     }
   }
 
   _drawVision(ctx, aiState, aiConfig) {
     const { facing } = aiState
     const { visionRadius, visionType, visionProximity, visionAngle } = aiConfig
-    
+
     // Optimization: Early return if context is missing or radius is tiny
     if (!ctx || visionRadius <= 1) return
 
@@ -303,39 +297,39 @@ export class MapEnemy {
     ctx.translate(this.pos.x, this.pos.y)
     // Rotate to facing direction
     ctx.rotate(currentAngle)
-    
+
     // Draw the cached image centered
     // The image was created with size = radius*2 + padding
     // And the shape is centered in that image.
     ctx.drawImage(img, -img.width / 2, -img.height / 2)
-    
+
     ctx.restore()
   }
 
   _drawSuspicion(renderer, aiState, aiConfig) {
-      const ctx = renderer.ctx
-      const cx = this.pos.x
-      const cy = this.pos.y - 35
+    const ctx = renderer.ctx
+    const cx = this.pos.x
+    const cy = this.pos.y - 35
 
-      // Draw "?"
-      ctx.save()
-      ctx.font = 'bold 20px Arial'
-      ctx.fillStyle = '#eab308' // Yellow
-      ctx.textAlign = 'center'
-      ctx.fillText('?', cx, cy)
+    // Draw "?"
+    ctx.save()
+    ctx.font = 'bold 20px Arial'
+    ctx.fillStyle = '#eab308' // Yellow
+    ctx.textAlign = 'center'
+    ctx.fillText('?', cx, cy)
 
-      // Draw Bar if has time
-      if (aiConfig.suspicionTime > 0) {
-        const barW = 20
-        const barH = 4
+    // Draw Bar if has time
+    if (aiConfig.suspicionTime > 0) {
+      const barW = 20
+      const barH = 4
 
-        ctx.fillStyle = '#1f2937'
-        ctx.fillRect(cx - barW / 2, cy + 5, barW, barH)
+      ctx.fillStyle = '#1f2937'
+      ctx.fillRect(cx - barW / 2, cy + 5, barW, barH)
 
-        ctx.fillStyle = '#eab308'
-        ctx.fillRect(cx - barW / 2 + 1, cy + 6, (barW - 2) * aiState.suspicion, barH - 2)
-      }
-      ctx.restore()
+      ctx.fillStyle = '#eab308'
+      ctx.fillRect(cx - barW / 2 + 1, cy + 6, (barW - 2) * aiState.suspicion, barH - 2)
+    }
+    ctx.restore()
   }
 
   _drawAlert(renderer, aiState) {
@@ -355,7 +349,7 @@ export class MapEnemy {
   _drawStunned(renderer, aiState) {
     const ctx = renderer.ctx
     const cx = this.pos.x
-    const cy = this.pos.y - 25 
+    const cy = this.pos.y - 25
 
     ctx.save()
     ctx.fillStyle = '#fbbf24' // Gold
@@ -363,7 +357,7 @@ export class MapEnemy {
       const angle = aiState.starAngle + (i * (Math.PI * 2 / 3))
       const sx = cx + Math.cos(angle) * 12
       const sy = cy + Math.sin(angle) * 4
-      
+
       ctx.beginPath()
       ctx.moveTo(sx, sy - 3)
       ctx.lineTo(sx + 3, sy)
@@ -374,7 +368,7 @@ export class MapEnemy {
 
     const barW = 24
     const barH = 4
-    const pct = Math.max(0, aiState.timer / 3.0) 
+    const pct = Math.max(0, aiState.timer / 3.0)
 
     ctx.fillStyle = '#1f2937'
     ctx.fillRect(cx - barW / 2, cy - 15, barW, barH)

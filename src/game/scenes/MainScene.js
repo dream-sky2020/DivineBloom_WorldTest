@@ -1,11 +1,12 @@
 import { Player } from '@/game/entities/Player'
 import { MapEnemy } from '@/game/entities/MapEnemy'
-import { clearWorld } from '@/game/ecs/world'
+import { clearWorld, world } from '@/game/ecs/world'
 import { MovementSystem } from '@/game/ecs/systems/MovementSystem'
 import { InputSystem } from '@/game/ecs/systems/InputSystem'
 import { ConstraintSystem } from '@/game/ecs/systems/ConstraintSystem'
 import { RenderSystem } from '@/game/ecs/systems/RenderSystem'
 import { EnemyAISystem } from '@/game/ecs/systems/EnemyAISystem'
+import { InteractionSystem } from '@/game/ecs/systems/InteractionSystem'
 // import { maps } from '@/data/maps' // No longer needed directly here
 
 /**
@@ -37,7 +38,7 @@ export class MainScene {
 
     // Map Enemies
     this.mapEnemies = []
-    
+
     // Static Cache Layer
     this.staticLayer = null
     this.lastCacheWidth = 0
@@ -61,7 +62,7 @@ export class MainScene {
     if (this.currentMap.entryPoints && this.currentMap.entryPoints[this.entryId]) {
       spawn = this.currentMap.entryPoints[this.entryId]
     }
-    
+
     if (spawn) {
       this.player.pos.x = spawn.x
       this.player.pos.y = spawn.y
@@ -87,12 +88,12 @@ export class MainScene {
     if (state.enemies) {
       // Cleanup existing entities
       this.mapEnemies.forEach(e => e.destroy && e.destroy())
-      
-      this.mapEnemies = state.enemies.map(data => 
+
+      this.mapEnemies = state.enemies.map(data =>
         MapEnemy.fromData(this.engine, data, { player: this.player })
       )
     }
-    
+
     // Rebuild entities list if needed (constructor does it too, but good for safety if called later)
     this.entities = [this.player, ...this.mapEnemies]
   }
@@ -143,70 +144,48 @@ export class MainScene {
   update(dt) {
     if (!this.isLoaded) return
 
+    // 1. Check Resize & Update Bounds
+    if (this.lastCacheWidth !== this.engine.width || this.lastCacheHeight !== this.engine.height) {
+      this._handleResize()
+    }
+
     // Run ECS Systems
     InputSystem.update(dt, this.engine.input)
     EnemyAISystem.update(dt)
     MovementSystem.update(dt)
     ConstraintSystem.update(dt)
 
-    // 更新所有实体
-    this.entities.forEach(ent => {
-      if (ent.update) ent.update(dt)
+    // Check Collisions / Interactions
+    InteractionSystem.update({
+      onEncounter: this.onEncounter,
+      onSwitchMap: this.onSwitchMap,
+      portals: this.currentMap.portals
     })
-
-    // Check Collisions
-    this._checkEncounters()
-    this._checkPortals()
 
     // 摄像机跟随玩家 (简单示例)
     // this.engine.renderer.setCamera(this.player.pos.x - 400, 0)
     this.engine.renderer.setCamera(0, 0)
   }
 
-  _checkPortals() {
-    if (!this.onSwitchMap || !this.currentMap.portals) return
+  _handleResize() {
+    const { width, height } = this.engine
+    if (width === 0 || height === 0) return
 
-    const p = this.player.pos
-    // Simple AABB for portals
-    // Player is a point, portal is a rect
-    for (const portal of this.currentMap.portals) {
-      if (p.x >= portal.x && p.x <= portal.x + portal.w &&
-          p.y >= portal.y && p.y <= portal.y + portal.h) {
-        
-        console.log('Portal Triggered!', portal)
-        this.onSwitchMap(portal.targetMapId, portal.targetEntryId)
-        return
-      }
+    // Update bounds for all entities that need it
+    const boundedEntities = world.with('bounds')
+    const minYRatio = this.currentMap.constraints?.minYRatio ?? 0.35
+
+    for (const ent of boundedEntities) {
+      ent.bounds.minX = 0
+      ent.bounds.maxX = width
+      ent.bounds.maxY = height
+      // Use entity config if available, else default
+      const ratio = ent.aiConfig?.minYRatio ?? minYRatio
+      ent.bounds.minY = height * ratio
     }
-  }
 
-  _checkEncounters() {
-    if (!this.onEncounter) return
-
-    const p = this.player.pos
-    const detectionRadius = 40 // simple hit box distance
-
-    for (let i = this.mapEnemies.length - 1; i >= 0; i--) {
-      const enemy = this.mapEnemies[i]
-      const dx = p.x - enemy.pos.x
-      const dy = p.y - enemy.pos.y
-      const dist = Math.sqrt(dx * dx + dy * dy)
-
-      if (dist < detectionRadius) {
-        if (enemy.isStunned) continue
-
-        // Trigger Encounter!
-        console.log('Encounter triggered with enemy index:', i)
-
-        // Don't remove immediately - let the battle system / world store handle the outcome
-        // this.mapEnemies.splice(i, 1)
-        // this.entities = this.entities.filter(e => e !== enemy)
-
-        // Callback
-        this.onEncounter(enemy.battleGroup, enemy.uuid)
-        return // Trigger one at a time
-      }
-    }
+    // Refresh background cache
+    this._refreshStaticLayer()
   }
 
   /**
@@ -243,52 +222,52 @@ export class MainScene {
 
     // Check if cache needs refresh (e.g. resize)
     if (!this.staticLayer || this.lastCacheWidth !== width || this.lastCacheHeight !== height) {
-        this._refreshStaticLayer()
+      this._refreshStaticLayer()
     }
 
     if (this.staticLayer) {
-        // Fast Path: Draw cached image
-        renderer.ctx.drawImage(this.staticLayer, 0, 0)
+      // Fast Path: Draw cached image
+      renderer.ctx.drawImage(this.staticLayer, 0, 0)
     }
   }
 
   _refreshStaticLayer() {
-      if (!this.currentMap) return
-      const { width, height } = this.engine
-      if (width === 0 || height === 0) return
+    if (!this.currentMap) return
+    const { width, height } = this.engine
+    if (width === 0 || height === 0) return
 
-      // Create or Resize Canvas
-      if (!this.staticLayer) {
-          this.staticLayer = document.createElement('canvas')
-      }
-      this.staticLayer.width = width
-      this.staticLayer.height = height
-      
-      const ctx = this.staticLayer.getContext('2d')
-      const bg = this.currentMap.background
-      const minYRatio = this.currentMap.constraints?.minYRatio ?? 0.35
+    // Create or Resize Canvas
+    if (!this.staticLayer) {
+      this.staticLayer = document.createElement('canvas')
+    }
+    this.staticLayer.width = width
+    this.staticLayer.height = height
 
-      // 1. Clear
-      ctx.clearRect(0, 0, width, height)
+    const ctx = this.staticLayer.getContext('2d')
+    const bg = this.currentMap.background
+    const minYRatio = this.currentMap.constraints?.minYRatio ?? 0.35
 
-      // 2. Draw Ground
-      ctx.fillStyle = bg.groundColor || '#bbf7d0'
-      const groundY = height * minYRatio
-      ctx.fillRect(0, groundY, width, height - groundY)
+    // 1. Clear
+    ctx.clearRect(0, 0, width, height)
 
-      // 3. Draw Decorations
-      if (bg.decorations) {
-        bg.decorations.forEach(dec => {
-          if (dec.type === 'rect') {
-            const y = dec.yRatio ? height * dec.yRatio : dec.y
-            ctx.fillStyle = dec.color
-            ctx.fillRect(dec.x, y, dec.width, dec.height)
-          }
-        })
-      }
-      
-      this.lastCacheWidth = width
-      this.lastCacheHeight = height
+    // 2. Draw Ground
+    ctx.fillStyle = bg.groundColor || '#bbf7d0'
+    const groundY = height * minYRatio
+    ctx.fillRect(0, groundY, width, height - groundY)
+
+    // 3. Draw Decorations
+    if (bg.decorations) {
+      bg.decorations.forEach(dec => {
+        if (dec.type === 'rect') {
+          const y = dec.yRatio ? height * dec.yRatio : dec.y
+          ctx.fillStyle = dec.color
+          ctx.fillRect(dec.x, y, dec.width, dec.height)
+        }
+      })
+    }
+
+    this.lastCacheWidth = width
+    this.lastCacheHeight = height
   }
 
   // 辅助：生成资源 URL
