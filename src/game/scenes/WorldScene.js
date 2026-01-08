@@ -61,20 +61,16 @@ export class WorldScene {
         const { player } = ScenarioLoader.load(this.engine, this.mapData, this.entryId)
         this.player = player
 
-        // [NEW] Convert Portals Data to ECS Entities
+        // [NEW] Use EntityManager to create Portal Entities
         if (this.mapData.portals) {
             for (const p of this.mapData.portals) {
-                world.add({
-                    type: 'portal',
-                    position: { x: p.x, y: p.y },
-                    trigger: {
-                        type: 'ZONE',
-                        bounds: { x: 0, y: 0, w: p.w, h: p.h }
-                    },
-                    actionTeleport: {
-                        mapId: p.targetMapId,
-                        entryId: p.targetEntryId
-                    }
+                EntityManager.createPortal({
+                    x: p.x,
+                    y: p.y,
+                    width: p.w,
+                    height: p.h,
+                    targetMapId: p.targetMapId,
+                    targetEntryId: p.targetEntryId
                 })
             }
         }
@@ -107,20 +103,16 @@ export class WorldScene {
         const { player } = ScenarioLoader.restore(this.engine, state)
         this.player = player
 
-        // Re-create portals since they aren't saved in save file (they are static map data)
+        // Re-create portals using EntityManager
         if (this.mapData.portals) {
             for (const p of this.mapData.portals) {
-                world.add({
-                    type: 'portal',
-                    position: { x: p.x, y: p.y },
-                    trigger: {
-                        type: 'ZONE',
-                        bounds: { x: 0, y: 0, w: p.w, h: p.h }
-                    },
-                    actionTeleport: {
-                        mapId: p.targetMapId,
-                        entryId: p.targetEntryId
-                    }
+                EntityManager.createPortal({
+                    x: p.x,
+                    y: p.y,
+                    width: p.w,
+                    height: p.h,
+                    targetMapId: p.targetMapId,
+                    targetEntryId: p.targetEntryId
                 })
             }
         }
@@ -165,8 +157,7 @@ export class WorldScene {
         // [NEW] Trigger System (Logic)
         TriggerSystem.update(dt, this.engine.input)
 
-        // [LEGACY] UI Hints System (e.g. "Press E")
-        // Currently disabled as no callback is provided, but structure is ready.
+        // [LEGACY] UI Hints System
         InteractionSystem.update({
             onProximity: null
         })

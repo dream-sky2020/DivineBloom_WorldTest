@@ -1,6 +1,7 @@
 import { PlayerFactory } from './factories/PlayerFactory'
 import { EnemyFactory } from './factories/EnemyFactory'
 import { NPCFactory } from './factories/NPCFactory'
+import { PortalFactory } from './factories/PortalFactory'
 
 export const EntityCreator = {
     createEnemy(data) {
@@ -13,6 +14,10 @@ export const EntityCreator = {
 
     createNPC(data) {
         return NPCFactory.create(data)
+    },
+
+    createPortal(data) {
+        return PortalFactory.create(data)
     },
 
     create(engine, type, data, context = {}) {
@@ -33,6 +38,9 @@ export const EntityCreator = {
                 config: data.config || {}
             })
         }
+
+        if (type === 'portal') {
+            return this.createPortal(data)
+        }
     }
 }
-
