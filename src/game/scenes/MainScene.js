@@ -1,6 +1,6 @@
-import { Player } from '@/game/entities/Player'
-import { MapEnemy } from '@/game/entities/MapEnemy'
-import { NPC } from '@/game/entities/NPC'
+// Player 移除
+// MapEnemy 移除
+// NPC 移除
 import { EntityFactory } from '@/game/entities/EntityFactory'
 import { clearWorld, world } from '@/game/ecs/world'
 import { MovementSystem } from '@/game/ecs/systems/MovementSystem'
@@ -64,8 +64,12 @@ export class MainScene {
   }
 
   _initMap() {
-    // 1. Create Player
-    this.player = new Player(this.engine, PlayerConfig)
+    // 1. Create Player via Factory
+    this.player = EntityFactory.createPlayer({ 
+        x: 200, 
+        y: 260, 
+        scale: PlayerConfig.scale 
+    })
     this.gameEntities.push(this.player)
 
     // Set Player Spawn from Entry Point
@@ -75,8 +79,8 @@ export class MainScene {
     }
 
     if (spawn) {
-      this.player.pos.x = spawn.x
-      this.player.pos.y = spawn.y
+      this.player.position.x = spawn.x
+      this.player.position.y = spawn.y
     }
     
     // 2. Spawn Enemies and NPCs
@@ -89,21 +93,26 @@ export class MainScene {
       isInitialized: true,
       // Serialize ALL entities in one list
       entities: this.gameEntities.map(e => ({
-        type: e.type,
-        data: e.toData()
+        type: e.type || (e.entity ? e.entity.type : 'unknown'),
+        data: EntityFactory.serialize(e)
       }))
     }
   }
 
   restore(state) {
-    // Clear existing wrappers just in case (ECS world is already cleared in constructor)
-    this.gameEntities.forEach(e => e.destroy && e.destroy())
+    // Clear existing entities
+    this.gameEntities.forEach(e => {
+        // 如果还有 destroy 方法（防止漏网之鱼），调用之；否则直接从 world 移除
+        if (e.destroy) e.destroy()
+        else world.remove(e)
+    })
     this.gameEntities = []
 
     if (state.entities) {
       state.entities.forEach(item => {
+        // 使用 create 统一入口，不需要根据 type 显式 new Class
         const entity = EntityFactory.create(this.engine, item.type, item.data, {
-          player: null // Will attach later if needed, or update dynamically
+          player: null 
         })
         
         if (entity) {
@@ -115,23 +124,16 @@ export class MainScene {
       })
     }
     
-    // If for some reason player is missing (e.g. old save format), recreate default
+    // Fallback: recreate player if missing
     if (!this.player) {
        console.warn('Player not found in save state, recreating...')
-       this.player = new Player(this.engine, PlayerConfig)
+       this.player = EntityFactory.createPlayer({ 
+            x: 200, 
+            y: 260, 
+            scale: PlayerConfig.scale 
+       })
        this.gameEntities.push(this.player)
     }
-
-    // Update references for enemies (they need player reference for AI)
-    this.gameEntities.forEach(e => {
-      if (e.type === 'enemy' && e.entity.aiState) {
-        // AI logic often queries the world for player, or we can pass it here if needed
-        // Our EnemyAISystem actually calls `getPlayer()` which searches the ECS world,
-        // so we don't strictly need to pass `player` in context anymore if the system is robust.
-        // However, MapEnemy constructor might store it. Let's check MapEnemy...
-        // MapEnemy doesn't store 'player' property, it uses it for initial lookups if needed.
-      }
-    })
   }
 
   _spawnEnemies() {
@@ -150,12 +152,17 @@ export class MainScene {
 
         const group = spawner.enemyIds.map(id => ({ id }))
 
-        const enemy = new MapEnemy(this.engine, x, y, group, {
-          player: this.player,
-          ...spawner.options,
-          minYRatio: this.currentMap.constraints?.minYRatio
-        })
-        this.gameEntities.push(enemy)
+        const enemyData = {
+            x, y, 
+            battleGroup: group,
+            options: {
+                ...spawner.options,
+                minYRatio: this.currentMap.constraints?.minYRatio,
+            }
+        }
+        
+        const enemyEntity = EntityFactory.createEnemy(enemyData)
+        this.gameEntities.push(enemyEntity)
       }
     })
   }
@@ -164,27 +171,40 @@ export class MainScene {
     if (!this.currentMap || !this.currentMap.npcs) return
 
     this.currentMap.npcs.forEach(data => {
-      const npc = new NPC(this.engine, data.x, data.y, data.config || {})
-      this.gameEntities.push(npc)
+      // [修改] 使用工厂创建 NPC
+      // 数据结构适配：map 数据是平铺的 {x, y, ...config}，工厂期望 {x, y, config: {...}}
+      // 为了保持 EntityFactory createNPC 签名清晰，我们在 factory 里做了分离，或者在这里构造好
+      
+      // 根据 EntityFactory.createNPC(data) 的签名： { x, y, config: {} }
+      // 而 map 数据通常是 { x, y, dialogueId: '...', ... }
+      // 所以我们在这里重新组装一下
+      
+      const npcData = {
+          x: data.x,
+          y: data.y,
+          config: {
+              ...data, // 把所有额外属性都传进去作为 config (包含 dialogueId, spriteId 等)
+              x: undefined, // 清理掉重复的 x, y（可选）
+              y: undefined
+          }
+      }
+      
+      const npcEntity = EntityFactory.createNPC(npcData)
+      this.gameEntities.push(npcEntity)
     })
   }
 
   async load() {
-    // 扫描所有实体收集所需的 visual ID
     const requiredVisuals = new Set()
-    
-    // 总是包含默认
     requiredVisuals.add('default')
 
     this.gameEntities.forEach(e => {
-      // 检查 ECS visual 组件
-      if (e.entity && e.entity.visual) {
-        requiredVisuals.add(e.entity.visual.id)
+      // 现在的 e 都是纯 ECS 实体，没有 wrapper 了，直接访问
+      if (e.visual) {
+        requiredVisuals.add(e.visual.id)
       }
-      // 兼容旧的 spriteId 配置（如果还没生成实体，比如如果是预加载逻辑分离的情况）
     })
 
-    // Map Background
     if (this.currentMap.backgroundId) {
       const bgPath = getAssetPath(this.currentMap.backgroundId)
       if (bgPath) {
@@ -192,13 +212,10 @@ export class MainScene {
       }
     }
 
-    // 执行批量加载
     console.log('Preloading visuals:', Array.from(requiredVisuals))
     await this.engine.assets.preloadVisuals(Array.from(requiredVisuals), Visuals)
 
-    // Pre-render background
     this._refreshStaticLayer()
-
     this.isLoaded = true
   }
 
@@ -210,27 +227,24 @@ export class MainScene {
     if (!this.isLoaded) return
     this.lastDt = dt
 
-    // 1. Check Resize & Update Bounds
     if (this.lastCacheWidth !== this.engine.width || this.lastCacheHeight !== this.engine.height) {
       this._handleResize()
     }
 
-    // Run ECS Systems
     InputSystem.update(dt, this.engine.input)
     EnemyAISystem.update(dt)
     MovementSystem.update(dt)
     ConstraintSystem.update(dt)
 
-    // Check Collisions / Interactions
     InteractionSystem.update({
       input: this.engine.input,
       onEncounter: this.onEncounter,
       onSwitchMap: this.onSwitchMap,
       onInteract: this.onInteract,
+      onProximity: null,
       portals: this.currentMap.portals
     })
 
-    // 摄像机跟随玩家 (简单示例)
     this.engine.renderer.setCamera(0, 0)
   }
 
@@ -238,7 +252,6 @@ export class MainScene {
     const { width, height } = this.engine
     if (width === 0 || height === 0) return
 
-    // Update bounds for all entities that need it
     const boundedEntities = world.with('bounds')
     const minYRatio = this.currentMap.constraints?.minYRatio ?? 0.35
 
@@ -246,12 +259,10 @@ export class MainScene {
       ent.bounds.minX = 0
       ent.bounds.maxX = width
       ent.bounds.maxY = height
-      // Use entity config if available, else default
       const ratio = ent.aiConfig?.minYRatio ?? minYRatio
       ent.bounds.minY = height * ratio
     }
 
-    // Refresh background cache
     this._refreshStaticLayer()
   }
 
@@ -259,20 +270,14 @@ export class MainScene {
    * @param {Renderer2D} renderer 
    */
   draw(renderer) {
-    // 1. 绘制背景/地面
     this._drawEnvironment(renderer)
 
     if (!this.isLoaded) return
 
-    // 2. 绘制所有实体 (ECS RenderSystem)
-    // RenderSystem handles Y-sorting and drawing
-    // 我们把 update(dt) 获取到的时间传给 RenderSystem 用于播放动画
     RenderSystem.update(renderer, this.lastDt)
 
-    // Draw Portals (Visual Feedback)
     if (this.currentMap.portals) {
       this.currentMap.portals.forEach(p => {
-        // Semi-transparent cyan glow
         renderer.drawRect(p.x, p.y, p.w, p.h, 'rgba(34, 211, 238, 0.3)')
       })
     }
@@ -284,13 +289,11 @@ export class MainScene {
   _drawEnvironment(renderer) {
     const { width, height } = this.engine
 
-    // Check if cache needs refresh (e.g. resize)
     if (!this.staticLayer || this.lastCacheWidth !== width || this.lastCacheHeight !== height) {
       this._refreshStaticLayer()
     }
 
     if (this.staticLayer) {
-      // Fast Path: Draw cached image
       renderer.ctx.drawImage(this.staticLayer, 0, 0)
     }
   }
@@ -300,7 +303,6 @@ export class MainScene {
     const { width, height } = this.engine
     if (width === 0 || height === 0) return
 
-    // Create or Resize Canvas
     if (!this.staticLayer) {
       this.staticLayer = document.createElement('canvas')
     }
@@ -311,15 +313,12 @@ export class MainScene {
     const bg = this.currentMap.background
     const minYRatio = this.currentMap.constraints?.minYRatio ?? 0.35
 
-    // 1. Clear
     ctx.clearRect(0, 0, width, height)
 
-    // 2. Draw Ground
     ctx.fillStyle = bg.groundColor || '#bbf7d0'
     const groundY = height * minYRatio
     ctx.fillRect(0, groundY, width, height - groundY)
 
-    // 3. Draw Decorations
     if (bg.decorations) {
       bg.decorations.forEach(dec => {
         if (dec.type === 'rect') {

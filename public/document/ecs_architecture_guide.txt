@@ -1,0 +1,128 @@
+ECS 架构与项目运行流程指南
+
+本文档旨在说明项目的核心架构设计、目录结构及游戏循环的运行机制。
+本项目采用 Entity-Component-System (ECS) 架构，配合数据驱动 (Data-Driven) 的设计理念，为实现可视化编辑器和多人联机奠定基础。
+
+---
+
+## 1. 核心架构：ECS (Entity-Component-System)
+
+传统的面向对象编程 (OOP) 通常使用 `class Player extends Character`，但在 ECS 中，我们摒弃了继承，拥抱组合。
+
+### 1.1 三大支柱
+
+1.  **Entity (实体)**
+    *   **定义**: 仅仅是一个 ID（在 Miniplex 库中是一个纯对象容器）。
+    *   **意义**: 代表游戏中的一个“物体”。
+    *   **例子**: 玩家、敌人、NPC、传送门、甚至是一颗飞行中的子弹。
+    *   **实现**: 不包含任何逻辑方法（如 `update()`, `draw()`），只包含数据组件。
+
+2.  **Component (组件)**
+    *   **定义**: 纯数据结构 (Plain Old Data)，用于描述实体的属性。
+    *   **意义**: 赋予实体某种“能力”或“状态”。
+    *   **原则**: 必须是可序列化的 JSON 数据（不含函数、不含类实例）。
+    *   **常用组件**:
+        *   `position: { x, y }` -> 表示位置
+        *   `velocity: { x, y }` -> 表示会移动
+        *   `visual: { id, state }` -> 表示有外观
+        *   `input: true` -> 表示接收玩家控制
+        *   `aiState: { ... }` -> 表示拥有 AI 行为
+
+3.  **System (系统)**
+    *   **定义**: 纯逻辑函数。
+    *   **意义**: 每一帧运行一次，负责处理拥有特定组件的实体。
+    *   **原则**: 不持有状态，只修改组件数据。
+    *   **工作流**: Query (查询实体) -> Process (处理逻辑) -> Mutate (修改组件)。
+
+---
+
+## 2. 项目目录结构
+
+项目源码位于 `src/` 目录下，ECS 相关代码集中在 `src/game/`。
+
+```text
+src/
+├── game/
+│   ├── ecs/
+│   │   ├── world.js             # 【数据库】 Miniplex World 实例，所有实体的容器
+│   │   └── systems/             # 【处理器】 所有的逻辑系统
+│   │       ├── InputSystem.js      # 处理键盘输入 -> 修改 velocity
+│   │       ├── MovementSystem.js   # 物理移动 -> 根据 velocity 修改 position
+│   │       ├── InteractionSystem.js# 交互检测 -> 检查距离，触发对话/战斗
+│   │       ├── EnemyAISystem.js    # AI 决策 -> 修改敌人 velocity 和 aiState
+│   │       ├── ConstraintSystem.js # 边界限制 -> 修正 position
+│   │       └── RenderSystem.js     # 渲染 -> 读取 visual 和 position 绘制画面
+│   │
+│   ├── entities/
+│   │   └── EntityFactory.js     # 【数据工厂】 负责组装组件，生成 Entity 并加入 World
+│   │
+│   └── scenes/
+│       └── MainScene.js         # 【场景总管】 负责加载地图数据、初始化工厂、驱动游戏循环
+│
+├── data/                        # 【静态数据】
+│   ├── maps/                    # 关卡数据 (JSON/JS)
+│   ├── assets.js                # 资源清单
+│   └── visuals.js               # 视觉配置表
+│
+└── components/                  # 【UI 层】 Vue 组件，负责界面显示 (Inventory, Dialogue等)
+```
+
+---
+
+## 3. 游戏循环 (Game Loop) 运行流程
+
+当游戏启动时，`MainScene` 负责驱动每一帧的更新。以下是一帧 (`update(dt)`) 内数据的流转过程：
+
+### Step 0: 数据准备 (MainScene)
+*   **初始化**: `MainScene` 读取地图数据 (`data/maps/*.js`)。
+*   **生成**: 调用 `EntityFactory.createPlayer()` 和 `createEnemy()`。
+*   **结果**: ECS World 中填充了许多拥有初始状态的 Entity。
+
+### Step 1: InputSystem (输入阶段)
+*   **输入**: 读取全局 InputManager 的按键状态。
+*   **Query**: 查找所有拥有 `input` + `velocity` 组件的实体（通常是 Player）。
+*   **Action**: 如果按下了 W/A/S/D，修改实体的 `velocity` 值。
+*   *注：此时玩家坐标尚未改变。*
+
+### Step 2: EnemyAISystem (决策阶段)
+*   **Query**: 查找所有拥有 `aiState` + `enemy` 的实体。
+*   **Logic**: 计算与玩家的距离，执行状态机 (Wander/Chase/Flee)。
+*   **Action**: 修改敌人的 `velocity` (移动方向) 和 `aiState` (警觉度)。
+
+### Step 3: MovementSystem (物理阶段)
+*   **Query**: 查找所有拥有 `position` + `velocity` 的实体。
+*   **Action**: 执行欧拉积分：`position += velocity * dt`。
+*   **结果**: 实体在这一步真正发生了位移。
+
+### Step 4: ConstraintSystem (修正阶段)
+*   **Query**: 查找所有拥有 `bounds` 的实体。
+*   **Action**: 如果 `position` 超出了 `bounds` 定义的矩形范围，强制拉回边界内。
+
+### Step 5: InteractionSystem (交互阶段)
+*   **Query**: 查找 Player 和所有拥有 `interaction` (NPC/Portal) 的实体。
+*   **Logic**: 计算距离。如果满足条件（距离 < 阈值），触发回调。
+*   **Event**: 可能触发 `onInteract` (打开对话框) 或 `onEncounter` (进入战斗)。
+*   *注：战斗系统目前是独立的 Vue Store 状态，通过这里触发切换。*
+
+### Step 6: RenderSystem (渲染阶段)
+*   **Query**: 查找所有拥有 `visual` + `position` 的实体。
+*   **Layering**: 根据 Y 轴坐标进行排序 (Y-Sorting)，实现遮挡关系。
+*   **Draw**: 根据 `visual.id` 查找贴图资源，结合 `visual.state` (动画帧) 绘制到 Canvas 上。
+
+---
+
+## 4. 数据驱动的优势
+
+1.  **解耦**: 渲染系统不需要知道对象是“敌人”还是“玩家”，它只关心“有没有图”。
+2.  **序列化 (Serialization)**:
+    *   保存游戏 = `JSON.stringify(world.entities)`。
+    *   加载游戏 = `JSON.parse(data).forEach(e => world.add(e))`。
+    *   这使得**关卡编辑器**的开发变得极其简单：编辑器只需要读写这个 JSON 列表。
+3.  **扩展性**: 新增功能（例如“中毒状态”）只需要新增一个 System 和一个 Component，无需修改现有的 Player 或 Enemy 类。
+
+## 5. 开发规范
+
+*   **新建实体**: 必须通过 `EntityFactory` 创建，禁止在 Scene 中手动拼装对象。
+*   **修改逻辑**: 必须在 `src/game/ecs/systems/` 下对应的 System 中修改，禁止在 Entity 数据中写方法。
+*   **状态保存**: 所有需要保存的游戏状态（血量、位置、CD）都必须放在 ECS Component 中，不能放在 System 的闭包变量里。
+
