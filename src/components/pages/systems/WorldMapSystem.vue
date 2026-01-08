@@ -198,16 +198,32 @@ onMounted(async () => {
         if (dialogueStore.isActive) return
         console.log('Interacted with NPC:', interaction)
         
-        const scriptId = interaction.id // e.g. 'elder_greeting' or just 'elder'
-        // 尝试在 DB 中查找脚本
-        // 注意：我们的 elder.js 导出的是 { elderDialogue: function*... }
-        // 所以 NPC 的 config.dialogueId 应该配置为 'elderDialogue'
+        let scriptId = interaction.id // e.g. 'elder_greeting' or just 'elder'
         
-        // 为了方便，如果没找到直接匹配的，可以尝试加上 'Dialogue' 后缀或者查找前缀匹配
+        // 尝试在 DB 中查找脚本
         let scriptFn = dialoguesDb[scriptId]
+        
+        // 如果找不到，尝试查找常用的 id 映射
+        if (!scriptFn) {
+            // 尝试查找以 _test 结尾的 ID 对应的正式脚本，或者反之
+            // 例如: elder_test -> elderDialogue
+            // 这里可以做一个简单的映射或者约定
+            // 目前我们的 elder.js 导出的是 elderDialogue，所以 id 应该是 elderDialogue
+            // 但是 village.js 里面配置的是 elder_test
+            
+            // 简单容错：如果 ID 是 elder_test，尝试找 elderDialogue
+            if (scriptId === 'elder_test' && dialoguesDb['elderDialogue']) {
+                scriptFn = dialoguesDb['elderDialogue'];
+                console.log(`Redirected dialogue ID '${scriptId}' to 'elderDialogue'`);
+            }
+        }
         
         if (!scriptFn) {
            console.warn(`No dialogue script found for ID: ${scriptId}`)
+           // 可以在这里显示一个默认的提示文本，而不是直接报错
+           dialogueStore.startDialogue(function*() {
+               yield { type: 'SAY', speaker: 'System', textKey: `Debug: Dialogue ID '${scriptId}' not found.` };
+           });
            return
         }
 

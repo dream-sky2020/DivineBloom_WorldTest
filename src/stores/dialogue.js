@@ -60,7 +60,7 @@ export const useDialogueStore = defineStore('dialogue', () => {
                 speaker.value = op.speaker;
                 currentText.value = op.textKey;
                 currentOptions.value = [];
-                isWaitingForInput = true; // 等待点击继续
+                isWaitingForInput.value = true; // 等待点击继续
                 break;
 
             case OP_CODES.CHOICE:
@@ -69,7 +69,7 @@ export const useDialogueStore = defineStore('dialogue', () => {
                     currentText.value = op.titleKey;
                 }
                 currentOptions.value = op.choices;
-                isWaitingForInput = true; // 等待选择
+                isWaitingForInput.value = true; // 等待选择
                 break;
 
             case OP_CODES.EVENT:
@@ -99,8 +99,14 @@ export const useDialogueStore = defineStore('dialogue', () => {
      * 玩家点击“继续”
      */
     const advance = () => {
+        // 如果不在等待输入，忽略点击
+        if (!isWaitingForInput.value) return;
+
         // 如果当前是选项模式，点击背景可能无效，必须选选项
         if (currentOptions.value.length > 0) return;
+
+        // 标记不再等待输入，防止重复点击
+        isWaitingForInput.value = false;
 
         // 传递 null 给 next
         next(null);
@@ -110,6 +116,12 @@ export const useDialogueStore = defineStore('dialogue', () => {
      * 玩家选择选项
      */
     const selectOption = (val) => {
+        // 如果不在等待输入，忽略
+        if (!isWaitingForInput.value) return;
+        
+        // 标记不再等待输入
+        isWaitingForInput.value = false;
+
         // 传递选项值给 next，这个值会成为脚本里 yield 表达式的返回值
         // const choice = yield choose(...) -> choice 就会变成 val
         next(val);
@@ -117,6 +129,7 @@ export const useDialogueStore = defineStore('dialogue', () => {
 
     const endDialogue = () => {
         isActive.value = false;
+        isWaitingForInput.value = false;
         speaker.value = '';
         currentText.value = '';
         currentOptions.value = [];
@@ -125,6 +138,7 @@ export const useDialogueStore = defineStore('dialogue', () => {
 
     return {
         isActive,
+        isWaitingForInput,
         speaker,
         currentText,
         currentOptions,

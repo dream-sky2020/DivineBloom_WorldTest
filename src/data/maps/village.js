@@ -41,7 +41,7 @@ export const village = {
             x: 400, y: 300,
             config: {
                 spriteId: 'npc_elder',
-                dialogueId: 'elder_test', // Corresponds to dialoguesDb['elder_test']
+                dialogueId: 'elderDialogue', // Update ID to match exported function name in elder.js
                 range: 60
             }
         }

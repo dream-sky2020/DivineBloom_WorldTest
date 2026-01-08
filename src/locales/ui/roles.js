@@ -82,6 +82,20 @@ export default {
     en: 'Monster',
     ja: 'モンスター',
     ko: '몬스터'
+  },
+  elder: {
+    zh: '长老',
+    'zh-TW': '長老',
+    en: 'Elder',
+    ja: '長老',
+    ko: '장로'
+  },
+  guide: {
+    zh: '向导',
+    'zh-TW': '嚮導',
+    en: 'Guide',
+    ja: 'ガイド',
+    ko: '가이드'
   }
 }
 

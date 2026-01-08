@@ -148,7 +148,9 @@ export class MainScene {
     if (!this.currentMap || !this.currentMap.npcs) return
 
     this.currentMap.npcs.forEach(data => {
-      const npc = new NPC(this.engine, data.x, data.y, data)
+      // 传递 data.config 而不是整个 data 对象
+      // 确保 NPC 构造函数能正确读取 dialogueId 等配置
+      const npc = new NPC(this.engine, data.x, data.y, data.config || {})
       this.npcs.push(npc)
     })
   }
