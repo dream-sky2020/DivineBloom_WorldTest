@@ -10,8 +10,8 @@ export const InteractionSystem = {
      * @param {object} params
      * @param {import('@/game/GameEngine').InputManager} [params.input]
      * @param {Function} [params.onEncounter] - Used as a flag to enable battle detection
-     * @param {Function} [params.onSwitchMap]
-     * @param {Function} [params.onInteract]
+     * @param {Function} [params.onSwitchMap] - Used as a flag to enable portal detection
+     * @param {Function} [params.onInteract] - Used as a flag to enable interaction detection
      * @param {Function} [params.onProximity]
      * @param {Array} [params.portals]
      */
@@ -33,14 +33,16 @@ export const InteractionSystem = {
                     pPos.y >= portal.y && pPos.y <= portal.y + portal.h) {
 
                     console.log('Portal Triggered!', portal)
-                    onSwitchMap(portal.targetMapId, portal.targetEntryId)
+                    eventQueue.emit('TRIGGER_MAP_SWITCH', {
+                        targetMapId: portal.targetMapId,
+                        targetEntryId: portal.targetEntryId
+                    })
                     return
                 }
             }
         }
 
         // 3. Check Encounters (Battle)
-        // We use onEncounter existence as a flag to enable battle checks
         if (onEncounter) {
             const detectionRadius = 40
             for (const enemy of enemies) {
@@ -52,7 +54,6 @@ export const InteractionSystem = {
 
                 if (dist < detectionRadius) {
                     const { battleGroup, uuid } = enemy.interaction
-                    // Emit event instead of direct callback
                     eventQueue.emit('TRIGGER_BATTLE', { battleGroup, uuid })
                     return
                 }
@@ -80,17 +81,18 @@ export const InteractionSystem = {
             }
 
             // Proximity callback (for UI prompt)
+            // Note: This is a continuous state update (UI hint), not a discrete event, 
+            // so keeping it as a direct callback is often cleaner for "active/inactive" states.
+            // But we could also emit a 'PROXIMITY_UPDATE' event every frame if we wanted to be strict.
+            // For now, let's keep it direct or move it later.
             if (onProximity) {
                 onProximity(nearestNPC ? nearestNPC.interaction : null)
             }
 
             // Interaction Trigger
             if (nearestNPC && input) {
-                // Check keys with simple debounce or justPressed check
-                // Since we don't have isJustPressed implemented in InputManager yet, 
-                // we rely on the game loop stopping (gameEngine.stop()) immediately after interaction to prevent multi-trigger
                 if (input.isDown('Space') || input.isDown('KeyE') || input.isDown('Enter')) {
-                    onInteract(nearestNPC.interaction)
+                    eventQueue.emit('INTERACT_NPC', { interaction: nearestNPC.interaction })
                 }
             }
         }
