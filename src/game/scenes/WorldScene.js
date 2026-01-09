@@ -1,13 +1,17 @@
 import { clearWorld, world } from '@/game/ecs/world'
-import { MovementSystem } from '@/game/ecs/systems/MovementSystem'
-import { InputSystem } from '@/game/ecs/systems/InputSystem'
-import { ConstraintSystem } from '@/game/ecs/systems/ConstraintSystem'
-import { RenderSystem } from '@/game/ecs/systems/RenderSystem'
-import { EnemyAISystem } from '@/game/ecs/systems/EnemyAISystem'
-import { InteractionSystem } from '@/game/ecs/systems/InteractionSystem'
-import { ActionSystem } from '@/game/ecs/systems/ActionSystem'
-import { EnvironmentSystem } from '@/game/ecs/systems/EnvironmentSystem'
-import { TriggerSystem } from '@/game/ecs/systems/TriggerSystem'
+import { MovementSystem } from '@/game/ecs/systems/physics/MovementSystem'
+import { InputSystem } from '@/game/ecs/systems/input/InputSystem'
+import { PlayerControlSystem } from '@/game/ecs/systems/control/PlayerControlSystem'
+import { ConstraintSystem } from '@/game/ecs/systems/physics/ConstraintSystem'
+import { VisualRenderSystem } from '@/game/ecs/systems/render/VisualRenderSystem'
+import { VisionRenderSystem } from '@/game/ecs/systems/render/VisionRenderSystem'
+import { StatusRenderSystem } from '@/game/ecs/systems/render/StatusRenderSystem'
+import { EnemyAISystem } from '@/game/ecs/systems/ai/EnemyAISystem'
+import { ActionSystem } from '@/game/ecs/systems/event/ActionSystem'
+import { AnimationSystem } from '@/game/ecs/systems/render/AnimationSystem'
+import { EnvironmentRenderSystem } from '@/game/ecs/systems/render/EnvironmentRenderSystem'
+import { DetectionAreaRenderSystem } from '@/game/ecs/systems/render/DetectionAreaRenderSystem'
+import { TriggerSystem } from '@/game/ecs/systems/event/TriggerSystem'
 import { getAssetPath } from '@/data/assets'
 import { Visuals } from '@/data/visuals'
 import { ScenarioLoader } from '@/game/utils/ScenarioLoader'
@@ -41,8 +45,9 @@ export class WorldScene {
         this.entryId = entryId
 
         // 初始化 Environment System
-        EnvironmentSystem.init(this.mapData)
-
+        EnvironmentRenderSystem.init(this.mapData)
+        DetectionAreaRenderSystem.init(this.mapData)
+        
         // Time delta for animation
         this.lastDt = 0.016
         this.isLoaded = false
@@ -148,19 +153,16 @@ export class WorldScene {
         this.lastDt = dt
 
         // Update Systems
-        EnvironmentSystem.update(dt, this.engine)
+        EnvironmentRenderSystem.update(dt, this.engine)
+        AnimationSystem.update(dt)
         InputSystem.update(dt, this.engine.input)
+        PlayerControlSystem.update(dt)
         EnemyAISystem.update(dt)
         MovementSystem.update(dt)
         ConstraintSystem.update(dt)
 
         // [NEW] Trigger System (Logic)
-        TriggerSystem.update(dt, this.engine.input)
-
-        // [LEGACY] UI Hints System
-        InteractionSystem.update({
-            onProximity: null
-        })
+        TriggerSystem.update(dt)
 
         // [NEW] Action System (Execution)
         ActionSystem.update({
@@ -176,10 +178,21 @@ export class WorldScene {
      * @param {Renderer2D} renderer 
      */
     draw(renderer) {
-        EnvironmentSystem.draw(renderer, this.engine)
+        // Layer 0: Background
+        EnvironmentRenderSystem.draw(renderer, this.engine)
+
+        // Debug Layer: Detection Areas (Draw below entities or above background)
+        DetectionAreaRenderSystem.draw(renderer)
 
         if (!this.isLoaded) return
 
-        RenderSystem.update(renderer, this.lastDt)
+        // Layer 1: Vision / Effects
+        VisionRenderSystem.draw(renderer)
+
+        // Layer 2: Entities (Sorted)
+        VisualRenderSystem.draw(renderer)
+
+        // Layer 3: Status UI
+        StatusRenderSystem.draw(renderer)
     }
 }

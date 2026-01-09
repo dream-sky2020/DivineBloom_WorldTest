@@ -1,23 +1,23 @@
-import { PlayerFactory } from './factories/PlayerFactory'
-import { EnemyFactory } from './factories/EnemyFactory'
-import { NPCFactory } from './factories/NPCFactory'
-import { PortalFactory } from './factories/PortalFactory'
+import { PlayerEntity } from '../definitions/PlayerEntity'
+import { EnemyEntity } from '../definitions/EnemyEntity'
+import { NPCEntity } from '../definitions/NPCEntity'
+import { PortalEntity } from '../definitions/PortalEntity'
 
 export const EntityCreator = {
     createEnemy(data) {
-        return EnemyFactory.create(data)
+        return EnemyEntity.create(data)
     },
 
     createPlayer(data) {
-        return PlayerFactory.create(data)
+        return PlayerEntity.create(data)
     },
 
     createNPC(data) {
-        return NPCFactory.create(data)
+        return NPCEntity.create(data)
     },
 
     createPortal(data) {
-        return PortalFactory.create(data)
+        return PortalEntity.create(data)
     },
 
     create(engine, type, data, context = {}) {

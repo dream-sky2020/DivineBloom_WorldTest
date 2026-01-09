@@ -1,6 +1,8 @@
 import { world } from '@/game/ecs/world'
+import { Triggers } from '@/game/entities/components/Triggers'
+import { Actions } from '@/game/entities/components/Actions'
 
-export const PortalFactory = {
+export const PortalEntity = {
   /**
    * Create a Portal entity
    * @param {object} data
@@ -17,15 +19,13 @@ export const PortalFactory = {
     return world.add({
       type: 'portal',
       position: { x, y },
-      trigger: {
-        type: 'ZONE',
-        bounds: { x: 0, y: 0, w: width, h: height }
-      },
-      actionTeleport: {
-        mapId: targetMapId,
-        entryId: targetEntryId
-      }
+      trigger: Triggers.PlayerZone({ x: 0, y: 0, w: width, h: height }),
+      actionTeleport: Actions.Teleport(targetMapId, targetEntryId)
     })
+  },
+
+  // Portal is static and usually defined in map data, so no serialization needed
+  serialize(entity) {
+    return null
   }
 }
-

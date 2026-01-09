@@ -1,14 +1,16 @@
 import { world } from '@/game/ecs/world'
 import { PlayerConfig } from '@/data/assets'
+import { Visuals } from '@/game/entities/components/Visuals'
+import { Physics } from '@/game/entities/components/Physics'
 
-export const PlayerFactory = {
+export const PlayerEntity = {
   create(data) {
     const { x, y, scale } = data
 
     const entity = world.add({
       type: 'player', // 方便序列化识别
       position: { x, y },
-      velocity: { x: 0, y: 0 },
+      velocity: Physics.Velocity(),
 
       // 玩家特有属性
       input: true,
@@ -18,21 +20,23 @@ export const PlayerFactory = {
       speed: PlayerConfig.speed || 200,
       fastSpeed: PlayerConfig.fastSpeed || 320,
 
-      bounds: {
-        minX: 0, maxX: 9999, // 由 EnvironmentSystem 更新
-        minY: 0, maxY: 9999
-      },
+      bounds: Physics.Bounds(),
 
-      visual: {
-        id: 'hero',
-        state: 'idle',
-        frameIndex: 0,
-        timer: 0,
-        scale: scale || 0.7
-      }
+      visual: Visuals.Sprite(
+        'hero', 
+        scale || 0.7
+        // default state 'idle' is fine
+      )
     })
 
     return entity
+  },
+
+  serialize(entity) {
+    return {
+      x: entity.position.x,
+      y: entity.position.y,
+      scale: entity.visual.scale
+    }
   }
 }
-

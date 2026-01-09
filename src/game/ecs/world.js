@@ -29,4 +29,9 @@ export const eventQueue = {
 export function clearWorld() {
   world.clear()
   eventQueue._events = []
+  actionQueue.length = 0
 }
+
+// Inter-System Communication Queue (High Frequency)
+// Used by TriggerSystem -> ActionSystem
+export const actionQueue = []

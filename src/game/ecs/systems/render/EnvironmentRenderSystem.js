@@ -1,5 +1,27 @@
 import { world } from '@/game/ecs/world'
 
+/**
+ * Environment System Components Schema
+ * 
+ * 1. Global Map Data (Init Parameter)
+ * @param {object} mapData
+ * @param {object} mapData.background - { groundColor: string, decorations: [] }
+ * @param {object} [mapData.constraints] - { minYRatio: number }
+ * @param {Array} [mapData.portals] - 传送门调试数据 (实际逻辑在 PortalEntity)
+ * 
+ * 2. Bounded Entity Components (Resize Logic)
+ * Required Components:
+ * @property {object} bounds - 边界限制组件
+ * @property {number} bounds.minX
+ * @property {number} bounds.maxX
+ * @property {number} bounds.minY
+ * @property {number} bounds.maxY
+ * 
+ * Optional:
+ * @property {object} [aiConfig]
+ * @property {number} [aiConfig.minYRatio] - 覆盖地图默认的 Y 轴约束比例
+ */
+
 // 缓存状态
 let currentMap = null
 let staticLayer = null
@@ -9,7 +31,7 @@ let lastCacheHeight = 0
 // ECS 查询
 const boundedEntities = world.with('bounds')
 
-export const EnvironmentSystem = {
+export const EnvironmentRenderSystem = {
     /**
      * 初始化环境系统
      * @param {object} mapData 地图数据
@@ -55,13 +77,6 @@ export const EnvironmentSystem = {
         // 绘制静态层
         if (staticLayer) {
             renderer.ctx.drawImage(staticLayer, 0, 0)
-        }
-
-        // 绘制传送门调试框 (保留原逻辑)
-        if (currentMap.portals) {
-            currentMap.portals.forEach(p => {
-                renderer.drawRect(p.x, p.y, p.w, p.h, 'rgba(34, 211, 238, 0.3)')
-            })
         }
     },
 
