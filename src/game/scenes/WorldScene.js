@@ -8,7 +8,6 @@ import { VisionRenderSystem } from '@/game/ecs/systems/render/VisionRenderSystem
 import { StatusRenderSystem } from '@/game/ecs/systems/render/StatusRenderSystem'
 import { EnemyAISystem } from '@/game/ecs/systems/ai/EnemyAISystem'
 import { ActionSystem } from '@/game/ecs/systems/event/ActionSystem'
-import { AnimationSystem } from '@/game/ecs/systems/render/AnimationSystem'
 import { EnvironmentRenderSystem } from '@/game/ecs/systems/render/EnvironmentRenderSystem'
 import { DetectionAreaRenderSystem } from '@/game/ecs/systems/render/DetectionAreaRenderSystem'
 import { TriggerSystem } from '@/game/ecs/systems/event/TriggerSystem'
@@ -154,7 +153,7 @@ export class WorldScene {
 
         // Update Systems
         EnvironmentRenderSystem.update(dt, this.engine)
-        AnimationSystem.update(dt)
+        VisualRenderSystem.update(dt)
         InputSystem.update(dt, this.engine.input)
         PlayerControlSystem.update(dt)
         EnemyAISystem.update(dt)
