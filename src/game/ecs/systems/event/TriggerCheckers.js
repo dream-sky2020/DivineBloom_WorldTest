@@ -49,8 +49,8 @@ export const TriggerCheckers = {
     // 1. 先检查距离
     if (!TriggerCheckers.PROXIMITY(entity, player)) return false
 
-    // 2. 再检查按键状态 (PlayerControlSystem 处理过的输入)
-    return !!(player.controls && player.controls.interact)
+    // 2. 再检查按键状态 (PlayerIntentSystem 处理过的意图)
+    return !!(player.playerIntent && player.playerIntent.wantsToInteract)
   },
 
   /**

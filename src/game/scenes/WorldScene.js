@@ -1,12 +1,15 @@
 import { clearWorld, world } from '@/game/ecs/world'
 import { MovementSystem } from '@/game/ecs/systems/physics/MovementSystem'
-import { InputSystem } from '@/game/ecs/systems/input/InputSystem'
+import { InputSenseSystem } from '@/game/ecs/systems/sense/InputSenseSystem'
+import { AISenseSystem } from '@/game/ecs/systems/sense/AISenseSystem'
+import { PlayerIntentSystem } from '@/game/ecs/systems/intent/PlayerIntentSystem'
 import { PlayerControlSystem } from '@/game/ecs/systems/control/PlayerControlSystem'
 import { ConstraintSystem } from '@/game/ecs/systems/physics/ConstraintSystem'
 import { VisualRenderSystem } from '@/game/ecs/systems/render/VisualRenderSystem'
 import { VisionRenderSystem } from '@/game/ecs/systems/render/VisionRenderSystem'
 import { StatusRenderSystem } from '@/game/ecs/systems/render/StatusRenderSystem'
-import { EnemyAISystem } from '@/game/ecs/systems/ai/EnemyAISystem'
+import { EnemyAIIntentSystem } from '@/game/ecs/systems/intent/EnemyAIIntentSystem'
+import { EnemyControlSystem } from '@/game/ecs/systems/control/EnemyControlSystem'
 import { ActionSystem } from '@/game/ecs/systems/event/ActionSystem'
 import { EnvironmentRenderSystem } from '@/game/ecs/systems/render/EnvironmentRenderSystem'
 import { DetectionAreaRenderSystem } from '@/game/ecs/systems/render/DetectionAreaRenderSystem'
@@ -46,7 +49,7 @@ export class WorldScene {
         // 初始化 Environment System
         EnvironmentRenderSystem.init(this.mapData)
         DetectionAreaRenderSystem.init(this.mapData)
-        
+
         // Time delta for animation
         this.lastDt = 0.016
         this.isLoaded = false
@@ -154,9 +157,12 @@ export class WorldScene {
         // Update Systems
         EnvironmentRenderSystem.update(dt, this.engine)
         VisualRenderSystem.update(dt)
-        InputSystem.update(dt, this.engine.input)
+        InputSenseSystem.update(dt, this.engine.input)
+        AISenseSystem.update(dt)
+        PlayerIntentSystem.update(dt)
         PlayerControlSystem.update(dt)
-        EnemyAISystem.update(dt)
+        EnemyAIIntentSystem.update(dt)
+        EnemyControlSystem.update(dt)
         MovementSystem.update(dt)
         ConstraintSystem.update(dt)
 

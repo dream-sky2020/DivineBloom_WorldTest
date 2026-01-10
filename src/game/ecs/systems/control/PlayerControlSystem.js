@@ -2,42 +2,31 @@ import { world } from '@/game/ecs/world'
 
 /**
  * Player Control System
- * 负责将抽象的输入指令 (Controls) 转换为实际的游戏逻辑 (Velocity)
+ * 负责将玩家意图 (PlayerIntent) 转换为物理速度 (Velocity)
  * 
  * Required Components:
  * @property {object} velocity
- * @property {object} controls (Created by InputSystem)
- * @property {number} controls.x
- * @property {number} controls.y
- * @property {boolean} controls.fast
+ * @property {object} playerIntent (Created by PlayerIntentSystem)
+ * @property {object} playerIntent.move { x, y }
+ * @property {boolean} playerIntent.wantsToRun
  */
 
-const controlEntities = world.with('input', 'velocity')
+const controlEntities = world.with('playerIntent', 'velocity')
 
 export const PlayerControlSystem = {
   update(dt) {
     for (const entity of controlEntities) {
-      if (!entity.controls) continue
+      if (!entity.playerIntent) continue
 
-      const { x, y, fast } = entity.controls
+      const { move, wantsToRun } = entity.playerIntent
       const speed = entity.speed || 200
       const fastSpeed = entity.fastSpeed || 320
-      
-      const currentSpeed = fast ? fastSpeed : speed
 
-      let dx = x
-      let dy = y
+      const currentSpeed = wantsToRun ? fastSpeed : speed
 
-      // Normalize diagonal movement
-      if (dx !== 0 && dy !== 0) {
-        const inv = 1 / Math.sqrt(2)
-        dx *= inv
-        dy *= inv
-      }
-
-      // Apply velocity
-      entity.velocity.x = dx * currentSpeed
-      entity.velocity.y = dy * currentSpeed
+      // Apply velocity directly from intent
+      entity.velocity.x = move.x * currentSpeed
+      entity.velocity.y = move.y * currentSpeed
     }
   }
 }

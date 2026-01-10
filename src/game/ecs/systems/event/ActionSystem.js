@@ -1,7 +1,7 @@
 import { eventQueue, actionQueue } from '@/game/ecs/world'
-import { BattleSystem } from '@/game/ecs/systems/battle/BattleSystem'
-import { TeleportSystem } from '@/game/ecs/systems/teleport/TeleportSystem'
-import { DialogueSystem } from '@/game/ecs/systems/dialogue/DialogueSystem'
+import { BattleExecuteSystem } from '@/game/ecs/systems/execute/BattleExecuteSystem'
+import { TeleportExecuteSystem } from '@/game/ecs/systems/execute/TeleportExecuteSystem'
+import { DialogueExecuteSystem } from '@/game/ecs/systems/execute/DialogueExecuteSystem'
 
 /**
  * 遗留事件处理器
@@ -25,9 +25,9 @@ const EventHandlers = {
  * 顺序: 数组顺序决定了优先级的默认顺序 (如果需要更复杂的优先级，可能需要权重系统)
  */
 const ActionHandlers = [
-    { component: 'actionBattle', handler: BattleSystem },
-    { component: 'actionTeleport', handler: TeleportSystem },
-    { component: 'actionDialogue', handler: DialogueSystem }
+    { component: 'actionBattle', handler: BattleExecuteSystem },
+    { component: 'actionTeleport', handler: TeleportExecuteSystem },
+    { component: 'actionDialogue', handler: DialogueExecuteSystem }
 ]
 
 /**
@@ -52,7 +52,7 @@ export const ActionSystem = {
                     handler.handle(source, callbacks)
                     // 目前设计为：一次触发通常只执行一个主要动作，避免冲突
                     // 如果需要同时执行多个动作，可以移除 break
-                    break 
+                    break
                 }
             }
         }

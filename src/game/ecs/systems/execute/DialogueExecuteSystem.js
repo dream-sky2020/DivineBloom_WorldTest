@@ -4,7 +4,7 @@ import { world } from '@/game/ecs/world'
  * Dialogue System
  * 处理对话触发逻辑
  */
-export const DialogueSystem = {
+export const DialogueExecuteSystem = {
   handle(entity, callbacks) {
     if (callbacks.onInteract && entity.actionDialogue) {
       callbacks.onInteract({
