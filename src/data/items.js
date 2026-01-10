@@ -11,12 +11,18 @@
 // 使用 Vite 的 glob 导入功能自动加载 ./items 下的所有 .js 文件
 // eager: true 确保是同步加载，保持 itemsDb 的直接可用性
 const modules = import.meta.glob('./items/*.js', { eager: true })
+import { ItemSchema, createMapValidator } from './schemas/index'
 
-export const itemsDb = {}
+const rawItemsDb = {}
 
 // 聚合所有模块导出的物品数据
 for (const path in modules) {
   const mod = modules[path]
   // 合并模块的默认导出到 itemsDb
-  Object.assign(itemsDb, mod.default || mod)
+  Object.assign(rawItemsDb, mod.default || mod)
 }
+
+// 运行时校验
+// 任何物品配置错误都会导致游戏启动中断并抛出详细错误
+const validateItems = createMapValidator(ItemSchema, 'ItemsDb');
+export const itemsDb = validateItems(rawItemsDb);

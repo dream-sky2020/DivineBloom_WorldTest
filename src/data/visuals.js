@@ -61,6 +61,14 @@ export const Visuals = {
         }
     },
 
+    // --- Portals ---
+    'portal_default': {
+        assetId: 'default_enemy', // Temporary placeholder
+        layout: { type: 'grid', cols: 1, rows: 1 },
+        anchor: { x: 0.5, y: 1.0 },
+        animations: { 'default': { frames: [0] } }
+    },
+
     // 缺省/调试用
     'default': {
         assetId: 'default_enemy', // 假设 assets.js 有这个

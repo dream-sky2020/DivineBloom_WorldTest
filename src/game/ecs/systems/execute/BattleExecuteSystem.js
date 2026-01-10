@@ -1,25 +1,31 @@
-import { actionQueue } from '@/game/ecs/world'
+import { world } from '@/game/ecs/world'
+import { BattleTransition } from '@/game/entities/components/Requests'
 
-/**
- * Battle System
- * 处理战斗遭遇逻辑
- */
 export const BattleExecuteSystem = {
-  update(callbacks = {}) {
-    // 遍历 ActionQueue, 寻找需要战斗的实体
-    // 注意：不要在这里移除队列内容，由 ActionSystem 主循环统一清空，或者只处理对应类型的
-
-    // 更好的方式是 ActionSystem 将 entity 传递进来，而不是 BattleSystem 自己去遍历
-    // 但为了保持接口一致，我们可以在 ActionSystem 中做分发
-  },
-
-  /**
-   * @param {object} entity 
-   * @param {object} callbacks 
-   */
   handle(entity, callbacks) {
-    if (callbacks.onEncounter && entity.actionBattle) {
-      callbacks.onEncounter(entity.actionBattle.group, entity.actionBattle.uuid)
+    if (entity.actionBattle) {
+      const { group, uuid } = entity.actionBattle
+
+      if (!group) {
+        console.warn('[BattleExecuteSystem] Missing enemy group in actionBattle')
+        world.removeComponent(entity, 'actionBattle')
+        return
+      }
+
+      // 延迟处理：添加组件，由 SceneSystem 在帧末尾统一处理
+      // 这样可以避免在帧中间销毁 World 导致后续 System 报错
+      world.addComponent(entity, 'battleTransition', BattleTransition({
+        enemyGroup: group,
+        battleId: uuid
+      }))
+
+      // 如果是 Enemy (配置数据)，则保留组件；如果是临时 Action (如 Player 主动发起)，则移除
+      // 目前 Enemy 的 actionBattle 也是配置，不能移除，否则逃跑后无法再次触发
+      if (entity.type !== 'enemy') {
+        world.removeComponent(entity, 'actionBattle')
+      }
+
+      console.log(`[BattleExecuteSystem] Requesting battle with group:`, group)
     }
   }
 }

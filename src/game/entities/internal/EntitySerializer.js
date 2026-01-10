@@ -1,19 +1,27 @@
 import { EnemyEntity } from '../definitions/EnemyEntity'
 import { PlayerEntity } from '../definitions/PlayerEntity'
 import { NPCEntity } from '../definitions/NPCEntity'
+import { PortalEntity } from '../definitions/PortalEntity'
 
 export const EntitySerializer = {
     serialize(entity) {
+        let data = null
+
         if (entity.type === 'enemy') {
-            return EnemyEntity.serialize(entity)
+            data = EnemyEntity.serialize(entity)
+        } else if (entity.type === 'player') {
+            data = PlayerEntity.serialize(entity)
+        } else if (entity.type === 'npc') {
+            data = NPCEntity.serialize(entity)
+        } else if (entity.type === 'portal') {
+            data = PortalEntity.serialize(entity)
         }
 
-        if (entity.type === 'player') {
-            return PlayerEntity.serialize(entity)
-        }
-
-        if (entity.type === 'npc') {
-            return NPCEntity.serialize(entity)
+        if (data) {
+            return {
+                type: entity.type,
+                data: data
+            }
         }
 
         return null

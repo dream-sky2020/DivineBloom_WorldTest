@@ -23,7 +23,7 @@ export const PlayerEntity = {
       bounds: Physics.Bounds(),
 
       visual: Visuals.Sprite(
-        'hero', 
+        'hero',
         scale || 0.7
         // default state 'idle' is fine
       )

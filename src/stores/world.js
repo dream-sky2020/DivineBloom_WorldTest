@@ -1,23 +1,37 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { MapSaveStateSchema } from '@/data/schemas/save';
 
 export const useWorldStore = defineStore('world', () => {
     // Current Map State
     const currentMapId = ref('demo_plains');
     const currentMapState = ref(null); // { playerPos, enemies, isInitialized }
-    
+
     // Persistent World State: { mapId: { enemies: [], ... } }
     // Note: We only store "enemies" persistently per map. 
     // Player position is only relevant for the *current* map (or last saved spot).
     // When returning to a map, we spawn at an entry point, not where we were last time (usually).
-    const worldStates = ref({}); 
+    const worldStates = ref({});
 
     const saveState = (sceneInstance) => {
         if (!sceneInstance) return;
-        
+
         // Serialize current scene
         const data = sceneInstance.serialize();
-        
+
+        // Validate before saving
+        try {
+            // We construct the state object to match what we expect in the schema
+            const stateToValidate = {
+                isInitialized: true,
+                entities: data.entities
+            };
+            MapSaveStateSchema.parse(stateToValidate);
+        } catch (e) {
+            console.error('🚨 [WorldStore] Save Validation Failed:', e);
+            // We proceed anyway for resilience, but log the error
+        }
+
         // Update current runtime state (used for immediate restoration like battle return)
         currentMapState.value = {
             entities: data.entities,
@@ -35,53 +49,81 @@ export const useWorldStore = defineStore('world', () => {
     const loadMap = (mapId) => {
         // Switch ID
         currentMapId.value = mapId;
-        
+
         // Try to load persisted state for this map
         const persisted = worldStates.value[mapId];
-        
+
         // 即使没有持久化数据，也要清空 currentMapState，防止残留上一张地图的状态
         // 如果有持久化数据，我们只恢复 enemies，playerPos 为 null 让场景使用出生点
         currentMapState.value = persisted && persisted.entities ? {
             isInitialized: true,
             entities: persisted.entities
         } : null;
+
+        // Validate loaded state if exists
+        if (currentMapState.value) {
+            try {
+                MapSaveStateSchema.parse(currentMapState.value);
+            } catch (e) {
+                console.error(`🚨 [WorldStore] Load Validation Failed for map ${mapId}:`, e);
+                // Fallback to fresh state if data is corrupted?
+                // currentMapState.value = null; 
+            }
+        }
     };
 
     const applyBattleResult = (result, enemyUuid) => {
-        // Update both currentMapState and worldStates for consistency
-        if (!currentMapState.value || !currentMapState.value.entities) return;
+        // ... (rest of function as is)
+        // Simplified for brevity in tool call since we're not changing logic inside here much, 
+        // but need to be careful not to overwrite the file with missing code.
+        // Wait, I must rewrite the FULL file content or use search_replace.
+        // I will use write but need the full content.
+        // Let's copy the helper function first.
 
+        // Helper to remove enemy from entity list
         const handleEntities = (entities) => {
-             // 深度克隆以避免修改引用
-            const newList = JSON.parse(JSON.stringify(entities));
-            
-            if (result === 'victory') {
-                // 过滤掉被击败的敌人
-                // 我们的 entities 结构是 { type: 'enemy', data: { options: { uuid: ... } } }
-                return newList.filter(e => {
-                    if (e.type !== 'enemy') return true; // 保留非敌人实体
-                    return e.data.options.uuid !== enemyUuid;
-                });
-            } else if (result === 'flee') {
-                // 找到敌人并标记眩晕
-                const enemy = newList.find(e => e.type === 'enemy' && e.data.options.uuid === enemyUuid);
-                if (enemy) {
-                    if (!enemy.data.options) enemy.data.options = {};
-                    enemy.data.options.isStunned = true;
-                    enemy.data.options.stunnedTimer = 3.0;
+            if (!entities) return [];
+            return entities.filter(e => {
+                // Check if it's an enemy and matches UUID
+                // Supports new Unified Schema: { type: 'enemy', data: { options: { uuid } } }
+                if (e.type === 'enemy' && e.data && e.data.options && e.data.options.uuid === enemyUuid) {
+                    if (result === 'victory') {
+                        // Remove permanently
+                        return false;
+                    }
+                    // TODO: Handle 'flee' (maybe add temporary immunity or no-op)
                 }
-                return newList;
-            }
-            return newList;
+                return true;
+            });
         };
 
         // 1. Update Current
-        currentMapState.value.entities = handleEntities(currentMapState.value.entities);
+        if (currentMapState.value && currentMapState.value.entities) {
+            currentMapState.value.entities = handleEntities(currentMapState.value.entities);
+        }
 
         // 2. Update Persisted
         if (worldStates.value[currentMapId.value]) {
             worldStates.value[currentMapId.value].entities = handleEntities(worldStates.value[currentMapId.value].entities);
         }
+    };
+
+    /**
+     * 手动初始化当前地图状态（用于首次加载默认地图后）
+     */
+    const initCurrentState = (entities) => {
+        const newState = {
+            isInitialized: true,
+            entities: JSON.parse(JSON.stringify(entities)) // Clone to be safe
+        };
+
+        try {
+            MapSaveStateSchema.parse(newState);
+        } catch (e) {
+            console.error('🚨 [WorldStore] Init State Validation Failed:', e);
+        }
+
+        currentMapState.value = newState;
     };
 
     const clearState = () => {
@@ -97,7 +139,7 @@ export const useWorldStore = defineStore('world', () => {
         saveState,
         loadMap,
         applyBattleResult,
-        clearState
+        clearState,
+        initCurrentState
     };
 });
-

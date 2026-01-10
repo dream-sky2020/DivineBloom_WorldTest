@@ -1,5 +1,5 @@
 import { world } from '@/game/ecs/world'
-import { Triggers } from '@/game/entities/components/Triggers'
+import { DetectArea, DetectInput, Trigger } from '@/game/entities/components/Triggers'
 import { Visuals } from '@/game/entities/components/Visuals'
 import { Physics } from '@/game/entities/components/Physics'
 import { Actions } from '@/game/entities/components/Actions'
@@ -23,7 +23,12 @@ export const NPCEntity = {
       npc: true,
       
       // [NEW ARCHITECTURE]
-      trigger: Triggers.PlayerInteract(config.range || 60),
+      detectArea: DetectArea({ shape: 'circle', radius: config.range || 60, target: 'player' }),
+      detectInput: DetectInput({ keys: ['Interact'] }),
+      trigger: Trigger({ 
+        rules: [{ type: 'onPress', requireArea: true }], 
+        actions: ['DIALOGUE'] 
+      }),
       
       actionDialogue: Actions.Dialogue(dialogueId),
 

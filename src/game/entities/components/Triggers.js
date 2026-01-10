@@ -1,53 +1,45 @@
 /**
- * Reusable Trigger Component Factories
- * 提供标准化的触发器组件定义，确保所有实体使用一致的数据结构。
- * 对应 TriggerCheckers.js 的逻辑。
+ * Component Factories for Detection and Triggers
  */
 
-export const Triggers = {
-  /**
-   * 区域触发
-   * @param {object} bounds - { x, y, w, h }
-   * @param {boolean} [active=true]
-   * @param {boolean} [oneshot=false]
-   */
-  PlayerZone(bounds, active = true, oneshot = false) {
-    return {
-      type: 'ZONE',
-      bounds: bounds || { x: 0, y: 0, w: 0, h: 0 },
-      active,
-      oneshot
-    }
-  },
+export const DetectArea = (config = {}) => ({
+  // Configuration
+  shape: config.shape || 'circle', // 'circle' | 'aabb'
+  offset: config.offset || { x: 0, y: 0 },
+  radius: config.radius || 0,
+  size: config.size || { w: 0, h: 0 },
+  target: config.target || 'actors', // 'actors' | 'player'
+  includeTags: config.includeTags || ['player'],
+  excludeTags: config.excludeTags || ['ghost'],
+  
+  // Runtime Data
+  results: [] // Array of detected entities
+})
 
-  /**
-   * 距离触发 (圆形)
-   * @param {number} radius
-   * @param {boolean} [active=true]
-   * @param {boolean} [oneshot=false]
-   */
-  PlayerProximity(radius, active = true, oneshot = false) {
-    return {
-      type: 'PROXIMITY',
-      radius: radius || 0,
-      active,
-      oneshot
-    }
-  },
+export const DetectInput = (config = {}) => ({
+  // Configuration
+  keys: config.keys || ['Interact'], // Virtual keys
+  
+  // Runtime Data
+  isPressed: false,
+  justPressed: false
+})
 
-  /**
-   * 交互触发 (距离 + 按键)
-   * @param {number} radius
-   * @param {boolean} [active=true]
-   * @param {boolean} [oneshot=false]
-   */
-  PlayerInteract(radius, active = true, oneshot = false) {
-    return {
-      type: 'INTERACT',
-      radius: radius || 0,
-      active,
-      oneshot
-    }
+export const Trigger = (config = {}) => ({
+  // Configuration
+  rules: config.rules || [], // e.g. [{ type: 'onEnter' }]
+  actions: config.actions || [], // e.g. ['BATTLE']
+  
+  // Runtime Data
+  state: {
+    active: true,
+    triggered: false,
+    cooldownTimer: 0,
+    oneShotExecuted: false
   }
-}
+})
 
+// Exporting a compatibility layer or grouping if needed, but for now direct exports are fine.
+// We can also keep the old Triggers object for a moment if we want to avoid breaking imports immediately, 
+// but the user asked for a "large scale modification", so I'll assume I should update the usages.
+// To make the transition smoother, I will NOT export the old 'Triggers' object, forcing me to update all usages.

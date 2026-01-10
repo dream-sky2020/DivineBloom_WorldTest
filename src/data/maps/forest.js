@@ -1,7 +1,7 @@
 export const forest = {
     id: 'forest',
     name: 'Dark Forest',
-    
+
     constraints: {
         minYRatio: 0.35
     },
@@ -9,19 +9,19 @@ export const forest = {
     entryPoints: {
         default: { x: 100, y: 400 },
         from_village: { x: 50, y: 400 }, // 从左边（村庄）来，出现在左侧
-        from_demo: { x: 400, y: 550 }    // 从下边（Demo）来，出现在下方
+        from_demo: { x: 400, y: 480 }    // 从下边（Demo）来，出现在下方 (远离底部 Portal 防止误触)
     },
 
     portals: [
         {
             // 左侧边缘 -> 回村庄
-            x: 0, y: 0, w: 20, h: 600, 
+            x: 0, y: 0, w: 20, h: 600,
             targetMapId: 'village',
             targetEntryId: 'from_forest'
         },
         {
             // 下方边缘 -> 去 Demo
-            x: 0, y: 580, w: 800, h: 20, 
+            x: 0, y: 580, w: 800, h: 20,
             targetMapId: 'demo_plains',
             targetEntryId: 'from_forest'
         }

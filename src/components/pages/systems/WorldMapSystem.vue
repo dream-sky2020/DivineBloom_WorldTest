@@ -169,28 +169,15 @@ onMounted(async () => {
       },
       // 初始状态
       initialState,
-      // 地图数据对象 (passing data instead of ID)
+      // 地图数据对象
       mapData,
       // 入口ID
       entryId,
-      // 切换地图回调
-      async (targetMapId, targetEntryId) => {
-        // 如果正在切换中，忽略重复触发
-        if (isSwitchingMap.value) return
-        isSwitchingMap.value = true
-
-        console.log(`Switching Map: ${targetMapId} @ ${targetEntryId}`)
-        
-        try {
-          // 1. 保存当前状态
-          worldStore.saveState(scene.value)
-          
-          // 2. 暂停一下（可选转场动画）
-          
-          // 3. 重新加载场景
-          await initScene(targetMapId, targetEntryId)
-        } finally {
-          isSwitchingMap.value = false
+      // 切换地图回调 (只更新 Store ID，不再手动 saveState)
+      (targetMapId, targetEntryId) => {
+        console.log(`[WorldMapSystem] Map switched to ${targetMapId}`)
+        if (targetMapId) {
+            worldStore.currentMapId = targetMapId
         }
       },
       // NPC 交互回调
@@ -232,6 +219,13 @@ onMounted(async () => {
         
         // Start Dialogue
         dialogueStore.startDialogue(scriptFn)
+      },
+      // State Provider
+      {
+        getMapState: (mapId) => {
+             return worldStore.worldStates[mapId]
+        },
+        worldStore // Pass the store instance directly
       }
     )
     

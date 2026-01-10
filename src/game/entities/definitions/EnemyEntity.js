@@ -1,5 +1,5 @@
 import { world } from '@/game/ecs/world'
-import { Triggers } from '@/game/entities/components/Triggers'
+import { DetectArea, Trigger, DetectInput } from '@/game/entities/components/Triggers' // Updated import
 import { Visuals } from '@/game/entities/components/Visuals'
 import { Physics } from '@/game/entities/components/Physics'
 import { AI } from '@/game/entities/components/AI'
@@ -15,17 +15,21 @@ export const EnemyEntity = {
     const uuid = options.uuid || Math.random().toString(36).substr(2, 9)
 
     const entity = world.add({
-      type: 'enemy', 
+      type: 'enemy',
       position: { x, y },
       velocity: Physics.Velocity(),
       enemy: true,
 
       // [NEW ARCHITECTURE]
-      trigger: Triggers.PlayerProximity(40),
-      
+      detectArea: DetectArea({ shape: 'circle', radius: 40, target: 'player' }),
+      trigger: Trigger({
+        rules: [{ type: 'onEnter' }],
+        actions: ['BATTLE']
+      }),
+
       actionBattle: Actions.Battle(battleGroup, uuid),
 
-      // [LEGACY COMPATIBILITY]
+      // [LEGACY COMPATIBILITY] - Keeping for safety if other systems access it directly
       interaction: {
         battleGroup: battleGroup || [],
         uuid: uuid
@@ -34,8 +38,8 @@ export const EnemyEntity = {
       bounds: Physics.Bounds(),
 
       aiConfig: AI.Config(
-        options.aiType, 
-        options.visionRadius, 
+        options.aiType,
+        options.visionRadius,
         options.speed,
         { // Extra options
           visionType: options.visionType,
@@ -49,10 +53,20 @@ export const EnemyEntity = {
       aiState: AI.State(isStunned, options.stunnedTimer),
 
       visual: Visuals.Sprite(
-        visualId, 
+        visualId,
         options.scale,
         isStunned ? 'stunned' : 'idle'
       )
+    })
+
+    // Create Attached Vision Indicator Entity
+    // This entity shares the 'position' object reference, so it moves automatically with the enemy
+    world.add({
+      type: 'vision_indicator',
+      target: entity, // Reference to owner
+      position: entity.position, // Shared reference
+      zIndex: -10, // Render below entity (0) but above background (-100)
+      visual: Visuals.Vision()
     })
 
     return entity

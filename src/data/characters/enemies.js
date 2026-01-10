@@ -7,6 +7,7 @@ export default {
     weaponType: "weapons.none",
     initialStats: { hp: 150, mp: 0, str: 10, def: 5, mag: 0, spd: 8 },
     skills: [2001, 401], // Slime Shot (Active) + Attack Up (Passive)
+    spriteId: 'enemy_slime',
     description: { zh: '常见的胶状怪物。', en: 'A common gelatinous monster.' }
   },
   202: {
@@ -17,6 +18,7 @@ export default {
     weaponType: "weapons.none",
     initialStats: { hp: 100, mp: 20, str: 12, def: 2, mag: 5, spd: 18 },
     skills: [2002], // Vampiric Bite
+    spriteId: 'default',
     description: { zh: '行动敏捷的飞行怪物。', en: 'An agile flying monster.' }
   },
   203: {
@@ -27,6 +29,7 @@ export default {
     weaponType: "weapons.claw",
     initialStats: { hp: 300, mp: 0, str: 20, def: 8, mag: 0, spd: 14 },
     skills: [2003, 401], // Pack Bite + Attack Up
+    spriteId: 'default',
     description: { zh: '凶猛的群居野兽。', en: 'A ferocious pack beast.' }
   },
   204: {
@@ -37,6 +40,7 @@ export default {
     weaponType: "weapons.shield",
     initialStats: { hp: 500, mp: 50, str: 25, def: 20, mag: 0, spd: 6 },
     skills: [2004, 302], // Shield Bash + Shield (Buff)
+    spriteId: 'default',
     description: { zh: '全副武装的巡逻者。', en: 'A fully armed patroller.' }
   }
 }

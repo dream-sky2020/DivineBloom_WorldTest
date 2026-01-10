@@ -1,5 +1,6 @@
 import { world } from '@/game/ecs/world'
 import { Visuals } from '@/data/visuals'
+import { drawVision } from '@/game/utils/renderUtils'
 
 /**
  * Sprite Render System
@@ -66,8 +67,20 @@ export const VisualRenderSystem = {
       entities.push(entity)
     }
 
-    // 2. Y轴排序
-    entities.sort((a, b) => a.position.y - b.position.y)
+    // 2. 排序 (Z-Index First, then Y-Sort for entities)
+    entities.sort((a, b) => {
+      const zA = a.zIndex || 0
+      const zB = b.zIndex || 0
+
+      if (zA !== zB) return zA - zB
+
+      // 同层级下，如果是普通实体 (z=0)，按 Y 轴排序
+      if (zA === 0) {
+        return a.position.y - b.position.y
+      }
+
+      return 0
+    })
 
     // 3. 剔除与绘制
     const viewW = renderer.width || 9999
@@ -90,16 +103,50 @@ export const VisualRenderSystem = {
 
   drawVisual(renderer, entity) {
     const { visual, position } = entity
+
+    // --- Rect Support ---
+    if (visual.type === 'rect') {
+      renderer.ctx.fillStyle = visual.color
+      // rect is drawn from top-left by default in canvas
+      renderer.ctx.fillRect(position.x, position.y, visual.width, visual.height)
+      return
+    }
+
+    // --- Vision Support ---
+    if (visual.type === 'vision') {
+      const target = entity.target
+      // Check if target is alive/valid
+      // If target is removed from world, we should probably destroy this indicator too
+      // But for render system, just skipping draw is safe enough.
+      // Cleanup should be handled elsewhere or lazily.
+      if (target && target.aiState && target.aiConfig) {
+        if (target.aiState.state !== 'stunned') {
+          // Use shared position
+          drawVision(renderer.ctx, position, target.aiConfig, target.aiState)
+        }
+      } else {
+        // Target invalid (dead?), maybe mark for removal?
+        // world.remove(entity) // Risky inside loop if not careful, but miniplex handles it.
+        // For now, just don't draw.
+      }
+      return
+    }
+
+    // --- Sprite Support ---
     const def = Visuals[visual.id]
 
     if (!def) {
       // Fallback placeholder
       renderer.drawCircle(position.x, position.y, 10, 'red')
+      if (Math.random() < 0.01) console.warn(`[VisualRenderSystem] Missing visual definition for: ${visual.id}`)
       return
     }
 
     const texture = renderer.assetManager.getTexture(def.assetId)
-    if (!texture) return
+    if (!texture) {
+      if (Math.random() < 0.01) console.warn(`[VisualRenderSystem] Missing texture for asset: ${def.assetId}`)
+      return
+    }
 
     const animName = visual.state || 'default'
     const anim = def.animations[animName] || def.animations['default'] || def.animations['idle']
