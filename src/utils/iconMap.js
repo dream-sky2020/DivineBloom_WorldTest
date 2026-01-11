@@ -31,6 +31,16 @@ export const iconMap = {
   icon_map: "🗺️",
   icon_key: "🗝️",
 
+  // Materials
+  icon_material_gel: "💧",
+  icon_material_fang: "🦷",
+  icon_material_pelt: "📜",
+  icon_material_metal: "🔩",
+  icon_material_shard: "💎",
+  icon_material_dust: "✨",
+  icon_material_crystal: "🔮",
+  icon_material_essence: "🏺",
+
   // Skills
   icon_slash: "⚔️", // 可以复用 icon_sword，但区分语意更好
   icon_impact: "💥",

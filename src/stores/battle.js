@@ -12,6 +12,7 @@ import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/stat
 import { resolveTargets, findPartyMember } from '@/game/battle/targetSystem';
 import { resolveChainSequence, resolveRandomSequence } from '@/game/battle/skillSystem';
 import { calculateAtbTick } from '@/game/battle/timeSystem';
+import { calculateDrops, mergeDrops } from '@/game/battle/lootSystem';
 
 // ECS Integration
 import { world } from '@/game/ecs/world';
@@ -599,8 +600,9 @@ export const useBattleStore = defineStore('battle', () => {
     /**
      * Notify ECS of battle result
      * @param {'victory'|'defeat'|'flee'} resultType 
+     * @param {Array} drops - Optional drops for victory
      */
-    const notifyECS = (resultType) => {
+    const notifyECS = (resultType, drops = []) => {
         if (!triggeredEnemyUuid.value) return;
 
         try {
@@ -611,7 +613,7 @@ export const useBattleStore = defineStore('battle', () => {
                 const resultData = {
                     win: resultType === 'victory',
                     fled: resultType === 'flee',
-                    drops: [], // TODO: Collect actual drops
+                    drops: drops,
                     exp: 0     // TODO: Collect actual exp
                 };
 
@@ -639,11 +641,32 @@ export const useBattleStore = defineStore('battle', () => {
             lastBattleResult.value = { result: 'victory', enemyUuid: triggeredEnemyUuid.value };
             log('battle.victory');
 
+            // --- Loot Calculation ---
+            const allDrops = []
+            enemies.value.forEach(enemy => {
+                // Use original DB data for drops if available to avoid runtime mutations affecting it
+                // But calculateDrops handles the structure from DB or runtime if structure matches
+                const drops = calculateDrops(enemy)
+                if (drops.length > 0) {
+                    allDrops.push(drops)
+                }
+            })
+            const finalDrops = mergeDrops(allDrops)
+
+            // Add to Inventory Store
+            finalDrops.forEach(drop => {
+                inventoryStore.addItem(drop.itemId, drop.qty)
+                const item = itemsDb[drop.itemId]
+                if (item) {
+                    log('battle.foundLoot', { item: item.name, qty: drop.qty })
+                }
+            })
+
             // Sync state back to PartyStore
             partyStore.updatePartyAfterBattle(partySlots.value);
 
-            // Notify ECS
-            notifyECS('victory');
+            // Notify ECS with drops
+            notifyECS('victory', finalDrops);
 
             return true;
         }

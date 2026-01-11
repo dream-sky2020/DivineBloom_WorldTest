@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { ID, LocalizedStringSchema } from '../common.js';
 
+// --- 掉落物 (Drop) Schema ---
+export const DropSchema = z.object({
+    itemId: ID,         // 物品ID
+    chance: z.number().min(0).max(1), // 掉落概率 0-1
+    minQty: z.number().int().min(1).default(1), // 最小数量
+    maxQty: z.number().int().min(1).default(1), // 最大数量
+});
+
 // --- 角色 (Character) Schema ---
 export const CharacterSchema = z.object({
     id: ID, // 支持数字ID
@@ -19,6 +27,9 @@ export const CharacterSchema = z.object({
     }),
     skills: z.array(z.number()).optional().default([]),
     description: LocalizedStringSchema.optional(),
+
+    // 掉落物配置
+    drops: z.array(DropSchema).optional().default([]),
 
     // 敌人特有
     spriteId: z.string().optional().default('default'),

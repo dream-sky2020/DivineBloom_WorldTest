@@ -28,8 +28,8 @@ export const ExecuteSystem = {
     // 1. 处理 ActionQueue (ECS 内部产生)
     // Defensive check: ensure queue exists (though imported)
     if (!actionQueue) {
-        console.error('[ExecuteSystem] ActionQueue is undefined!');
-        return;
+      console.error('[ExecuteSystem] ActionQueue is undefined!');
+      return;
     }
 
     const queueLength = actionQueue.length
@@ -39,8 +39,8 @@ export const ExecuteSystem = {
 
       // Type Guard: Validate request structure
       if (!request.source || !request.type) {
-          console.error('[ExecuteSystem] Invalid request structure:', request);
-          continue;
+        console.error('[ExecuteSystem] Invalid request structure:', request);
+        continue;
       }
 
       const { source, type } = request
@@ -67,23 +67,23 @@ export const ExecuteSystem = {
 
     // 2. 处理 Legacy/UI Events (EventQueue) - 保持兼容性
     if (!eventQueue) return;
-    
+
     const events = eventQueue.drain()
     for (const event of events) {
       if (!event.type || !event.payload) {
-          console.warn('[ExecuteSystem] Invalid legacy event format:', event);
-          continue;
+        console.warn('[ExecuteSystem] Invalid legacy event format:', event);
+        continue;
       }
-      
+
       const handler = EventHandlers[event.type]
       if (handler) {
         try {
-            handler(event.payload, callbacks)
+          handler(event.payload, callbacks)
         } catch (e) {
-            console.error(`[ExecuteSystem] Error handling legacy event ${event.type}:`, e);
+          console.error(`[ExecuteSystem] Error handling legacy event ${event.type}:`, e);
         }
       } else {
-          // Optional: warn about unhandled legacy events if strict
+        // Optional: warn about unhandled legacy events if strict
       }
     }
   }

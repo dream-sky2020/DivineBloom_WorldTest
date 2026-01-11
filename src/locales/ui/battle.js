@@ -78,6 +78,8 @@ export default {
   actionBloom: { zh: '怒放', 'zh-TW': '怒放', en: 'Bloom', ja: '開花', ko: '개화' },
   runAway: { zh: '成功逃离了战斗!', 'zh-TW': '成功逃離了戰鬥!', en: 'Escaped safely!', ja: '逃げ出した！', ko: '성공적으로 도망쳤다!' },
   noBackup: { zh: '无后备', 'zh-TW': '無後備', en: 'No Backup', ja: '控えなし', ko: '예비 없음' },
+  foundLoot: { zh: '获得了 {item} x{qty}', 'zh-TW': '獲得了 {item} x{qty}', en: 'Found {item} x{qty}', ja: '{item} x{qty} を手に入れた', ko: '{item} x{qty} 획득' },
+  energyConsume: { zh: '{name} 消耗了 {energy} BP', 'zh-TW': '{name} 消耗了 {energy} BP', en: '{name} consumes {energy} BP', ja: '{name}は{energy}BPを消費', ko: '{name} BP {energy} 소모' },
 
   views: {
     default: { zh: '默认视图', 'zh-TW': '預設視圖', en: 'Default View', ja: 'デフォルト表示', ko: '기본 보기' },

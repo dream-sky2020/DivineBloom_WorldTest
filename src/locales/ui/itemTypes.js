@@ -33,6 +33,13 @@ export default {
     en: 'Key Item',
     ja: '貴重品',
     ko: '중요'
+  },
+  material: {
+    zh: '材料',
+    'zh-TW': '材料',
+    en: 'Material',
+    ja: '素材',
+    ko: '재료'
   }
 }
 

@@ -8,7 +8,11 @@ export default {
     initialStats: { hp: 150, mp: 0, str: 10, def: 5, mag: 0, spd: 8 },
     skills: [2001, 401], // Slime Shot (Active) + Attack Up (Passive)
     spriteId: 'enemy_slime',
-    description: { zh: '常见的胶状怪物。', en: 'A common gelatinous monster.' }
+    description: { zh: '常见的胶状怪物。', en: 'A common gelatinous monster.' },
+    drops: [
+      { itemId: 9001, chance: 0.8, minQty: 1, maxQty: 2 }, // Slime Gel
+      { itemId: 1, chance: 0.1, minQty: 1, maxQty: 1 }     // Potion (example)
+    ]
   },
   202: {
     id: 202,
@@ -19,7 +23,10 @@ export default {
     initialStats: { hp: 100, mp: 20, str: 12, def: 2, mag: 5, spd: 18 },
     skills: [2002], // Vampiric Bite
     spriteId: 'default',
-    description: { zh: '行动敏捷的飞行怪物。', en: 'An agile flying monster.' }
+    description: { zh: '行动敏捷的飞行怪物。', en: 'An agile flying monster.' },
+    drops: [
+      { itemId: 9002, chance: 0.6, minQty: 1, maxQty: 1 } // Bat Fang
+    ]
   },
   203: {
     id: 203,
@@ -30,7 +37,11 @@ export default {
     initialStats: { hp: 300, mp: 0, str: 20, def: 8, mag: 0, spd: 14 },
     skills: [2003, 401], // Pack Bite + Attack Up
     spriteId: 'default',
-    description: { zh: '凶猛的群居野兽。', en: 'A ferocious pack beast.' }
+    description: { zh: '凶猛的群居野兽。', en: 'A ferocious pack beast.' },
+    drops: [
+      { itemId: 9003, chance: 0.5, minQty: 1, maxQty: 1 }, // Wolf Pelt
+      { itemId: 9002, chance: 0.2, minQty: 1, maxQty: 1 }  // Bat Fang (maybe they ate a bat?) - Just example
+    ]
   },
   204: {
     id: 204,
@@ -41,7 +52,11 @@ export default {
     initialStats: { hp: 500, mp: 50, str: 25, def: 20, mag: 0, spd: 6 },
     skills: [2004, 302], // Shield Bash + Shield (Buff)
     spriteId: 'default',
-    description: { zh: '全副武装的巡逻者。', en: 'A fully armed patroller.' }
+    description: { zh: '全副武装的巡逻者。', en: 'A fully armed patroller.' },
+    drops: [
+      { itemId: 9004, chance: 0.7, minQty: 1, maxQty: 3 }, // Iron Scrap
+      { itemId: 3, chance: 0.1, minQty: 1, maxQty: 1 }     // Elixir
+    ]
   }
 }
 
