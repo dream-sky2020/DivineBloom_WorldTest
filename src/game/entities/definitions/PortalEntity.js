@@ -1,21 +1,44 @@
+import { z } from 'zod'
 import { world } from '@/game/ecs/world'
 import { DetectArea, Trigger } from '@/game/entities/components/Triggers'
 import { Actions } from '@/game/entities/components/Actions'
-import { Visuals } from '@/game/entities/components/Visuals'
+
+// --- Schema Definition ---
+
+export const PortalEntitySchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  width: z.number(),
+  height: z.number(),
+  targetMapId: z.string(),
+  targetEntryId: z.string()
+});
+
+// --- Entity Definition ---
 
 export const PortalEntity = {
   /**
    * Create a Portal entity
-   * @param {object} data
-   * @param {number} data.x
-   * @param {number} data.y
-   * @param {number} data.width
-   * @param {number} data.height
-   * @param {string} data.targetMapId
-   * @param {string} data.targetEntryId
+   * @param {z.infer<typeof PortalEntitySchema>} data
    */
   create(data) {
-    const { x, y, width, height, targetMapId, targetEntryId } = data
+    // Validate Input
+    const result = PortalEntitySchema.safeParse(data);
+    if (!result.success) {
+      console.error('[PortalEntity] Validation failed', result.error);
+      // Fallback or throw? For now, let's try to proceed with partial data if possible or just log error.
+      // But usually we should return null or handle error.
+      // Given the previous code didn't validate, we'll assume caller tries to be correct, but we log validation error.
+    }
+    // We use the validated data if success, otherwise original data (or maybe we should just crash in dev?)
+    // The prompt says "like Actions.js", which returns default/fallback on error.
+    // However, entities are more complex. Actions returned a component object.
+    // Here we are adding to world.
+
+    // If validation fails, we might want to not create the entity to avoid undefined behavior.
+    if (!result.success) return null;
+
+    const { x, y, width, height, targetMapId, targetEntryId } = result.data;
 
     // Offset calculation:
     // Portal position is usually top-left or center? 
@@ -40,9 +63,7 @@ export const PortalEntity = {
         actions: ['TELEPORT']
       }),
 
-      actionTeleport: Actions.Teleport(targetMapId, targetEntryId),
-
-      visual: Visuals.Sprite('portal_default', 1, 'default')
+      actionTeleport: Actions.Teleport(targetMapId, targetEntryId)
     })
   },
 

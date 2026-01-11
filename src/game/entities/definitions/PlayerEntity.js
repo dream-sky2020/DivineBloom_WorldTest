@@ -1,11 +1,28 @@
+import { z } from 'zod'
 import { world } from '@/game/ecs/world'
 import { PlayerConfig } from '@/data/assets'
 import { Visuals } from '@/game/entities/components/Visuals'
 import { Physics } from '@/game/entities/components/Physics'
 
+// --- Schema Definition ---
+
+export const PlayerEntitySchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  scale: z.number().optional().default(0.7)
+});
+
+// --- Entity Definition ---
+
 export const PlayerEntity = {
   create(data) {
-    const { x, y, scale } = data
+    const result = PlayerEntitySchema.safeParse(data);
+    if (!result.success) {
+      console.error('[PlayerEntity] Validation failed', result.error);
+      return null;
+    }
+
+    const { x, y, scale } = result.data;
 
     const entity = world.add({
       type: 'player', // 方便序列化识别
@@ -24,7 +41,7 @@ export const PlayerEntity = {
 
       visual: Visuals.Sprite(
         'hero',
-        scale || 0.7
+        scale
         // default state 'idle' is fine
       )
     })

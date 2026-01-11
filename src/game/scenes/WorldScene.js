@@ -1,8 +1,11 @@
 import { EntityManager } from '@/game/entities/EntityManager'
+import { BackgroundRenderSystem } from '@/game/ecs/systems/render/BackgroundRenderSystem'
 import { VisualRenderSystem } from '@/game/ecs/systems/render/VisualRenderSystem'
-// import { VisionRenderSystem } from '@/game/ecs/systems/render/VisionRenderSystem' (Removed)
+import { AIVisionRenderSystem } from '@/game/ecs/systems/render/AIVisionRenderSystem'
 import { StatusRenderSystem } from '@/game/ecs/systems/render/StatusRenderSystem'
+import { DetectAreaRenderSystem } from '@/game/ecs/systems/render/DetectAreaRenderSystem'
 import { InputSenseSystem } from '@/game/ecs/systems/sense/InputSenseSystem'
+// import { ExternalSenseSystem } from '@/game/ecs/systems/sense/ExternalSenseSystem' (Removed)
 import { AISenseSystem } from '@/game/ecs/systems/sense/AISenseSystem'
 import { PlayerIntentSystem } from '@/game/ecs/systems/intent/PlayerIntentSystem'
 import { PlayerControlSystem } from '@/game/ecs/systems/control/PlayerControlSystem'
@@ -10,7 +13,6 @@ import { EnemyAIIntentSystem } from '@/game/ecs/systems/intent/EnemyAIIntentSyst
 import { EnemyControlSystem } from '@/game/ecs/systems/control/EnemyControlSystem'
 import { MovementSystem } from '@/game/ecs/systems/physics/MovementSystem'
 import { ConstraintSystem } from '@/game/ecs/systems/physics/ConstraintSystem'
-import { DetectAreaRenderSystem } from '@/game/ecs/systems/render/DetectAreaRenderSystem'
 import { DetectAreaSystem } from '@/game/ecs/systems/detect/DetectAreaSystem'
 import { DetectInputSystem } from '@/game/ecs/systems/detect/DetectInputSystem'
 import { TriggerSystem } from '@/game/ecs/systems/event/TriggerSystem'
@@ -22,6 +24,7 @@ import Enemies from '@/data/characters/enemies'
 import { clearWorld, world } from '@/game/ecs/world'
 import { SceneSystem } from '@/game/ecs/systems/SceneSystem'
 import { MapSaveStateSchema } from '@/data/schemas/save'
+import { GlobalEntity } from '@/game/entities/definitions/GlobalEntity'
 
 /**
  * @typedef {import('@/game/GameEngine').GameEngine} GameEngine
@@ -55,6 +58,20 @@ export class WorldScene {
         // 初始化 Environment System
         DetectAreaRenderSystem.init(this.mapData)
 
+        // --- Render Pipeline Setup ---
+        // 注册所有渲染系统，draw() 时会自动按 LAYER 排序执行
+        // 如果要添加新的渲染系统，只需在这里注册，并在系统内定义 LAYER 即可
+        this.renderPipeline = [
+            BackgroundRenderSystem, // Layer 10
+            AIVisionRenderSystem,   // Layer 15
+            VisualRenderSystem,     // Layer 20
+            StatusRenderSystem,     // Layer 30
+            DetectAreaRenderSystem  // Layer 100 (Debug)
+        ]
+
+        // 预排序（虽然通常是静态的，但排序一次无妨）
+        this.renderPipeline.sort((a, b) => (a.LAYER || 0) - (b.LAYER || 0))
+
         // Time delta for animation
         this.lastDt = 0.016
         this.isLoaded = false
@@ -62,10 +79,22 @@ export class WorldScene {
         // Convenience reference (populated during load)
         this.player = null
 
+        // Initialize Global Entities (Command Queue)
+        this._initGlobalEntities()
+
         if (initialState && initialState.isInitialized) {
             this.restore(initialState)
         } else {
             this._initScenario()
+        }
+    }
+
+    _initGlobalEntities() {
+        // Create the global manager entity if it doesn't exist
+        // Note: GlobalEntity.create handles duplicate checks internally but checking here is safer/clearer
+        const existing = world.with('globalManager').first
+        if (!existing) {
+            GlobalEntity.create()
         }
     }
 
@@ -111,6 +140,9 @@ export class WorldScene {
 
         // Iterate all entities in the world
         for (const entity of world) {
+            // Exclude global manager from map-specific serialization
+            if (entity.globalManager) continue;
+
             // 只序列化动态实体，不包含静态配置（静态配置由 ScenarioLoader 重建）
             // EntityManager.serialize 已经返回了 { type, data } 格式
             const item = EntityManager.serialize(entity)
@@ -180,6 +212,9 @@ export class WorldScene {
         if (!this.isTransitioning) {
             InputSenseSystem.update(dt, this.engine.input)
 
+            // 0. 全局外部事件感知 - 已移除，功能由 AISenseSystem 接管
+            // ExternalSenseSystem.update(dt, { scene: this })
+
             // 1. 感知 (Sense/Detect)
             AISenseSystem.update(dt)
             DetectAreaSystem.update(dt)
@@ -216,27 +251,18 @@ export class WorldScene {
             onEncounter: this.onEncounter,
             onSwitchMap: this.onSwitchMap // Used to update Vue UI
         })
-
-        this.engine.renderer.setCamera(0, 0)
     }
 
     /**
      * @param {Renderer2D} renderer 
      */
     draw(renderer) {
-        // Layer 0: Background
-        // EnvironmentRenderSystem removed
-
-        // Layer 1: Ground Indicators (Vision)
-        // VisionRenderSystem removed - integrated into VisualRenderSystem (zIndex: -10)
-
-        // Layer 2: Entities (Y-sort) & Background & Vision
-        VisualRenderSystem.draw(renderer)
-
-        // Layer 3: Status Icons (Above sprites)
-        StatusRenderSystem.draw(renderer)
-
-        // Debug Layer
-        DetectAreaRenderSystem.draw(renderer)
+        // 自动渲染管线
+        // 按 Z-Index (LAYER) 顺序执行
+        for (const system of this.renderPipeline) {
+            if (system.draw) {
+                system.draw(renderer)
+            }
+        }
     }
 }

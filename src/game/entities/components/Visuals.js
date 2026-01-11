@@ -114,6 +114,7 @@ export const Visuals = {
 
   /**
    * 创建视野指示器组件数据
+   * @deprecated Vision rendering is now handled by AIVisionRenderSystem. Do not use.
    */
   Vision() {
     if (!VisualVisionSchema) {

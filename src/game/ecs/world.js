@@ -27,7 +27,14 @@ export const eventQueue = {
 
 // Export a helper to clear the world (useful for scene transitions/hot reload)
 export function clearWorld() {
-  world.clear()
+  // Modified to preserve Global Entities (marked with globalManager: true)
+  const entities = [...world]
+  for (const entity of entities) {
+    if (!entity.globalManager) {
+      world.remove(entity)
+    }
+  }
+
   eventQueue._events = []
   actionQueue.length = 0
 }

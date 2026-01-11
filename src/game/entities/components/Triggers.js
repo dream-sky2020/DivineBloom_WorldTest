@@ -32,7 +32,12 @@ export const TriggerRuleSchema = z.object({
   // Optional flags default to false/undefined logic in System, but let's be explicit where helpful
   requireArea: z.boolean().default(false),
   requireInput: z.boolean().default(false),
-  requireEnterOnly: z.boolean().default(false)
+  requireEnterOnly: z.boolean().default(false),
+
+  // [NEW] Condition check
+  // 'none': 无额外条件
+  // 'notStunned': 要求实体未处于晕眩状态 (需要 aiState)
+  condition: z.enum(['none', 'notStunned']).default('none')
 });
 
 export const TriggerSchema = z.object({

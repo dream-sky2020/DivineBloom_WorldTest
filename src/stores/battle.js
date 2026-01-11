@@ -3,7 +3,6 @@ import { ref, computed } from 'vue';
 import { charactersDb } from '@/data/characters';
 import { skillsDb } from '@/data/skills';
 import { itemsDb } from '@/data/items';
-import { statusDb } from '@/data/status'; // Keep for now if used elsewhere, or remove if fully moved
 import { useInventoryStore } from './inventory';
 import { usePartyStore } from './party';
 import { getEnemyAction } from '@/game/ai';
@@ -13,6 +12,10 @@ import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/stat
 import { resolveTargets, findPartyMember } from '@/game/battle/targetSystem';
 import { resolveChainSequence, resolveRandomSequence } from '@/game/battle/skillSystem';
 import { calculateAtbTick } from '@/game/battle/timeSystem';
+
+// ECS Integration
+import { world } from '@/game/ecs/world';
+import { BattleResult } from '@/game/entities/components/BattleResult';
 
 export const useBattleStore = defineStore('battle', () => {
     const inventoryStore = useInventoryStore();
@@ -78,8 +81,6 @@ export const useBattleStore = defineStore('battle', () => {
     });
 
     // Helper to find any party member
-    // Delegated to targetSystem, but kept as a store wrapper if needed by template (unlikely) or internal legacy
-    // Replaced internal usage with imported findPartyMember where possible, or keep using this wrapper
     const findPartyMemberWrapper = (id) => findPartyMember(partySlots.value, id);
 
 
@@ -578,19 +579,6 @@ export const useBattleStore = defineStore('battle', () => {
         });
     };
 
-    // --- Status System ---
-    // (Moved to status.js, kept here for store action references if needed, but actually we use the imported ones now via processEffect)
-    // The internal status helpers (applyStatus, removeStatus) are no longer needed here as they are imported by effects.js.
-    // However, if processATB (updateATB) or other logic needs them, we should update those too.
-
-    // Note: updateATB uses status effects for speed calculation, which is read-only.
-    // processTurnStatuses is called in startTurn.
-
-    // We can remove the local definitions of processEffect, applyStatus, removeStatus, processTurnStatuses, checkCrowdControl, performSwitch (wait, performSwitch is used by applyDamage callback, so it must stay or be passed)
-
-    // performSwitch needs access to partySlots.value (ref), so it should stay in the store.
-    // applyDamage needs to call performSwitch. We pass performSwitch in getContext().
-
     const performSwitch = (slotIndex) => {
         const slot = partySlots.value[slotIndex];
         if (slot && slot.back) {
@@ -608,8 +596,41 @@ export const useBattleStore = defineStore('battle', () => {
         }
     };
 
-    // Removing old function definitions that are now imported or unused
-    // processEffect, applyStatus, removeStatus, processTurnStatuses, checkCrowdControl, applyDamage, applyHeal are removed from here.
+    /**
+     * Notify ECS of battle result
+     * @param {'victory'|'defeat'|'flee'} resultType 
+     */
+    const notifyECS = (resultType) => {
+        if (!triggeredEnemyUuid.value) return;
+
+        try {
+            // Find global entity
+            const globalEntity = world.with('globalManager').first;
+
+            if (globalEntity) {
+                const resultData = {
+                    win: resultType === 'victory',
+                    fled: resultType === 'flee',
+                    drops: [], // TODO: Collect actual drops
+                    exp: 0     // TODO: Collect actual exp
+                };
+
+                console.log('[BattleStore] Setting BattleResult on GlobalEntity:', triggeredEnemyUuid.value, resultData);
+
+                // 直接添加 BattleResult 组件
+                // 如果已存在会覆盖，这正是我们想要的（最新的结果覆盖旧的）
+                world.addComponent(globalEntity, 'battleResult', {
+                    uuid: triggeredEnemyUuid.value,
+                    result: resultData
+                });
+
+            } else {
+                console.warn('[BattleStore] GlobalEntity not found, cannot push battle result!');
+            }
+        } catch (e) {
+            console.error('[BattleStore] Failed to create external event:', e);
+        }
+    };
 
     const checkBattleStatus = () => {
         const allEnemiesDead = enemies.value.every(e => e.currentHp <= 0);
@@ -621,6 +642,9 @@ export const useBattleStore = defineStore('battle', () => {
             // Sync state back to PartyStore
             partyStore.updatePartyAfterBattle(partySlots.value);
 
+            // Notify ECS
+            notifyECS('victory');
+
             return true;
         }
 
@@ -629,6 +653,10 @@ export const useBattleStore = defineStore('battle', () => {
             battleState.value = 'defeat';
             lastBattleResult.value = { result: 'defeat', enemyUuid: triggeredEnemyUuid.value };
             log('battle.defeat');
+
+            // Notify ECS
+            notifyECS('defeat');
+
             return true;
         }
         return false;
@@ -637,7 +665,10 @@ export const useBattleStore = defineStore('battle', () => {
     const runAway = () => {
         battleState.value = 'flee';
         lastBattleResult.value = { result: 'flee', enemyUuid: triggeredEnemyUuid.value };
-        log('battle.runAway'); // Make sure translation exists or text
+        log('battle.runAway');
+
+        // Notify ECS
+        notifyECS('flee');
     };
 
     const reset = () => {

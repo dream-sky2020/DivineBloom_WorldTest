@@ -112,6 +112,13 @@ export const TriggerSystem = {
   checkRule(entity, rule) {
     if (!rule) return false;
 
+    // [NEW] 0. 额外条件检查 (Condition Check)
+    if (rule.condition && rule.condition !== 'none') {
+      if (!this.checkCondition(entity, rule.condition)) {
+        return false;
+      }
+    }
+
     const detectArea = entity.detectArea
     const detectInput = entity.detectInput
 
@@ -179,5 +186,20 @@ export const TriggerSystem = {
         console.warn(`[TriggerSystem] Unknown rule type: ${rule.type}`)
         return false
     }
+  },
+
+  /**
+   * 检查自定义条件
+   * @param {object} entity 
+   * @param {string} conditionType 
+   */
+  checkCondition(entity, conditionType) {
+    if (conditionType === 'notStunned') {
+      // 如果实体没有 aiState，则认为满足条件（不是 stunned）
+      if (!entity.aiState) return true;
+      // 只有 state 为 'stunned' 时返回 false
+      return entity.aiState.state !== 'stunned';
+    }
+    return true;
   }
 }

@@ -1,18 +1,55 @@
+import { z } from 'zod'
+import { ID } from '@/data/schemas/common'
 import { world } from '@/game/ecs/world'
-import { DetectArea, Trigger, DetectInput } from '@/game/entities/components/Triggers' // Updated import
+import { DetectArea, Trigger, DetectInput } from '@/game/entities/components/Triggers'
 import { Visuals } from '@/game/entities/components/Visuals'
 import { Physics } from '@/game/entities/components/Physics'
 import { AI } from '@/game/entities/components/AI'
 import { Actions } from '@/game/entities/components/Actions'
 
+// --- Schema Definition ---
+
+export const EnemyEntitySchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  battleGroup: z.array(z.object({ id: ID })).default([]),
+  options: z.object({
+    uuid: z.string().optional(),
+    isStunned: z.boolean().default(false),
+    stunnedTimer: z.number().default(0),
+    spriteId: z.string().default('enemy_slime'),
+    scale: z.number().optional(),
+
+    // AI Config
+    aiType: z.string().optional(),
+    visionRadius: z.number().optional(),
+    speed: z.number().optional(),
+
+    // AI Extra Options
+    visionType: z.string().optional(),
+    visionAngle: z.number().optional(),
+    visionProximity: z.number().optional(),
+    suspicionTime: z.number().optional(),
+    minYRatio: z.number().optional()
+  }).default({})
+});
+
+// --- Entity Definition ---
+
 export const EnemyEntity = {
   create(data) {
-    const { x, y, battleGroup, options = {} } = data
+    const result = EnemyEntitySchema.safeParse(data);
+    if (!result.success) {
+      console.error('[EnemyEntity] Validation failed', result.error);
+      return null;
+    }
 
-    // 默认值处理
-    const isStunned = options.isStunned || false
-    const visualId = options.spriteId || 'enemy_slime'
-    const uuid = options.uuid || Math.random().toString(36).substr(2, 9)
+    const { x, y, battleGroup, options } = result.data;
+
+    // Generate UUID if not present
+    const uuid = options.uuid || Math.random().toString(36).substr(2, 9);
+    const isStunned = options.isStunned;
+    const visualId = options.spriteId;
 
     const entity = world.add({
       type: 'enemy',
@@ -23,7 +60,11 @@ export const EnemyEntity = {
       // [NEW ARCHITECTURE]
       detectArea: DetectArea({ shape: 'circle', radius: 40, target: 'player' }),
       trigger: Trigger({
-        rules: [{ type: 'onEnter' }],
+        rules: [{
+          type: 'onEnter',
+          // [NEW] Added Condition
+          condition: 'notStunned'
+        }],
         actions: ['BATTLE']
       }),
 
@@ -31,7 +72,7 @@ export const EnemyEntity = {
 
       // [LEGACY COMPATIBILITY] - Keeping for safety if other systems access it directly
       interaction: {
-        battleGroup: battleGroup || [],
+        battleGroup: battleGroup,
         uuid: uuid
       },
 
@@ -59,15 +100,9 @@ export const EnemyEntity = {
       )
     })
 
-    // Create Attached Vision Indicator Entity
-    // This entity shares the 'position' object reference, so it moves automatically with the enemy
-    world.add({
-      type: 'vision_indicator',
-      target: entity, // Reference to owner
-      position: entity.position, // Shared reference
-      zIndex: -10, // Render below entity (0) but above background (-100)
-      visual: Visuals.Vision()
-    })
+    // [REMOVED] Vision Indicator Entity
+    // Vision rendering is now handled by AIVisionRenderSystem which queries the enemy entity directly.
+    // No need for a separate attached entity.
 
     return entity
   },

@@ -2,6 +2,7 @@ import { EnemyEntity } from '../definitions/EnemyEntity'
 import { PlayerEntity } from '../definitions/PlayerEntity'
 import { NPCEntity } from '../definitions/NPCEntity'
 import { PortalEntity } from '../definitions/PortalEntity'
+import { GlobalEntity } from '../definitions/GlobalEntity'
 
 export const EntitySerializer = {
     serialize(entity) {
@@ -15,6 +16,8 @@ export const EntitySerializer = {
             data = NPCEntity.serialize(entity)
         } else if (entity.type === 'portal') {
             data = PortalEntity.serialize(entity)
+        } else if (entity.type === 'global_manager') {
+            data = GlobalEntity.serialize(entity)
         }
 
         if (data) {

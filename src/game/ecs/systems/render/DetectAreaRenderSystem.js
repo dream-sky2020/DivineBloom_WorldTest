@@ -4,6 +4,9 @@ import { world } from '@/game/ecs/world'
 const detectors = world.with('detectArea', 'position')
 
 export const DetectAreaRenderSystem = {
+    // 定义渲染层级 (Z-Index) - Debug 层通常最高
+    LAYER: 100,
+
     /**
      * 初始化检测区域渲染系统
      * @param {object} mapData 地图数据
@@ -19,8 +22,9 @@ export const DetectAreaRenderSystem = {
     draw(renderer) {
         // Defensive check
         if (!renderer || !renderer.ctx) return;
-        
+
         const ctx = renderer.ctx
+        const camera = renderer.camera || { x: 0, y: 0 }
 
         for (const entity of detectors) {
             // Defensive Check
@@ -28,9 +32,9 @@ export const DetectAreaRenderSystem = {
 
             const { detectArea, position } = entity
 
-            // 计算中心点 (加上偏移)
-            const centerX = position.x + (detectArea.offset?.x || 0)
-            const centerY = position.y + (detectArea.offset?.y || 0)
+            // 计算中心点 (加上偏移) - 并转换为屏幕坐标
+            const centerX = (position.x + (detectArea.offset?.x || 0)) - camera.x
+            const centerY = (position.y + (detectArea.offset?.y || 0)) - camera.y
 
             // 设置绘制样式
             // 根据是否有检测结果改变颜色 (如果有 detected result 则变红，否则保持默认)

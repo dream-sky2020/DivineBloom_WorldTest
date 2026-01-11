@@ -1,11 +1,10 @@
 import { world } from '@/game/ecs/world'
 import { Visuals } from '@/data/visuals'
-import { drawVision } from '@/game/utils/renderUtils'
 
 /**
  * Sprite Render System
  * 负责渲染：实体 Sprite (角色, 道具等)
- * 层级：中间层 (Layer 2)，需要 Y 轴排序
+ * 层级：中间层 (Layer 20)，需要 Y 轴排序
  * 
  * Required Components:
  * @property {object} position
@@ -15,6 +14,9 @@ import { drawVision } from '@/game/utils/renderUtils'
 const renderEntities = world.with('position', 'visual')
 
 export const VisualRenderSystem = {
+  // 定义渲染层级 (Z-Index)
+  LAYER: 20,
+
   /**
    * 更新动画帧 (原 AnimationSystem 的职责)
    * @param {number} dt 
@@ -22,8 +24,8 @@ export const VisualRenderSystem = {
   update(dt) {
     for (const entity of renderEntities) {
       if (!entity.visual) {
-         console.warn(`[VisualRenderSystem] Entity ${entity.id || 'N/A'} missing visual component!`);
-         continue;
+        console.warn(`[VisualRenderSystem] Entity ${entity.id || 'N/A'} missing visual component!`);
+        continue;
       }
       this.updateAnimation(entity, dt)
     }
@@ -65,14 +67,18 @@ export const VisualRenderSystem = {
    * @param {import('@/game/GameEngine').Renderer2D} renderer 
    */
   draw(renderer) {
-    // 1. 收集实体
+    // 1. 收集实体 (仅 Z >= 0)
     const entities = []
     for (const entity of renderEntities) {
       // Defensive check for entity validity before adding to render list
       if (!entity.position || !entity.visual) {
-          console.error(`[VisualRenderSystem] Entity ${entity.id || 'N/A'} missing essential components for rendering!`);
-          continue;
+        console.error(`[VisualRenderSystem] Entity ${entity.id || 'N/A'} missing essential components for rendering!`);
+        continue;
       }
+
+      // Filter out background (handled by BackgroundRenderSystem)
+      if ((entity.zIndex || 0) < 0) continue;
+
       entities.push(entity)
     }
 
@@ -95,19 +101,19 @@ export const VisualRenderSystem = {
     const viewW = renderer.width || 9999
     const viewH = renderer.height || 9999
     const camera = renderer.camera
-    
+
     // Defensive check for camera
     if (!camera) {
-        console.error('[VisualRenderSystem] Camera not initialized!');
-        return;
+      console.error('[VisualRenderSystem] Camera not initialized!');
+      return;
     }
-    
+
     const cullMargin = 100
 
     const isVisible = (pos) => {
       // Defensive check for pos
       if (typeof pos.x !== 'number' || typeof pos.y !== 'number') return false;
-      
+
       return !(pos.x < camera.x - cullMargin ||
         pos.x > camera.x + viewW + cullMargin ||
         pos.y < camera.y - cullMargin ||
@@ -131,33 +137,20 @@ export const VisualRenderSystem = {
       return
     }
 
-    // --- Vision Support ---
+    // --- Vision Support (Deprecated) ---
+    // Vision is now handled by AIVisionRenderSystem.
+    // If we encounter a 'vision' type visual, just ignore it to prevent errors.
     if (visual.type === 'vision') {
-      const target = entity.target
-      // Check if target is alive/valid
-      // If target is removed from world, we should probably destroy this indicator too
-      // But for render system, just skipping draw is safe enough.
-      // Cleanup should be handled elsewhere or lazily.
-      if (target && target.aiState && target.aiConfig) {
-        if (target.aiState.state !== 'stunned') {
-          // Use shared position
-          drawVision(renderer.ctx, position, target.aiConfig, target.aiState)
-        }
-      } else {
-        // Target invalid (dead?), maybe mark for removal?
-        // world.remove(entity) // Risky inside loop if not careful, but miniplex handles it.
-        // For now, just don't draw.
-      }
       return
     }
 
     // --- Sprite Support ---
     // Defensive check
     if (!visual.id) {
-        console.warn(`[VisualRenderSystem] Visual component missing 'id'. Entity: ${entity.id || 'N/A'}`);
-        return;
+      console.warn(`[VisualRenderSystem] Visual component missing 'id'. Entity: ${entity.id || 'N/A'}`);
+      return;
     }
-    
+
     const def = Visuals[visual.id]
 
     if (!def) {
@@ -181,7 +174,7 @@ export const VisualRenderSystem = {
     if (anim && anim.frames.length > 0) {
       // Safe access
       if (visual.frameIndex === undefined) visual.frameIndex = 0;
-      
+
       if (visual.frameIndex >= anim.frames.length) visual.frameIndex = 0
       frameId = anim.frames[visual.frameIndex]
     }

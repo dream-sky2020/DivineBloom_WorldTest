@@ -11,7 +11,7 @@ import { StunnedState } from '@/game/ai/states/StunnedState'
  * 
  * Required Components:
  * ... (同前)
- * @property {object} aiSensory (From AISenseSystem)
+ * @property {object} aiSensory (From AISenseSystem & ExternalSenseSystem)
  */
 
 const enemyEntities = world.with('enemy', 'position', 'velocity', 'aiState', 'aiConfig')
@@ -26,38 +26,56 @@ const STATES = {
 
 export const EnemyAIIntentSystem = {
   update(dt) {
-    // No longer need to fetch player here, States use aiSensory
-
     for (const entity of enemyEntities) {
       // Defensive Checks
       if (!entity.aiState) {
-          console.error(`[EnemyAIIntentSystem] Entity ${entity.id || 'N/A'} missing aiState!`);
-          continue;
+        continue;
       }
 
-      const { aiState } = entity
-      
+      const { aiState, aiSensory } = entity
+
+      // --------------------------------------------------------
+      // 1. High Priority: React to Battle Results (External Events)
+      // --------------------------------------------------------
+      if (aiSensory && aiSensory.lastBattleResult) {
+        const result = aiSensory.lastBattleResult
+        console.error(`[EnemyAIIntentSystem] 🚨 Processing Battle Result for Entity ${entity.id}:`, result);
+
+        // Clear it immediately so we don't process it twice
+        aiSensory.lastBattleResult = null
+
+        if (result.win) {
+          // Player Won -> Enemy Defeated
+          // For now, simply remove the entity
+          console.log(`[EnemyAIIntentSystem] Enemy ${entity.id} defeated. Removing.`)
+          world.remove(entity)
+          continue; // Stop processing this entity
+        }
+        else if (result.fled) {
+          // Player Fled -> Enemy Stunned
+          console.log(`[EnemyAIIntentSystem] Player fled. Stunning enemy ${entity.id}.`)
+          aiState.state = 'stunned'
+          aiState.timer = 5 // Stun for 5 seconds
+        }
+      }
+
+      // --------------------------------------------------------
+      // 2. Standard State Machine Update
+      // --------------------------------------------------------
       const currentState = STATES[aiState.state]
       if (currentState) {
-          try {
-              // States now read from entity.aiSensory internally
-              // Defensive: Check update method
-              if (typeof currentState.update === 'function') {
-                  currentState.update(entity, dt)
-              } else {
-                  console.error(`[EnemyAIIntentSystem] Invalid State Implementation for '${aiState.state}'`);
-              }
-          } catch (e) {
-              console.error(`[EnemyAIIntentSystem] Error in AI State '${aiState.state}' for Entity ${entity.id || 'N/A'}:`, e);
-              // Fallback to wander or idle to prevent loop crash
-              aiState.state = 'wander';
+        try {
+          if (typeof currentState.update === 'function') {
+            currentState.update(entity, dt)
           }
-      } else {
-          console.warn(`[EnemyAIIntentSystem] Unknown AI State '${aiState.state}' for Entity ${entity.id || 'N/A'}. Resetting to wander.`);
+        } catch (e) {
+          console.error(`[EnemyAIIntentSystem] Error in AI State '${aiState.state}'`, e);
           aiState.state = 'wander';
+        }
+      } else {
+        // Unknown state fallback
+        aiState.state = 'wander';
       }
-      
-      // Control Logic moved to EnemyControlSystem
     }
   }
 }

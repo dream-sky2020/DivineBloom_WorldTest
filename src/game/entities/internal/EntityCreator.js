@@ -2,6 +2,7 @@ import { PlayerEntity } from '../definitions/PlayerEntity'
 import { EnemyEntity } from '../definitions/EnemyEntity'
 import { NPCEntity } from '../definitions/NPCEntity'
 import { PortalEntity } from '../definitions/PortalEntity'
+import { GlobalEntity } from '../definitions/GlobalEntity'
 
 export const EntityCreator = {
     createEnemy(data) {
@@ -18,6 +19,10 @@ export const EntityCreator = {
 
     createPortal(data) {
         return PortalEntity.create(data)
+    },
+
+    createGlobalManager(data) {
+        return GlobalEntity.create(data)
     },
 
     create(engine, type, data, context = {}) {
@@ -41,6 +46,10 @@ export const EntityCreator = {
 
         if (type === 'portal') {
             return this.createPortal(data)
+        }
+
+        if (type === 'global_manager') {
+            return this.createGlobalManager(data)
         }
     }
 }
