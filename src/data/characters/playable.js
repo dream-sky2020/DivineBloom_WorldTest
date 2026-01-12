@@ -13,7 +13,7 @@ export default {
     weaponType: "weapons.sword",
     initialStats: {
       hp: 14500,
-      mp: 50,
+      mp: 150,
       str: 18,
       def: 12,
       mag: 8,
@@ -42,7 +42,7 @@ export default {
     weaponType: "weapons.rifle",
     initialStats: {
       hp: 13380,
-      mp: 120,
+      mp: 220,
       str: 14,
       def: 10,
       mag: 20,
@@ -71,7 +71,7 @@ export default {
     weaponType: "weapons.book",
     initialStats: {
       hp: 13300,
-      mp: 200,
+      mp: 300,
       str: 6,
       def: 8,
       mag: 25,
@@ -100,7 +100,7 @@ export default {
     weaponType: "weapons.gauntlets",
     initialStats: {
       hp: 14550,
-      mp: 60,
+      mp: 160,
       str: 22,
       def: 10,
       mag: 5,
@@ -129,7 +129,7 @@ export default {
     weaponType: "weapons.spear",
     initialStats: {
       hp: 15600,
-      mp: 80,
+      mp: 180,
       str: 24,
       def: 14,
       mag: 5,
@@ -158,7 +158,7 @@ export default {
     weaponType: "weapons.jade",
     initialStats: {
       hp: 13400,
-      mp: 150,
+      mp: 250,
       str: 10,
       def: 10,
       mag: 18,
@@ -187,7 +187,7 @@ export default {
     weaponType: "weapons.scroll",
     initialStats: {
       hp: 13350,
-      mp: 220,
+      mp: 320,
       str: 5,
       def: 8,
       mag: 26,
