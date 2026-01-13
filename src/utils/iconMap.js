@@ -80,6 +80,8 @@ export const iconMap = {
   icon_skill_shoot: "🔫",
   icon_skill_reload: "🔄",
   icon_skill_magic_ammo: "🔮",
+  icon_skill_shoot_speed: "🔫", // Quick Shot
+  icon_skill_reload_speed: "🔄", // Quick Reload
 
   // Monster Skills
   icon_slime: "🦠",
@@ -96,6 +98,7 @@ export const iconMap = {
   icon_regen: "✨", // 复用星星
   icon_buff_atk: "⚔️",
   icon_buff_def: "🛡️",
+  icon_limit_break: "🔥", // 限界突破/破碎监牢
 
   // Characters
   icon_user: "👤",

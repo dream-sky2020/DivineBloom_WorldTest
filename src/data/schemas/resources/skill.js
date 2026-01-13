@@ -23,7 +23,8 @@ const SkillEffectSchema = z.object({
 const SkillCostSchema = z.object({
     type: z.enum(['mp', 'hp', 'status_duration', 'item']),
     id: ID.optional(), // Item ID or Status ID
-    amount: z.number()
+    amount: z.number(),
+    group: z.number().optional() // Cost priority group (0 checked first, then 1...)
 });
 
 export const SkillSchema = z.object({
@@ -52,5 +53,6 @@ export const SkillSchema = z.object({
     // 某些特殊技能参数
     chain: z.number().optional(),
     decay: z.number().optional(),
-    randomHits: z.number().optional()
+    randomHits: z.number().optional(),
+    consumeTurn: z.boolean().optional() // 是否消耗回合，默认为 true
 });

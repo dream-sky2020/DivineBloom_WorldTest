@@ -23,6 +23,7 @@ export const ItemSchema = z.object({
 
     // 可选字段
     targetType: z.string().optional(), // 消耗品特有
+    consumeTurn: z.boolean().optional(), // 是否消耗回合，默认为 true (仅消耗品有效)
     effects: z.array(ItemEffectSchema).optional(), // 消耗品特有
     price: z.number().optional(),
 

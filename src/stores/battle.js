@@ -308,8 +308,16 @@ export const useBattleStore = defineStore('battle', () => {
             // Simple Enemy AI Energy Usage (Optional: For now enemies don't use BP or just reset)
             // But if we want consistent data structure, we can consume it if they have it.
             // For now, let's just execute.
-            executeBattleAction(enemy, action);
-            endTurn(enemy);
+            const result = executeBattleAction(enemy, action);
+            
+            if (result && result.consumeTurn === false) {
+                // If turn is not consumed (e.g. Free Action), act again immediately
+                // To prevent infinite loops with free actions, we might want a safety check,
+                // but for now, we trust the AI/Data design.
+                processEnemyTurn(enemy);
+            } else {
+                endTurn(enemy);
+            }
         }, 1000);
     };
 
@@ -318,6 +326,7 @@ export const useBattleStore = defineStore('battle', () => {
         let targetType = 'single';
         let effects = [];
         let skillData = null;
+        let consumeTurn = true; // Default to consuming turn
 
         // --- Energy System Consumption ---
         let energyMult = 1.0;
@@ -335,6 +344,7 @@ export const useBattleStore = defineStore('battle', () => {
         if (action.type === 'custom_skill') {
             targetType = action.targetType || 'single';
             effects = action.effects || [];
+            if (action.consumeTurn === false) consumeTurn = false;
 
             // Custom Log
             if (action.logKey) {
@@ -353,10 +363,11 @@ export const useBattleStore = defineStore('battle', () => {
 
         } else if (action.type === 'skill') {
             skillData = skillsDb[action.skillId];
-            if (!skillData) return;
+            if (!skillData) return { consumeTurn: false }; // Fail safe
 
             targetType = skillData.targetType || 'single';
             effects = skillData.effects || [];
+            if (skillData.consumeTurn === false) consumeTurn = false;
 
             log('battle.useSkill', { user: actor.name, skill: skillData.name });
 
@@ -392,6 +403,8 @@ export const useBattleStore = defineStore('battle', () => {
                 lastResult = processEffect(eff, target, actor, skillData, actionContext, false, lastResult);
             });
         });
+
+        return { consumeTurn };
     };
 
     // Player Actions
@@ -400,6 +413,7 @@ export const useBattleStore = defineStore('battle', () => {
 
         waitingForInput.value = false; // Hide UI immediately
         const actor = activeUnit.value;
+        let consumeTurn = true; // Default true
 
         // Calculate Energy Multiplier from Manual Boost Level
         let energyMult = 1.0;
@@ -434,6 +448,8 @@ export const useBattleStore = defineStore('battle', () => {
             // Consume Item
             inventoryStore.removeItem(itemId, 1);
             const item = itemsDb[itemId];
+            if (item && item.consumeTurn === false) consumeTurn = false;
+
             log('battle.useItem', { user: actor.name, item: item.name });
 
             // Centralized Item Logic
@@ -451,6 +467,8 @@ export const useBattleStore = defineStore('battle', () => {
                     log('battle.notEnoughMp'); // or generic "cannot use"
                     return; // Don't end turn
                 }
+
+                if (skill.consumeTurn === false) consumeTurn = false;
 
                 // Pay Cost
                 paySkillCost(actor, skill, getContext());
@@ -569,7 +587,12 @@ export const useBattleStore = defineStore('battle', () => {
         }
 
         if (actionDone) {
-            endTurn(actor);
+            if (consumeTurn) {
+                endTurn(actor);
+            } else {
+                // Return control to player if turn not consumed
+                waitingForInput.value = true;
+            }
         }
     };
 

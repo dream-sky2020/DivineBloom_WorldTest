@@ -75,8 +75,84 @@ export const resolveRandomSequence = (skill, allEnemies) => {
     return hits;
 };
 
+// --- Internal Helper Functions for Cost System ---
+
+const accumulateCosts = (costs, initialReqs = null) => {
+    const reqs = initialReqs ? JSON.parse(JSON.stringify(initialReqs)) : {
+        mp: 0,
+        hp: 0,
+        statuses: {}, // id -> amount
+        items: {}     // id -> amount
+    };
+
+    for (const cost of costs) {
+        if (cost.type === 'mp') {
+            reqs.mp += cost.amount;
+        } else if (cost.type === 'hp') {
+            reqs.hp += cost.amount;
+        } else if (cost.type === 'status_duration') {
+            reqs.statuses[cost.id] = (reqs.statuses[cost.id] || 0) + cost.amount;
+        } else if (cost.type === 'item') {
+            reqs.items[cost.id] = (reqs.items[cost.id] || 0) + cost.amount;
+        }
+    }
+    return reqs;
+};
+
+const checkResources = (actor, reqs, context) => {
+    if (actor.currentMp < reqs.mp) return false;
+    if (actor.currentHp <= reqs.hp) return false;
+
+    for (const [statusId, amount] of Object.entries(reqs.statuses)) {
+        const status = actor.statusEffects?.find(s => s.id === statusId);
+        const currentDuration = status ? (Number(status.duration) || 0) : 0;
+        if (currentDuration < amount) return false;
+    }
+
+    for (const [itemId, amount] of Object.entries(reqs.items)) {
+        if (context && context.checkItem) {
+            if (!context.checkItem(itemId, amount)) return false;
+        } else {
+            console.warn('Battle context missing checkItem for item cost');
+            return false;
+        }
+    }
+    return true;
+};
+
+const payResources = (actor, reqs, context) => {
+    // Pay MP
+    if (reqs.mp > 0) {
+        actor.currentMp = Math.max(0, actor.currentMp - reqs.mp);
+    }
+    // Pay HP
+    if (reqs.hp > 0) {
+        actor.currentHp = Math.max(1, actor.currentHp - reqs.hp);
+    }
+    // Pay Status Duration
+    for (const [statusId, amount] of Object.entries(reqs.statuses)) {
+        const status = actor.statusEffects?.find(s => s.id === statusId);
+        if (status) {
+            status.duration = (Number(status.duration) || 0) - amount;
+            if (status.duration <= 0) {
+                if (actor.statusEffects) {
+                    const idx = actor.statusEffects.indexOf(status);
+                    if (idx !== -1) actor.statusEffects.splice(idx, 1);
+                }
+            }
+        }
+    }
+    // Pay Items
+    for (const [itemId, amount] of Object.entries(reqs.items)) {
+        if (context && context.consumeItem) {
+            context.consumeItem(itemId, amount);
+        }
+    }
+};
+
 /**
  * 检查技能消耗是否满足
+ * 支持 Group 优先级：优先尝试消耗 group 0，其次 group 1...
  * @param {Object} actor 行动者
  * @param {Object} skill 技能定义
  * @param {Object} context 上下文 (包含 inventory 等)
@@ -85,27 +161,37 @@ export const resolveRandomSequence = (skill, allEnemies) => {
 export const checkSkillCost = (actor, skill, context) => {
     // 1. 优先检查结构化的 costs 数组
     if (skill.costs && skill.costs.length > 0) {
+        const commonCosts = [];
+        const costGroups = {};
+
         for (const cost of skill.costs) {
-            if (cost.type === 'mp') {
-                if (actor.currentMp < cost.amount) return false;
-            } else if (cost.type === 'hp') {
-                if (actor.currentHp <= cost.amount) return false; // 通常不能自杀
-            } else if (cost.type === 'status_duration') {
-                // 检查是否有足够的 status 持续时间 (duration)
-                const status = actor.statusEffects?.find(s => s.id === cost.id);
-                const currentDuration = status ? (Number(status.duration) || 0) : 0;
-                if (currentDuration < cost.amount) return false;
-            } else if (cost.type === 'item') {
-                // 需要 context 提供 inventory
-                if (context && context.checkItem) {
-                    if (!context.checkItem(cost.id, cost.amount)) return false;
-                } else {
-                    console.warn('Battle context missing checkItem for item cost');
-                    return false;
-                }
+            if (cost.group !== undefined && cost.group !== null) {
+                if (!costGroups[cost.group]) costGroups[cost.group] = [];
+                costGroups[cost.group].push(cost);
+            } else {
+                commonCosts.push(cost);
             }
         }
-        return true;
+
+        // 计算公共消耗需求
+        const baseReqs = accumulateCosts(commonCosts);
+
+        // 如果没有分组，直接检查公共消耗
+        const groupIds = Object.keys(costGroups).map(Number).sort((a, b) => a - b);
+        if (groupIds.length === 0) {
+            return checkResources(actor, baseReqs, context);
+        }
+
+        // 如果有分组，按优先级检查
+        // 逻辑：BaseReqs + GroupReqs 必须满足其一
+        for (const groupId of groupIds) {
+            const groupReqs = accumulateCosts(costGroups[groupId], baseReqs);
+            if (checkResources(actor, groupReqs, context)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // 2. 兼容旧的字符串 cost 格式 (例如 "10 MP")
@@ -166,29 +252,38 @@ export const canUseSkill = (actor, skill, context) => {
 export const paySkillCost = (actor, skill, context) => {
     // 1. 结构化 costs
     if (skill.costs && skill.costs.length > 0) {
+        const commonCosts = [];
+        const costGroups = {};
+
         for (const cost of skill.costs) {
-            if (cost.type === 'mp') {
-                actor.currentMp = Math.max(0, actor.currentMp - cost.amount);
-            } else if (cost.type === 'hp') {
-                actor.currentHp = Math.max(1, actor.currentHp - cost.amount);
-            } else if (cost.type === 'status_duration') {
-                const status = actor.statusEffects?.find(s => s.id === cost.id);
-                if (status) {
-                    status.duration = (Number(status.duration) || 0) - cost.amount;
-                    if (status.duration <= 0) {
-                        // 移除过期的状态
-                        if (actor.statusEffects) {
-                            const idx = actor.statusEffects.indexOf(status);
-                            if (idx !== -1) actor.statusEffects.splice(idx, 1);
-                        }
-                    }
-                }
-            } else if (cost.type === 'item') {
-                if (context && context.consumeItem) {
-                    context.consumeItem(cost.id, cost.amount);
-                }
+            if (cost.group !== undefined && cost.group !== null) {
+                if (!costGroups[cost.group]) costGroups[cost.group] = [];
+                costGroups[cost.group].push(cost);
+            } else {
+                commonCosts.push(cost);
             }
         }
+
+        const baseReqs = accumulateCosts(commonCosts);
+        const groupIds = Object.keys(costGroups).map(Number).sort((a, b) => a - b);
+
+        if (groupIds.length === 0) {
+            payResources(actor, baseReqs, context);
+            return;
+        }
+
+        // 找到第一个满足条件的组进行支付
+        for (const groupId of groupIds) {
+            const groupReqs = accumulateCosts(costGroups[groupId], baseReqs);
+            if (checkResources(actor, groupReqs, context)) {
+                payResources(actor, groupReqs, context);
+                return; // 支付成功，退出
+            }
+        }
+
+        // 理论上 checkSkillCost 通过了就不会走到这里，
+        // 但如果走到这里说明资源可能在 check 和 pay 之间变化了，或者逻辑异常。
+        console.warn("paySkillCost failed to find satisfied cost group despite check passing.");
         return;
     }
 

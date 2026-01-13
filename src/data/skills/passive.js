@@ -55,6 +55,34 @@ export default {
             ja: '毎ターンMPを少量自動回復する。',
             ko: '매 턴마다 소량의 MP를 자동으로 회복한다.'
         }
+    },
+    'skill_passive_heroic_will_shattered_prison': {
+        id: 'skill_passive_heroic_will_shattered_prison',
+        name: {
+            zh: '英雄意志·破碎监牢',
+            'zh-TW': '英雄意志·破碎監牢',
+            en: 'Heroic Will: Shattered Prison',
+            ja: '英雄の意志・砕かれた牢獄',
+            ko: '영웅의 의지: 부서진 감옥'
+        },
+        type: "skillTypes.passive",
+        category: "skillCategories.passive",
+        icon: "icon_limit_break", // 假设复用或新加图标
+        cost: "--",
+        subText: {
+            zh: '控制抵抗',
+            'zh-TW': '控制抵抗',
+            en: 'CC Resist',
+            ja: '行動阻害耐性',
+            ko: '제어 저항'
+        },
+        description: {
+            zh: '当因无法行动（如麻痹、冻结）跳过回合时，获得"破碎监牢"状态，下一回合行动必定不会被阻止。',
+            'zh-TW': '當因無法行動（如麻痺、凍結）跳過回合時，獲得"破碎監牢"狀態，下一回合行動必定不會被阻止。',
+            en: 'When a turn is skipped due to CC (Stun, Freeze), gain "Shattered Prison" status, ensuring action next turn.',
+            ja: '行動不能（麻痺、凍結など）によりターンをスキップした時、「砕かれた牢獄」状態を得て、次のターンは確実に行動できる。',
+            ko: '행동 불가(마비, 동결 등)로 인해 턴을 건너뛸 때, "부서진 감옥" 상태를 얻어 다음 턴에는 반드시 행동할 수 있다.'
+        }
     }
 }
 

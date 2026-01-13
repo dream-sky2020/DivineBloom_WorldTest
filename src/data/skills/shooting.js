@@ -34,7 +34,45 @@ export default {
             { type: 'status_duration', id: 'status_chambered_count', amount: 1 } // 逻辑消耗：弦上余数 (持续时间)
         ],
         effects: [
-            { type: 'damage', scaling: 'atk', value: 1.0 }
+            { type: 'damage', scaling: 'atk', value: 1.0, maxOffset: 1.2 }
+        ]
+    },
+
+    // 快速射击 (不消耗回合)
+    'skill_firearm_quick_shot': {
+        id: 'skill_firearm_quick_shot',
+        name: {
+            zh: '快速射击',
+            'zh-TW': '快速射擊',
+            en: 'Quick Shot',
+            ja: 'クイックショット',
+            ko: '속사'
+        },
+        type: "skillTypes.active",
+        category: "skillCategories.physical",
+        icon: "icon_skill_shoot_speed", // 假设有加速图标
+        subText: {
+            zh: '敏捷射击',
+            'zh-TW': '敏捷射擊',
+            en: 'Agile Shot',
+            ja: '早撃ち',
+            ko: '민첩한 사격'
+        },
+        description: {
+            zh: '以敏捷的身手进行射击，不消耗回合。造成少量伤害。',
+            'zh-TW': '以敏捷的身手進行射擊，不消耗回合。造成少量傷害。',
+            en: 'Fires a quick shot that does not end turn. Deals minor damage.',
+            ja: '素早く射撃を行う。ターンを消費しない。小ダメージを与える。',
+            ko: '민첩하게 사격한다. 턴을 소모하지 않는다. 소량의 피해를 준다.'
+        },
+        targetType: "enemy",
+        consumeTurn: false, // 不消耗回合
+        cost: "1 Ammo",
+        costs: [
+            { type: 'status_duration', id: 'status_chambered_count', amount: 1 }
+        ],
+        effects: [
+            { type: 'damage', scaling: 'atk', value: 0.8, maxOffset: 1.2 } // 伤害倍率略低
         ]
     }
 };

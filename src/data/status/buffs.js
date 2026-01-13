@@ -186,6 +186,35 @@ export default {
       ko: '발'
     },
     effects: []
+  },
+  'status_shattered_prison': {
+    id: 'status_shattered_prison',
+    name: {
+      zh: '破碎监牢',
+      'zh-TW': '破碎監牢',
+      en: 'Shattered Prison',
+      ja: '砕かれた牢獄',
+      ko: '부서진 감옥'
+    },
+    type: "statusTypes.buff",
+    icon: "icon_limit_break",
+    subText: {
+      zh: '免控',
+      'zh-TW': '免控',
+      en: 'CC Immunity',
+      ja: '阻害無効',
+      ko: '제어 면역'
+    },
+    description: {
+      zh: '英雄意志觉醒，无视所有行动限制效果。',
+      'zh-TW': '英雄意志覺醒，無視所有行動限制效果。',
+      en: 'Heroic will awakened, ignores all action-restricting effects.',
+      ja: '英雄の意志が目覚め、全ての行動制限効果を無視する。',
+      ko: '영웅의 의지가 각성하여 모든 행동 제한 효과를 무시한다.'
+    },
+    effects: [
+      { trigger: 'checkAction', type: 'immunity', status: 'stun' } // 特殊类型：阻止 checkAction 返回 false
+    ]
   }
 }
 

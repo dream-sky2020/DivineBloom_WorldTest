@@ -1,7 +1,7 @@
 export default {
-    // 玩家装填 (消耗物品)
-    'skill_firearm_reload_item': {
-        id: 'skill_firearm_reload_item',
+    // 通用装填 (优先消耗状态储备，不足则消耗物品)
+    'skill_firearm_reload': {
+        id: 'skill_firearm_reload',
         name: {
             zh: '装填',
             'zh-TW': '裝填',
@@ -10,62 +10,70 @@ export default {
             ko: '재장전'
         },
         type: "skillTypes.utility",
-        category: "skillCategories.support",
+        category: "skillCategories.support", // 通用分类
         icon: "icon_skill_reload",
         subText: {
-            zh: '消耗物品恢复弹药',
-            'zh-TW': '消耗物品恢復彈藥',
-            en: 'Use Item to Reload',
-            ja: 'アイテムを消費してリロード',
-            ko: '아이템을 소모하여 재장전'
+            zh: '装填弹药',
+            'zh-TW': '裝填彈藥',
+            en: 'Reload Ammo',
+            ja: '弾薬リロード',
+            ko: '탄약 재장전'
         },
         description: {
-            zh: '消耗背包中的子弹装填武器。',
-            'zh-TW': '消耗背包中的子彈裝填武器。',
-            en: 'Reload weapon using ammo from inventory.',
-            ja: 'インベントリの弾薬を使って武器をリロードする。',
-            ko: '인벤토리의 탄약을 사용하여 무기를 재장전한다.'
+            zh: '装填武器。优先消耗储备弹药(Buff)，不足时消耗背包中的子弹。',
+            'zh-TW': '裝填武器。優先消耗儲備彈藥(Buff)，不足時消耗背包中的子彈。',
+            en: 'Reloads weapon. Prioritizes reserve ammo (Buff), uses inventory ammo if unavailable.',
+            ja: '武器をリロードする。予備弾薬(バフ)を優先消費し、なければインベントリの弾薬を使用する。',
+            ko: '무기를 재장전한다. 예비 탄약(버프)을 우선 소모하고, 부족하면 인벤토리의 탄약을 사용한다.'
         },
         targetType: "self",
-        cost: "5 Rounds",
+        cost: "5 Rounds", // 显示文本，可能需要动态化，但此处为静态描述
         costs: [
-            { type: 'item', id: 6001, amount: 5 } // 逻辑消耗：通用子弹 (ID 6001)
+            // 优先级 0: 消耗储备弹药状态
+            { type: 'status_duration', id: 'status_ammo_count', amount: 5, group: 0 },
+            // 优先级 1: 消耗背包物品 (item_ammo_standard)
+            { type: 'item', id: 'item_ammo_standard', amount: 5, group: 1 }
         ],
         effects: [
             { type: 'applyStatus', status: 'status_chambered_count', duration: 5, target: 'self' }
         ]
     },
 
-    // 怪物装填 (消耗自身Buff)
-    'skill_firearm_reload_reserve': {
-        id: 'skill_firearm_reload_reserve',
+    // 快速装填 (不消耗回合)
+    'skill_firearm_quick_reload': {
+        id: 'skill_firearm_quick_reload',
         name: {
-            zh: '装填',
-            'zh-TW': '裝填',
-            en: 'Reload',
-            ja: 'リロード',
-            ko: '재장전'
+            zh: '快速装填',
+            'zh-TW': '快速裝填',
+            en: 'Quick Reload',
+            ja: 'クイックリロード',
+            ko: '빠른 재장전'
         },
         type: "skillTypes.utility",
-        category: "skillCategories.enemy", // 标记为敌人技能
-        icon: "icon_skill_reload",
+        category: "skillCategories.support",
+        icon: "icon_skill_reload_speed", // 假设有加速图标
         subText: {
-            zh: '消耗备弹恢复弹药',
-            'zh-TW': '消耗備彈恢復彈藥',
-            en: 'Use Reserve to Reload',
-            ja: '予備弾薬を消費してリロード',
-            ko: '예비 탄약을 소모하여 재장전'
+            zh: '迅速装填',
+            'zh-TW': '迅速裝填',
+            en: 'Fast Reload',
+            ja: '迅速リロード',
+            ko: '신속 재장전'
         },
         description: {
-            zh: '从储备弹药中装填武器。',
-            'zh-TW': '從儲備彈藥中裝填武器。',
-            en: 'Reload weapon from reserve ammo.',
-            ja: '予備弾薬から武器をリロードする。',
-            ko: '예비 탄약에서 무기를 재장전한다.'
+            zh: '以极快的速度装填武器，不消耗回合。',
+            'zh-TW': '以極快的速度裝填武器，不消耗回合。',
+            en: 'Reloads weapon instantly, does not end turn.',
+            ja: '素早く武器をリロードする。ターンを消費しない。',
+            ko: '매우 빠르게 무기를 재장전한다. 턴을 소모하지 않는다.'
         },
         targetType: "self",
+        consumeTurn: false, // 不消耗回合
+        cost: "5 Rounds",
         costs: [
-            { type: 'status_duration', id: 'status_ammo_count', amount: 5 } // 逻辑消耗：残弹余数 (持续时间)
+            // 优先级 0: 消耗储备弹药状态
+            { type: 'status_duration', id: 'status_ammo_count', amount: 5, group: 0 },
+            // 优先级 1: 消耗背包物品 (item_ammo_standard)
+            { type: 'item', id: 'item_ammo_standard', amount: 5, group: 1 }
         ],
         effects: [
             { type: 'applyStatus', status: 'status_chambered_count', duration: 5, target: 'self' }

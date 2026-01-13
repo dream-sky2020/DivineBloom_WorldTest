@@ -269,7 +269,7 @@ export default {
     targetType: "enemy",
     effects: [
       { type: "damage", element: "fire", value: 300 },
-      { type: "applyStatus", status: 2, duration: 3, chance: 1.0 }
+      { type: "applyStatus", status: "status_burn", duration: 3, chance: 1.0 }
     ],
     icon: "icon_bomb",
     subText: {
@@ -301,7 +301,7 @@ export default {
     targetType: "allEnemies",
     effects: [
       { type: "damage", element: "fire", value: 300 },
-      { type: "applyStatus", status: 2, duration: 3, chance: 1.0 }
+      { type: "applyStatus", status: "status_burn", duration: 3, chance: 1.0 }
     ],
     icon: "icon_bomb",
     subText: {
@@ -333,7 +333,7 @@ export default {
     targetType: "enemy",
     effects: [
       { type: "damage", element: "ice", value: 300 },
-      { type: "applyStatus", status: 3, duration: 3, chance: 1.0 }
+      { type: "applyStatus", status: "status_freeze", duration: 3, chance: 1.0 }
     ],
     icon: "icon_bomb_ice",
     subText: {
@@ -365,7 +365,7 @@ export default {
     targetType: "allEnemies",
     effects: [
       { type: "damage", element: "ice", value: 300 },
-      { type: "applyStatus", status: 3, duration: 3, chance: 1.0 }
+      { type: "applyStatus", status: "status_freeze", duration: 3, chance: 1.0 }
     ],
     icon: "icon_bomb_ice",
     subText: {
