@@ -41,6 +41,20 @@ export const removeStatus = (target, statusId, context, silent = false) => {
 export const checkCrowdControl = (character) => {
     if (!character || !character.statusEffects) return false;
 
+    // Step 1: Check for immunity effects first
+    for (const status of character.statusEffects) {
+        const statusDef = statusDb[status.id];
+        if (statusDef && statusDef.effects) {
+            for (const eff of statusDef.effects) {
+                if (eff.trigger === 'checkAction' && eff.type === 'immunity') {
+                    // Has immunity, not affected by crowd control
+                    return false;
+                }
+            }
+        }
+    }
+
+    // Step 2: Check for stun/control effects
     for (const status of character.statusEffects) {
         const statusDef = statusDb[status.id];
         if (statusDef && statusDef.effects) {

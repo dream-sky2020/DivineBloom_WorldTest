@@ -1,28 +1,9 @@
 import { z } from 'zod';
 import { ID, LocalizedStringSchema } from '../common.js';
+import { SkillEffectSchema } from '../effects.js';
 
 // --- 技能 (Skill) Schema ---
-
-const SkillEffectSchema = z.object({
-    type: z.string(),
-    value: z.number().optional(),
-    scaling: z.string().optional(), // e.g. "atk", "mag"
-    element: z.string().optional(),
-    status: ID.optional(), // ID of status to apply
-    chance: z.number().optional(), // 0.0 - 1.0
-    duration: z.number().optional(),
-    minOffset: z.number().optional(),
-    maxOffset: z.number().optional(),
-    times: z.number().optional(),
-    minTimes: z.number().optional(),
-    maxTimes: z.number().optional(),
-    target: z.string().optional(), // Self heal etc
-    mode: z.string().optional(), // "add_stack", "refresh", etc.
-
-    // Passive / Trigger fields
-    trigger: z.string().optional(), // e.g. "battle_start", "turn_start", "on_cc_skip"
-    stat: z.string().optional(), // e.g. "atk", "def"
-});
+// SkillEffectSchema 现在从 effects.js 导入，提供完整的类型检查
 
 const SkillCostSchema = z.object({
     type: z.enum(['mp', 'hp', 'status_duration', 'item']),

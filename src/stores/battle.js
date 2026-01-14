@@ -9,7 +9,7 @@ import { getEnemyAction } from '@/game/ai';
 import { calculateDamage, applyDamage, applyHeal } from '@/game/battle/damageSystem';
 import { processEffect, processTurnStatuses } from '@/game/battle/effectSystem';
 import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/statusSystem';
-import { resolveTargets, findPartyMember } from '@/game/battle/targetSystem';
+import { resolveTargets, findPartyMember, getValidTargetIds } from '@/game/battle/targetSystem';
 import { resolveChainSequence, resolveRandomSequence, canUseSkill, paySkillCost, processPassiveTrigger } from '@/game/battle/skillSystem';
 import { calculateAtbTick } from '@/game/battle/timeSystem';
 import { calculateDrops, mergeDrops } from '@/game/battle/lootSystem';
@@ -37,6 +37,8 @@ export const useBattleStore = defineStore('battle', () => {
     const triggeredEnemyUuid = ref(null);
     const lastBattleResult = ref(null); // { result: 'victory'|'defeat'|'flee', enemyUuid: string }
     const waitingForInput = ref(false); // Controls UI visibility
+    const pendingAction = ref(null); // { type, id, targetType, data }
+    const validTargetIds = ref([]);
 
     // --- Getters ---
     const activeCharacter = computed(() => {
@@ -63,6 +65,19 @@ export const useBattleStore = defineStore('battle', () => {
         const skill = skillsDb[skillId];
         if (!skill) return false;
         return canUseSkill(activeCharacter.value, skill, getContext());
+    };
+
+    const setPendingAction = (action) => {
+        pendingAction.value = action;
+        if (action && action.targetType) {
+            validTargetIds.value = getValidTargetIds({
+                partySlots: partySlots.value,
+                enemies: enemies.value,
+                actor: activeUnit.value
+            }, action.targetType);
+        } else {
+            validTargetIds.value = [];
+        }
     };
 
     const adjustBoost = (delta) => {
@@ -270,7 +285,7 @@ export const useBattleStore = defineStore('battle', () => {
         const cannotMove = checkCrowdControl(unit);
         if (cannotMove) {
             log('battle.cannotMove', { name: unit.name });
-            
+
             // Process CC Skip Passives (e.g. Heroic Will)
             processPassiveTrigger(unit, 'on_cc_skip', context);
 
@@ -331,7 +346,7 @@ export const useBattleStore = defineStore('battle', () => {
             // But if we want consistent data structure, we can consume it if they have it.
             // For now, let's just execute.
             const result = executeBattleAction(enemy, action);
-            
+
             if (result && result.consumeTurn === false) {
                 // If turn is not consumed (e.g. Free Action), act again immediately
                 // To prevent infinite loops with free actions, we might want a safety check,
@@ -798,6 +813,8 @@ export const useBattleStore = defineStore('battle', () => {
         activeUnit,
         boostLevel,
         waitingForInput,
+        pendingAction,
+        validTargetIds,
 
         // Getters
         activeCharacter,
@@ -807,6 +824,7 @@ export const useBattleStore = defineStore('battle', () => {
         // Actions
         initBattle,
         playerAction,
+        setPendingAction,
         checkSkillUsability,
         updateATB,
         runAway,

@@ -24,7 +24,7 @@
         v-for="enemy in enemies" 
         :key="enemy.uuid" 
         :enemy="enemy"
-        :is-selecting-target="isSelectingTarget"
+        :is-selectable="validTargetIds.includes(enemy.uuid)"
         @click="onEnemyClick"
       />
     </div>
@@ -61,7 +61,7 @@
         :compact="compactPartyMode"
         :view-mode="partyViewMode"
         :is-active-turn="isSlotActive(slot)"
-        :selection-context="{ isSelectingAlly, isSelectingDead }"
+        :valid-target-ids="validTargetIds"
         @click-character="onCharacterClick"
       />
     </div>
@@ -87,7 +87,18 @@ const gameStore = useGameStore();
 const battleStore = gameStore.battle;
 const settingsStore = gameStore.settings;
 // removed activeSlotIndex
-const { enemies, partySlots, activeCharacter, battleLog, battleState, battleItems, boostLevel, waitingForInput } = storeToRefs(battleStore);
+const { 
+    enemies, 
+    partySlots, 
+    activeCharacter, 
+    battleLog, 
+    battleState, 
+    battleItems, 
+    boostLevel, 
+    waitingForInput,
+    pendingAction,
+    validTargetIds
+} = storeToRefs(battleStore);
 const { battleSpeed: gameSpeed } = storeToRefs(settingsStore);
 
 // Only show action menu if waiting for input
@@ -116,11 +127,8 @@ const compactPartyMode = ref(true);
 
 const showSkillMenu = ref(false);
 const showItemMenu = ref(false);
-const pendingAction = ref(null); // { type: 'attack' | 'skill' | 'item', skillId?: number, itemId?: number, targetType?: string }
 
 const isSelectingTarget = computed(() => !!pendingAction.value);
-const isSelectingAlly = computed(() => pendingAction.value?.targetType === 'ally' || pendingAction.value?.targetType === 'deadAlly');
-const isSelectingDead = computed(() => pendingAction.value?.targetType === 'deadAlly');
 
 const isSlotActive = (slot) => {
     if (!activeCharacter.value) return false;
@@ -177,80 +185,72 @@ const selectSkill = (skill) => {
         return;
     }
     
-    // Check target type from data
-    if (skill.targetType === 'ally' || skill.targetType === 'deadAlly' || skill.targetType === 'enemy') {
-        // Requires Selection
-        pendingAction.value = { type: 'skill', skillId: skill.id, targetType: skill.targetType };
-    } else if (skill.targetType === 'allDeadAllies' || skill.targetType === 'allAllies' || skill.targetType === 'allUnits' || skill.targetType === 'allOtherUnits' || skill.targetType === 'allOtherAllies' || skill.targetType === 'randomEnemy') {
-         // Instant Cast (Mass Revive / Mass Heal / Global / Multi-Target / Random)
-         battleStore.playerAction('skill', skill.id);
+    const needsSelection = ['ally', 'deadAlly', 'enemy'].includes(skill.targetType);
+
+    if (needsSelection) {
+        battleStore.setPendingAction({ 
+            type: 'skill', 
+            targetType: skill.targetType, 
+            data: { skillId: skill.id } 
+        });
     } else {
-        // Instant Cast (Self, AoE, etc.)
         battleStore.playerAction('skill', skill.id);
     }
     showSkillMenu.value = false;
 };
 
 const selectItem = (item) => {
-    const targetType = item.targetType || 'ally'; // default to ally if not set
-    
-    if (targetType === 'enemy') {
-        pendingAction.value = { type: 'item', itemId: item.id, targetType: 'enemy' };
-    } else if (targetType === 'deadAlly') {
-         pendingAction.value = { type: 'item', itemId: item.id, targetType: 'deadAlly' };
-    } else if (targetType === 'allDeadAllies' || targetType === 'allAllies' || targetType === 'allEnemies') {
-         // Instant cast for mass revive / mass heal / mass attack item
-         battleStore.playerAction('item', { itemId: item.id, targetId: null });
-         showItemMenu.value = false;
+    const targetType = item.targetType || 'ally';
+    const needsSelection = ['ally', 'deadAlly', 'enemy'].includes(targetType);
+
+    if (needsSelection) {
+        battleStore.setPendingAction({ 
+            type: 'item', 
+            targetType: targetType, 
+            data: { itemId: item.id } 
+        });
     } else {
-         // Default ally (alive)
-         pendingAction.value = { type: 'item', itemId: item.id, targetType: 'ally' };
+        battleStore.playerAction('item', { itemId: item.id, targetId: null });
     }
     showItemMenu.value = false;
 };
 
 const cancelSelection = () => {
-    pendingAction.value = null;
+    battleStore.setPendingAction(null);
 };
 
 const onEnemyClick = (enemy) => {
-    if (!isSelectingTarget.value) return;
-    if (pendingAction.value.targetType !== 'enemy' && pendingAction.value.type !== 'attack' && pendingAction.value.type !== 'skill') return;
-    if (enemy.currentHp <= 0) return;
-
-    const action = pendingAction.value;
-    if (action.type === 'attack') {
-        battleStore.playerAction('attack', { targetId: enemy.uuid });
-    } else if (action.type === 'skill') {
-        battleStore.playerAction('skill', { skillId: action.skillId, targetId: enemy.uuid });
-    } else if (action.type === 'item') {
-        battleStore.playerAction('item', { itemId: action.itemId, targetId: enemy.uuid });
-    }
-    
-    pendingAction.value = null;
+    handleTargetClick(enemy);
 };
 
 const onCharacterClick = (character) => {
-    if (!isSelectingAlly.value) return;
-    if (!character) return;
-    
-    // Validation
-    if (isSelectingDead.value && character.currentHp > 0) return; // Must be dead
-    if (!isSelectingDead.value && character.currentHp <= 0) return; // Must be alive
-    
+    handleTargetClick(character);
+};
+
+const handleTargetClick = (unit) => {
+    if (!unit || !validTargetIds.value.includes(unit.uuid)) return;
+
     const action = pendingAction.value;
-    if (action.type === 'item') {
-         battleStore.playerAction('item', { itemId: action.itemId, targetId: character.uuid || character.id });
+    if (!action) return;
+
+    if (action.type === 'attack') {
+        battleStore.playerAction('attack', { targetId: unit.uuid });
     } else if (action.type === 'skill') {
-         battleStore.playerAction('skill', { skillId: action.skillId, targetId: character.uuid || character.id });
+        battleStore.playerAction('skill', { skillId: action.data.skillId, targetId: unit.uuid });
+    } else if (action.type === 'item') {
+        battleStore.playerAction('item', { itemId: action.data.itemId, targetId: unit.uuid });
     }
     
-    pendingAction.value = null;
+    battleStore.setPendingAction(null);
 };
 
 const handleAction = (actionType) => {
   if (actionType === 'attack') {
-      pendingAction.value = { type: 'attack' };
+      battleStore.setPendingAction({ 
+          type: 'attack', 
+          targetType: 'enemy', 
+          data: {} 
+      });
   } else {
       battleStore.playerAction(actionType);
   }

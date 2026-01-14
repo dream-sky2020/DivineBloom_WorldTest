@@ -93,6 +93,68 @@ export default {
             ko: '아군 전원의 HP를 300과 최대 HP의 3%만큼 회복시킨다.'
         }
     },
+    item_consumable_hi_splash_potion: {
+        id: "item_consumable_hi_splash_potion",
+        name: {
+            zh: '大范围喷溅高级治疗药水',
+            'zh-TW': '大範圍噴濺高級治療藥水',
+            en: 'Hi-Splashing Healing Potion',
+            ja: 'ハイスプラッシュポーション',
+            ko: '하이 스플래시 포션'
+        },
+        type: "itemTypes.consumable",
+        targetType: "allAllies",
+        effects: [
+            { type: "heal_all", value: 600, percent: 0.06 }
+        ],
+        icon: "icon_potion_splash",
+        subText: {
+            zh: '群体 HP +600 (+6%)',
+            'zh-TW': '群體 HP +600 (+6%)',
+            en: 'Group HP +600 (+6%)',
+            ja: '全体 HP +600 (+6%)',
+            ko: '전체 HP +600 (+6%)'
+        },
+        footerLeft: "itemTypes.consumable",
+        description: {
+            zh: '恢复所有队友600点生命值及6%最大生命值的强力喷溅药水。',
+            'zh-TW': '恢復所有隊友600點生命值及6%最大生命值的強力噴濺藥水。',
+            en: 'Restores 600 HP and 6% Max HP to all allies.',
+            ja: '味方全員のHPを600と最大HPの6%回復する強力な薬。',
+            ko: '아군 전원의 HP를 600과 최대 HP의 6%만큼 회복시키는 강력한 물약.'
+        }
+    },
+    item_consumable_mega_splash_potion: {
+        id: "item_consumable_mega_splash_potion",
+        name: {
+            zh: '大范围喷溅超级治疗药水',
+            'zh-TW': '大範圍噴濺超級治療藥水',
+            en: 'Mega Splashing Healing Potion',
+            ja: 'メガスプラッシュポーション',
+            ko: '메가 스플래시 포션'
+        },
+        type: "itemTypes.consumable",
+        targetType: "allAllies",
+        effects: [
+            { type: "heal_all", value: 1000, percent: 0.10 }
+        ],
+        icon: "icon_potion_splash",
+        subText: {
+            zh: '群体 HP +1000 (+10%)',
+            'zh-TW': '群體 HP +1000 (+10%)',
+            en: 'Group HP +1000 (+10%)',
+            ja: '全体 HP +1000 (+10%)',
+            ko: '전체 HP +1000 (+10%)'
+        },
+        footerLeft: "itemTypes.consumable",
+        description: {
+            zh: '恢复所有队友1000点生命值及10%最大生命值的超强喷溅药水。',
+            'zh-TW': '恢復所有隊友1000點生命值及10%最大生命值的超強噴濺藥水。',
+            en: 'Restores 1000 HP and 10% Max HP to all allies.',
+            ja: '味方全員のHPを1000と最大HPの10%回復する超強力な薬。',
+            ko: '아군 전원의 HP를 1000과 최대 HP의 10%만큼 회복시키는 초강력 물약.'
+        }
+    },
 
     // --- MP Recovery ---
     item_consumable_ether: {

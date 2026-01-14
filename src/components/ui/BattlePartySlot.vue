@@ -258,9 +258,9 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  selectionContext: {
-    type: Object,
-    default: () => ({ isSelectingAlly: false, isSelectingDead: false })
+  validTargetIds: {
+    type: Array,
+    default: () => []
   },
   viewMode: {
     type: String,
@@ -280,9 +280,7 @@ const getLocalizedName = (nameObj) => {
 
 const canSelect = (character) => {
     if (!character) return false;
-    if (!props.selectionContext.isSelectingAlly) return false;
-    if (props.selectionContext.isSelectingDead) return character.currentHp <= 0;
-    return character.currentHp > 0;
+    return props.validTargetIds.includes(character.uuid);
 };
 
 const onCharacterClick = (character) => {

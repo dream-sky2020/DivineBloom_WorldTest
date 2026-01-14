@@ -86,12 +86,12 @@ const _executeSingleEffect = (effect, target, actor, skill, context, silent, pre
             if (target && effect.stat) {
                 const statName = effect.stat; // 'atk', 'def', etc.
                 const pct = Number(effect.value) || 0;
-                
+
                 // Base stat value should be preserved if we want additive stacking properly,
                 // but for now we just multiply current value. 
                 // Better: Check if we have baseStats, otherwise assume current is base.
                 // Or: This is a runtime modification that persists until battle end.
-                
+
                 if (typeof target[statName] === 'number') {
                     const increase = Math.floor(target[statName] * pct);
                     target[statName] += increase;

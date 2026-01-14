@@ -11,7 +11,7 @@
 // 使用 Vite 的 glob 导入功能自动加载 ./skills 下的所有 .js 文件
 // eager: true 确保是同步加载，保持 skillsDb 的直接可用性
 const modules = import.meta.glob('./skills/*.js', { eager: true })
-import { SkillSchema, createMapValidator } from './schemas/index'
+import { SkillSchema, createMapValidator } from './schemas/index.js'
 
 const rawSkillsDb = {}
 

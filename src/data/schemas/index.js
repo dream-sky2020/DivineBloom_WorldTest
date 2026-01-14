@@ -1,5 +1,7 @@
 export * from './common.js';
 export * from './save.js';
+export * from './effects.js';
+export * from './config.js';
 
 // Resource Schemas (Static Game Data)
 export * from './resources/character.js';

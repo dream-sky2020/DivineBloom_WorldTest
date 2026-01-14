@@ -6,7 +6,7 @@
 // 使用 Vite 的 glob 导入功能自动加载 ./characters 下的所有 .js 文件
 // eager: true 确保是同步加载，保持 charactersDb 的直接可用性
 const modules = import.meta.glob('./characters/*.js', { eager: true })
-import { CharacterSchema, createMapValidator } from './schemas/index'
+import { CharacterSchema, createMapValidator } from './schemas/index.js'
 
 const rawCharactersDb = {}
 

@@ -1,5 +1,5 @@
 // Use dynamic imports for lazy loading
-import { MapSchema, createValidator } from './schemas/index'
+import { MapSchema, createValidator } from './schemas/index.js'
 
 export const maps = {
     village: () => import('./maps/village').then(m => m.village),

@@ -180,3 +180,57 @@ export const resolveTargets = ({ partySlots, enemies, actor, targetId }, targetT
 
     return targets;
 };
+
+/**
+ * Get all valid target UUIDs based on target type
+ * @param {Object} context { partySlots, enemies, actor }
+ * @param {String} targetType 
+ * @returns {String[]} Array of valid unit UUIDs
+ */
+export const getValidTargetIds = ({ partySlots, enemies, actor }, targetType) => {
+    if (!actor) return [];
+
+    const isPlayer = actor.isPlayer;
+    const myTeamUnits = extractUnits(isPlayer ? partySlots : enemies, isPlayer);
+    const oppTeamUnits = extractUnits(isPlayer ? enemies : partySlots, !isPlayer);
+
+    const getAlive = (list) => list.filter(u => u.currentHp > 0);
+    const getDead = (list) => list.filter(u => u.currentHp <= 0);
+
+    switch (targetType) {
+        case 'single':
+        case 'enemy':
+            return getAlive(oppTeamUnits).map(u => u.uuid);
+        case 'allEnemies':
+        case 'all':
+        case 'randomEnemy':
+            // For mass/random attacks, sometimes we just want to highlight all possible targets
+            // Or if it's instant cast, validTargetIds might be empty as it doesn't need selection.
+            // But if the UI wants to show who *will* be hit, we return them.
+            return getAlive(oppTeamUnits).map(u => u.uuid);
+        case 'ally':
+            return getAlive(myTeamUnits).map(u => u.uuid);
+        case 'allAllies':
+            return getAlive(myTeamUnits).map(u => u.uuid);
+        case 'deadAlly':
+            return getDead(myTeamUnits).map(u => u.uuid);
+        case 'deadEnemy':
+            return getDead(oppTeamUnits).map(u => u.uuid);
+        case 'allDeadAllies':
+            return getDead(myTeamUnits).map(u => u.uuid);
+        case 'self':
+            return [actor.uuid];
+        case 'allUnits':
+            return [...getAlive(myTeamUnits), ...getAlive(oppTeamUnits)].map(u => u.uuid);
+        case 'allOtherUnits':
+            return [...getAlive(myTeamUnits), ...getAlive(oppTeamUnits)]
+                .filter(u => u.uuid !== actor.uuid)
+                .map(u => u.uuid);
+        case 'allOtherAllies':
+            return getAlive(myTeamUnits)
+                .filter(u => u.uuid !== actor.uuid)
+                .map(u => u.uuid);
+        default:
+            return [];
+    }
+};

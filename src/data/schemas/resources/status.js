@@ -1,17 +1,9 @@
 import { z } from 'zod';
 import { ID, LocalizedStringSchema } from '../common.js';
+import { StatusEffectSchema } from '../effects.js';
 
 // --- 状态 (Status) Schema ---
-
-const StatusEffectSchema = z.object({
-    trigger: z.string(), // "turnStart", "passive", "checkAction"
-    type: z.string(), // "damage", "statMod", "stun", "heal"
-    value: z.number().optional(),
-    scaling: z.string().optional(),
-    stat: z.string().optional(), // for statMod
-    chance: z.number().optional(),
-    maxStack: z.number().optional() // 计数器类型最大层数
-});
+// StatusEffectSchema 现在从 effects.js 导入，提供完整的类型检查
 
 export const StatusSchema = z.object({
     id: ID,

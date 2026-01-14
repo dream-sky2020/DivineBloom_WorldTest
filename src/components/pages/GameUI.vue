@@ -26,6 +26,9 @@
       </div>
     </div>
 
+    <!-- Developer Tools Overlay -->
+    <DevTools v-if="showDevTools" @close="showDevTools = false" />
+
     <!-- Viewport 2: Developer Dashboard -->
     <div class="dev-panel-section">
       <div class="dev-container">
@@ -82,6 +85,13 @@
                 @click="currentSystem = 'dialogue'"
                 v-t="'dev.systems.dialogue'"
               >
+              </button>
+              <button 
+                :class="{ active: currentSystem === 'dev-tools' }" 
+                @click="currentSystem = 'dev-tools'"
+                class="dev-tools-btn"
+              >
+                🛠️ 开发工具
               </button>
             </div>
           </div>
@@ -150,6 +160,8 @@ import EncyclopediaSystem from '@/components/pages/systems/EncyclopediaSystem.vu
 import WorldMapSystem from '@/components/pages/systems/WorldMapSystem.vue';
 import BattleSystem from '@/components/pages/systems/BattleSystem.vue';
 import DialogueSystem from '@/components/pages/systems/DialogueSystem.vue';
+import DevToolsSystem from '@/components/pages/systems/DevToolsSystem.vue';
+import DevTools from '@/components/pages/DevTools.vue';
 
 const logger = createLogger('GameUI');
 const { locale } = useI18n();
@@ -157,6 +169,7 @@ const gameStore = useGameStore();
 const settingsStore = gameStore.settings;
 const currentSystem = ref(gameManager.state.system); // Initialize from GameManager
 const gameCanvas = ref(null);
+const showDevTools = ref(false);
 
 // Sync with GameManager state
 watch(() => gameManager.state.system, (newSystem) => {
@@ -175,6 +188,7 @@ const activeSystemComponent = computed(() => {
     case 'world-map': return WorldMapSystem;
     case 'battle': return BattleSystem;
     case 'dialogue': return DialogueSystem;
+    case 'dev-tools': return DevToolsSystem;
     default: return MainMenuSystem;
   }
 });
@@ -188,7 +202,8 @@ const showGrid = computed(() => {
     'encyclopedia', 
     'shop', // Has blur, but better to hide grid to be clean
     'list-menu', 
-    'list-menu-previews'
+    'list-menu-previews',
+    'dev-tools' // Hide grid for dev tools
   ];
   return !opaqueSystems.includes(currentSystem.value);
 });
@@ -239,8 +254,36 @@ const resizeCanvas = () => {
   canvas.style.transform = `scale(${scale})`;
 }
 
+// Keyboard shortcuts
+const handleKeyDown = (e) => {
+  // Ctrl+Shift+D: Toggle Dev Tools (switch to dev-tools system)
+  if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+    e.preventDefault();
+    if (currentSystem.value === 'dev-tools') {
+      // If already in dev-tools, go back to main menu
+      currentSystem.value = 'main-menu';
+      gameManager.state.system = 'main-menu';
+    } else {
+      // Switch to dev-tools
+      currentSystem.value = 'dev-tools';
+      gameManager.state.system = 'dev-tools';
+    }
+    logger.info('Dev Tools system toggled:', currentSystem.value);
+  }
+  // Keep the overlay dev tools for quick access
+  if (e.ctrlKey && e.shiftKey && e.key === 'X') {
+    e.preventDefault();
+    showDevTools.value = !showDevTools.value;
+  }
+  // Escape: Close Dev Tools overlay
+  if (e.key === 'Escape' && showDevTools.value) {
+    showDevTools.value = false;
+  }
+};
+
 onMounted(() => {
   window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('keydown', handleKeyDown);
   resizeCanvas();
   setTimeout(resizeCanvas, 0);
 
@@ -251,6 +294,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', resizeCanvas);
+  window.removeEventListener('keydown', handleKeyDown);
 });
 
 // Debug Actions

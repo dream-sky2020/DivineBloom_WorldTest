@@ -1,8 +1,11 @@
 <template>
   <div 
     class="enemy-unit" 
-    :class="{ 'boss-unit': enemy.isBoss, 'selectable': isSelectingTarget && enemy.currentHp > 0 }"
-    @click="$emit('click', enemy)"
+    :class="{ 
+      'boss-unit': enemy.isBoss, 
+      'selectable': isSelectable && enemy.currentHp > 0 
+    }"
+    @click="onEnemyClick"
   >
     <!-- Enemy Avatar -->
     <div class="enemy-avatar-wrapper">
@@ -62,12 +65,22 @@ const props = defineProps({
   isSelectingTarget: {
     type: Boolean,
     default: false
+  },
+  isSelectable: {
+    type: Boolean,
+    default: false
   }
 });
 
-defineEmits(['click']);
+const emit = defineEmits(['click']);
 
 const { locale } = useI18n();
+
+const onEnemyClick = () => {
+  if (props.isSelectable) {
+    emit('click', props.enemy);
+  }
+};
 
 const getLocalizedName = (nameObj) => {
     if (!nameObj) return '';

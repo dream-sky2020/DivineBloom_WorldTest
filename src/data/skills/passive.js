@@ -14,11 +14,11 @@ export default {
         icon: "icon_strength",
         cost: "--",
         effects: [
-            { 
-                type: "stat_boost", 
-                stat: "atk", 
+            {
+                type: "stat_boost",
+                stat: "atk",
                 value: 0.15, // +15%
-                trigger: "battle_start" 
+                trigger: "battle_start"
             }
         ],
         subText: {
@@ -50,10 +50,10 @@ export default {
         icon: "icon_mana",
         cost: "--",
         effects: [
-            { 
-                type: "recover_mp", 
+            {
+                type: "recover_mp",
                 value: 10,
-                trigger: "turn_start" 
+                trigger: "turnStart"
             }
         ],
         subText: {
@@ -85,10 +85,10 @@ export default {
         icon: "icon_limit_break", // 假设复用或新加图标
         cost: "--",
         effects: [
-            { 
-                type: "applyStatus", 
-                status: "status_shattered_prison", 
-                trigger: "on_cc_skip" 
+            {
+                type: "applyStatus",
+                status: "status_shattered_prison",
+                trigger: "on_cc_skip"
             }
         ],
         subText: {
