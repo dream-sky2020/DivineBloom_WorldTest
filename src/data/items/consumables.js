@@ -1,132 +1,4 @@
 export default {
-  // --- HP Recovery (1001-1100) ---
-  item_consumable_potion: {
-    id: "item_consumable_potion",
-    name: {
-      zh: '回复药水',
-      'zh-TW': '回復藥水',
-      en: 'Potion',
-      ja: 'ポーション',
-      ko: '포션'
-    },
-    type: "itemTypes.consumable",
-    targetType: "ally",
-    effects: [
-      { type: "heal", value: 50 }
-    ],
-    icon: "icon_potion",
-    subText: {
-      zh: 'HP +50',
-      'zh-TW': 'HP +50',
-      en: 'HP +50',
-      ja: 'HP +50',
-      ko: 'HP +50'
-    },
-    footerLeft: "itemTypes.consumable",
-    description: {
-      zh: '恢复少量生命值的药水。',
-      'zh-TW': '恢復少量生命值的藥水。',
-      en: 'Restores a small amount of HP.',
-      ja: 'HPを少量回復する薬。',
-      ko: 'HP를 소량 회복하는 물약.'
-    }
-  },
-  item_consumable_hi_potion: {
-    id: "item_consumable_hi_potion",
-    name: {
-      zh: '高级回复药水',
-      'zh-TW': '高級回復藥水',
-      en: 'Hi-Potion',
-      ja: 'ハイポーション',
-      ko: '하이 포션'
-    },
-    type: "itemTypes.consumable",
-    targetType: "ally",
-    effects: [
-      { type: "heal", value: 200 }
-    ],
-    icon: "icon_potion",
-    subText: {
-      zh: 'HP +200',
-      'zh-TW': 'HP +200',
-      en: 'HP +200',
-      ja: 'HP +200',
-      ko: 'HP +200'
-    },
-    footerLeft: "itemTypes.consumable",
-    description: {
-      zh: '恢复中量生命值的药水。',
-      'zh-TW': '恢復中量生命值的藥水。',
-      en: 'Restores a moderate amount of HP.',
-      ja: 'HPを中量回復する薬。',
-      ko: 'HP를 중량 회복하는 물약.'
-    }
-  },
-  item_consumable_splash_potion: {
-    id: "item_consumable_splash_potion",
-    name: {
-      zh: '大范围喷溅治疗药水',
-      'zh-TW': '大範圍噴濺治療藥水',
-      en: 'Splashing Healing Potion',
-      ja: 'スプラッシュポーション',
-      ko: '스플래시 포션'
-    },
-    type: "itemTypes.consumable",
-    targetType: "allAllies",
-    effects: [
-      { type: "heal_all", value: 300 }
-    ],
-    icon: "icon_potion_splash",
-    subText: {
-      zh: '群体回复',
-      'zh-TW': '群體回復',
-      en: 'Mass Heal',
-      ja: '全体回復',
-      ko: '전체 회복'
-    },
-    footerLeft: "itemTypes.consumable",
-    description: {
-      zh: '恢复所有队友的生命值。',
-      'zh-TW': '恢復所有隊友的生命值。',
-      en: 'Restores HP to all allies.',
-      ja: '味方全員のHPを回復する。',
-      ko: '아군 전원의 HP를 회복시킨다.'
-    }
-  },
-
-  // --- MP Recovery (1101-1200) ---
-  item_consumable_ether: {
-    id: "item_consumable_ether",
-    name: {
-      zh: '魔法药水',
-      'zh-TW': '魔法藥水',
-      en: 'Ether',
-      ja: 'エーテル',
-      ko: '에테르'
-    },
-    type: "itemTypes.consumable",
-    targetType: "ally",
-    effects: [
-      { type: "recoverMp", value: 50 }
-    ],
-    icon: "icon_potion",
-    subText: {
-      zh: 'MP +50',
-      'zh-TW': 'MP +50',
-      en: 'MP +50',
-      ja: 'MP +50',
-      ko: 'MP +50'
-    },
-    footerLeft: "itemTypes.consumable",
-    description: {
-      zh: '恢复少量魔法值的药水。',
-      'zh-TW': '恢復少量魔法值的藥水。',
-      en: 'Restores a small amount of MP.',
-      ja: 'MPを少量回復する薬。',
-      ko: 'MP를 소량 회복하는 물약.'
-    }
-  },
-
   // --- Status Cure (1201-1300) ---
   item_consumable_antidote: {
     id: "item_consumable_antidote",
@@ -415,6 +287,72 @@ export default {
       en: 'Use at save points to fully recover party.',
       ja: 'セーブポイントで使用し、パーティを全回復する。',
       ko: '세이브 포인트에서 사용하여 파티를 완전히 회복한다.'
+    }
+  },
+
+  // --- Cosmic Items (1601-1700) ---
+  item_consumable_cosmic_frost_bang: {
+    id: "item_consumable_cosmic_frost_bang",
+    name: {
+      zh: '宇宙冰霜大爆炸',
+      'zh-TW': '宇宙冰霜大爆炸',
+      en: 'Cosmic Frost Big Bang',
+      ja: '宇宙の氷霜大爆発',
+      ko: '우주 빙설 대폭발'
+    },
+    type: "itemTypes.consumable",
+    targetType: "allUnits",
+    effects: [
+      { type: "damage", value: 2000 },
+      { type: "applyStatus", status: "status_freeze", duration: 5, chance: 1.0 }
+    ],
+    icon: "icon_bomb_ice",
+    subText: {
+      zh: '全场 2000 + 冰封',
+      'zh-TW': '全場 2000 + 冰封',
+      en: 'Global 2000 + Freeze',
+      ja: '全場 2000 + 凍結',
+      ko: '전체 2000 + 동결'
+    },
+    footerLeft: "itemTypes.consumable",
+    description: {
+      zh: '引发宇宙级的冰霜爆炸，对场上所有人造成 2000 点伤害并冰封 5 回合。',
+      'zh-TW': '引發宇宙級的冰霜爆炸，對場上所有人造成 2000 點傷害並冰封 5 回合。',
+      en: 'Triggers a cosmic frost explosion, dealing 2000 damage and freezing everyone for 5 turns.',
+      ja: '宇宙級の氷霜爆発を引き起こし、場にいる全員に2000ダメージと5ターンの凍結を与える。',
+      ko: '우주급 빙설 폭발을 일으켜 전장의 모든 이에게 2000 피해를 입히고 5턴간 동결시킨다.'
+    }
+  },
+  item_consumable_cosmic_thunder_bang: {
+    id: "item_consumable_cosmic_thunder_bang",
+    name: {
+      zh: '宇宙雷暴大爆炸',
+      'zh-TW': '宇宙雷暴大爆炸',
+      en: 'Cosmic Thunder Big Bang',
+      ja: '宇宙の雷鳴大爆発',
+      ko: '우주 뇌우 대폭발'
+    },
+    type: "itemTypes.consumable",
+    targetType: "allUnits",
+    effects: [
+      { type: "damage", value: 2000 },
+      { type: "applyStatus", status: "status_paralysis", duration: 5, chance: 1.0 }
+    ],
+    icon: "icon_bomb",
+    subText: {
+      zh: '全场 2000 + 麻痹',
+      'zh-TW': '全場 2000 + 麻痺',
+      en: 'Global 2000 + Paralysis',
+      ja: '全場 2000 + 麻痺',
+      ko: '전체 2000 + 마비'
+    },
+    footerLeft: "itemTypes.consumable",
+    description: {
+      zh: '引发宇宙级的雷暴爆炸，对场上所有人造成 2000 点伤害并麻痹 5 回合。',
+      'zh-TW': '引發宇宙級的雷暴爆炸，對場上所有人造成 2000 點傷害並麻痺 5 回合。',
+      en: 'Triggers a cosmic thunder explosion, dealing 2000 damage and paralyzing everyone for 5 turns.',
+      ja: '宇宙級の雷鳴爆発を引き起こし、場にいる全員に2000ダメージと5ターンの麻痺を与える。',
+      ko: '우주급 뇌우 폭발을 일으켜 전장의 모든 이에게 2000 피해를 입히고 5턴간 마비시킨다.'
     }
   }
 }
