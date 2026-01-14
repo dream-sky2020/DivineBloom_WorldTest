@@ -46,6 +46,12 @@ const _executeSingleEffect = (effect, target, actor, skill, context, silent, pre
         case 'heal_all':
             if (target) {
                 let amount = Number(effect.value) || 0;
+
+                // Percent-based recovery (from Max HP)
+                if (effect.percent) {
+                    amount += Math.floor((target.maxHp || 0) * effect.percent);
+                }
+
                 if (effect.scaling === 'maxHp') {
                     amount = Math.floor(target.maxHp * amount);
                 } else if (effect.scaling === 'damage_dealt') {
@@ -61,16 +67,15 @@ const _executeSingleEffect = (effect, target, actor, skill, context, silent, pre
             }
             break;
         case 'recoverMp':
-            if (target) {
-                const amount = Number(effect.value) || 0;
-                target.currentMp = Math.min(target.maxMp, target.currentMp + amount);
-                if (!silent && log) log('battle.recoveredMp', { target: target.name, amount });
-                return amount;
-            }
-            break;
         case 'recover_mp':
             if (target) {
-                const amount = Number(effect.value) || 0;
+                let amount = Number(effect.value) || 0;
+
+                // Percent-based recovery (from Max MP)
+                if (effect.percent) {
+                    amount += Math.floor((target.maxMp || 0) * effect.percent);
+                }
+
                 target.currentMp = Math.min(target.maxMp, target.currentMp + amount);
                 if (!silent && log) log('battle.recoveredMp', { target: target.name, amount });
                 return amount;
@@ -221,6 +226,12 @@ const _executeSingleEffect = (effect, target, actor, skill, context, silent, pre
             if (target) {
                 // Heal
                 let amount = Number(effect.value) || 0;
+
+                // Percent-based recovery (from Max HP)
+                if (effect.percent) {
+                    amount += Math.floor((target.maxHp || 0) * effect.percent);
+                }
+
                 if (effect.scaling === 'maxHp') {
                     amount = Math.floor(target.maxHp * amount);
                 }
