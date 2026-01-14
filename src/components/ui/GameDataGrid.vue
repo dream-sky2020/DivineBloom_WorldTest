@@ -1,5 +1,5 @@
 <template>
-  <div class="game-grid custom-scrollbar" :style="{ gridTemplateColumns: `repeat(${currentColumns}, 1fr)` }">
+  <div class="game-grid custom-scrollbar" :style="{ gridTemplateColumns: currentColumnsStyle }">
     <div 
       v-for="(item, index) in items" 
       :key="index"
@@ -37,7 +37,11 @@
           <div class="list-left">
             <GameIcon class="list-icon" :name="item?.icon || 'icon_box'" />
             <div class="list-info-group">
-              <span class="list-title">{{ item?.name ? getLocalizedText(item.name) : t('common.emptySlot') }}</span>
+              <MarqueeText 
+                class="list-title" 
+                :text="item?.name ? getLocalizedText(item.name) : t('common.emptySlot')"
+                :active="selectedIndex === index || hoveredIndex === index"
+              />
               <span v-if="item?.subText" class="list-sub">{{ getLocalizedText(item.subText) }}</span>
             </div>
           </div>
@@ -52,7 +56,11 @@
       <template v-else-if="mode === 'simple'">
         <div class="card-header">
           <GameIcon class="card-icon" :name="item?.icon || 'icon_box'" />
-          <span class="card-title">{{ item?.name ? getLocalizedText(item.name) : t('common.emptySlot') }}</span>
+          <MarqueeText 
+            class="card-title" 
+            :text="item?.name ? getLocalizedText(item.name) : t('common.emptySlot')"
+            :active="selectedIndex === index || hoveredIndex === index"
+          />
         </div>
         <div class="card-footer">
           <span class="footer-left">{{ item?.footerLeft ? getLocalizedText(item.footerLeft) : (item?.isEmpty ? '---' : '') }}</span>
@@ -68,9 +76,12 @@
             <GameIcon :name="item?.icon || 'icon_unknown'" />
           </div>
           <div class="card-info">
-             <div class="card-title" :class="{ 'text-yellow': item?.highlight }">
-               {{ item?.name ? getLocalizedText(item.name) : t('common.unknown') }}
-             </div>
+             <MarqueeText 
+               class="card-title" 
+               :class="{ 'text-yellow': item?.highlight }"
+               :text="item?.name ? getLocalizedText(item.name) : t('common.unknown')"
+               :active="selectedIndex === index || hoveredIndex === index"
+             />
              <div class="card-sub">{{ item?.subText ? getLocalizedText(item.subText) : '---' }}</div>
           </div>
         </div>
@@ -91,6 +102,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import GameIcon from '@/components/ui/GameIcon.vue';
+import MarqueeText from '@/components/ui/MarqueeText.vue';
 
 const { t, te, locale } = useI18n();
 
@@ -133,8 +145,9 @@ const selectedIndex = ref(props.modelValue);
 const hoveredIndex = ref(-1);
 
 // Force 1 column for list mode, otherwise use prop
-const currentColumns = computed(() => {
-  return props.mode === 'list' ? 1 : props.columns;
+const currentColumnsStyle = computed(() => {
+  const count = props.mode === 'list' ? 1 : props.columns;
+  return `repeat(${count}, minmax(0, 1fr))`;
 });
 
 const handleSelect = (index, item) => {

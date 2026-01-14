@@ -105,7 +105,11 @@
         <div class="desc-content">
           <div>
             <div class="desc-header">
-              <h3 class="desc-title">{{ getLocalizedName(selectedSkill.name) }}</h3>
+              <MarqueeText 
+                class="desc-title" 
+                :text="getLocalizedName(selectedSkill.name)" 
+                :active="true" 
+              />
               <span class="desc-cost" v-if="selectedSkill.cost">Cost: {{ selectedSkill.cost }}</span>
             </div>
             <div class="desc-meta">
@@ -147,6 +151,7 @@ import { skillsDb } from '@/data/skills';
 import { useI18n } from 'vue-i18n';
 import GameIcon from '@/components/ui/GameIcon.vue';
 import GameDataGrid from '@/components/ui/GameDataGrid.vue';
+import MarqueeText from '@/components/ui/MarqueeText.vue';
 
 const { t, locale } = useI18n();
 const partyStore = usePartyStore();

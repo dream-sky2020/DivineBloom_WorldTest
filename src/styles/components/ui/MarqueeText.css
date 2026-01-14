@@ -1,0 +1,45 @@
+.marquee-container {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  min-width: 100%;
+  display: block;
+}
+
+/* 实现末尾半透明遮罩 */
+.marquee-container.is-overflowing {
+  mask-image: linear-gradient(to right, 
+    black 0%, 
+    black calc(100% - 20px), 
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to right, 
+    black 0%, 
+    black calc(100% - 20px), 
+    transparent 100%
+  );
+}
+
+.marquee-content {
+  display: inline-block;
+  will-change: transform;
+  transform: translateX(0);
+}
+
+/* 当 active 且动画未暂停时应用动画 */
+.marquee-container.is-active:not(.is-paused) .marquee-content {
+  animation: marquee-scroll-forward var(--scroll-duration, 0s) linear forwards;
+  animation-delay: 1s;
+}
+
+/* 关键修复：当处于暂停状态（即到达末尾待命时），强制保持在末尾位置 */
+.marquee-container.is-paused .marquee-content {
+  transform: translateX(var(--scroll-distance));
+}
+
+/* 关键改动：到达 100% 后保持在末尾 (forwards) */
+@keyframes marquee-scroll-forward {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(var(--scroll-distance, 0px)); }
+}
