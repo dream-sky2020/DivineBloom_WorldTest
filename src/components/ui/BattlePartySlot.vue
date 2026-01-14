@@ -9,13 +9,14 @@
     <template v-if="viewMode === 'default' || viewMode === 'avatar'">
       <div class="card front-card" v-if="slot.front" 
            :class="{ 
-               'dead': slot.front.currentHp <= 0,
+               'dead': hasStatus(slot.front, 'status_dead'),
+               'dying': hasStatus(slot.front, 'status_dying'),
                'selectable': canSelect(slot.front)
            }"
            @click.stop="onCharacterClick(slot.front)"
       >
         <div class="card-header">
-          <span class="char-name" :class="{ 'name-dead': slot.front.currentHp <= 0 }">{{ getLocalizedName(slot.front.name) }}</span>
+          <span class="char-name" :class="{ 'name-dead': hasStatus(slot.front, 'status_dead') || hasStatus(slot.front, 'status_dying') }">{{ getLocalizedName(slot.front.name) }}</span>
           <GameIcon class="element-icon" name="icon_fire" />
         </div>
         <div class="card-avatar-container">
@@ -80,7 +81,8 @@
           class="avatar-badge"
           :class="{ 
             'selectable': canSelect(slot.back),
-            'dead': slot.back.currentHp <= 0
+            'dead': hasStatus(slot.back, 'status_dead'),
+            'dying': hasStatus(slot.back, 'status_dying')
           }"
           @click.stop="onCharacterClick(slot.back)"
           :title="getLocalizedName(slot.back.name)"
@@ -103,13 +105,14 @@
     <template v-else>
       <div class="card back-card front-compact" v-if="slot.front"
            :class="{ 
-               'dead': slot.front.currentHp <= 0,
+               'dead': hasStatus(slot.front, 'status_dead'),
+               'dying': hasStatus(slot.front, 'status_dying'),
                'selectable': canSelect(slot.front)
            }"
            @click.stop="onCharacterClick(slot.front)"
       >
          <div class="back-card-header">
-             <span class="char-name" :class="{ 'name-dead': slot.front.currentHp <= 0 }">{{ getLocalizedName(slot.front.name) }}</span>
+             <span class="char-name" :class="{ 'name-dead': hasStatus(slot.front, 'status_dead') || hasStatus(slot.front, 'status_dying') }">{{ getLocalizedName(slot.front.name) }}</span>
          </div>
          <div class="back-card-main-content">
              <div class="back-card-avatar">
@@ -170,14 +173,15 @@
     
     <div class="card back-card" v-if="slot.back && viewMode !== 'avatar'"
          :class="{ 
-             'dead': slot.back.currentHp <= 0,
+             'dead': hasStatus(slot.back, 'status_dead'),
+             'dying': hasStatus(slot.back, 'status_dying'),
              'selectable': canSelect(slot.back) 
          }"
          @click.stop="onCharacterClick(slot.back)"
     >
        <!-- Top Row: Name -->
        <div class="back-card-header">
-           <span class="char-name" :class="{ 'name-dead': slot.back.currentHp <= 0 }">{{ getLocalizedName(slot.back.name) }}</span>
+           <span class="char-name" :class="{ 'name-dead': hasStatus(slot.back, 'status_dead') || hasStatus(slot.back, 'status_dying') }">{{ getLocalizedName(slot.back.name) }}</span>
        </div>
 
        <div class="back-card-main-content">
@@ -276,6 +280,11 @@ const getLocalizedName = (nameObj) => {
     if (!nameObj) return '';
     if (typeof nameObj === 'string') return nameObj;
     return nameObj[locale.value] || nameObj.en || nameObj.zh || '';
+};
+
+const hasStatus = (character, statusId) => {
+    if (!character || !character.statusEffects) return false;
+    return character.statusEffects.some(s => s.id === statusId);
 };
 
 const canSelect = (character) => {

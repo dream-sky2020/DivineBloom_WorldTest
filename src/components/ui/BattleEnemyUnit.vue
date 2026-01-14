@@ -3,7 +3,9 @@
     class="enemy-unit" 
     :class="{ 
       'boss-unit': enemy.isBoss, 
-      'selectable': isSelectable && enemy.currentHp > 0 
+      'selectable': isSelectable && enemy.currentHp > 0,
+      'dead': hasStatus(enemy, 'status_dead'),
+      'dying': hasStatus(enemy, 'status_dying')
     }"
     @click="onEnemyClick"
   >
@@ -86,6 +88,11 @@ const getLocalizedName = (nameObj) => {
     if (!nameObj) return '';
     if (typeof nameObj === 'string') return nameObj;
     return nameObj[locale.value] || nameObj.en || nameObj.zh || '';
+};
+
+const hasStatus = (character, statusId) => {
+    if (!character || !character.statusEffects) return false;
+    return character.statusEffects.some(s => s.id === statusId);
 };
 </script>
 

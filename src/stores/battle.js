@@ -712,7 +712,9 @@ export const useBattleStore = defineStore('battle', () => {
     };
 
     const checkBattleStatus = () => {
-        const allEnemiesDead = enemies.value.every(e => e.currentHp <= 0);
+        const isDead = (u) => u && u.statusEffects && u.statusEffects.some(s => s.id === 'status_dead');
+
+        const allEnemiesDead = enemies.value.every(e => isDead(e));
         if (allEnemiesDead) {
             battleState.value = 'victory';
             lastBattleResult.value = { result: 'victory', enemyUuid: triggeredEnemyUuid.value };
@@ -748,7 +750,10 @@ export const useBattleStore = defineStore('battle', () => {
             return true;
         }
 
-        const allPlayersDead = partySlots.value.every(s => !s.front || s.front.currentHp <= 0);
+        const allPlayersDead = partySlots.value.every(s =>
+            (!s.front || isDead(s.front)) &&
+            (!s.back || isDead(s.back))
+        );
         if (allPlayersDead) {
             battleState.value = 'defeat';
             lastBattleResult.value = { result: 'defeat', enemyUuid: triggeredEnemyUuid.value };

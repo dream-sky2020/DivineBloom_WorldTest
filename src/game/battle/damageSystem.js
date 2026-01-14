@@ -1,4 +1,5 @@
 import { statusDb } from '@/data/status';
+import { applyStatus, removeStatus } from '@/game/battle/statusSystem';
 
 /**
  * Calculates raw damage based on attacker, defender, and modifiers.
@@ -85,7 +86,7 @@ export const calculateDamage = (attacker, defender, skill = null, effect = null,
 
     // Add some randomness based on data config
     let finalMultiplier = 1.0;
-    
+
     // Check if minOffset or maxOffset are defined
     const hasMin = effect && typeof effect.minOffset === 'number';
     const hasMax = effect && typeof effect.maxOffset === 'number';
@@ -100,7 +101,7 @@ export const calculateDamage = (attacker, defender, skill = null, effect = null,
         } else if (!hasMin && hasMax && maxOffset <= 0) {
             console.error(`Skill Config Error: maxOffset (${maxOffset}) must be greater than 0 when minOffset is undefined.`);
         } else if (minOffset >= maxOffset) {
-             console.error(`Skill Config Error: minOffset (${minOffset}) must be less than maxOffset (${maxOffset})`);
+            console.error(`Skill Config Error: minOffset (${minOffset}) must be less than maxOffset (${maxOffset})`);
         } else {
             // Calculate Variance
             const range = maxOffset - minOffset;
@@ -139,6 +140,37 @@ export const applyDamage = (target, amount, context, silent = false) => {
     const currentHp = target.currentHp;
     target.currentHp = Math.max(0, currentHp - safeAmount);
 
+    // Dying/Death Logic
+    if (target.currentHp === 0) {
+        const isDying = target.statusEffects && target.statusEffects.some(s => s.id === 'status_dying');
+        const isDead = target.statusEffects && target.statusEffects.some(s => s.id === 'status_dead');
+
+        if (!isDead) {
+            if (target.isPlayer || target.isBoss) {
+                if (!isDying) {
+                    applyStatus(target, 'status_dying', 999, null, context);
+                    if (!silent && log) log('battle.enteredDying', { target: target.name });
+                } else if (safeAmount > 0) {
+                    // Roll for death when taking damage while dying
+                    const deathChance = 0.35;
+                    if (Math.random() < deathChance) {
+                        applyStatus(target, 'status_dead', 999, null, context);
+                        removeStatus(target, 'status_dying', context, true);
+                        target.atb = 0; // Clear ATB on death
+                        if (!silent && log) log('battle.death', { target: target.name });
+                    } else {
+                        if (!silent && log) log('battle.struggling', { target: target.name });
+                    }
+                }
+            } else {
+                // Minions die immediately
+                applyStatus(target, 'status_dead', 999, null, context);
+                target.atb = 0; // Clear ATB on death
+                if (!silent && log) log('battle.death', { target: target.name });
+            }
+        }
+    }
+
     // Log "NaN" damage as 0 visually if needed, but safeAmount handles logic
     if (!silent && log) {
         log('battle.damage', { target: target.name, amount: safeAmount });
@@ -147,12 +179,16 @@ export const applyDamage = (target, amount, context, silent = false) => {
         }
     }
 
-    // Check if a front-row party member died and needs switching
-    if (target.currentHp <= 0 && performSwitch && partySlots) {
+    // Check if a front-row party member is incapacitated and needs switching
+    const isIncapacitated = target.currentHp <= 0 || (target.statusEffects && target.statusEffects.some(s => s.id === 'status_dead'));
+
+    if (isIncapacitated && performSwitch && partySlots) {
         const slotIndex = partySlots.findIndex(s => s.front && s.front.id === target.id);
         if (slotIndex !== -1) {
             const slot = partySlots[slotIndex];
-            if (slot.back && slot.back.currentHp > 0) {
+            // Only switch if backup is alive (not dead status)
+            const backupAlive = slot.back && !slot.back.statusEffects?.some(s => s.id === 'status_dead');
+            if (backupAlive) {
                 if (!silent && log) log('battle.fell', { target: target.name, backup: slot.back.name });
                 performSwitch(slotIndex);
             }
@@ -191,7 +227,16 @@ export const applyHeal = (target, amount, context, silent = false) => {
     target.currentHp = Math.min(target.maxHp, target.currentHp + safeAmount);
     const healed = target.currentHp - oldHp;
 
-    if (!silent && log) log('battle.recoveredHp', { target: target.name, amount: healed });
+    if (healed > 0) {
+        // Recovery from Dying
+        const isDying = target.statusEffects && target.statusEffects.some(s => s.id === 'status_dying');
+        if (isDying && target.currentHp > 0) {
+            removeStatus(target, 'status_dying', context);
+            if (!silent && log) log('battle.recoveredFromDying', { target: target.name });
+        }
+    }
+
+    if (!silent && log && healed > 0) log('battle.recoveredHp', { target: target.name, amount: healed });
     return healed;
 };
 

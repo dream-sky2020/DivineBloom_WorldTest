@@ -78,8 +78,11 @@ export const resolveTargets = ({ partySlots, enemies, actor, targetId }, targetT
     const oppTeamUnits = extractUnits(oppTeamRaw, !isPlayer);
 
     // Filter helpers
-    const getAlive = (list) => list.filter(u => u.currentHp > 0);
-    const getDead = (list) => list.filter(u => u.currentHp <= 0);
+    const isUnitDead = (u) => u.statusEffects && u.statusEffects.some(s => s.id === 'status_dead');
+    const isUnitAlive = (u) => !isUnitDead(u);
+
+    const getAlive = (list) => list.filter(u => isUnitAlive(u));
+    const getDead = (list) => list.filter(u => isUnitDead(u));
 
     // Resolve Logic
     switch (targetType) {
@@ -194,8 +197,11 @@ export const getValidTargetIds = ({ partySlots, enemies, actor }, targetType) =>
     const myTeamUnits = extractUnits(isPlayer ? partySlots : enemies, isPlayer);
     const oppTeamUnits = extractUnits(isPlayer ? enemies : partySlots, !isPlayer);
 
-    const getAlive = (list) => list.filter(u => u.currentHp > 0);
-    const getDead = (list) => list.filter(u => u.currentHp <= 0);
+    const isUnitDead = (u) => u.statusEffects && u.statusEffects.some(s => s.id === 'status_dead');
+    const isUnitAlive = (u) => !isUnitDead(u);
+
+    const getAlive = (list) => list.filter(u => isUnitAlive(u));
+    const getDead = (list) => list.filter(u => isUnitDead(u));
 
     switch (targetType) {
         case 'single':

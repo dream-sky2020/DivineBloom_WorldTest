@@ -12,7 +12,7 @@ export default {
     element: "elements.fire",
     weaponType: "weapons.sword",
     initialStats: {
-      hp: 14500,
+      hp: 4500,
       mp: 150,
       str: 18,
       def: 12,
@@ -45,7 +45,7 @@ export default {
     element: "elements.fire", // Also uses astral energy
     weaponType: "weapons.rifle",
     initialStats: {
-      hp: 13380,
+      hp: 3380,
       mp: 220,
       str: 14,
       def: 10,
@@ -92,7 +92,7 @@ export default {
     element: "elements.windLight",
     weaponType: "weapons.book",
     initialStats: {
-      hp: 13300,
+      hp: 3300,
       mp: 300,
       str: 6,
       def: 8,
@@ -125,7 +125,7 @@ export default {
     element: "elements.light",
     weaponType: "weapons.gauntlets",
     initialStats: {
-      hp: 14550,
+      hp: 4550,
       mp: 160,
       str: 22,
       def: 10,
@@ -158,7 +158,7 @@ export default {
     element: "elements.blood",
     weaponType: "weapons.spear",
     initialStats: {
-      hp: 15600,
+      hp: 5600,
       mp: 180,
       str: 24,
       def: 14,
@@ -191,7 +191,7 @@ export default {
     element: "elements.void",
     weaponType: "weapons.jade",
     initialStats: {
-      hp: 13400,
+      hp: 3400,
       mp: 250,
       str: 10,
       def: 10,
@@ -250,7 +250,7 @@ export default {
     element: "elements.time",
     weaponType: "weapons.scroll",
     initialStats: {
-      hp: 13350,
+      hp: 3350,
       mp: 320,
       str: 5,
       def: 8,

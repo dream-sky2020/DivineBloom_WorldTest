@@ -71,4 +71,51 @@ export default {
         },
         effects: []
     },
+    'status_dying': {
+        id: 'status_dying',
+        name: {
+            zh: '濒死',
+            'zh-TW': '瀕死',
+            en: 'Dying',
+            ja: '瀕死',
+            ko: '빈사 (瀕死)'
+        },
+        type: "statusTypes.special",
+        icon: "icon_warning",
+        description: {
+            zh: '生命值已归零。再次受击可能导致彻底死亡。',
+            'zh-TW': '生命值已歸零。再次受擊可能導致徹底死亡。',
+            en: 'HP reached zero. Further hits may cause permanent death.',
+            ja: 'HPがゼロになった。さらなる攻撃で死亡する可能性がある。',
+            ko: '생명력이 0이 되었습니다. 추가 공격을 받으면 완전히 사망할 수 있습니다.'
+        },
+        decayMode: 'none',
+        effects: [
+            { trigger: 'checkAction', type: 'stun', chance: 1.0 }
+        ]
+    },
+    'status_dead': {
+        id: 'status_dead',
+        name: {
+            zh: '死亡',
+            'zh-TW': '死亡',
+            en: 'Dead',
+            ja: '戦闘不能',
+            ko: '사망'
+        },
+        type: "statusTypes.special",
+        icon: "icon_death",
+        description: {
+            zh: '已无法战斗。需要复活手段才能归队。',
+            'zh-TW': '已無法戰鬥。需要復活手段才能歸隊。',
+            en: 'Incapacitated and cannot continue fighting.',
+            ja: '戦闘不能になった。復活手段が必要だ。',
+            ko: '사망하여 전투를 계속할 수 없습니다. 부활 수단이 필요합니다.'
+        },
+        decayMode: 'none',
+        persistent: true,
+        effects: [
+            { trigger: 'checkAction', type: 'stun', chance: 1.0 }
+        ]
+    },
 }

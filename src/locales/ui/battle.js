@@ -26,6 +26,10 @@ export default {
   switchIn: { zh: '{name} 上场了!', 'zh-TW': '{name} 上場了!', en: '{name} switched in!', ja: '{name}が戦場に出た！', ko: '{name} 등장!' },
   cannotSwitch: { zh: '无法切换!', 'zh-TW': '無法切換!', en: 'Cannot switch!', ja: '交代できない！', ko: '교체 불가!' },
   skipTurn: { zh: '{name} 跳过回合。', 'zh-TW': '{name} 跳過回合。', en: '{name} skips turn.', ja: '{name}はターンをスキップ。', ko: '{name} 턴 넘김.' },
+  enteredDying: { zh: '{target} 陷入了濒死状态!', 'zh-TW': '{target} 陷入了瀕死狀態!', en: '{target} is on the brink of death!', ja: '{target}が濒死状态に陥った！', ko: '{target} 빈사 상태에 빠졌습니다!' },
+  death: { zh: '{target} 彻底死亡了!', 'zh-TW': '{target} 彻底死亡了!', en: '{target} has died!', ja: '{target}が完全に死亡した！', ko: '{target} 완전히 사망했습니다!' },
+  struggling: { zh: '{target} 在死亡边缘苦苦支撑...', 'zh-TW': '{target} 在死亡边缘苦苦支撑...', en: '{target} is struggling at the edge of death...', ja: '{target}は死の渊で耐えている...', ko: '{target} 죽음의 문턱에서 버티고 있습니다...' },
+  recoveredFromDying: { zh: '{target} 从濒死状态中恢复了!', 'zh-TW': '{target} 从濒死状态中恢复了!', en: '{target} recovered from the brink of death!', ja: '{target}が死の渊から生还した！', ko: '{target} 빈사 상태에서 회복되었습니다!' },
 
   // Status
   statusDamage: { zh: '{target} 受到 {amount} 点伤害 (来自 {status})!', 'zh-TW': '{target} 受到 {amount} 點傷害 (來自 {status})!', en: '{target} takes {amount} damage from {status}!', ja: '{target}は{status}により{amount}のダメージ！', ko: '{target} {status}(으)로 인해 {amount} 피해!' },

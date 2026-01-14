@@ -99,6 +99,8 @@ export const iconMap = {
   icon_buff_atk: "⚔️",
   icon_buff_def: "🛡️",
   icon_limit_break: "🔥", // 限界突破/破碎监牢
+  icon_warning: "⚠️",
+  icon_death: "💀",
 
   // Characters
   icon_user: "👤",
