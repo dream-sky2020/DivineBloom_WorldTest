@@ -6,6 +6,7 @@ import { ID, LocalizedStringSchema, StatsSchema } from '../common.js';
 const ItemEffectSchema = z.object({
     type: z.string(),
     value: z.number().optional(),
+    percent: z.number().optional(), // 百分比效果 (0-1)
     status: z.union([z.string(), z.number()]).optional(),
     duration: z.number().optional(),
     chance: z.number().optional(),
