@@ -251,6 +251,43 @@ export const canUseSkill = (actor, skill, context) => {
 };
 
 /**
+ * 过滤互斥技能，同一互斥组只保留优先级最高的
+ * @param {Array} skillIds 技能 ID 数组
+ * @returns {Array} 过滤后的技能 ID 数组
+ */
+export const filterExclusiveSkills = (skillIds) => {
+    if (!skillIds || !Array.isArray(skillIds)) return [];
+
+    const exclusiveMap = new Map(); // group -> { id, priority }
+    const result = [];
+
+    for (const id of skillIds) {
+        const skill = skillsDb[id];
+        if (!skill) {
+            result.push(id); // 无法识别的 ID 保持原样
+            continue;
+        }
+
+        if (skill.exclusiveGroup) {
+            const current = exclusiveMap.get(skill.exclusiveGroup);
+            const priority = skill.exclusiveGroupPriority || 0;
+            if (!current || priority > current.priority) {
+                exclusiveMap.set(skill.exclusiveGroup, { id, priority });
+            }
+        } else {
+            result.push(id);
+        }
+    }
+
+    // 将每个互斥组中优先级最高的技能添加回结果集
+    for (const entry of exclusiveMap.values()) {
+        result.push(entry.id);
+    }
+
+    return result;
+};
+
+/**
  * 支付技能消耗
  * @param {Object} actor 行动者
  * @param {Object} skill 技能定义

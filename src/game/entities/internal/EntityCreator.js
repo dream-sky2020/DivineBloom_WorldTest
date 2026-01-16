@@ -32,6 +32,7 @@ export const EntityCreator = {
             return this.createPlayer({
                 x: data.x,
                 y: data.y,
+                name: data.name,
                 scale: data.scale
             })
         }
@@ -40,6 +41,7 @@ export const EntityCreator = {
             return this.createNPC({
                 x: data.x,
                 y: data.y,
+                name: data.name,
                 config: data.config || {}
             })
         }

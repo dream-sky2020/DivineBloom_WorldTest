@@ -218,6 +218,12 @@ export const EffectSchema = z.object({
     critRate: z.number().min(0).max(1).optional(), // 暴击率覆盖
     critDamage: z.number().min(1).optional(), // 暴击倍率覆盖
 
+    // ===== 扩展字段 (针对多样化被动) =====
+    preventDeath: z.boolean().optional(), // 是否拦截死亡
+    priority: z.number().int().optional(), // 触发优先级 (越大越先执行)
+    limit: z.number().int().min(1).optional(), // 每场战斗触发次数限制
+    healPercent: z.number().min(0).max(1).optional(), // 专用回复比例
+
 }).strict(); // 严格模式：不允许未定义的字段
 
 /**

@@ -8,6 +8,7 @@ import { Actions } from '@/game/entities/components/Actions'
 export const PortalEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
+  name: z.string().optional(),
   width: z.number(),
   height: z.number(),
   targetMapId: z.string(),
@@ -38,7 +39,7 @@ export const PortalEntity = {
     // If validation fails, we might want to not create the entity to avoid undefined behavior.
     if (!result.success) return null;
 
-    const { x, y, width, height, targetMapId, targetEntryId } = result.data;
+    const { x, y, name, width, height, targetMapId, targetEntryId } = result.data;
 
     // Offset calculation:
     // Portal position is usually top-left or center? 
@@ -49,6 +50,7 @@ export const PortalEntity = {
 
     return world.add({
       type: 'portal',
+      name: name || `To_${targetMapId}`,
       position: { x, y },
 
       detectArea: DetectArea({
@@ -70,14 +72,16 @@ export const PortalEntity = {
   // Portal Serialization
   serialize(entity) {
     // 逆向解构：从 Component 还原配置数据
-    const { position, detectArea, actionTeleport } = entity
+    const { position, detectArea, actionTeleport, name } = entity
 
     // detectArea.size => {w, h}
     // actionTeleport => {mapId, entryId}
 
     return {
+      type: 'portal',
       x: position.x,
       y: position.y,
+      name: name,
       width: detectArea.size.w,
       height: detectArea.size.h,
       targetMapId: actionTeleport.mapId,

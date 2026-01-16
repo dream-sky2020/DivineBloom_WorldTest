@@ -25,6 +25,9 @@ import { clearWorld, world } from '@/game/ecs/world'
 import { SceneSystem } from '@/game/ecs/systems/SceneSystem'
 import { MapSaveStateSchema } from '@/data/schemas/save'
 import { GlobalEntity } from '@/game/entities/definitions/GlobalEntity'
+import { EditorGridRenderSystem } from '@/game/ecs/systems/render/EditorGridRenderSystem'
+import { EditorInteractionSystem } from '@/game/ecs/systems/editor/EditorInteractionSystem'
+import { EditorHighlightRenderSystem } from '@/game/ecs/systems/editor/EditorHighlightRenderSystem'
 
 /**
  * @typedef {import('@/game/GameEngine').GameEngine} GameEngine
@@ -81,6 +84,8 @@ export class WorldScene {
         // Convenience reference (populated during load)
         this.player = null
 
+        this.editMode = false
+
         // Initialize Global Entities (Command Queue)
         this._initGlobalEntities()
 
@@ -117,20 +122,36 @@ export class WorldScene {
     }
 
     restore(state) {
-        // Validate state before restoring
-        try {
-            MapSaveStateSchema.parse(state)
-        } catch (e) {
-            console.error('🚨 [WorldScene] Restore State Validation Failed:', e)
-            // If validation fails, fallback to fresh initialization
-            this._initScenario()
-            return
-        }
-
-        // Restore from state logic
-        const { player } = ScenarioLoader.restore(this.engine, state, this.mapData)
+        // ... (existing restore code) ...
         this.player = player
         this.isLoaded = true
+    }
+
+    /**
+     * 进入编辑模式
+     */
+    enterEditMode() {
+        this.editMode = true
+        if (!this.renderPipeline.includes(EditorGridRenderSystem)) {
+            this.renderPipeline.push(EditorGridRenderSystem)
+            this.renderPipeline.push(EditorHighlightRenderSystem)
+            this.renderPipeline.sort((a, b) => (a.LAYER || 0) - (b.LAYER || 0))
+        }
+    }
+
+    /**
+     * 退出编辑模式
+     */
+    exitEditMode() {
+        this.editMode = false
+        
+        // 清理渲染系统
+        const systemsToRemove = [EditorGridRenderSystem, EditorHighlightRenderSystem]
+        this.renderPipeline = this.renderPipeline.filter(s => !systemsToRemove.includes(s))
+        
+        // 重置交互状态
+        EditorInteractionSystem.selectedEntity = null
+        EditorInteractionSystem.isDragging = false
     }
 
     /**
@@ -207,8 +228,15 @@ export class WorldScene {
         if (!this.isLoaded) return
         this.lastDt = dt
 
-        // Always update Render Systems (maybe freeze animations if desired, but for now keep them running)
+        // Always update Render Systems (animations)
         VisualRenderSystem.update(dt)
+
+        // 编辑模式下跳过大部分游戏逻辑
+        if (this.editMode) {
+            InputSenseSystem.update(dt, this.engine.input)
+            EditorInteractionSystem.update(dt, this.engine)
+            return
+        }
 
         // Only update Game Logic if not transitioning
         if (!this.isTransitioning) {

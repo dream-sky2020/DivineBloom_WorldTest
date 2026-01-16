@@ -156,6 +156,22 @@ class GameManager {
         this.pause()
     }
 
+    /**
+     * Toggle Editor Mode
+     */
+    toggleEditMode() {
+        if (!this.currentScene.value) return;
+        
+        const scene = this.currentScene.value;
+        if (scene.editMode) {
+            scene.exitEditMode();
+            logger.info('Editor Mode Disabled');
+        } else {
+            scene.enterEditMode();
+            logger.info('Editor Mode Enabled');
+        }
+    }
+
     // --- Callbacks ---
 
     _onEncounter(enemyGroup, enemyUuid) {

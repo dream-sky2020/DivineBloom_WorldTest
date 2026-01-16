@@ -9,6 +9,7 @@ import { Physics } from '@/game/entities/components/Physics'
 export const PlayerEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
+  name: z.string().optional().default('Player'),
   scale: z.number().optional().default(0.7)
 });
 
@@ -22,10 +23,11 @@ export const PlayerEntity = {
       return null;
     }
 
-    const { x, y, scale } = result.data;
+    const { x, y, name, scale } = result.data;
 
     const entity = world.add({
       type: 'player', // 方便序列化识别
+      name: name,
       position: { x, y },
       velocity: Physics.Velocity(),
 
@@ -51,8 +53,10 @@ export const PlayerEntity = {
 
   serialize(entity) {
     return {
+      type: 'player',
       x: entity.position.x,
       y: entity.position.y,
+      name: entity.name,
       scale: entity.visual.scale
     }
   }

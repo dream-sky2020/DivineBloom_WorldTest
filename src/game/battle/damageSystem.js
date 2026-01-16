@@ -3,6 +3,132 @@ import { skillsDb } from '@/data/skills';
 import { applyStatus, removeStatus } from '@/game/battle/statusSystem';
 
 /**
+ * 收集单位身上的 HP 归零相关被动
+ */
+const collectHpZeroHandlers = (unit) => {
+    const handlers = [];
+    if (!unit.skills) return handlers;
+
+    unit.skills.forEach(skillId => {
+        const skill = skillsDb[skillId];
+        if (skill && skill.type === 'skillTypes.passive' && skill.effects) {
+            skill.effects.forEach(eff => {
+                if (eff.trigger === 'onHpZero') {
+                    handlers.push({ skill, effect: eff });
+                }
+            });
+        }
+    });
+    return handlers;
+};
+
+/**
+ * 执行具体的归零效果逻辑
+ */
+const executeHpZeroEffect = (target, skill, effect, context, silent) => {
+    const { log } = context;
+
+    switch (effect.variant) {
+        case 'revive':
+            // 复活/回复逻辑
+            const healAmount = effect.healPercent ? target.maxHp * effect.healPercent : (effect.value || 1);
+            applyHeal(target, healAmount, context, silent);
+            // 假设日志系统支持这种 key
+            if (!silent && log) log('battle.revived', { target: target.name, skill: skill.name.zh });
+            return true;
+
+        case 'will_to_live':
+            // 经典的进入濒死逻辑
+            applyStatus(target, 'status_dying', 999, null, context);
+            if (!silent && log) log('battle.enteredDying', { target: target.name });
+            return true;
+
+        case 'add_status':
+            // 添加额外状态（如麻痹、不屈、隐身等）
+            if (effect.status) {
+                applyStatus(target, effect.status, effect.duration || 3, null, context);
+            }
+            return true;
+
+        case 'call_of_death':
+            // 强制死亡逻辑
+            return false; // 不拦截死亡判定
+
+        default:
+            return false;
+    }
+};
+
+/**
+ * 处理初次 HP 归零事件
+ */
+const handleHpZeroEvent = (target, context, silent) => {
+    const { log } = context;
+    const handlers = collectHpZeroHandlers(target);
+    let deathPrevented = false;
+
+    // 按优先级排序 (priority 越大越先执行)
+    handlers.sort((a, b) => (b.effect.priority || 0) - (a.effect.priority || 0));
+
+    for (const { skill, effect } of handlers) {
+        // 检查次数限制 (如果有)
+        if (effect.limit) {
+            target.usageRecords = target.usageRecords || {};
+            const usedCount = target.usageRecords[skill.id] || 0;
+            if (usedCount >= effect.limit) continue;
+            target.usageRecords[skill.id] = usedCount + 1;
+        }
+
+        // 检查概率
+        if (effect.chance !== undefined && Math.random() > effect.chance) continue;
+
+        // 执行效果
+        const success = executeHpZeroEffect(target, skill, effect, context, silent);
+        if (success && effect.preventDeath) {
+            deathPrevented = true;
+        }
+    }
+
+    // 如果没有任何被动拦截死亡，则执行默认死亡
+    if (!deathPrevented) {
+        const isDead = target.statusEffects?.some(s => s.id === 'status_dead');
+        if (!isDead) {
+            applyStatus(target, 'status_dead', 999, null, context);
+            target.atb = 0;
+            if (!silent && log) log('battle.death', { target: target.name });
+        }
+    }
+};
+
+/**
+ * 处理濒死状态下受创事件
+ */
+const handleDyingDamageEvent = (target, amount, context, silent) => {
+    const { log } = context;
+    const isDying = target.statusEffects?.some(s => s.id === 'status_dying');
+    if (!isDying) return;
+
+    let deathChance = 0.35; // 默认死亡率
+    
+    // 允许被动修改死亡率 (例如求生意志的变体)
+    const handlers = collectHpZeroHandlers(target);
+    for (const { effect } of handlers) {
+        if (effect.variant === 'will_to_live' && effect.chance !== undefined) {
+            deathChance = effect.chance;
+        }
+    }
+
+    if (Math.random() < deathChance) {
+        applyStatus(target, 'status_dead', 999, null, context);
+        removeStatus(target, 'status_dying', context, true);
+        target.atb = 0;
+        if (!silent && log) log('battle.death', { target: target.name });
+    } else {
+        if (!silent && log) log('battle.struggling', { target: target.name });
+    }
+};
+
+/**
  * Calculates raw damage based on attacker, defender, and modifiers.
  */
 export const calculateDamage = (attacker, defender, skill = null, effect = null, damageMultiplier = 1.0) => {
@@ -139,69 +265,14 @@ export const applyDamage = (target, amount, context, silent = false) => {
     }
 
     const currentHp = target.currentHp;
+    const wasAlreadyZero = currentHp === 0;
     target.currentHp = Math.max(0, currentHp - safeAmount);
 
     // HP-Zero/Death Logic via Passive Skills
-    if (target.currentHp === 0) {
-        const isDead = target.statusEffects && target.statusEffects.some(s => s.id === 'status_dead');
-        const isDying = target.statusEffects && target.statusEffects.some(s => s.id === 'status_dying');
-
-        if (!isDead) {
-            // Find passives that trigger on HP Zero
-            const deathHandlers = [];
-            if (target.skills) {
-                target.skills.forEach(skillId => {
-                    const skill = skillsDb[skillId];
-                    if (skill && skill.type === 'skillTypes.passive' && skill.effects) {
-                        skill.effects.forEach(eff => {
-                            if (eff.trigger === 'onHpZero' && eff.type === 'death_handler') {
-                                deathHandlers.push({ skill, effect: eff });
-                            }
-                        });
-                    }
-                });
-            }
-
-            if (deathHandlers.length > 0) {
-                // Prioritize "will_to_live" over "hollow_will"
-                const hasWillToLive = deathHandlers.some(h => h.effect.variant === 'will_to_live');
-                const prioritizedHandlers = hasWillToLive 
-                    ? deathHandlers.filter(h => h.effect.variant === 'will_to_live')
-                    : deathHandlers;
-
-                // Execute death handlers
-                prioritizedHandlers.forEach(({ skill, effect }) => {
-                    if (effect.variant === 'will_to_live') {
-                        if (!isDying) {
-                            applyStatus(target, 'status_dying', 999, null, context);
-                            if (!silent && log) log('battle.enteredDying', { target: target.name });
-                        } else if (safeAmount > 0) {
-                            // Roll for death when taking damage while dying
-                            const deathChance = effect.chance || 0.35;
-                            if (Math.random() < deathChance) {
-                                applyStatus(target, 'status_dead', 999, null, context);
-                                removeStatus(target, 'status_dying', context, true);
-                                target.atb = 0;
-                                if (!silent && log) log('battle.death', { target: target.name });
-                            } else {
-                                if (!silent && log) log('battle.struggling', { target: target.name });
-                            }
-                        }
-                    } else if (effect.variant === 'hollow_will') {
-                        applyStatus(target, 'status_dead', 999, null, context);
-                        if (isDying) removeStatus(target, 'status_dying', context, true);
-                        target.atb = 0;
-                        if (!silent && log) log('battle.death', { target: target.name });
-                    }
-                });
-            } else {
-                // Fallback: Default Hollow Will behavior if no handlers found
-                applyStatus(target, 'status_dead', 999, null, context);
-                if (isDying) removeStatus(target, 'status_dying', context, true);
-                target.atb = 0;
-                if (!silent && log) log('battle.death', { target: target.name });
-            }
-        }
+    if (target.currentHp === 0 && !wasAlreadyZero) {
+        handleHpZeroEvent(target, context, silent);
+    } else if (target.currentHp === 0 && wasAlreadyZero && safeAmount > 0) {
+        handleDyingDamageEvent(target, safeAmount, context, silent);
     }
 
     // Log "NaN" damage as 0 visually if needed, but safeAmount handles logic
@@ -211,6 +282,8 @@ export const applyDamage = (target, amount, context, silent = false) => {
             log('battle.defended');
         }
     }
+    
+    // ... 原有的 Incapacitated 检查 ...
 
     // Check if a front-row party member is incapacitated and needs switching
     const isDead = target.statusEffects && target.statusEffects.some(s => s.id === 'status_dead');

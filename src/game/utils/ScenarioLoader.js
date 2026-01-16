@@ -122,10 +122,12 @@ export class ScenarioLoader {
                 const npcData = {
                     x: data.x,
                     y: data.y,
+                    name: data.name, // 传递名称
                     config: {
                         ...data,
                         x: undefined,
-                        y: undefined
+                        y: undefined,
+                        name: undefined // 避免重复
                     }
                 }
 
@@ -140,6 +142,7 @@ export class ScenarioLoader {
                 const portalData = {
                     x: data.x,
                     y: data.y,
+                    name: data.name, // 传递名称
                     width: data.w,
                     height: data.h,
                     targetMapId: data.targetMapId,
@@ -210,6 +213,7 @@ export class ScenarioLoader {
                     const portalData = {
                         x: data.x,
                         y: data.y,
+                        name: data.name, // 传递名称
                         width: data.w,
                         height: data.h,
                         targetMapId: data.targetMapId,

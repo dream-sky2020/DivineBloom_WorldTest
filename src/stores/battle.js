@@ -10,7 +10,7 @@ import { calculateDamage, applyDamage, applyHeal } from '@/game/battle/damageSys
 import { processEffect, processTurnStatuses } from '@/game/battle/effectSystem';
 import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/statusSystem';
 import { resolveTargets, findPartyMember, getValidTargetIds } from '@/game/battle/targetSystem';
-import { resolveChainSequence, resolveRandomSequence, canUseSkill, paySkillCost, processPassiveTrigger } from '@/game/battle/skillSystem';
+import { resolveChainSequence, resolveRandomSequence, canUseSkill, paySkillCost, processPassiveTrigger, filterExclusiveSkills } from '@/game/battle/skillSystem';
 import { calculateAtbTick } from '@/game/battle/timeSystem';
 import { calculateDrops, mergeDrops } from '@/game/battle/lootSystem';
 import { getUnitDisplayData } from '@/game/battle/displaySystem';
@@ -161,7 +161,7 @@ export const useBattleStore = defineStore('battle', () => {
             spd: data.initialStats.spd || 10,
             mag: data.initialStats.mag || 10,
             // Runtime state
-            skills: data.skills || [], // Load skills from data
+            skills: filterExclusiveSkills(data.skills || []), // Load skills from data
             statusEffects: [],
             isDefending: false,
             atb: 0,
@@ -184,8 +184,8 @@ export const useBattleStore = defineStore('battle', () => {
             // Combine all active and passive skills that should be available in battle
             battleSkills = [...equippedActive, ...equippedPassive, ...fixedPassive];
             
-            // Deduplicate to be safe
-            battleSkills = [...new Set(battleSkills)];
+            // Deduplicate and filter exclusive skills
+            battleSkills = filterExclusiveSkills([...new Set(battleSkills)]);
         }
 
         return {

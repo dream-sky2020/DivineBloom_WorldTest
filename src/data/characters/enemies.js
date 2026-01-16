@@ -6,7 +6,7 @@ export default {
     element: "elements.water",
     weaponType: "weapons.none",
     initialStats: { hp: 150, mp: 0, str: 10, def: 5, mag: 0, spd: 8 },
-    skills: ['skill_enemy_slime_shot', 'skill_passive_attack_up', 'skill_passive_hollow_will'], // Slime Shot (Active) + Attack Up (Passive)
+    skills: ['skill_enemy_slime_shot', 'skill_passive_attack_up', 'skill_passive_call_of_death'], // Slime Shot (Active) + Attack Up (Passive)
     spriteId: 'enemy_slime',
     description: { zh: '常见的胶状怪物。', en: 'A common gelatinous monster.' },
     drops: [
@@ -21,7 +21,7 @@ export default {
     element: "elements.wind",
     weaponType: "weapons.none",
     initialStats: { hp: 100, mp: 20, str: 12, def: 2, mag: 5, spd: 18 },
-    skills: ['skill_enemy_vampiric_bite', 'skill_passive_hollow_will'], // Vampiric Bite
+    skills: ['skill_enemy_vampiric_bite', 'skill_passive_call_of_death'], // Vampiric Bite
     spriteId: 'default',
     description: { zh: '行动敏捷的飞行怪物。', en: 'An agile flying monster.' },
     drops: [
@@ -35,7 +35,7 @@ export default {
     element: "elements.earth",
     weaponType: "weapons.claw",
     initialStats: { hp: 300, mp: 0, str: 20, def: 8, mag: 0, spd: 14 },
-    skills: ['skill_enemy_pack_bite', 'skill_passive_attack_up', 'skill_passive_hollow_will'], // Pack Bite + Attack Up
+    skills: ['skill_enemy_pack_bite', 'skill_passive_attack_up', 'skill_passive_call_of_death'], // Pack Bite + Attack Up
     spriteId: 'default',
     description: { zh: '凶猛的群居野兽。', en: 'A ferocious pack beast.' },
     drops: [
@@ -50,7 +50,7 @@ export default {
     element: "elements.metal",
     weaponType: "weapons.shield",
     initialStats: { hp: 500, mp: 50, str: 25, def: 20, mag: 0, spd: 6 },
-    skills: ['skill_enemy_shield_bash', 'skill_support_shield', 'skill_passive_hollow_will'], // Shield Bash + Shield (Buff)
+    skills: ['skill_enemy_shield_bash', 'skill_support_shield', 'skill_passive_call_of_death'], // Shield Bash + Shield (Buff)
     spriteId: 'default',
     description: { zh: '全副武装的巡逻者。', en: 'A fully armed patroller.' },
     drops: [

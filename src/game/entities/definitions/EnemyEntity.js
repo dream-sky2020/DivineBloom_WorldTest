@@ -12,6 +12,7 @@ import { Actions } from '@/game/entities/components/Actions'
 export const EnemyEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
+  name: z.string().optional(),
   battleGroup: z.array(z.object({ id: ID })).default([]),
   options: z.object({
     uuid: z.string().optional(),
@@ -44,7 +45,7 @@ export const EnemyEntity = {
       return null;
     }
 
-    const { x, y, battleGroup, options } = result.data;
+    const { x, y, name, battleGroup, options } = result.data;
 
     // Generate UUID if not present
     const uuid = options.uuid || Math.random().toString(36).substr(2, 9);
@@ -53,6 +54,7 @@ export const EnemyEntity = {
 
     const entity = world.add({
       type: 'enemy',
+      name: name || `Enemy_${visualId}`,
       position: { x, y },
       velocity: Physics.Velocity(),
       enemy: true,
@@ -108,10 +110,12 @@ export const EnemyEntity = {
   },
 
   serialize(entity) {
-    const { position, aiState, aiConfig, interaction, visual } = entity
+    const { position, aiState, aiConfig, interaction, visual, name } = entity
     return {
+      type: 'enemy',
       x: position.x,
       y: position.y,
+      name: name,
       battleGroup: interaction.battleGroup,
       options: {
         uuid: interaction.uuid,

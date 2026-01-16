@@ -40,58 +40,46 @@
             <div class="btn-group">
               <button 
                 :class="{ active: currentSystem === 'main-menu' }" 
-                @click="currentSystem = 'main-menu'"
+                @click="handleSystemChange('main-menu')"
                 v-t="'dev.systems.mainMenu'"
               >
               </button>
               <button 
-                :class="{ active: currentSystem === 'list-menu' }" 
-                @click="currentSystem = 'list-menu'"
-                v-t="'dev.systems.listMenu'"
+                :class="{ active: currentSystem === 'world-map' }" 
+                @click="handleSystemChange('world-map')"
+                v-t="'dev.systems.worldMap'"
               >
               </button>
               <button 
-                :class="{ active: currentSystem === 'list-menu-previews' }" 
-                @click="currentSystem = 'list-menu-previews'"
-                v-t="'dev.systems.listMenuPreview'"
+                :class="{ active: currentSystem === 'battle' }" 
+                @click="handleSystemChange('battle')"
+                v-t="'dev.systems.battle'"
               >
               </button>
               <button 
                 :class="{ active: currentSystem === 'shop' }" 
-                @click="currentSystem = 'shop'"
+                @click="handleSystemChange('shop')"
                 v-t="'dev.systems.shop'"
               >
               </button>
               <button 
                 :class="{ active: currentSystem === 'encyclopedia' }" 
-                @click="currentSystem = 'encyclopedia'"
+                @click="handleSystemChange('encyclopedia')"
                 v-t="'dev.systems.encyclopedia'"
               >
               </button>
               <button 
-                :class="{ active: currentSystem === 'battle' }" 
-                @click="currentSystem = 'battle'"
-                v-t="'dev.systems.battle'"
-              >
-              </button>
-              <button 
-                :class="{ active: currentSystem === 'world-map' }" 
-                @click="currentSystem = 'world-map'"
-                v-t="'dev.systems.worldMap'"
-              >
-              </button>
-              <button 
-                :class="{ active: currentSystem === 'dialogue' }" 
-                @click="currentSystem = 'dialogue'"
-                v-t="'dev.systems.dialogue'"
+                :class="{ active: currentSystem === 'list-menu' }" 
+                @click="handleSystemChange('list-menu')"
+                v-t="'dev.systems.listMenu'"
               >
               </button>
               <button 
                 :class="{ active: currentSystem === 'dev-tools' }" 
-                @click="currentSystem = 'dev-tools'"
+                @click="handleSystemChange('dev-tools')"
                 class="dev-tools-btn"
               >
-                🛠️ 开发工具
+                🛠️ 实验性工具
               </button>
             </div>
           </div>
@@ -99,8 +87,20 @@
           <div class="dev-card">
             <h3 v-t="'dev.debugActions'"></h3>
             <div class="btn-group">
-               <button @click="addGold" v-t="'dev.actions.addGold'"></button>
+               <!-- 全局按钮 -->
                <button @click="logState" v-t="'dev.actions.logState'"></button>
+               
+               <!-- 大地图专属操作 -->
+               <template v-if="currentSystem === 'world-map'">
+                 <button @click="toggleEditMode" class="warn">
+                   {{ gameManager.currentScene.value?.editMode ? '关闭编辑器' : '开启编辑器' }}
+                 </button>
+               </template>
+
+               <!-- 战斗专属操作 (预留) -->
+               <template v-if="currentSystem === 'battle'">
+                 <!-- 可以在这里添加：一键胜利、伤害测试等 -->
+               </template>
             </div>
           </div>
 
@@ -298,13 +298,12 @@ onUnmounted(() => {
 });
 
 // Debug Actions
-const addGold = () => {
-  logger.info('Adding gold...');
-  // In real implementation, call store.addGold(1000)
-};
-
 const logState = () => {
   logger.info('Current System:', currentSystem.value);
+};
+
+const toggleEditMode = () => {
+  gameManager.toggleEditMode();
 };
 
 const setLanguage = (lang) => {

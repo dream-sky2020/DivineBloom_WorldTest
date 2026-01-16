@@ -106,20 +106,65 @@ export class Renderer2D {
 export class InputManager {
     constructor() {
         this.keys = new Set()
+        this.mouse = {
+            x: 0,
+            y: 0,
+            isDown: false,
+            justPressed: false,
+            justReleased: false
+        }
         this.lastInput = ''
         this._boundDown = this.onKeyDown.bind(this)
         this._boundUp = this.onKeyUp.bind(this)
+        this._boundMouseMove = this.onMouseMove.bind(this)
+        this._boundMouseDown = this.onMouseDown.bind(this)
+        this._boundMouseUp = this.onMouseUp.bind(this)
     }
 
     enable() {
         window.addEventListener('keydown', this._boundDown, { passive: false })
         window.addEventListener('keyup', this._boundUp)
+        window.addEventListener('mousemove', this._boundMouseMove)
+        window.addEventListener('mousedown', this._boundMouseDown)
+        window.addEventListener('mouseup', this._boundMouseUp)
     }
 
     disable() {
         window.removeEventListener('keydown', this._boundDown)
         window.removeEventListener('keyup', this._boundUp)
+        window.removeEventListener('mousemove', this._boundMouseMove)
+        window.removeEventListener('mousedown', this._boundMouseDown)
+        window.removeEventListener('mouseup', this._boundMouseUp)
         this.keys.clear()
+    }
+
+    onMouseMove(e) {
+        // We need to calculate position relative to the canvas
+        // This will be handled in the update loop or by the caller providing the canvas rect
+        this.mouse.screenX = e.clientX
+        this.mouse.screenY = e.clientY
+    }
+
+    onMouseDown(e) {
+        if (e.button === 0) { // Left click
+            this.mouse.isDown = true
+            this.mouse.justPressed = true
+        }
+    }
+
+    onMouseUp(e) {
+        if (e.button === 0) {
+            this.mouse.isDown = false
+            this.mouse.justReleased = true
+        }
+    }
+
+    /**
+     * Called at the end of the frame to clear justPressed/justReleased flags
+     */
+    clearJustActions() {
+        this.mouse.justPressed = false
+        this.mouse.justReleased = false
     }
 
     onKeyDown(e) {
@@ -235,12 +280,24 @@ export class GameEngine {
         const dt = Math.min(0.05, now - this.lastTime)
         this.lastTime = now
 
+        // Update Mouse Position relative to Canvas
+        if (this.canvas) {
+            const rect = this.canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            // Screen to Canvas (logic pixels)
+            this.input.mouse.x = (this.input.mouse.screenX - rect.left) * (this.width / rect.width);
+            this.input.mouse.y = (this.input.mouse.screenY - rect.top) * (this.height / rect.height);
+        }
+
         // Update
         this.onUpdate(dt)
 
         // Draw
         this.renderer.begin(this.width, this.height)
         this.onDraw(this.renderer)
+
+        // Clear input flags
+        this.input.clearJustActions()
 
         this.rafId = requestAnimationFrame(() => this.loop())
     }

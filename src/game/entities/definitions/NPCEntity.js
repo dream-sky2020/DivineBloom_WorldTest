@@ -10,6 +10,7 @@ import { Actions } from '@/game/entities/components/Actions'
 export const NPCEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
+  name: z.string().optional(),
   config: z.object({
     dialogueId: z.string().optional().default('welcome'),
     spriteId: z.string().optional().default('npc_guide'),
@@ -29,21 +30,15 @@ export const NPCEntity = {
       return null;
     }
     
-    const { x, y, config } = result.data;
+    const { x, y, name, config } = result.data;
     
-    // Check for explicit missing dialogueId if user passed config but empty object
-    // Schema default handles 'undefined' config, but inside config, defaults handle missing properties.
-    // But original code had a warning.
-    if (data.config && !data.config.dialogueId) {
-       // Original warning logic preserved effectively via defaults?
-       // If data.config.dialogueId is missing, Zod uses default 'welcome'.
-       // We can keep the warning if we want, but Zod takes care of values.
-    }
+    // ... (logic)
 
     const { dialogueId, spriteId, range, scale } = config;
 
     const entity = world.add({
       type: 'npc',
+      name: name || `NPC_${dialogueId}`, // 如果没传名字，用对话ID兜底
       position: { x, y },
       npc: true,
       
@@ -81,8 +76,10 @@ export const NPCEntity = {
 
   serialize(entity) {
     return {
+      type: 'npc',
       x: entity.position.x,
       y: entity.position.y,
+      name: entity.name,
       config: {
         dialogueId: entity.interaction.id,
         range: entity.interaction.range,

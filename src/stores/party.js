@@ -67,8 +67,8 @@ export const usePartyStore = defineStore('party', () => {
                 let fixedPassive = dbChar.fixedPassiveSkills ? [...dbChar.fixedPassiveSkills] : [];
                 
                 // Force include core death passives as fixed if not present
-                if (!fixedPassive.includes('skill_passive_hollow_will')) {
-                    fixedPassive.push('skill_passive_hollow_will');
+                if (!fixedPassive.includes('skill_passive_call_of_death')) {
+                    fixedPassive.push('skill_passive_call_of_death');
                 }
                 
                 if (equippedActive.length === 0 && equippedPassive.length === 0 && dbChar.skills && dbChar.skills.length > 0) {

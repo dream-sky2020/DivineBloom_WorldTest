@@ -39,5 +39,7 @@ export const SkillSchema = z.object({
     chain: z.number().optional(),
     decay: z.number().optional(),
     randomHits: z.number().optional(),
+    exclusiveGroup: z.string().optional(),
+    exclusiveGroupPriority: z.number().optional(),
     consumeTurn: z.boolean().optional() // 是否消耗回合，默认为 true
 });
