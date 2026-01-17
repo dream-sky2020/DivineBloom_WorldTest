@@ -18,7 +18,7 @@ export const getUnitDisplayData = (unit, { activeUnit, validTargetIds = [] } = {
     if (!unit) return null;
 
     const isDead = unit.statusEffects?.some(s => s.id === 'status_dead') || false;
-    const isDying = unit.statusEffects?.some(s => s.id === 'status_dying') || false;
+    const isDying = unit.statusEffects?.some(s => s.id.startsWith('status_dying')) || false;
     const isActiveTurn = activeUnit && activeUnit.uuid === unit.uuid;
     const isSelectable = validTargetIds.includes(unit.uuid);
 

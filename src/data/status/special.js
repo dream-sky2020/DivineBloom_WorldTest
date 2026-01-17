@@ -83,13 +83,62 @@ export default {
         type: "statusTypes.special",
         icon: "icon_warning",
         description: {
-            zh: '生命值已归零。再次受击可能导致彻底死亡。',
-            'zh-TW': '生命值已歸零。再次受擊可能導致徹底死亡。',
-            en: 'HP reached zero. Further hits may cause permanent death.',
-            ja: 'HPがゼロになった。さらなる攻撃で死亡する可能性がある。',
-            ko: '생명력이 0이 되었습니다. 추가 공격을 받으면 완전히 사망할 수 있습니다.'
+            zh: '生命值已归零。再次受击有 30% 概率导致彻底死亡。',
+            'zh-TW': '生命值已歸零。再次受擊有 30% 概率導致徹底死亡。',
+            en: 'HP reached zero. Further hits have 30% chance to cause permanent death.',
+            ja: 'HPがゼロになった。さらなる攻撃で 30% の確率で死亡する。',
+            ko: '생명력이 0이 되었습니다. 추가 공격을 받으면 30% 확률로 완전히 사망할 수 있습니다.'
         },
         decayMode: 'none',
+        deathChance: 0.3,
+        effects: [
+            { trigger: 'checkAction', type: 'stun', chance: 1.0 }
+        ]
+    },
+    'status_dying_fragile': {
+        id: 'status_dying_fragile',
+        name: {
+            zh: '天命已至',
+            'zh-TW': '天命已至',
+            en: 'Fate Sealed',
+            ja: '天命',
+            ko: '천명 (天命)'
+        },
+        type: "statusTypes.special",
+        icon: "icon_skull",
+        description: {
+            zh: '生命值已归零。再次受击将必定死亡。',
+            'zh-TW': '生命值已歸零。再次受擊將必定死亡。',
+            en: 'HP reached zero. Further hits will result in immediate death.',
+            ja: 'HPがゼロになった。さらなる攻撃で確実に死亡する。',
+            ko: '생명력이 0이 되었습니다. 추가 공격을 받으면 확실히 사망합니다.'
+        },
+        decayMode: 'none',
+        deathChance: 1.0,
+        effects: [
+            { trigger: 'checkAction', type: 'stun', chance: 1.0 }
+        ]
+    },
+    'status_dying_heroic': {
+        id: 'status_dying_heroic',
+        name: {
+            zh: '涅槃濒死',
+            'zh-TW': '涅槃瀕死',
+            en: 'Heroic Dying',
+            ja: '涅槃',
+            ko: '열반 (涅槃)'
+        },
+        type: "statusTypes.special",
+        icon: "icon_phoenix",
+        description: {
+            zh: '生命值已归零。再次受击仅有 10% 概率导致死亡。',
+            'zh-TW': '生命值已歸零。再次受擊僅有 10% 概率導致死亡。',
+            en: 'HP reached zero. Further hits have only 10% chance to cause death.',
+            ja: 'HPがゼロになった。さらなる攻撃で死亡する確率はわずか 10% です。',
+            ko: '생명력이 0이 되었습니다. 추가 공격을 받아도 사망할 확률은 10%뿐입니다.'
+        },
+        decayMode: 'none',
+        deathChance: 0.1,
         effects: [
             { trigger: 'checkAction', type: 'stun', chance: 1.0 }
         ]

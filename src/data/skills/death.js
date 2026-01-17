@@ -17,8 +17,9 @@ export default {
         effects: [
             {
                 type: "death_handler",
-                variant: "will_to_live",
+                variant: "apply_status",
                 trigger: "onHpZero",
+                status: "status_dying",
                 preventDeath: true,
                 priority: 10
             }
@@ -31,11 +32,11 @@ export default {
             ko: '생존 패시브'
         },
         description: {
-            zh: '当生命值归零时，不会立刻死亡而是进入濒死状态。在濒死状态下再次受到伤害有概率死亡。回复生命值可解除濒死。',
-            'zh-TW': '當生命值歸零時，不會立刻死亡而是進入瀕死狀態。在瀕死狀態下再次受到傷害有概率死亡。回復生命值可解除瀕死。',
-            en: 'When HP reaches zero, enter Dying state instead of dying. Taking damage while Dying has a chance to cause death. Healing removes Dying.',
-            ja: 'HP가 0になった時、即座に死亡せず瀕死状態になる。瀕死状態でダメージを受けると確率で死亡する。回復すると解除される。',
-            ko: '생명력이 0이 되어도 즉시 사망하지 않고 빈사 상태가 됩니다. 빈사 상태에서 피해를 입으면 확률적으로 사망합니다. 회복 시 해제됩니다.'
+            zh: '当生命值归零时，进入【濒死】状态。在此状态下受击有 30% 概率死亡。回复生命值可解除。',
+            'zh-TW': '當生命值歸零時，進入【瀕死】狀態。在此狀態下受擊有 30% 概率死亡。回復生命值可解除。',
+            en: 'When HP reaches zero, enter Dying state. Taking damage while Dying has a 30% chance to cause death. Healing removes it.',
+            ja: 'HPが0になった時、【瀕死】状態になる。この状態でダメージを受けると 30% の確率で死亡する。回復すると解除される。',
+            ko: '생명력이 0이 되면 【빈사】 상태가 됩니다. 이 상태에서 피해를 입으면 30% 확률로 사망합니다. 회복 시 해제됩니다.'
         }
     },
     'skill_passive_call_of_death': {
@@ -56,8 +57,11 @@ export default {
         effects: [
             {
                 type: "death_handler",
-                variant: "call_of_death",
-                trigger: "onHpZero"
+                variant: "apply_status",
+                trigger: "onHpZero",
+                status: "status_dying_fragile",
+                preventDeath: true,
+                priority: 1
             }
         ],
         subText: {
@@ -68,11 +72,11 @@ export default {
             ko: '죽음의 숙명'
         },
         description: {
-            zh: '生命值归零时立刻死亡。任何生灵终有一死。',
-            'zh-TW': '生命值歸零時立刻死亡。任何生靈終有一死。',
-            en: 'Dies immediately when HP reaches zero. All living things must eventually die.',
-            ja: 'HP가 0になると即座に死亡する。すべての生けるものは死を免れない。',
-            ko: '생명력이 0이 되면 즉시 사망합니다. 모든 생명체는 결국 죽음을 맞이합니다.'
+            zh: '生命值归零时进入【天命已至】状态。在此状态下再次受击将必定死亡。',
+            'zh-TW': '生命值歸零時進入【天命已至】狀態。在此狀態下再次受擊將必定死亡。',
+            en: 'When HP reaches zero, enter Fate Sealed state. Taking any further damage results in immediate death.',
+            ja: 'HP가 0になると【天命】状態になる。この状態でダメージを受けると確実に死亡する。',
+            ko: '생명력이 0이 되면 【천명】 상태가 됩니다. 이 상태에서 피해를 입으면 확실히 사망합니다.'
         }
     },
     'skill_passive_hero_revive': {
@@ -96,16 +100,16 @@ export default {
             },
             {
                 type: "death_handler",
-                variant: "add_status",
+                variant: "apply_status",
                 trigger: "onHpZero",
-                status: "status_paralyzed",
-                duration: 2,
+                status: "status_dying_heroic",
+                preventDeath: true,
                 priority: 90
             }
         ],
         description: {
-            zh: '血量归零时立即回满血量并陷入2回合麻痹状态。每场战斗触发1次。',
-            en: 'Fully restore HP when it reaches zero, but become Paralyzed for 2 turns. Once per battle.'
+            zh: '血量归零时立即回满血量并进入【涅槃濒死】状态（仅10%死亡率）。每场战斗触发1次。',
+            en: 'Fully restore HP when it reaches zero and enter Heroic Dying state (only 10% death rate). Once per battle.'
         }
     }
 }

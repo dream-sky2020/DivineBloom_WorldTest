@@ -5,7 +5,7 @@
       <!-- Left Sidebar -->
       <div 
         class="sidebar-container left-sidebar" 
-        v-if="gameManager.editor.editMode"
+        v-if="isEditMode"
         :class="{ 'is-collapsed': isLeftCollapsed }"
         :style="sidebarStyles.left"
       >
@@ -18,9 +18,19 @@
           </button>
         </div>
 
-        <div class="sidebar-content" v-show="!isLeftCollapsed">
-          <div class="sidebar-placeholder">
-            <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">工具箱</h3>
+        <div 
+          class="sidebar-content" 
+          v-show="!isLeftCollapsed"
+          @dragover.prevent
+          @drop="onDrop($event, 'left')"
+        >
+          <div v-for="panelId in gameManager.editor.layout.left" :key="panelId" class="sidebar-panel-wrapper">
+            <SidebarPanel :id="panelId" :title="getPanelTitle(panelId)" side="left">
+              <component :is="getPanelComponent(panelId)" />
+            </SidebarPanel>
+          </div>
+          <div v-if="gameManager.editor.layout.left.length === 0" class="sidebar-placeholder">
+            <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">左侧无面板</h3>
           </div>
         </div>
 
@@ -59,7 +69,7 @@
       <!-- Right Sidebar -->
       <div 
         class="sidebar-container right-sidebar" 
-        v-if="gameManager.editor.editMode"
+        v-if="isEditMode"
         :class="{ 'is-collapsed': isRightCollapsed }"
         :style="sidebarStyles.right"
       >
@@ -75,8 +85,20 @@
           </button>
         </div>
 
-        <div class="sidebar-content" v-show="!isRightCollapsed">
-          <EntityInspector />
+        <div 
+          class="sidebar-content" 
+          v-show="!isRightCollapsed"
+          @dragover.prevent
+          @drop="onDrop($event, 'right')"
+        >
+          <div v-for="panelId in gameManager.editor.layout.right" :key="panelId" class="sidebar-panel-wrapper">
+            <SidebarPanel :id="panelId" :title="getPanelTitle(panelId)" side="right">
+              <component :is="getPanelComponent(panelId)" />
+            </SidebarPanel>
+          </div>
+          <div v-if="gameManager.editor.layout.right.length === 0" class="sidebar-placeholder">
+            <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">右侧无面板</h3>
+          </div>
         </div>
       </div>
     </div>
@@ -147,8 +169,11 @@
                
                <!-- 大地图专属操作 -->
                <template v-if="currentSystem === 'world-map'">
-                 <button @click="toggleEditMode" class="warn">
-                   {{ gameManager.currentScene.value?.editMode ? '关闭编辑器' : '开启编辑器' }}
+                 <button @click="toggleEditMode" :class="{ active: isEditMode }">
+                   {{ isEditMode ? '关闭编辑器' : '开启编辑器' }}
+                 </button>
+                 <button @click="togglePause" :class="{ warn: gameManager.state.isPaused }">
+                   {{ gameManager.state.isPaused ? '恢复运行' : '暂停运行' }}
                  </button>
                </template>
 
@@ -209,7 +234,6 @@ import { createLogger } from '@/utils/logger';
 
 import MainMenuSystem from '@/components/pages/systems/MainMenuSystem.vue';
 import ListMenuSystem from '@/components/pages/systems/ListMenuSystem.vue';
-import ListMenuPreviewsSystem from '@/components/pages/systems/ListMenuPreviewsSystem.vue';
 import ShopSystem from '@/components/pages/systems/ShopSystem.vue';
 import EncyclopediaSystem from '@/components/pages/systems/EncyclopediaSystem.vue';
 import WorldMapSystem from '@/components/pages/systems/WorldMapSystem.vue';
@@ -217,7 +241,9 @@ import BattleSystem from '@/components/pages/systems/BattleSystem.vue';
 import DialogueSystem from '@/components/pages/systems/DialogueSystem.vue';
 import DevToolsSystem from '@/components/pages/systems/DevToolsSystem.vue';
 import DevTools from '@/components/pages/DevTools.vue';
-import EntityInspector from '@/components/pages/editor/EntityInspector.vue';
+import SidebarPanel from '@/components/pages/editor/SidebarPanel.vue';
+import SceneExplorer from '@/components/pages/editor/SceneExplorer.vue';
+import EntityProperties from '@/components/pages/editor/EntityProperties.vue';
 
 const logger = createLogger('GameUI');
 const { locale } = useI18n();
@@ -235,10 +261,12 @@ const isLeftCollapsed = ref(true);
 const isRightCollapsed = ref(false);
 const resizingSidebar = ref(null); // 'left' or 'right'
 
+// Reactive Edit Mode State
+const isEditMode = computed(() => gameManager.editor.editMode);
+
 const canvasContainerStyle = computed(() => {
-  const isEditMode = gameManager.editor.editMode;
-  const left = isEditMode ? (isLeftCollapsed.value ? 40 : leftSidebarWidth.value) : 0;
-  const right = isEditMode ? (isRightCollapsed.value ? 40 : rightSidebarWidth.value) : 0;
+  const left = isEditMode.value ? (isLeftCollapsed.value ? 40 : leftSidebarWidth.value) : 0;
+  const right = isEditMode.value ? (isRightCollapsed.value ? 40 : rightSidebarWidth.value) : 0;
   
   return {
     left: `${left}px`,
@@ -318,7 +346,7 @@ watch(() => gameManager.state.system, (newSystem) => {
 });
 
 // Watch for edit mode changes to resize canvas
-watch(() => gameManager.editor.editMode, () => {
+watch(isEditMode, () => {
   // Wait for DOM updates
   setTimeout(resizeCanvas, 0);
 });
@@ -327,7 +355,6 @@ const activeSystemComponent = computed(() => {
   switch (currentSystem.value) {
     case 'main-menu': return MainMenuSystem;
     case 'list-menu': return ListMenuSystem;
-    case 'list-menu-previews': return ListMenuPreviewsSystem;
     case 'shop': return ShopSystem;
     case 'encyclopedia': return EncyclopediaSystem;
     case 'world-map': return WorldMapSystem;
@@ -347,7 +374,6 @@ const showGrid = computed(() => {
     'encyclopedia', 
     'shop', // Has blur, but better to hide grid to be clean
     'list-menu', 
-    'list-menu-previews',
     'dev-tools' // Hide grid for dev tools
   ];
   return !opaqueSystems.includes(currentSystem.value);
@@ -453,8 +479,50 @@ const toggleEditMode = () => {
   gameManager.toggleEditMode();
 };
 
+const togglePause = () => {
+  if (gameManager.state.isPaused) {
+    gameManager.resume();
+  } else {
+    gameManager.pause();
+  }
+};
+
 const setLanguage = (lang) => {
   settingsStore.setLanguage(lang);
+};
+
+// Panel Management Helpers
+const getPanelTitle = (id) => {
+  const titles = {
+    'scene-explorer': '场景浏览器',
+    'entity-properties': '属性编辑'
+  };
+  return titles[id] || id;
+};
+
+const getPanelComponent = (id) => {
+  const components = {
+    'scene-explorer': SceneExplorer,
+    'entity-properties': EntityProperties
+  };
+  return components[id];
+};
+
+const onDrop = (e, targetSide) => {
+  const panelId = e.dataTransfer.getData('panelId');
+  const sourceSide = e.dataTransfer.getData('sourceSide');
+  
+  if (!panelId || sourceSide === targetSide) return;
+
+  const layout = gameManager.editor.layout;
+  
+  // 从来源移除
+  layout[sourceSide] = layout[sourceSide].filter(id => id !== panelId);
+  
+  // 添加到目标
+  if (!layout[targetSide].includes(panelId)) {
+    layout[targetSide].push(panelId);
+  }
 };
 </script>
 

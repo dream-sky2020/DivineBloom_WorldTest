@@ -50,12 +50,14 @@ import SkillsPanel from '@/components/panels/SkillsPanel.vue';
 import ThankPanel from '@/components/panels/ThankPanel.vue';
 import SystemPanel from '@/components/panels/SystemPanel.vue';
 import SaveLoadPanel from '@/components/panels/SaveLoadPanel.vue';
+import FormationPanel from '@/components/panels/FormationPanel.vue';
 
 const menuItems = [
   { id: 'items', labelKey: 'panels.inventory', component: InventoryPanel },
   { id: 'equip', labelKey: 'panels.equipment', component: EquipmentPanel },
   { id: 'skills', labelKey: 'panels.skills', component: SkillsPanel },
   { id: 'status', labelKey: 'panels.status', component: CharacterPanel },
+  { id: 'formation', labelKey: 'panels.formation', component: FormationPanel },
   { id: 'thank', labelKey: 'panels.thank', component: ThankPanel },
   { id: 'data', labelKey: 'panels.data', component: SaveLoadPanel },
   { id: 'system', labelKey: 'menu.settings', component: SystemPanel },

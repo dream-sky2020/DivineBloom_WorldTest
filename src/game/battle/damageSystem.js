@@ -37,16 +37,14 @@ const executeHpZeroEffect = (target, skill, effect, context, silent) => {
             if (!silent && log) log('battle.revived', { target: target.name, skill: skill.name.zh });
             return true;
 
-        case 'will_to_live':
-            // 经典的进入濒死逻辑
-            applyStatus(target, 'status_dying', 999, null, context);
-            if (!silent && log) log('battle.enteredDying', { target: target.name });
-            return true;
-
         case 'add_status':
-            // 添加额外状态（如麻痹、不屈、隐身等）
+        case 'apply_status':
+        case 'will_to_live': // 兼容旧逻辑
+            // 添加额外状态（如麻痹、不屈、隐身等，或濒死状态）
             if (effect.status) {
-                applyStatus(target, effect.status, effect.duration || 3, null, context);
+                applyStatus(target, effect.status, effect.duration || 999, null, context);
+            } else if (effect.variant === 'will_to_live') {
+                applyStatus(target, 'status_dying', 999, null, context);
             }
             return true;
 
@@ -105,22 +103,35 @@ const handleHpZeroEvent = (target, context, silent) => {
  */
 const handleDyingDamageEvent = (target, amount, context, silent) => {
     const { log } = context;
-    const isDying = target.statusEffects?.some(s => s.id === 'status_dying');
-    if (!isDying) return;
 
-    let deathChance = 0.35; // 默认死亡率
-    
-    // 允许被动修改死亡率 (例如求生意志的变体)
+    // 查找当前具有死亡概率的状态
+    const dyingStatus = target.statusEffects?.find(s => {
+        const def = statusDb[s.id];
+        return def && typeof def.deathChance === 'number';
+    });
+
+    if (!dyingStatus) return;
+
+    const statusDef = statusDb[dyingStatus.id];
+    let deathChance = statusDef.deathChance;
+
+    // 允许被动技能微调死亡率
     const handlers = collectHpZeroHandlers(target);
     for (const { effect } of handlers) {
-        if (effect.variant === 'will_to_live' && effect.chance !== undefined) {
-            deathChance = effect.chance;
+        if (effect.variant === 'modify_death_chance' && effect.value !== undefined) {
+            deathChance += effect.value;
         }
     }
 
     if (Math.random() < deathChance) {
         applyStatus(target, 'status_dead', 999, null, context);
-        removeStatus(target, 'status_dying', context, true);
+        // 移除所有濒死状态
+        target.statusEffects.forEach(s => {
+            const def = statusDb[s.id];
+            if (def && typeof def.deathChance === 'number') {
+                removeStatus(target, s.id, context, true);
+            }
+        });
         target.atb = 0;
         if (!silent && log) log('battle.death', { target: target.name });
     } else {
@@ -282,7 +293,7 @@ export const applyDamage = (target, amount, context, silent = false) => {
             log('battle.defended');
         }
     }
-    
+
     // ... 原有的 Incapacitated 检查 ...
 
     // Check if a front-row party member is incapacitated and needs switching
@@ -334,9 +345,13 @@ export const applyHeal = (target, amount, context, silent = false) => {
 
     if (healed > 0) {
         // Recovery from Dying
-        const isDying = target.statusEffects && target.statusEffects.some(s => s.id === 'status_dying');
-        if (isDying && target.currentHp > 0) {
-            removeStatus(target, 'status_dying', context);
+        const dyingStatuses = target.statusEffects?.filter(s => {
+            const def = statusDb[s.id];
+            return def && typeof def.deathChance === 'number';
+        });
+
+        if (dyingStatuses && dyingStatuses.length > 0 && target.currentHp > 0) {
+            dyingStatuses.forEach(s => removeStatus(target, s.id, context));
             if (!silent && log) log('battle.recoveredFromDying', { target: target.name });
         }
     }

@@ -19,7 +19,7 @@ export default {
       str: 50,
       def: 40,
       mag: 40,
-      spd: 20
+      spd: 10
     },
     description: {
       zh: '神戮兵装的持有者，立誓通过武力终结一切混乱的霸主。',
@@ -53,7 +53,7 @@ export default {
       str: 45,
       def: 35,
       mag: 50,
-      spd: 25
+      spd: 15
     },
     description: {
       zh: '看破轮回虚无的国王，试图毁灭许愿术核心以赐予众生彻底的解脱。',
@@ -87,7 +87,7 @@ export default {
       str: 60,
       def: 45,
       mag: 55,
-      spd: 30
+      spd: 20
     },
     description: {
       zh: '屠灭所有神明的非人神。',
@@ -121,7 +121,7 @@ export default {
       str: 50,
       def: 50,
       mag: 65,
-      spd: 32
+      spd: 22
     },
     description: {
       zh: '屠灭所有神明的非人神。',

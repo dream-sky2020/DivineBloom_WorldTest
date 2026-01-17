@@ -77,6 +77,7 @@ export const iconMap = {
   icon_spike_explosion: "🌵",
   icon_forward_allies: "🎺",
   icon_hell_revival: "👿",
+  icon_phoenix: "🐦",
 
   // Firearm Skills
   icon_skill_shoot: "🔫",

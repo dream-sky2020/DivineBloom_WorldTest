@@ -1,6 +1,5 @@
 import { world } from '@/game/ecs/world'
 import { Visuals } from '@/data/visuals'
-import { gameManager } from '@/game/GameManager'
 
 /**
  * Editor Interaction System
@@ -11,7 +10,8 @@ export const EditorInteractionSystem = {
   isDragging: false,
   dragOffset: { x: 0, y: 0 },
 
-  update(dt, engine) {
+  update(dt, engine, gameManager) {
+    if (!gameManager) return;
     const { input, renderer } = engine;
     const { mouse } = input;
     const { camera } = renderer;
@@ -23,7 +23,7 @@ export const EditorInteractionSystem = {
     // 1. 处理选中逻辑 (MouseDown)
     if (mouse.justPressed) {
       const hit = this.findEntityAt(worldX, worldY);
-      
+
       if (hit) {
         this.selectedEntity = hit;
         gameManager.editor.selectedEntity = hit; // Sync with reactive state
@@ -38,23 +38,24 @@ export const EditorInteractionSystem = {
     }
 
     // 2. 处理拖拽逻辑 (MouseMove while Down)
-    if (this.isDragging && this.selectedEntity) {
+    const target = gameManager.editor.selectedEntity;
+    if (this.isDragging && target) {
       if (mouse.isDown) {
-        // 更新位置
-        this.selectedEntity.position.x = worldX + this.dragOffset.x;
-        this.selectedEntity.position.y = worldY + this.dragOffset.y;
-        
+        // 更新位置 (通过响应式代理更新，Vue 就能感知到)
+        target.position.x = worldX + this.dragOffset.x;
+        target.position.y = worldY + this.dragOffset.y;
+
         // 也可以实现对齐网格 (Grid Snapping)
         if (input.keys.has('ControlLeft') || input.keys.has('ControlRight')) {
           const gridSize = 32; // 默认网格大小
-          this.selectedEntity.position.x = Math.round(this.selectedEntity.position.x / gridSize) * gridSize;
-          this.selectedEntity.position.y = Math.round(this.selectedEntity.position.y / gridSize) * gridSize;
+          target.position.x = Math.round(target.position.x / gridSize) * gridSize;
+          target.position.y = Math.round(target.position.y / gridSize) * gridSize;
         }
       } else {
         this.isDragging = false;
       }
     }
-    
+
     // 3. 处理松开 (MouseUp)
     if (mouse.justReleased) {
       this.isDragging = false;
@@ -71,8 +72,8 @@ export const EditorInteractionSystem = {
 
     for (const entity of entities) {
       const { position, visual, detectArea } = entity;
-      
-      let w = 16; 
+
+      let w = 16;
       let h = 16;
       let ax = 0.5;
       let ay = 0.5;
@@ -91,23 +92,23 @@ export const EditorInteractionSystem = {
         h = detectArea.size.h;
         ax = 0; // 传送门默认 x,y 是左上角
         ay = 0;
-        
+
         // 如果 detectArea 有 offset，需要调整
         if (detectArea.offset) {
-            // 我们的 PortalEntity 是把 x,y 作为左上角，然后 offset 是 size/2
-            // 实际上 AABB 系统判断时用的是 position.x + offset.x +/- size.w/2
-            // 所以中心点在 position.x + offset.x
-            const centerX = position.x + detectArea.offset.x;
-            const centerY = position.y + detectArea.offset.y;
-            const left = centerX - w/2;
-            const right = centerX + w/2;
-            const top = centerY - h/2;
-            const bottom = centerY + h/2;
+          // 我们的 PortalEntity 是把 x,y 作为左上角，然后 offset 是 size/2
+          // 实际上 AABB 系统判断时用的是 position.x + offset.x +/- size.w/2
+          // 所以中心点在 position.x + offset.x
+          const centerX = position.x + detectArea.offset.x;
+          const centerY = position.y + detectArea.offset.y;
+          const left = centerX - w / 2;
+          const right = centerX + w / 2;
+          const top = centerY - h / 2;
+          const bottom = centerY + h / 2;
 
-            if (x >= left && x <= right && y >= top && y <= bottom) {
-                return entity; // 传送门通常不多，直接返回
-            }
-            continue;
+          if (x >= left && x <= right && y >= top && y <= bottom) {
+            return entity; // 传送门通常不多，直接返回
+          }
+          continue;
         }
       }
 

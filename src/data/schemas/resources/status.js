@@ -23,5 +23,8 @@ export const StatusSchema = z.object({
     hasStack: z.boolean().optional(),
     stackLabel: LocalizedStringSchema.optional(),
 
+    // 战斗属性
+    deathChance: z.number().min(0).max(1).optional(), // 濒死状态下的死亡概率
+
     effects: z.array(StatusEffectSchema).optional().default([])
 });

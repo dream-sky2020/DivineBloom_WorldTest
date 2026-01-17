@@ -151,7 +151,9 @@ export class WorldScene {
         // 重置交互状态
         EditorInteractionSystem.selectedEntity = null
         EditorInteractionSystem.isDragging = false
-        gameManager.editor.selectedEntity = null // Reset reactive state
+        if (this.stateProvider.gameManager) {
+            this.stateProvider.gameManager.editor.selectedEntity = null // Reset reactive state
+        }
     }
 
     /**
@@ -231,16 +233,21 @@ export class WorldScene {
         // Always update Render Systems (animations)
         VisualRenderSystem.update(dt)
 
-        // 编辑模式下跳过大部分游戏逻辑
+        // 编辑器交互系统始终运行（无论是否暂停，只要在编辑模式下）
         if (this.editMode) {
             InputSenseSystem.update(dt, this.engine.input)
-            EditorInteractionSystem.update(dt, this.engine)
-            return
+            EditorInteractionSystem.update(dt, this.engine, this.stateProvider.gameManager)
         }
+
+        // 如果 GameManager 处于暂停状态，则跳过后续游戏逻辑更新
+        if (this.stateProvider.gameManager && this.stateProvider.gameManager.state.isPaused) return
 
         // Only update Game Logic if not transitioning
         if (!this.isTransitioning) {
-            InputSenseSystem.update(dt, this.engine.input)
+            // 如果不在编辑模式下，才更新常规输入感知（防止与编辑器冲突）
+            if (!this.editMode) {
+                InputSenseSystem.update(dt, this.engine.input)
+            }
 
             // 0. 全局外部事件感知 - 已移除，功能由 AISenseSystem 接管
             // ExternalSenseSystem.update(dt, { scene: this })

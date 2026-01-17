@@ -40,25 +40,53 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import FormationPartySlot from '@/components/ui/FormationPartySlot.vue';
-import { charactersDb as characters } from '@/data/characters'; 
+import { usePartyStore } from '@/stores/party';
 
-// Initialize slots (8 positions: 0-3 Front, 4-7 Back)
+const partyStore = usePartyStore();
+
+// 内部使用的扁平槽位 (0-3 前排, 4-7 后排)
 const slots = ref(new Array(8).fill(null));
 const selectedIndex = ref(-1);
-const targetIndex = ref(-1); // New: Track which slot is the potential target
+const targetIndex = ref(-1);
+
+// 将 Store 中的 formation 映射到本地扁平 slots
+const syncFromStore = () => {
+    partyStore.initParty();
+    const newSlots = new Array(8).fill(null);
+    
+    partyStore.formation.forEach((pos, i) => {
+        if (pos.front) {
+            newSlots[i] = partyStore.getCharacterState(pos.front);
+        }
+        if (pos.back) {
+            newSlots[i + 4] = partyStore.getCharacterState(pos.back);
+        }
+    });
+    slots.value = newSlots;
+};
+
+// 将本地扁平 slots 同步回 Store
+const syncToStore = () => {
+    const newFormation = [];
+    for (let i = 0; i < 4; i++) {
+        newFormation.push({
+            front: slots.value[i] ? slots.value[i].id : null,
+            back: slots.value[i + 4] ? slots.value[i + 4].id : null
+        });
+    }
+    partyStore.formation = newFormation;
+};
 
 onMounted(() => {
-    // Mock Data Loading
-    if (characters && Object.keys(characters).length > 0) {
-        const charKeys = Object.keys(characters);
-        slots.value[0] = { ...characters[charKeys[0]], currentHp: 500, maxHp: 500, currentMp: 100, maxMp: 100, role: 'warrior' };
-        if (charKeys[1]) slots.value[1] = { ...characters[charKeys[1]], currentHp: 300, maxHp: 300, currentMp: 200, maxMp: 200, role: 'mage' };
-        if (charKeys[2]) slots.value[4] = { ...characters[charKeys[2]], currentHp: 400, maxHp: 400, currentMp: 50, maxMp: 50, role: 'ranger' }; 
-    }
-    enforceFormationRules();
+    syncFromStore();
 });
+
+// 监听 Store 变化（例如战斗中切换了前后排，回到菜单时需要同步）
+watch(() => partyStore.formation, () => {
+    syncFromStore();
+}, { deep: true });
 
 const onSlotSelect = (index) => {
     if (selectedIndex.value === -1) {
@@ -82,55 +110,35 @@ const onSlotDrop = ({ from, to }) => {
 };
 
 const onSlotHoverEnter = (index) => {
-    // Only highlight as target if we are dragging OR we have something selected
     if (selectedIndex.value !== -1 && selectedIndex.value !== index) {
-        
-        // PREDICTION LOGIC:
-        // If target is in Back Row (4-7) AND corresponding Front Row is empty (and not the one moving in),
-        // highlight the Front Row instead because the character will slide there.
-        
         let actualTargetIndex = index;
-        
-        if (index >= 4) { // Is Back Row
+        if (index >= 4) {
             const col = index - 4;
             const frontIdx = col;
-            
-            // Check if Front is empty OR will become empty because we are moving the front character to the back
-            // 1. If Front is currently empty, any character dropped in Back will slide to Front.
-            // 2. If the moving character IS the Front character of this column, swapping to Back will leave Front empty, causing a slide back to Front.
-            
             if (!slots.value[frontIdx] || selectedIndex.value === frontIdx) {
                 actualTargetIndex = frontIdx;
             }
         }
-
         targetIndex.value = actualTargetIndex;
     }
 };
 
 const onSlotHoverLeave = (index) => {
-    // We clear targetIndex regardless of which index triggered leave, 
-    // because we might have redirected the highlight to a different index (actualTargetIndex).
-    // Simply checking if targetIndex.value === index might fail if we highlighted the Front row instead.
-    
-    // However, to avoid flickering if we move mouse strictly between the "Back Slot" and "Front Slot",
-    // we should be careful. 
-    // But generally, 'leave' fires before 'enter' of next element.
-    // Let's just clear it. The next 'enter' will set it correctly.
     targetIndex.value = -1;
 };
 
 const clearSelection = () => {
-    // Optional: Clear selection if clicking background
-    // selectedIndex.value = -1;
-    // targetIndex.value = -1;
+    selectedIndex.value = -1;
+    targetIndex.value = -1;
 };
 
 const performMove = (fromIndex, toIndex) => {
     const temp = slots.value[fromIndex];
     slots.value[fromIndex] = slots.value[toIndex];
     slots.value[toIndex] = temp;
+    
     enforceFormationRules();
+    syncToStore();
 };
 
 const enforceFormationRules = () => {
@@ -144,7 +152,6 @@ const enforceFormationRules = () => {
         }
     }
 };
-
 </script>
 
 <style scoped src="@styles/components/panels/FormationPanel.css"></style>

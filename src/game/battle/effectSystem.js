@@ -105,7 +105,14 @@ const _executeSingleEffect = (effect, target, actor, skill, context, silent, pre
                 const pct = Number(effect.value) || 0.1;
                 target.currentHp = Math.floor(target.maxHp * pct);
                 removeStatus(target, 'status_dead', context, true);
-                removeStatus(target, 'status_dying', context, true);
+
+                // 移除所有濒死状态
+                const dyingStatuses = target.statusEffects.filter(s => {
+                    const def = statusDb[s.id];
+                    return def && typeof def.deathChance === 'number';
+                });
+                dyingStatuses.forEach(s => removeStatus(target, s.id, context, true));
+
                 if (!silent && log) log('battle.revived', { target: target.name });
                 return target.currentHp;
             } else {
@@ -118,7 +125,13 @@ const _executeSingleEffect = (effect, target, actor, skill, context, silent, pre
                 const pct = Number(effect.value) || 0.1;
                 target.currentHp = Math.floor(target.maxHp * pct);
                 removeStatus(target, 'status_dead', context, true);
-                removeStatus(target, 'status_dying', context, true);
+
+                // 移除所有濒死状态
+                const dyingStatuses = target.statusEffects.filter(s => {
+                    const def = statusDb[s.id];
+                    return def && typeof def.deathChance === 'number';
+                });
+                dyingStatuses.forEach(s => removeStatus(target, s.id, context, true));
 
                 if (!silent && log) log('battle.revived', { target: target.name });
 

@@ -27,7 +27,12 @@ class GameManager {
         // Editor State (Reactive for UI)
         this.editor = reactive({
             selectedEntity: null,
-            editMode: false
+            editMode: false,
+            // 侧边栏布局配置
+            layout: {
+                left: ['scene-explorer'], // 左侧面板列表
+                right: ['entity-properties'] // 右侧面板列表
+            }
         })
     }
 
@@ -142,7 +147,7 @@ class GameManager {
             (targetMapId) => { worldStore.currentMapId = targetMapId },
             this._onInteract.bind(this),
             () => { this.state.system = 'list-menu' }, // onOpenMenu
-            { worldStore, sceneManager: this.sceneManager }
+            { worldStore, sceneManager: this.sceneManager, gameManager: this }
         )
 
         this.currentScene.value = scene
@@ -167,16 +172,16 @@ class GameManager {
      */
     toggleEditMode() {
         if (!this.currentScene.value) return;
-        
+
         const scene = this.currentScene.value;
-        if (scene.editMode) {
-            scene.exitEditMode();
-            this.editor.editMode = false;
-            logger.info('Editor Mode Disabled');
-        } else {
+        this.editor.editMode = !this.editor.editMode;
+
+        if (this.editor.editMode) {
             scene.enterEditMode();
-            this.editor.editMode = true;
             logger.info('Editor Mode Enabled');
+        } else {
+            scene.exitEditMode();
+            logger.info('Editor Mode Disabled');
         }
     }
 
@@ -221,7 +226,8 @@ class GameManager {
     // --- Loop ---
 
     update(dt) {
-        if (this.state.isPaused) return
+        // 全局暂停只影响非场景逻辑（如果有的话）
+        // 场景内部现在会根据 this.state.isPaused 自行处理逻辑更新与编辑器更新的隔离
 
         // Only update WorldScene if we are in Map Mode
         if (this.state.system === 'world-map') {

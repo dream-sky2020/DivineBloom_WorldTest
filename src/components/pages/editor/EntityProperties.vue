@@ -1,77 +1,72 @@
 <template>
-  <div class="entity-inspector">
-    <template v-if="entity">
-      <div class="inspector-header">
-        <h3>属性编辑: {{ entity.name || entity.type }}</h3>
-        <button class="close-btn" @click="deselect">×</button>
-      </div>
-
+  <div class="entity-properties">
+    <template v-if="localEntityState">
       <div class="inspector-body">
         <!-- 基础属性 -->
         <section class="prop-section">
           <h4>基础属性</h4>
           <div class="prop-group">
             <label>名称</label>
-            <input v-model="entity.name" type="text" />
+            <input v-model="localEntityState.name" type="text" />
           </div>
           <div class="prop-group inline">
             <div class="field">
               <label>X</label>
-              <input v-model.number="entity.position.x" type="number" />
+              <input v-model.number="localEntityState.position.x" type="number" />
             </div>
             <div class="field">
               <label>Y</label>
-              <input v-model.number="entity.position.y" type="number" />
+              <input v-model.number="localEntityState.position.y" type="number" />
             </div>
           </div>
         </section>
 
         <!-- NPC 配置 -->
-        <section v-if="entity.npc" class="prop-section">
+        <section v-if="localEntityState.npc" class="prop-section">
           <h4>NPC配置</h4>
           <div class="prop-group">
             <label>对话 ID</label>
-            <input v-model="entity.actionDialogue.dialogueId" type="text" @change="syncLegacyInteraction" />
+            <input v-model="localEntityState.actionDialogue.dialogueId" type="text" @change="syncLegacyInteraction" />
           </div>
           <div class="prop-group">
             <label>对话范围</label>
-            <input v-model.number="entity.detectArea.radius" type="number" @change="syncLegacyInteraction" />
+            <input v-model.number="localEntityState.detectArea.radius" type="number" @change="syncLegacyInteraction" />
           </div>
         </section>
 
         <!-- 传送门配置 -->
-        <section v-if="entity.type === 'portal'" class="prop-section">
+        <section v-if="localEntityState.type === 'portal'" class="prop-section">
           <h4>传送门配置</h4>
           <div class="prop-group">
             <label>目标地图</label>
-            <input v-model="entity.actionTeleport.mapId" type="text" />
+            <input v-model="localEntityState.actionTeleport.mapId" type="text" />
           </div>
           <div class="prop-group">
             <label>目标入口</label>
-            <input v-model="entity.actionTeleport.entryId" type="text" />
+            <input v-model="localEntityState.actionTeleport.entryId" type="text" />
           </div>
           <div class="prop-group inline">
             <div class="field">
               <label>宽度</label>
-              <input v-model.number="entity.detectArea.size.w" type="number" />
+              <input v-model.number="localEntityState.detectArea.size.w" type="number" />
             </div>
             <div class="field">
               <label>高度</label>
-              <input v-model.number="entity.detectArea.size.h" type="number" />
+              <input v-model.number="localEntityState.detectArea.size.h" type="number" />
             </div>
           </div>
         </section>
 
         <!-- 视觉/缩放 -->
-        <section v-if="entity.visual" class="prop-section">
+        <section v-if="localEntityState.visual" class="prop-section">
           <h4>视觉</h4>
           <div class="prop-group">
             <label>资源 ID</label>
-            <input v-model="entity.visual.id" type="text" />
+            <input v-model="localEntityState.visual.id" type="text" />
           </div>
           <div class="prop-group">
             <label>缩放</label>
-            <input v-model.number="entity.visual.scale" type="number" step="0.1" />
+            <input v-model.number="localEntityState.visual.scale" type="number" step="0.1" />
           </div>
         </section>
       </div>
@@ -83,65 +78,50 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { gameManager } from '@/game/GameManager'
 
-const entity = computed(() => gameManager.editor.selectedEntity)
+// 属性编辑同步
+const localEntityState = ref(null)
 
-const deselect = () => {
-  gameManager.editor.selectedEntity = null
-  // 如果 EditorInteractionSystem 也有引用，也需要清理
-  if (gameManager.currentScene.value) {
-    const interactionSystem = gameManager.currentScene.value.renderPipeline.find(s => s.selectedEntity !== undefined)
-    if (interactionSystem) interactionSystem.selectedEntity = null
+// 刷新频率控制
+let rafId = 0
+const syncEntityData = () => {
+  const currentSelected = gameManager.editor.selectedEntity
+  if (currentSelected) {
+    localEntityState.value = currentSelected
+  } else {
+    localEntityState.value = null
   }
+  rafId = requestAnimationFrame(syncEntityData)
 }
 
-// 同步旧系统的辅助函数（如果有的话）
+onMounted(() => {
+  syncEntityData()
+})
+
+onUnmounted(() => {
+  cancelAnimationFrame(rafId)
+})
+
+// 同步旧系统的辅助函数
 const syncLegacyInteraction = () => {
-  if (entity.value && entity.value.interaction) {
-    if (entity.value.actionDialogue) {
-      entity.value.interaction.id = entity.value.actionDialogue.dialogueId
+  if (localEntityState.value && localEntityState.value.interaction) {
+    if (localEntityState.value.actionDialogue) {
+      localEntityState.value.interaction.id = localEntityState.value.actionDialogue.dialogueId
     }
-    if (entity.value.detectArea && entity.value.detectArea.radius) {
-      entity.value.interaction.range = entity.value.detectArea.radius
+    if (localEntityState.value.detectArea && localEntityState.value.detectArea.radius) {
+      localEntityState.value.interaction.range = localEntityState.value.detectArea.radius
     }
   }
 }
 </script>
 
 <style scoped>
-.entity-inspector {
-  width: 100%;
+.entity-properties {
   height: 100%;
-  background: rgba(15, 23, 42, 0.95);
-  color: white;
   display: flex;
   flex-direction: column;
-  pointer-events: auto;
-  z-index: 1000;
-}
-
-.inspector-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #334155;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.inspector-header h3 {
-  margin: 0;
-  font-size: 14px;
-  color: #94a3b8;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #64748b;
-  font-size: 20px;
-  cursor: pointer;
 }
 
 .inspector-body {

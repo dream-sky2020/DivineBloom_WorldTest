@@ -37,6 +37,20 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.2s;
+}
+
+.sidebar-content:hover {
+    background-color: rgba(30, 41, 59, 0.5); /* 稍微变亮提示可放置 */
+}
+
+.sidebar-panel-wrapper {
+    flex: 1; /* 每个面板平分空间，如果需要可以改为固定高度或由内容决定 */
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-controls {
