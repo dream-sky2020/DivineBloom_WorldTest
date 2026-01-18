@@ -1,4 +1,4 @@
-import { changeState } from '../utils'
+import { changeState } from '@/game/ai/utils'
 
 export const ChaseState = {
     update(entity, dt) {
@@ -18,7 +18,7 @@ export const ChaseState = {
         if (aiState.chaseTimer > 0) return
       
         aiState.chaseTimer = 0.1 // Update every ~6 frames
-
+        
         // Use pre-calculated sensory data
         if (!aiSensory || !aiSensory.hasPlayer) {
              changeState(entity, 'wander')
@@ -45,4 +45,3 @@ export const ChaseState = {
         }
     }
 }
-

@@ -1,5 +1,5 @@
 import { world } from '@/game/ecs/world'
-import { drawVision } from '@/game/utils/renderUtils'
+import { drawVision } from '@/game/ecs/ECSCalculateTool/ECSSceneGizmosRendererCalculateTool'
 
 /**
  * AI Vision Render System
@@ -59,7 +59,7 @@ export const AIVisionRenderSystem = {
                 y: entity.position.y - camera.y
             }
 
-            // 直接绘制，不依赖 renderUtils (为了调试和确保可见性)
+            // 直接绘制，不依赖 Gizmos 工具类 (为了调试和确保可见性)
             const { visionRadius, visionType, visionAngle, visionProximity } = entity.aiConfig
             const { facing, colorHex, state } = entity.aiState
 

@@ -1,4 +1,4 @@
-import { changeState } from '../utils'
+import { changeState } from '@/game/ai/utils'
 
 export const WanderState = {
     update(entity, dt) {

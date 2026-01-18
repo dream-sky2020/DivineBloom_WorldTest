@@ -1,4 +1,4 @@
-import { changeState } from '../utils'
+import { changeState } from '@/game/ai/utils'
 
 export const FleeState = {
     update(entity, dt) {
@@ -40,4 +40,3 @@ export const FleeState = {
         }
     }
 }
-

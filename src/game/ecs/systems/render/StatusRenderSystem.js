@@ -1,5 +1,5 @@
 import { world } from '@/game/ecs/world'
-import { drawSuspicion, drawAlert, drawStunned } from '@/game/utils/renderUtils'
+import { drawSuspicion, drawAlert, drawStunned } from '@/game/ecs/ECSCalculateTool/ECSSceneGizmosRendererCalculateTool'
 
 /**
  * Status Render System

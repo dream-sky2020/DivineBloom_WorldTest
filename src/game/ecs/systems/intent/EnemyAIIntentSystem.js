@@ -1,8 +1,8 @@
 import { world } from '@/game/ecs/world'
-import { WanderState } from '@/game/ai/states/WanderState'
-import { ChaseState } from '@/game/ai/states/ChaseState'
-import { FleeState } from '@/game/ai/states/FleeState'
-import { StunnedState } from '@/game/ai/states/StunnedState'
+import { WanderState } from '@/game/ecs/ECSCalculateTool/states/WanderState'
+import { ChaseState } from '@/game/ecs/ECSCalculateTool/states/ChaseState'
+import { FleeState } from '@/game/ecs/ECSCalculateTool/states/FleeState'
+import { StunnedState } from '@/game/ecs/ECSCalculateTool/states/StunnedState'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('EnemyAIIntentSystem')

@@ -1,7 +1,8 @@
 import { reactive, shallowRef, watch } from 'vue'
 import { GameEngine } from './GameEngine'
-import { SceneManager } from './managers/SceneManager'
+import { SceneManager } from './scenes/SceneManager'
 import { WorldScene } from './scenes/WorldScene'
+import { SceneLifecycle } from './resources/SceneLifecycle'
 import { useGameStore } from '@/stores/game'
 import { dialoguesDb } from '@/data/dialogues'
 import { getMapData } from '@/data/maps'
@@ -138,10 +139,11 @@ class GameManager {
         const mapData = await getMapData(mapId)
         if (!mapData) throw new Error(`Map not found: ${mapId}`)
 
+        // 创建场景实例（只初始化，不创建实体）
         const scene = new WorldScene(
             this.engine,
             this._onEncounter.bind(this),
-            worldStore.currentMapState, // initialState
+            null, // initialState 不传递，由 SceneLifecycle 处理
             mapData,
             entryId,
             (targetMapId) => { worldStore.currentMapId = targetMapId },
@@ -153,7 +155,23 @@ class GameManager {
         this.currentScene.value = scene
         this.sceneManager.setScene(scene)
 
-        await scene.load()
+        // 🎯 使用 SceneLifecycle 统一加载资源和创建实体
+        logger.info('Loading scene resources via SceneLifecycle...')
+        const result = await SceneLifecycle.prepareScene(
+            mapData,
+            this.engine,
+            entryId,
+            worldStore.currentMapState,
+            (progress) => {
+                if (progress.phase === 'loading') {
+                    logger.info(`Loading assets: ${(progress.progress * 100).toFixed(0)}%`)
+                }
+            }
+        )
+
+        // 更新场景的 player 引用
+        scene.player = result.player
+        logger.info('Scene loaded successfully')
     }
 
     /**

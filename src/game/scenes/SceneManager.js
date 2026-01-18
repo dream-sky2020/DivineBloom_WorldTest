@@ -1,5 +1,5 @@
 import { world, clearWorld } from '@/game/ecs/world'
-import { ScenarioLoader } from '@/game/utils/ScenarioLoader'
+import { ScenarioLoader } from '@/game/ecs/ScenarioLoader'
 import { EntityManager } from '@/game/entities/EntityManager'
 import { getMapData } from '@/data/maps'
 import { createLogger } from '@/utils/logger'
@@ -151,4 +151,3 @@ export class SceneManager {
         logger.info(`✅ Map switch complete: ${mapId}`)
     }
 }
-

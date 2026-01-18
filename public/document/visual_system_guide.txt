@@ -29,7 +29,7 @@
 
 [D] 渲染管线层 (RenderSystem)
     - src/game/ecs/systems/RenderSystem.js -> 主渲染循环，分层绘制
-    - src/game/utils/renderUtils.js        -> 纯函数绘图工具库 (绘制扇形视野、惊叹号等)
+    - src/game/ecs/ECSCalculateTool/ECSSceneGizmosRendererCalculateTool.js -> 纯函数绘图工具库 (绘制扇形视野、惊叹号等)
 
 3. 渲染管线流程 (Render Pipeline)
 --------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ RenderSystem.update(renderer, dt) 的执行流程如下：
 5. 开发指南：如何添加新的 UI 标记 (如 沉默图标)
 --------------------------------------------------------------------------------
 
-[步骤 1] 在 renderUtils.js 中添加绘制函数
+[步骤 1] 在 ECSCalculateTool/ECSSceneGizmosRendererCalculateTool.js 中添加绘制函数
     export function drawSilenceIcon(ctx, pos) {
         ctx.drawImage(silenceImg, pos.x, pos.y - 50)
     }

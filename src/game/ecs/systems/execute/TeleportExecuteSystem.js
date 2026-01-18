@@ -23,7 +23,7 @@ export const TeleportExecuteSystem = {
 
       logger.info(`Triggering transition to ${mapId}:${entryId}`)
 
-      // 给实体添加切换场景请求，交由 SceneSystem 处理
+      // 给实体添加切换场景请求，交由 WorldScene → SceneManager 处理
       world.addComponent(entity, 'sceneTransition', SceneTransition({
         mapId,
         entryId

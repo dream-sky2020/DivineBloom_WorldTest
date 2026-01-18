@@ -1,4 +1,4 @@
-import { AssetManager } from './managers/AssetManager'
+import { AssetManager } from './resources/AssetManager'
 import { ResourcePipeline } from './resources/ResourcePipeline'
 import { ResourceDeclaration } from './resources/ResourceDeclaration'
 

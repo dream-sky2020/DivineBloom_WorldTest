@@ -244,4 +244,3 @@ export class ScenarioLoader {
         return result
     }
 }
-

@@ -16,12 +16,7 @@ import { DetectAreaSystem } from '@/game/ecs/systems/detect/DetectAreaSystem'
 import { DetectInputSystem } from '@/game/ecs/systems/detect/DetectInputSystem'
 import { TriggerSystem } from '@/game/ecs/systems/event/TriggerSystem'
 import { ExecuteSystem } from '@/game/ecs/systems/execute/ExecuteSystem'
-import { ScenarioLoader } from '@/game/utils/ScenarioLoader'
-import { Visuals } from '@/game/entities/components/Visuals'
-import { Visuals as VisualDefs } from '@/data/visuals'
-import Enemies from '@/data/characters/enemies'
 import { clearWorld, world } from '@/game/ecs/world'
-import { SceneSystem } from '@/game/ecs/systems/SceneSystem'
 import { MapSaveStateSchema } from '@/data/schemas/save'
 import { GlobalEntity } from '@/game/entities/definitions/GlobalEntity'
 import { EditorGridRenderSystem } from '@/game/ecs/systems/render/EditorGridRenderSystem'
@@ -77,7 +72,6 @@ export class WorldScene {
 
         // Time delta for animation
         this.lastDt = 0.016
-        this.isLoaded = false
 
         // Convenience reference (populated during load)
         this.player = null
@@ -87,12 +81,8 @@ export class WorldScene {
         // Initialize Global Entities (Command Queue)
         this._initGlobalEntities()
 
-        // 同步初始化实体（资源加载在 load() 中异步处理）
-        if (initialState && initialState.isInitialized) {
-            this._restoreSync(initialState)
-        } else {
-            this._initScenarioSync()
-        }
+        // 注意：实体创建现在由 SceneLifecycle.prepareScene() 统一处理
+        // 构造函数只负责初始化场景配置，不创建游戏实体
     }
 
     _initGlobalEntities() {
@@ -114,18 +104,6 @@ export class WorldScene {
         // Re-initialize systems that depend on map data
         DetectAreaRenderSystem.init(mapData)
         console.log('[WorldScene] Map systems reinitialized')
-    }
-
-    _initScenarioSync() {
-        const { player } = ScenarioLoader.load(this.engine, this.mapData, this.entryId)
-        this.player = player
-        // 资源加载在 load() 方法中进行
-    }
-
-    _restoreSync(state) {
-        const { player } = ScenarioLoader.restore(this.engine, state, this.mapData)
-        this.player = player
-        // 资源加载在 load() 方法中进行
     }
 
     /**
@@ -185,29 +163,9 @@ export class WorldScene {
     }
 
     /**
-     * 🎯 现代化资源加载（使用资源管线）
-     */
-    async load() {
-        console.log('[WorldScene] Starting resource loading...')
-
-        if (this.engine.resources && this.engine.resources.pipeline) {
-            // 使用新的资源管线
-            await this.engine.resources.pipeline.preloadWorld(world, (progress) => {
-                console.log(`[WorldScene] Loading: ${(progress.progress * 100).toFixed(0)}%`)
-            })
-        } else {
-            console.warn('[WorldScene] Resource pipeline not available, skipping')
-        }
-
-        this.isLoaded = true
-        console.log('[WorldScene] Resource loading complete')
-    }
-
-    /**
      * @param {number} dt 
      */
     update(dt) {
-        if (!this.isLoaded) return
         this.lastDt = dt
 
         // Always update Render Systems (animations)
@@ -254,20 +212,26 @@ export class WorldScene {
             // 6. 执行 (Execute)
             ExecuteSystem.update({
                 onEncounter: this.onEncounter,
-                onSwitchMap: null, // SceneSystem handles this now
+                onSwitchMap: null, // SceneManager handles this now
                 onInteract: this.onInteract,
                 onOpenMenu: this.onOpenMenu
             })
         }
 
         // 7. Scene Management (Always run to handle transitions)
-        SceneSystem.update(this.engine, {
-            worldStore: this.stateProvider.worldStore, // Need to pass store
-            currentScene: this,
-            // Still pass callbacks for legacy or manager usage if needed
-            onEncounter: this.onEncounter,
-            onSwitchMap: this.onSwitchMap // Used to update Vue UI
-        })
+        // 直接处理 ECS 场景切换请求和场景管理器更新
+        if (this.stateProvider.sceneManager) {
+            // 1. 处理 ECS 组件触发的场景切换请求
+            const transitionEntity = world.with('sceneTransition').first
+            if (transitionEntity) {
+                const request = transitionEntity.sceneTransition
+                this.stateProvider.sceneManager.requestSwitchMap(request.mapId, request.entryId)
+                world.removeComponent(transitionEntity, 'sceneTransition')
+            }
+
+            // 2. 更新场景管理器（执行待处理的切换）
+            this.stateProvider.sceneManager.update()
+        }
     }
 
     /**

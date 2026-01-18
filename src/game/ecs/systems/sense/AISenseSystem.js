@@ -87,7 +87,7 @@ export const AISenseSystem = {
             canSeePlayer: false,
             suspicion: 0,
             // 随机化初始计时器 (0s - 0.1s)，确保感知检测分布在不同帧
-            senseTimer: Math.random() * 0.1, 
+            senseTimer: Math.random() * 0.1,
             lastBattleResult: null
         })
     },
@@ -95,7 +95,7 @@ export const AISenseSystem = {
     senseEnvironment(dt) {
         const player = getPlayer()
         const playerPos = player ? player.position : null
-        
+
         // 预提取位置信息以减少循环内访问开销
         const px = playerPos ? playerPos.x : 0
         const py = playerPos ? playerPos.y : 0
@@ -165,7 +165,7 @@ export const AISenseSystem = {
     _updateSuspicion(entity, sensory, aiConfig, checkInterval, dt) {
         const suspicionTime = aiConfig.suspicionTime || 1.0
         const fillRate = 1.0 / suspicionTime
-        
+
         // 如果是检测帧 (checkInterval > 0)
         if (checkInterval > 0) {
             if (sensory.canSeePlayer) {

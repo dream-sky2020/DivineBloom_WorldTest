@@ -1,4 +1,4 @@
-import { changeState } from '../utils'
+import { changeState } from '@/game/ai/utils'
 
 export const StunnedState = {
     update(entity, dt) {
@@ -20,4 +20,3 @@ export const StunnedState = {
         }
     }
 }
-
