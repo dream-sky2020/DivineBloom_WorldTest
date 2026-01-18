@@ -34,8 +34,60 @@ export const demo_plains = {
     },
     decorations: [
         { type: 'sprite', spriteId: 'table_0', x: 200, yRatio: 0.6, scale: 0.8 },
-        { type: 'sprite', spriteId: 'table_1', x: 500, yRatio: 0.7, scale: 0.8 },
-        { type: 'sprite', spriteId: 'door_0', x: 700, yRatio: 0.4, scale: 1.0 }
+        { 
+            type: 'sprite', 
+            spriteId: 'table_1', 
+            x: 500, 
+            yRatio: 0.7, 
+            scale: 0.8,
+            // 自定义圆形碰撞体
+            collider: { type: 'circle', radius: 30, offsetY: 10 }
+        },
+        { 
+            type: 'sprite', 
+            spriteId: 'door_0', 
+            x: 700, 
+            yRatio: 0.4, 
+            scale: 1.0,
+            // 无碰撞体（即使是默认可能有的情况，这里显式指定一个空的或者不传，DecorationEntity 现在只在 rect 时默认加）
+        },
+        {
+            type: 'rect',
+            x: 150,
+            y: 500,
+            width: 40,
+            height: 40,
+            color: 'blue',
+            // 覆盖默认 AABB，改为 OBB
+            collider: { type: 'obb', width: 40, height: 40, rotation: Math.PI / 4 }
+        }
+    ],
+    obstacles: [
+        {
+            // 圆形空气墙
+            x: 300, y: 200, radius: 40, shape: 'circle'
+        },
+        {
+            // 矩形空气墙 (AABB)
+            x: 100, y: 100, width: 60, height: 20, shape: 'aabb'
+        },
+        {
+            // 旋转矩形空气墙 (OBB)
+            x: 400, y: 150, width: 80, height: 30, rotation: 0.5, shape: 'obb'
+        },
+        {
+            // 胶囊体空气墙
+            x: 600, y: 500, radius: 20, width: 60, height: 20, shape: 'capsule'
+        },
+        {
+            // 长长的旋转胶囊体
+            x: 400, y: 400, 
+            radius: 25, 
+            p1: { x: -100, y: 0 }, 
+            p2: { x: 100, y: 0 }, 
+            rotation: Math.PI / 6, // 旋转 30 度
+            shape: 'capsule'
+        }
     ],
     spawners: [
         {

@@ -29,7 +29,7 @@ export {
 export {
     PhysicsVelocitySchema,
     PhysicsBoundsSchema,
-    PhysicsStaticBodySchema
+    ColliderSchema
 } from '@/game/ecs/entities/components/Physics.js';
 
 export {
@@ -76,3 +76,7 @@ export {
 export {
     GlobalEntitySchema
 } from '@/game/ecs/entities/definitions/GlobalEntity.js';
+
+export {
+    ObstacleEntitySchema
+} from '@/game/ecs/entities/definitions/ObstacleEntity.js';

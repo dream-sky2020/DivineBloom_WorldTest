@@ -1,6 +1,7 @@
 import { EntityManager } from '@/game/ecs/entities/EntityManager'
 import { BackgroundRenderSystem } from '@/game/ecs/systems/render/BackgroundRenderSystem'
 import { VisualRenderSystem } from '@/game/ecs/systems/render/VisualRenderSystem'
+import { PhysicsDebugRenderSystem } from '@/game/ecs/systems/render/PhysicsDebugRenderSystem'
 import { AIVisionRenderSystem } from '@/game/ecs/systems/render/AIVisionRenderSystem'
 import { StatusRenderSystem } from '@/game/ecs/systems/render/StatusRenderSystem'
 import { DetectAreaRenderSystem } from '@/game/ecs/systems/render/DetectAreaRenderSystem'
@@ -11,6 +12,7 @@ import { PlayerControlSystem } from '@/game/ecs/systems/control/PlayerControlSys
 import { EnemyAIIntentSystem } from '@/game/ecs/systems/intent/EnemyAIIntentSystem'
 import { EnemyControlSystem } from '@/game/ecs/systems/control/EnemyControlSystem'
 import { MovementSystem } from '@/game/ecs/systems/physics/MovementSystem'
+import { CollisionSystem } from '@/game/ecs/systems/physics/CollisionSystem'
 import { DetectAreaSystem } from '@/game/ecs/systems/detect/DetectAreaSystem'
 import { DetectInputSystem } from '@/game/ecs/systems/detect/DetectInputSystem'
 import { TriggerSystem } from '@/game/ecs/systems/event/TriggerSystem'
@@ -63,7 +65,7 @@ export class WorldScene {
                 intent: [PlayerIntentSystem, EnemyAIIntentSystem],
                 decision: [TriggerSystem],
                 control: [PlayerControlSystem, EnemyControlSystem],
-                physics: [MovementSystem],
+                physics: [MovementSystem, CollisionSystem],
                 execution: [ExecuteSystem]
             },
             // 渲染管线 (Render Pipeline)
@@ -72,6 +74,7 @@ export class WorldScene {
                 AIVisionRenderSystem,   // Layer 15
                 VisualRenderSystem,     // Layer 20
                 StatusRenderSystem,     // Layer 30
+                PhysicsDebugRenderSystem, // Layer 110
                 DetectAreaRenderSystem  // Layer 100 (Debug)
             ],
             // 编辑器阶段 (Editor Phases)

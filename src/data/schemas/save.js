@@ -55,13 +55,60 @@ export const SavedPortalSchema = z.object({
     targetEntryId: z.string()
 });
 
+// 对应 DecorationEntity.serialize()
+export const SavedDecorationSchema = z.object({
+    x: z.number(),
+    y: z.number(),
+    name: z.string().optional(),
+    config: z.object({
+        spriteId: z.string().optional(),
+        scale: z.number().optional(),
+        zIndex: z.number().optional(),
+        rect: z.object({
+            width: z.number(),
+            height: z.number(),
+            color: z.string()
+        }).optional(),
+        collider: z.object({
+            type: z.string(),
+            radius: z.number().optional(),
+            width: z.number().optional(),
+            height: z.number().optional(),
+            rotation: z.number().optional(),
+            offsetX: z.number().optional(),
+            offsetY: z.number().optional(),
+            isStatic: z.boolean().optional()
+        }).optional()
+    }).optional()
+});
+
+// 对应 ObstacleEntity.serialize()
+export const SavedObstacleSchema = z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    radius: z.number().optional(),
+    p1: z.object({ x: z.number(), y: z.number() }).optional(),
+    p2: z.object({ x: z.number(), y: z.number() }).optional(),
+    rotation: z.number().optional(),
+    shape: z.string()
+});
+
 /**
  * 包装后的实体存储项
  * 明确区分 type 和 data，解决 "各讲各的" 问题
  */
 export const SavedEntityItemSchema = z.object({
-    type: z.enum(['player', 'enemy', 'npc', 'portal']),
-    data: z.union([SavedPlayerSchema, SavedEnemySchema, SavedNPCSchema, SavedPortalSchema])
+    type: z.enum(['player', 'enemy', 'npc', 'portal', 'decoration', 'obstacle']),
+    data: z.union([
+        SavedPlayerSchema, 
+        SavedEnemySchema, 
+        SavedNPCSchema, 
+        SavedPortalSchema,
+        SavedDecorationSchema,
+        SavedObstacleSchema
+    ])
 });
 
 // --- 地图运行时状态 (Map Runtime State) ---

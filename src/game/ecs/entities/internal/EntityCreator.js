@@ -4,6 +4,7 @@ import { NPCEntity } from '../definitions/NPCEntity'
 import { PortalEntity } from '../definitions/PortalEntity'
 import { GlobalEntity } from '../definitions/GlobalEntity'
 import { DecorationEntity } from '../definitions/DecorationEntity'
+import { ObstacleEntity } from '../definitions/ObstacleEntity'
 
 export const EntityCreator = {
     createEnemy(data) {
@@ -28,6 +29,10 @@ export const EntityCreator = {
 
     createDecoration(data) {
         return DecorationEntity.create(data)
+    },
+
+    createObstacle(data) {
+        return ObstacleEntity.create(data)
     },
 
     create(engine, type, data, context = {}) {
@@ -61,6 +66,10 @@ export const EntityCreator = {
 
         if (type === 'decoration') {
             return this.createDecoration(data)
+        }
+
+        if (type === 'obstacle') {
+            return this.createObstacle(data)
         }
     }
 }

@@ -78,6 +78,9 @@ export const EnemyEntity = {
         uuid: uuid
       },
 
+      // 🎯 自定义碰撞体 (圆形)
+      collider: Physics.Circle(15),
+
       bounds: Physics.Bounds(),
 
       aiConfig: AI.Config(

@@ -39,6 +39,9 @@ export const PlayerEntity = {
       speed: PlayerConfig.speed || 200,
       fastSpeed: PlayerConfig.fastSpeed || 320,
 
+      // 🎯 自定义碰撞体 (圆形)
+      collider: Physics.Circle(12),
+
       bounds: Physics.Bounds(),
 
       visual: Visuals.Sprite(

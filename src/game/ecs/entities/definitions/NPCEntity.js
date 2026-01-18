@@ -59,8 +59,8 @@ export const NPCEntity = {
         range: range
       },
 
-      // Body component
-      body: Physics.StaticBody(30, 30, 15),
+      // 🎯 自定义碰撞体 (静态圆形)
+      collider: Physics.Circle(15, true),
       
       bounds: Physics.Bounds(),
 

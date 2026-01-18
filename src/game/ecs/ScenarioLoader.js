@@ -32,6 +32,7 @@ const ENTITY_FACTORIES = {
                 config: {
                     spriteId: dec.spriteId,
                     scale: dec.scale,
+                    collider: dec.collider,
                     rect: dec.type === 'rect' ? {
                         width: dec.width,
                         height: dec.height,
@@ -40,6 +41,18 @@ const ENTITY_FACTORIES = {
                 }
             })
         })
+    },
+
+    // 障碍物 (空气墙) 工厂
+    obstacles: (mapData) => {
+        const created = []
+        mapData.obstacles?.forEach(data => {
+            const obstacleEntity = EntityManager.createObstacle({
+                ...data
+            })
+            created.push(obstacleEntity)
+        })
+        return created
     },
 
     // 玩家工厂
@@ -156,6 +169,7 @@ export class ScenarioLoader {
         // 1. 执行背景和装饰物初始化 (不返回实体引用)
         ENTITY_FACTORIES.background(mapData)
         ENTITY_FACTORIES.decorations(mapData)
+        ENTITY_FACTORIES.obstacles(mapData)
 
         // 2. 创建核心实体
         result.player = ENTITY_FACTORIES.player(mapData, entryId)
@@ -190,6 +204,7 @@ export class ScenarioLoader {
         if (mapData) {
             ENTITY_FACTORIES.background(mapData)
             ENTITY_FACTORIES.decorations(mapData)
+            ENTITY_FACTORIES.obstacles(mapData)
         }
 
         // 2. 从状态列表恢复动态实体

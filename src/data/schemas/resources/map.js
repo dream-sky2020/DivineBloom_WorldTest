@@ -61,7 +61,30 @@ const DecorationSchema = z.object({
     y: z.number().optional(), // 与 yRatio 二选一
     yRatio: z.number().optional(),
     width: z.number().optional(), // For rect
-    height: z.number().optional() // For rect
+    height: z.number().optional(), // For rect
+    // 自定义碰撞体
+    collider: z.object({
+        type: z.enum(['circle', 'aabb', 'obb', 'capsule']),
+        radius: z.number().optional(),
+        width: z.number().optional(),
+        height: z.number().optional(),
+        rotation: z.number().optional(),
+        offsetX: z.number().optional(),
+        offsetY: z.number().optional(),
+        isStatic: z.boolean().optional().default(true)
+    }).optional()
+});
+
+const ObstacleSchema = z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    radius: z.number().optional(),
+    p1: z.object({ x: z.number(), y: z.number() }).optional(),
+    p2: z.object({ x: z.number(), y: z.number() }).optional(),
+    rotation: z.number().optional().default(0),
+    shape: z.enum(['circle', 'aabb', 'obb', 'capsule']).optional().default('aabb')
 });
 
 export const MapSchema = z.object({
@@ -84,6 +107,7 @@ export const MapSchema = z.object({
 
     // 实体生成
     decorations: z.array(DecorationSchema).optional().default([]),
+    obstacles: z.array(ObstacleSchema).optional().default([]),
     spawners: z.array(SpawnerSchema).optional().default([]),
     npcs: z.array(NpcSpawnSchema).optional().default([]),
     portals: z.array(PortalSpawnSchema).optional().default([]),
