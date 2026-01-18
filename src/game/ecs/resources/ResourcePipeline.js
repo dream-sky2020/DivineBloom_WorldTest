@@ -4,7 +4,7 @@
  */
 export class ResourcePipeline {
     /**
-     * @param {import('@/game/resources/AssetManager').AssetManager} assetManager
+     * @param {import('@/game/ecs/resources/AssetManager').AssetManager} assetManager
      */
     constructor(assetManager) {
         this.assetManager = assetManager

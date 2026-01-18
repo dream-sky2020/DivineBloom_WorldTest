@@ -3,7 +3,7 @@ import { ScenarioLoader } from '@/game/ecs/ScenarioLoader'
 import { EntityManager } from '@/game/ecs/entities/EntityManager'
 import { getMapData } from '@/data/maps'
 import { createLogger } from '@/utils/logger'
-import { SceneLifecycle } from '@/game/resources/SceneLifecycle'
+import { SceneLifecycle } from '@/game/ecs/resources/SceneLifecycle'
 
 const logger = createLogger('SceneManager')
 

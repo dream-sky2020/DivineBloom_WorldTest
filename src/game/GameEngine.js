@@ -1,6 +1,6 @@
-import { AssetManager } from './resources/AssetManager'
-import { ResourcePipeline } from './resources/ResourcePipeline'
-import { ResourceDeclaration } from './resources/ResourceDeclaration'
+import { AssetManager } from './ecs/resources/AssetManager'
+import { ResourcePipeline } from './ecs/resources/ResourcePipeline'
+import { ResourceDeclaration } from './ecs/resources/ResourceDeclaration'
 
 /**
  * 精灵定义（支持裁切 + 锚点）

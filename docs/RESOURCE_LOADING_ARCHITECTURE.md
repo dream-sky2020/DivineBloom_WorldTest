@@ -121,8 +121,8 @@ ResourcePipeline.loadAssets(assetIds)
 ### 在 GameEngine 中集成
 
 ```javascript
-import { ResourcePipeline } from './resources/ResourcePipeline'
-import { ResourceDeclaration } from './resources/ResourceDeclaration'
+import { ResourcePipeline } from './ecs/resources/ResourcePipeline'
+import { ResourceDeclaration } from './ecs/resources/ResourceDeclaration'
 
 class GameEngine {
     constructor(canvas) {
@@ -140,7 +140,7 @@ class GameEngine {
 ### 在 SceneManager 中使用
 
 ```javascript
-import { SceneLifecycle } from '@/game/resources/SceneLifecycle'
+import { SceneLifecycle } from '@/game/ecs/resources/SceneLifecycle'
 
 async _handleMapSwitch({ mapId, entryId }) {
     // 加载地图数据
