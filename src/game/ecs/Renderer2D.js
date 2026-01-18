@@ -73,12 +73,7 @@ export class Renderer2D {
         const dx = x - dw * spr.ax
         const dy = y - dh * spr.ay
 
-        // 简单阴影
-        ctx.fillStyle = 'rgba(0,0,0,0.18)'
-        ctx.beginPath()
-        ctx.ellipse(x, y + 6 * scale, 12 * scale, 7 * scale, 0, 0, Math.PI * 2)
-        ctx.fill()
-
+        // 直接绘制精灵（已移除阴影）
         ctx.drawImage(img, spr.sx, spr.sy, sw, sh, dx, dy, dw, dh)
     }
 

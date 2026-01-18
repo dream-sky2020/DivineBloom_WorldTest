@@ -35,6 +35,10 @@ class GameManager {
                 right: ['entity-properties'] // 右侧面板列表
             }
         })
+
+        // 🎯 内存泄漏修复：存储 watcher 引用以便清理
+        this._watchers = []
+        this._isInitialized = false
     }
 
     /**
@@ -63,16 +67,22 @@ class GameManager {
         // Start the engine loop immediately (it will render blank/clear until scene loads)
         this.engine.start()
 
-        // Setup Watchers
-        this._setupWatchers()
+        // Setup Watchers (只在首次初始化时设置)
+        if (!this._isInitialized) {
+            this._setupWatchers()
+            this._isInitialized = true
+        }
     }
 
     _setupWatchers() {
+        // 🎯 防止内存泄漏：清理旧的 watchers
+        this._cleanupWatchers()
+
         const gameStore = useGameStore()
         const dialogueStore = gameStore.dialogue
 
         // Pause/Resume on Dialogue
-        watch(() => dialogueStore.isActive, (active) => {
+        const unwatchDialogue = watch(() => dialogueStore.isActive, (active) => {
             if (active) {
                 this.pause()
             } else {
@@ -81,6 +91,29 @@ class GameManager {
                 }
             }
         })
+
+        // 保存 unwatch 函数以便后续清理
+        this._watchers.push(unwatchDialogue)
+
+        logger.info('Watchers initialized')
+    }
+
+    /**
+     * 清理所有 Vue watchers
+     * @private
+     */
+    _cleanupWatchers() {
+        if (this._watchers.length > 0) {
+            logger.info(`Cleaning up ${this._watchers.length} watchers`)
+            this._watchers.forEach(unwatch => {
+                try {
+                    unwatch()
+                } catch (e) {
+                    logger.error('Error cleaning up watcher:', e)
+                }
+            })
+            this._watchers = []
+        }
     }
 
     /**
@@ -268,6 +301,42 @@ class GameManager {
 
     resume() {
         this.state.isPaused = false
+    }
+
+    /**
+     * 销毁 GameManager 并清理所有资源
+     * 防止内存泄漏
+     */
+    destroy() {
+        logger.info('Destroying GameManager')
+
+        // 1. 清理 Vue watchers
+        this._cleanupWatchers()
+
+        // 2. 清理当前场景
+        if (this.currentScene.value) {
+            if (typeof this.currentScene.value.destroy === 'function') {
+                this.currentScene.value.destroy()
+            }
+            this.currentScene.value = null
+        }
+
+        // 3. 清理 SceneManager
+        if (this.sceneManager) {
+            this.sceneManager.currentScene = null
+            this.sceneManager = null
+        }
+
+        // 4. 停止并销毁引擎
+        if (this.engine) {
+            this.engine.destroy()
+            this.engine = null
+        }
+
+        // 5. 重置状态标志
+        this._isInitialized = false
+
+        logger.info('GameManager destroyed successfully')
     }
 }
 
