@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { gameManager } from '@/game/GameManager'
+import { gameManager } from '@/game/ecs/GameManager'
 
 const props = defineProps({
   id: String,

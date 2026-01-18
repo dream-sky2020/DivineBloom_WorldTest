@@ -18,7 +18,7 @@ export const StatusRenderSystem = {
   LAYER: 30,
 
   /**
-   * @param {import('@/game/GameEngine').Renderer2D} renderer 
+   * @param {import('@/game/ecs/GameEngine').Renderer2D} renderer 
    */
   draw(renderer) {
     // Defensive Check: Renderer

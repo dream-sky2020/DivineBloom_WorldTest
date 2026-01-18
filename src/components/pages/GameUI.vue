@@ -229,7 +229,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '@/stores/game';
-import { gameManager } from '@/game/GameManager';
+import { gameManager } from '@/game/ecs/GameManager';
 import { createLogger } from '@/utils/logger';
 
 import MainMenuSystem from '@/components/pages/systems/MainMenuSystem.vue';

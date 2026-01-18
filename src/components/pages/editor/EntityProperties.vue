@@ -79,7 +79,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { gameManager } from '@/game/GameManager'
+import { gameManager } from '@/game/ecs/GameManager'
 
 // 属性编辑同步
 const localEntityState = ref(null)

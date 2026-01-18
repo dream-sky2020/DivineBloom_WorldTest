@@ -16,7 +16,7 @@ export const EditorGridRenderSystem = {
   },
 
   /**
-   * @param {import('@/game/GameEngine').Renderer2D} renderer 
+   * @param {import('@/game/ecs/GameEngine').Renderer2D} renderer 
    */
   draw(renderer) {
     if (!this.config.show) return;

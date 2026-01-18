@@ -20,7 +20,7 @@ export const AIVisionRenderSystem = {
     LAYER: 15,
 
     /**
-     * @param {import('@/game/GameEngine').Renderer2D} renderer 
+     * @param {import('@/game/ecs/GameEngine').Renderer2D} renderer 
      */
     draw(renderer) {
         if (!renderer || !renderer.ctx || !renderer.camera) return

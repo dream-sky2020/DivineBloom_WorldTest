@@ -29,7 +29,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { world } from '@/game/ecs/world'
-import { gameManager } from '@/game/GameManager'
+import { gameManager } from '@/game/ecs/GameManager'
 
 const entities = ref([])
 const mapId = computed(() => gameManager.currentScene.value?.mapData?.id || '')

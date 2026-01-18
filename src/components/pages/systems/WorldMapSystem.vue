@@ -55,7 +55,7 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
-import { gameManager } from '@/game/GameManager'
+import { gameManager } from '@/game/ecs/GameManager'
 import { useGameStore } from '@/stores/game'
 
 const emit = defineEmits(['change-system'])

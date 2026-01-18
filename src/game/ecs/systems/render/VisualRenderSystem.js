@@ -64,7 +64,7 @@ export const VisualRenderSystem = {
   },
 
   /**
-   * @param {import('@/game/GameEngine').Renderer2D} renderer 
+   * @param {import('@/game/ecs/GameEngine').Renderer2D} renderer 
    */
   draw(renderer) {
     // 1. 收集实体 (排除纯地面)

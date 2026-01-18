@@ -14,7 +14,7 @@ export const BackgroundRenderSystem = {
     LAYER: 10,
 
     /**
-     * @param {import('@/game/GameEngine').Renderer2D} renderer 
+     * @param {import('@/game/ecs/GameEngine').Renderer2D} renderer 
      */
     draw(renderer) {
         const camera = renderer.camera
