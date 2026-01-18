@@ -95,6 +95,22 @@ export class AssetManager {
         return this.textures.get(assetId)
     }
 
+    /**
+     * 清理资源缓存，释放内存
+     * @param {boolean} force 是否强制清理所有资源
+     */
+    clear(force = false) {
+        console.log(`[AssetManager] Clearing assets (force: ${force})`)
+        if (force) {
+            this.textures.clear()
+        } else {
+            // 这里可以实现更复杂的 LRU 策略，或者只保留通用资源
+            // 目前简单处理为全清，后续可按需优化
+            this.textures.clear()
+        }
+        this.loading.clear()
+    }
+
     _createFallback(w, h, color) {
         const cv = document.createElement('canvas')
         cv.width = w

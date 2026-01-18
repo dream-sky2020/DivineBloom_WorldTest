@@ -149,4 +149,21 @@ export class SceneLifecycle {
         await this.preloadPhase(mapData, engine)
         return this.createEntitiesPhase(mapData, engine, entryId, null)
     }
+
+    /**
+     * 销毁场景资源
+     * @param {object} scene 
+     * @param {object} engine 
+     */
+    static destroyScene(scene, engine) {
+        console.log('[SceneLifecycle] Destroying current scene...')
+        if (scene && scene.destroy) {
+            scene.destroy()
+        }
+        
+        // 可选：清理资源管理器中的非全局资源
+        if (engine && engine.assets) {
+            engine.assets.clear()
+        }
+    }
 }

@@ -5,7 +5,6 @@ import { AIVisionRenderSystem } from '@/game/ecs/systems/render/AIVisionRenderSy
 import { StatusRenderSystem } from '@/game/ecs/systems/render/StatusRenderSystem'
 import { DetectAreaRenderSystem } from '@/game/ecs/systems/render/DetectAreaRenderSystem'
 import { InputSenseSystem } from '@/game/ecs/systems/sense/InputSenseSystem'
-// import { ExternalSenseSystem } from '@/game/ecs/systems/sense/ExternalSenseSystem' (Removed)
 import { AISenseSystem } from '@/game/ecs/systems/sense/AISenseSystem'
 import { PlayerIntentSystem } from '@/game/ecs/systems/intent/PlayerIntentSystem'
 import { PlayerControlSystem } from '@/game/ecs/systems/control/PlayerControlSystem'
@@ -17,7 +16,6 @@ import { DetectInputSystem } from '@/game/ecs/systems/detect/DetectInputSystem'
 import { TriggerSystem } from '@/game/ecs/systems/event/TriggerSystem'
 import { ExecuteSystem } from '@/game/ecs/systems/execute/ExecuteSystem'
 import { clearWorld, world } from '@/game/ecs/world'
-import { MapSaveStateSchema } from '@/data/schemas/save'
 import { GlobalEntity } from '@/game/ecs/entities/definitions/GlobalEntity'
 import { EditorGridRenderSystem } from '@/game/ecs/systems/render/EditorGridRenderSystem'
 import { EditorInteractionSystem } from '@/game/ecs/systems/editor/EditorInteractionSystem'
@@ -57,18 +55,35 @@ export class WorldScene {
         // 初始化 Environment System
         DetectAreaRenderSystem.init(this.mapData)
 
-        // --- Render Pipeline Setup ---
-        // 注册所有渲染系统，draw() 时会自动按 LAYER 排序执行
-        this.renderPipeline = [
-            BackgroundRenderSystem, // Layer 10
-            AIVisionRenderSystem,   // Layer 15
-            VisualRenderSystem,     // Layer 20
-            StatusRenderSystem,     // Layer 30
-            DetectAreaRenderSystem  // Layer 100 (Debug)
-        ]
+        // 🎯 系统注册表化 (System Registry)
+        this.systems = {
+            // 逻辑阶段 (Logic Phases)
+            logic: {
+                sense: [AISenseSystem, DetectAreaSystem, DetectInputSystem],
+                intent: [PlayerIntentSystem, EnemyAIIntentSystem],
+                decision: [TriggerSystem],
+                control: [PlayerControlSystem, EnemyControlSystem],
+                physics: [MovementSystem],
+                execution: [ExecuteSystem]
+            },
+            // 渲染管线 (Render Pipeline)
+            render: [
+                BackgroundRenderSystem, // Layer 10
+                AIVisionRenderSystem,   // Layer 15
+                VisualRenderSystem,     // Layer 20
+                StatusRenderSystem,     // Layer 30
+                DetectAreaRenderSystem  // Layer 100 (Debug)
+            ],
+            // 编辑器阶段 (Editor Phases)
+            editor: {
+                sense: [InputSenseSystem],
+                interaction: [EditorInteractionSystem],
+                render: [EditorGridRenderSystem, EditorHighlightRenderSystem]
+            }
+        }
 
-        // 预排序
-        this.renderPipeline.sort((a, b) => (a.LAYER || 0) - (b.LAYER || 0))
+        // 预排序渲染管线
+        this._sortRenderPipeline()
 
         // Time delta for animation
         this.lastDt = 0.016
@@ -80,14 +95,16 @@ export class WorldScene {
 
         // Initialize Global Entities (Command Queue)
         this._initGlobalEntities()
+    }
 
-        // 注意：实体创建现在由 SceneLifecycle.prepareScene() 统一处理
-        // 构造函数只负责初始化场景配置，不创建游戏实体
+    /**
+     * 对渲染管线按 LAYER 排序
+     */
+    _sortRenderPipeline() {
+        this.systems.render.sort((a, b) => (a.LAYER || 0) - (b.LAYER || 0))
     }
 
     _initGlobalEntities() {
-        // Create the global manager entity if it doesn't exist
-        // Note: GlobalEntity.create handles duplicate checks internally but checking here is safer/clearer
         const existing = world.with('globalManager').first
         if (!existing) {
             GlobalEntity.create()
@@ -95,13 +112,9 @@ export class WorldScene {
     }
 
     /**
-     * Map Loaded Callback (Called by SceneManager when switching maps)
-     * 注意：现在资源加载由 SceneLifecycle 在 SceneManager 中统一处理
-     * 这个方法只负责初始化系统
-     * @param {object} mapData 
+     * Map Loaded Callback
      */
     onMapLoaded(mapData) {
-        // Re-initialize systems that depend on map data
         DetectAreaRenderSystem.init(mapData)
         console.log('[WorldScene] Map systems reinitialized')
     }
@@ -111,11 +124,13 @@ export class WorldScene {
      */
     enterEditMode() {
         this.editMode = true
-        if (!this.renderPipeline.includes(EditorGridRenderSystem)) {
-            this.renderPipeline.push(EditorGridRenderSystem)
-            this.renderPipeline.push(EditorHighlightRenderSystem)
-            this.renderPipeline.sort((a, b) => (a.LAYER || 0) - (b.LAYER || 0))
-        }
+        // 将编辑器渲染系统加入主管线
+        this.systems.editor.render.forEach(sys => {
+            if (!this.systems.render.includes(sys)) {
+                this.systems.render.push(sys)
+            }
+        })
+        this._sortRenderPipeline()
     }
 
     /**
@@ -123,43 +138,55 @@ export class WorldScene {
      */
     exitEditMode() {
         this.editMode = false
-
-        // 清理渲染系统
-        const systemsToRemove = [EditorGridRenderSystem, EditorHighlightRenderSystem]
-        this.renderPipeline = this.renderPipeline.filter(s => !systemsToRemove.includes(s))
+        // 从主管线移除编辑器渲染系统
+        this.systems.render = this.systems.render.filter(s => !this.systems.editor.render.includes(s))
 
         // 重置交互状态
         EditorInteractionSystem.selectedEntity = null
         EditorInteractionSystem.isDragging = false
         if (this.stateProvider.gameManager) {
-            this.stateProvider.gameManager.editor.selectedEntity = null // Reset reactive state
+            this.stateProvider.gameManager.editor.selectedEntity = null
         }
     }
 
     /**
      * Serialize the current scene state (entities)
-     * Used by WorldStore to persist state when switching maps
      */
     serialize() {
         const entitiesData = []
-
-        // Iterate all entities in the world
         for (const entity of world) {
-            // Exclude global manager from map-specific serialization
             if (entity.globalManager) continue;
-
-            // 只序列化动态实体，不包含静态配置（静态配置由 ScenarioLoader 重建）
-            // EntityManager.serialize 已经返回了 { type, data } 格式
             const item = EntityManager.serialize(entity)
             if (item) {
                 entitiesData.push(item)
             }
         }
-
         return {
             isInitialized: true,
             entities: entitiesData
         }
+    }
+
+    /**
+     * 销毁场景，释放资源防止内存泄漏
+     */
+    destroy() {
+        console.log('[WorldScene] Destroying scene...')
+
+        // 1. 清理引用
+        this.player = null
+        this.engine = null
+        this.stateProvider = null
+        this.mapData = null
+
+        // 2. 清理系统
+        this.systems.logic = null
+        this.systems.render = null
+        this.systems.editor = null
+        this.systems = null
+
+        // 3. 清理 ECS 世界 (如果这是当前唯一的场景)
+        clearWorld()
     }
 
     /**
@@ -168,68 +195,56 @@ export class WorldScene {
     update(dt) {
         this.lastDt = dt
 
-        // Always update Render Systems (animations)
+        // 1. 始终运行的系统 (动画等)
         VisualRenderSystem.update(dt)
 
-        // 编辑器交互系统始终运行（无论是否暂停，只要在编辑模式下）
+        // 2. 编辑器模式逻辑
         if (this.editMode) {
-            InputSenseSystem.update(dt, this.engine.input)
-            EditorInteractionSystem.update(dt, this.engine, this.stateProvider.gameManager)
+            // 编辑器感官 (Input)
+            this.systems.editor.sense.forEach(s => s.update(dt, this.engine.input))
+            // 编辑器交互 (Drag/Select)
+            this.systems.editor.interaction.forEach(s => s.update(dt, this.engine, this.stateProvider.gameManager))
         }
 
-        // 如果 GameManager 处于暂停状态，则跳过后续游戏 logic 更新
-        if (this.stateProvider.gameManager && this.stateProvider.gameManager.state.isPaused) return
+        // 3. 基础游戏逻辑 (受暂停影响)
+        const isPaused = this.stateProvider.gameManager && this.stateProvider.gameManager.state.isPaused
 
-        // Only update Game Logic if not transitioning
-        if (!this.isTransitioning) {
-            // 如果不在编辑模式下，才更新常规输入感知（防止与编辑器冲突）
+        if (!isPaused && !this.isTransitioning) {
+            // 如果不在编辑模式，才更新常规输入感知
             if (!this.editMode) {
                 InputSenseSystem.update(dt, this.engine.input)
             }
 
-            // 0. 全局外部事件感知 - 已移除，功能由 AISenseSystem 接管
-            // ExternalSenseSystem.update(dt, { scene: this })
+            // 核心逻辑阶段驱动
+            const phases = ['sense', 'intent', 'decision', 'control', 'physics']
+            phases.forEach(phase => {
+                this.systems.logic[phase].forEach(system => system.update(dt))
+            })
 
-            // 1. 感知 (Sense/Detect)
-            AISenseSystem.update(dt)
-            DetectAreaSystem.update(dt)
-            DetectInputSystem.update(dt)
-
-            // 2. 意图 (Intent)
-            PlayerIntentSystem.update(dt)
-            EnemyAIIntentSystem.update(dt)
-
-            // 3. 决策 (Trigger Logic)
-            TriggerSystem.update(dt)
-
-            // 4. 控制 (Control)
-            PlayerControlSystem.update(dt)
-            EnemyControlSystem.update(dt)
-
-            // 5. 物理 (Physics)
-            MovementSystem.update(dt)
-
-            // 6. 执行 (Execute)
+            // 执行阶段 (特殊参数处理)
             ExecuteSystem.update({
                 onEncounter: this.onEncounter,
-                onSwitchMap: null, // SceneManager handles this now
+                onSwitchMap: null,
                 onInteract: this.onInteract,
                 onOpenMenu: this.onOpenMenu
             })
         }
 
-        // 7. Scene Management (Always run to handle transitions)
-        // 直接处理 ECS 场景切换请求和场景管理器更新
+        // 4. 场景管理 (始终运行以处理切换请求)
+        this._updateSceneManagement()
+    }
+
+    /**
+     * 处理场景切换和管理器更新
+     */
+    _updateSceneManagement() {
         if (this.stateProvider.sceneManager) {
-            // 1. 处理 ECS 组件触发的场景切换请求
             const transitionEntity = world.with('sceneTransition').first
             if (transitionEntity) {
                 const request = transitionEntity.sceneTransition
                 this.stateProvider.sceneManager.requestSwitchMap(request.mapId, request.entryId)
                 world.removeComponent(transitionEntity, 'sceneTransition')
             }
-
-            // 2. 更新场景管理器（执行待处理的切换）
             this.stateProvider.sceneManager.update()
         }
     }
@@ -238,9 +253,8 @@ export class WorldScene {
      * @param {Renderer2D} renderer 
      */
     draw(renderer) {
-        // 自动渲染管线
-        // 按 Z-Index (LAYER) 顺序执行
-        for (const system of this.renderPipeline) {
+        // 自动渲染管线驱动
+        for (const system of this.systems.render) {
             if (system.draw) {
                 system.draw(renderer)
             }

@@ -3,65 +3,54 @@ import { BackgroundEntity } from '@/game/ecs/entities/definitions/BackgroundEnti
 import { PlayerConfig } from '@/data/assets'
 import Enemies from '@/data/characters/enemies'
 
-export class ScenarioLoader {
-    /**
-     * 加载场景实体 (Player, Enemies, NPCs, Background)
-     * @param {object} engine 
-     * @param {object} mapData 
-     * @param {string} entryId 
-     * @returns {object} 返回创建的关键实体引用 (如 player)
-     */
-    static load(engine, mapData, entryId = 'default') {
-        const result = {
-            player: null,
-            entities: []
-        }
-
-        if (!mapData) return result
-
-        // 0. Spawn Background (Ground only)
+/**
+ * 实体创建工厂映射表
+ * 将不同类型的实体创建逻辑解耦，便于后续扩展
+ */
+const ENTITY_FACTORIES = {
+    // 背景层工厂
+    background: (mapData) => {
         if (mapData.background) {
             const groundW = 2000
             const groundH = 2000
             BackgroundEntity.createGround(groundW, groundH, mapData.background.groundColor)
         }
+    },
 
-        // 0.5 Spawn Decorations (As top-level entities)
-        if (mapData.decorations) {
-            mapData.decorations.forEach(dec => {
-                let y = dec.y
-                if (y === undefined && dec.yRatio !== undefined) {
-                    y = dec.yRatio * 600
+    // 装饰物工厂
+    decorations: (mapData) => {
+        mapData.decorations?.forEach(dec => {
+            let y = dec.y
+            if (y === undefined && dec.yRatio !== undefined) {
+                y = dec.yRatio * 600
+            }
+
+            EntityManager.createDecoration({
+                x: dec.x,
+                y: y || 0,
+                name: dec.spriteId ? `Decoration_${dec.spriteId}` : 'Decoration_Rect',
+                config: {
+                    spriteId: dec.spriteId,
+                    scale: dec.scale,
+                    rect: dec.type === 'rect' ? {
+                        width: dec.width,
+                        height: dec.height,
+                        color: dec.color
+                    } : undefined
                 }
-
-                EntityManager.createDecoration({
-                    x: dec.x,
-                    y: y || 0,
-                    name: dec.spriteId ? `Decoration_${dec.spriteId}` : 'Decoration_Rect',
-                    config: {
-                        spriteId: dec.spriteId,
-                        scale: dec.scale,
-                        rect: dec.type === 'rect' ? {
-                            width: dec.width,
-                            height: dec.height,
-                            color: dec.color
-                        } : undefined
-                    }
-                })
             })
-        }
+        })
+    },
 
-        // 1. Create Player
-        // 默认位置，会被 spawn point 覆盖
+    // 玩家工厂
+    player: (mapData, entryId) => {
         const player = EntityManager.createPlayer({
             x: 200,
             y: 260,
             scale: PlayerConfig.scale
         })
-        result.entities.push(player)
-        result.player = player
 
-        // Set Player Spawn from Entry Point
+        // 处理出生点
         let spawn = mapData.spawnPoint
         if (mapData.entryPoints && mapData.entryPoints[entryId]) {
             spawn = mapData.entryPoints[entryId]
@@ -72,87 +61,123 @@ export class ScenarioLoader {
             player.position.y = spawn.y
         }
 
-        // 2. Spawn Enemies
-        if (mapData.spawners) {
-            mapData.spawners.forEach(spawner => {
-                for (let i = 0; i < spawner.count; i++) {
-                    let x = 0, y = 0
-                    if (spawner.area) {
-                        x = spawner.area.x + Math.random() * spawner.area.w
-                        y = spawner.area.y + Math.random() * spawner.area.h
-                    } else {
-                        x = 300
-                        y = 300
-                    }
+        return player
+    },
 
-                    const group = spawner.enemyIds.map(id => ({ id }))
-
-                    // Determine visual from the first enemy in group (leader)
-                    const leaderId = spawner.enemyIds[0]
-                    const leaderDef = Enemies[leaderId]
-                    const spriteId = (leaderDef && leaderDef.spriteId) ? leaderDef.spriteId : 'default'
-
-                    const enemyData = {
-                        x, y,
-                        battleGroup: group,
-                        options: {
-                            ...spawner.options,
-                            spriteId: spriteId,
-                            minYRatio: mapData.constraints?.minYRatio,
-                        }
-                    }
-
-                    const enemyEntity = EntityManager.createEnemy(enemyData)
-                    result.entities.push(enemyEntity)
-                }
-            })
-        }
-
-        // 3. Spawn NPCs
-        if (mapData.npcs) {
-            mapData.npcs.forEach(data => {
-                const npcData = {
-                    x: data.x,
-                    y: data.y,
-                    name: data.name, // 传递名称
-                    config: {
-                        ...data,
-                        x: undefined,
-                        y: undefined,
-                        name: undefined // 避免重复
-                    }
+    // 敌人/生成器工厂
+    enemies: (mapData) => {
+        const created = []
+        mapData.spawners?.forEach(spawner => {
+            for (let i = 0; i < spawner.count; i++) {
+                let x = 0, y = 0
+                if (spawner.area) {
+                    x = spawner.area.x + Math.random() * spawner.area.w
+                    y = spawner.area.y + Math.random() * spawner.area.h
+                } else {
+                    x = 300
+                    y = 300
                 }
 
-                const npcEntity = EntityManager.createNPC(npcData)
-                result.entities.push(npcEntity)
+                const group = spawner.enemyIds.map(id => ({ id }))
+                const leaderId = spawner.enemyIds[0]
+                const leaderDef = Enemies[leaderId]
+                const spriteId = (leaderDef && leaderDef.spriteId) ? leaderDef.spriteId : 'default'
+
+                const enemyEntity = EntityManager.createEnemy({
+                    x, y,
+                    battleGroup: group,
+                    options: {
+                        ...spawner.options,
+                        spriteId: spriteId,
+                        minYRatio: mapData.constraints?.minYRatio,
+                    }
+                })
+                created.push(enemyEntity)
+            }
+        })
+        return created
+    },
+
+    // NPC 工厂
+    npcs: (mapData) => {
+        const created = []
+        mapData.npcs?.forEach(data => {
+            const npcEntity = EntityManager.createNPC({
+                x: data.x,
+                y: data.y,
+                name: data.name,
+                config: {
+                    ...data,
+                    x: undefined,
+                    y: undefined,
+                    name: undefined
+                }
             })
+            created.push(npcEntity)
+        })
+        return created
+    },
+
+    // 传送门工厂
+    portals: (mapData) => {
+        const created = []
+        mapData.portals?.forEach(data => {
+            const portalEntity = EntityManager.createPortal({
+                x: data.x,
+                y: data.y,
+                name: data.name,
+                width: data.w,
+                height: data.h,
+                targetMapId: data.targetMapId,
+                targetEntryId: data.targetEntryId
+            })
+            created.push(portalEntity)
+        })
+        return created
+    }
+}
+
+export class ScenarioLoader {
+    /**
+     * 加载场景实体 (静态配置加载)
+     * @param {object} engine 
+     * @param {object} mapData 
+     * @param {string} entryId 
+     * @returns {object} { player, entities }
+     */
+    static load(engine, mapData, entryId = 'default') {
+        const result = {
+            player: null,
+            entities: []
         }
 
-        // 4. Spawn Portals
-        if (mapData.portals) {
-            mapData.portals.forEach(data => {
-                const portalData = {
-                    x: data.x,
-                    y: data.y,
-                    name: data.name, // 传递名称
-                    width: data.w,
-                    height: data.h,
-                    targetMapId: data.targetMapId,
-                    targetEntryId: data.targetEntryId
-                }
-                const portalEntity = EntityManager.createPortal(portalData)
-                result.entities.push(portalEntity)
-            })
-        }
+        if (!mapData) return result
+
+        // 1. 执行背景和装饰物初始化 (不返回实体引用)
+        ENTITY_FACTORIES.background(mapData)
+        ENTITY_FACTORIES.decorations(mapData)
+
+        // 2. 创建核心实体
+        result.player = ENTITY_FACTORIES.player(mapData, entryId)
+        result.entities.push(result.player)
+
+        // 3. 创建其他业务实体
+        const otherEntities = [
+            ...ENTITY_FACTORIES.enemies(mapData),
+            ...ENTITY_FACTORIES.npcs(mapData),
+            ...ENTITY_FACTORIES.portals(mapData)
+        ]
+        
+        result.entities.push(...otherEntities)
 
         return result
     }
 
     /**
-     * 从保存状态恢复实体
+     * 从保存状态恢复实体 (动态状态恢复)
      * @param {object} engine 
      * @param {object} state 
-     * @param {object} [mapData] Optional fallback for missing static entities
+     * @param {object} [mapData] 
      * @returns {object} { player, entities }
      */
     static restore(engine, state, mapData = null) {
@@ -161,37 +186,13 @@ export class ScenarioLoader {
             entities: []
         }
 
-        // 0. Restore Background (Ground and Decorations)
-        if (mapData && mapData.background) {
-            const groundW = 2000
-            const groundH = 2000
-            BackgroundEntity.createGround(groundW, groundH, mapData.background.groundColor)
+        // 1. 恢复静态背景（通常不随存档改变）
+        if (mapData) {
+            ENTITY_FACTORIES.background(mapData)
+            ENTITY_FACTORIES.decorations(mapData)
         }
 
-        if (mapData && mapData.decorations) {
-            mapData.decorations.forEach(dec => {
-                let y = dec.y
-                if (y === undefined && dec.yRatio !== undefined) {
-                    y = dec.yRatio * 600
-                }
-
-                EntityManager.createDecoration({
-                    x: dec.x,
-                    y: y || 0,
-                    name: dec.spriteId ? `Decoration_${dec.spriteId}` : 'Decoration_Rect',
-                    config: {
-                        spriteId: dec.spriteId,
-                        scale: dec.scale,
-                        rect: dec.type === 'rect' ? {
-                            width: dec.width,
-                            height: dec.height,
-                            color: dec.color
-                        } : undefined
-                    }
-                })
-            })
-        }
-
+        // 2. 从状态列表恢复动态实体
         if (state.entities) {
             state.entities.forEach(item => {
                 const entity = EntityManager.create(engine, item.type, item.data, {
@@ -207,38 +208,21 @@ export class ScenarioLoader {
             })
         }
 
-        // Safety Fallback: Check for missing Portals in old saves
-        // If we have mapData but no portals were restored, inject them
-        if (mapData && mapData.portals) {
+        // 3. 补丁逻辑：如果是旧存档缺失传送门，从地图配置补全
+        if (mapData?.portals) {
             const hasPortals = result.entities.some(e => e.type === 'portal')
             if (!hasPortals) {
-                console.warn('[ScenarioLoader] ⚠️ No portals found in save state. Injecting from map data (Legacy Save Fix).')
-                mapData.portals.forEach(data => {
-                    const portalData = {
-                        x: data.x,
-                        y: data.y,
-                        name: data.name, // 传递名称
-                        width: data.w,
-                        height: data.h,
-                        targetMapId: data.targetMapId,
-                        targetEntryId: data.targetEntryId
-                    }
-                    const portalEntity = EntityManager.createPortal(portalData)
-                    result.entities.push(portalEntity)
-                })
+                console.warn('[ScenarioLoader] Legacy Save: Injecting portals from map data.')
+                const portals = ENTITY_FACTORIES.portals(mapData)
+                result.entities.push(...portals)
             }
         }
 
-        // Fallback: recreate player if missing
+        // 4. 安全回退：确保玩家存在
         if (!result.player) {
-            console.warn('Player not found in save state, recreating...')
-            const player = EntityManager.createPlayer({
-                x: 200,
-                y: 260,
-                scale: PlayerConfig.scale
-            })
-            result.entities.push(player)
-            result.player = player
+            console.warn('[ScenarioLoader] Player missing in state, recreating...')
+            result.player = ENTITY_FACTORIES.player(mapData || {}, 'default')
+            result.entities.push(result.player)
         }
 
         return result
