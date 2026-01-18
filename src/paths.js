@@ -14,11 +14,11 @@ export const PATHS = {
   ENTITIES: '@/game/ecs/entities',
 
   // Vue 组件
-  COMPONENTS: '@/components',
-  PAGES: '@/components/pages',
-  SYSTEMS: '@/components/pages/systems',
-  PANELS: '@/components/panels',
-  UI: '@/components/ui',
+  COMPONENTS: '@/interface',
+  PAGES: '@/interface/pages',
+  SYSTEMS: '@/interface/pages/systems',
+  PANELS: '@/interface/panels',
+  UI: '@/interface/ui',
 
   // Stores (Pinia)
   STORES: '@/stores',

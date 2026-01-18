@@ -39,7 +39,7 @@
 
 如果引入了新的**目标选择类型**（例如 `allDeadAllies`），需要更新 UI 组件以支持该类型的选择流程。
 
-- **文件路径**: `src/components/pages/systems/BattleSystem.vue`
+- **文件路径**: `src/interface/pages/systems/BattleSystem.vue`
 - **修改内容**:
     - **`selectSkill` 方法**: 处理技能选择。如果是群体或特殊目标，可能需要直接触发 `playerAction` 而不是进入选择模式。
     - **`selectItem` 方法**: 处理物品选择。同上。

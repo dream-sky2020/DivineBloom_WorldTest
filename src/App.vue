@@ -1,5 +1,5 @@
 <script setup>
-import GameUI from '@/components/pages/GameUI.vue';
+import GameUI from '@/interface/pages/GameUI.vue';
 import { useSettingsStore } from '@/stores/settings';
 import { onMounted } from 'vue';
 

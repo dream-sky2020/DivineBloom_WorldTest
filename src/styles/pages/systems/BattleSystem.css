@@ -1,0 +1,39 @@
+.battle-system {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    /* Opaque dark blue */
+    background: #1e1b4b;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: white;
+    font-family: var(--font-main, sans-serif);
+}
+
+/* Enemy Zone */
+.enemy-zone {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Party Zone */
+.party-zone {
+    height: 600px;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+}
+
+.view-toggle-pos {
+    position: absolute;
+    top: 20px;
+    right: 140px;
+    z-index: 200;
+}

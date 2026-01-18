@@ -59,9 +59,9 @@ export const checkCrowdControl = (character) => {
 #### 浏览器内验证工具
 
 **文件**：
-- `src/components/dev/DataValidator.vue` - 数据验证 UI 组件
-- `src/components/pages/DevTools.vue` - 开发工具主界面
-- `src/components/pages/GameUI.vue` - 添加快捷键支持
+- `src/interface/dev/DataValidator.vue` - 数据验证 UI 组件
+- `src/interface/pages/DevTools.vue` - 开发工具主界面
+- `src/interface/pages/GameUI.vue` - 添加快捷键支持
 
 **使用方法**：
 1. 启动游戏 `npm run dev`

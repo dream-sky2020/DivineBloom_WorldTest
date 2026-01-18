@@ -11,7 +11,7 @@
 
 ### 1. 创建 DevToolsSystem.vue ✅
 
-**位置**: `src/components/pages/systems/DevToolsSystem.vue`
+**位置**: `src/interface/pages/systems/DevToolsSystem.vue`
 
 **特点**:
 - ✅ 作为独立的游戏系统，与其他系统（战斗、菜单等）平级
@@ -36,7 +36,7 @@
 
 #### a) 导入新系统
 ```javascript
-import DevToolsSystem from '@/components/pages/systems/DevToolsSystem.vue';
+import DevToolsSystem from '@/interface/pages/systems/DevToolsSystem.vue';
 ```
 
 #### b) 添加系统路由
@@ -65,7 +65,7 @@ case 'dev-tools': return DevToolsSystem;
 
 ### 3. 添加特殊样式 ✅
 
-**位置**: `src/styles/components/pages/GameUI.css`
+**位置**: `src/styles/pages/GameUI.css`
 
 **新增样式**:
 

@@ -13,7 +13,7 @@
 - **Data**: `src/data/dialogues/*.js` (脚本文件), `src/data/dialogues.js` (自动加载器)
 - **Locales**: `src/locales/dialogue/index.js` (对话内容文本), `src/locales/ui/roles.js` (角色名称文本)
 - **Utils**: `src/game/dialogue/utils.js` (指令工具)
-- **UI**: `src/components/pages/systems/DialogueSystem.vue` (调试), `WorldMapSystem.vue` (游戏内集成)
+- **UI**: `src/interface/pages/systems/DialogueSystem.vue` (调试), `WorldMapSystem.vue` (游戏内集成)
 
 2. 目录结构
 -----------------------------------------
