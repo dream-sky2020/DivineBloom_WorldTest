@@ -11,9 +11,25 @@ export const PortalEntitySchema = z.object({
   name: z.string().optional(),
   width: z.number(),
   height: z.number(),
+  // 跨地图传送：需要 targetMapId 和 targetEntryId
   targetMapId: z.string().optional(),
-  targetEntryId: z.string()
-});
+  targetEntryId: z.string().optional(),
+  // 同地图传送：可以使用 destinationId（推荐）或直接坐标 targetX/targetY
+  destinationId: z.string().optional(),
+  targetX: z.number().optional(),
+  targetY: z.number().optional()
+}).refine(
+  data => {
+    // 必须是跨地图传送或同地图传送之一
+    // 使用 != null 来同时排除 null 和 undefined
+    const isCrossMap = data.targetMapId != null && data.targetEntryId != null
+    const isLocalTeleport = data.destinationId != null || (data.targetX != null && data.targetY != null)
+    return isCrossMap || isLocalTeleport
+  },
+  {
+    message: "Portal must have either (targetMapId + targetEntryId) for cross-map teleport or (destinationId / targetX + targetY) for local teleport"
+  }
+);
 
 // --- Entity Definition ---
 
@@ -27,19 +43,26 @@ export const PortalEntity = {
     const result = PortalEntitySchema.safeParse(data);
     if (!result.success) {
       console.error('[PortalEntity] Validation failed', result.error);
-      // Fallback or throw? For now, let's try to proceed with partial data if possible or just log error.
-      // But usually we should return null or handle error.
-      // Given the previous code didn't validate, we'll assume caller tries to be correct, but we log validation error.
+      return null;
     }
-    // We use the validated data if success, otherwise original data (or maybe we should just crash in dev?)
-    // The prompt says "like Actions.js", which returns default/fallback on error.
-    // However, entities are more complex. Actions returned a component object.
-    // Here we are adding to world.
 
-    // If validation fails, we might want to not create the entity to avoid undefined behavior.
-    if (!result.success) return null;
+    const { x, y, name, width, height, targetMapId, targetEntryId, destinationId, targetX, targetY } = result.data;
 
-    const { x, y, name, width, height, targetMapId, targetEntryId } = result.data;
+    // 判断传送类型（使用 != null 来同时排除 null 和 undefined）
+    const isCrossMap = targetMapId != null && targetEntryId != null
+    const isLocalTeleport = destinationId != null || (targetX != null && targetY != null)
+
+    // 生成默认名称
+    let portalName = name
+    if (!portalName) {
+      if (isCrossMap) {
+        portalName = `To_${targetMapId}_${targetEntryId}`
+      } else if (destinationId) {
+        portalName = `To_${destinationId}`
+      } else if (targetX != null && targetY != null) {
+        portalName = `Local_Teleport_${targetX}_${targetY}`
+      }
+    }
 
     // Offset calculation:
     // Portal position is usually top-left or center? 
@@ -50,22 +73,28 @@ export const PortalEntity = {
 
     return world.add({
       type: 'portal',
-      name: name || `To_${targetMapId}`,
+      name: portalName,
       position: { x, y },
 
       detectArea: DetectArea({
         shape: 'aabb',
         offset: { x: width / 2, y: height / 2 },
         size: { w: width, h: height },
-        target: 'player'
+        target: ['player']  // 只检测玩家，不检测敌人（避免敌人误触传送门）
       }),
 
       trigger: Trigger({
-        rules: [{ type: 'onEnter' }],
+        rules: [{ type: 'onEnter', requireEnterOnly: true }],  // 只在刚进入时触发一次
         actions: ['TELEPORT']
       }),
 
-      actionTeleport: Actions.Teleport(targetMapId, targetEntryId)
+      actionTeleport: Actions.Teleport(
+        isCrossMap ? targetMapId : undefined,
+        isCrossMap ? targetEntryId : undefined,
+        isLocalTeleport && destinationId ? destinationId : undefined,
+        isLocalTeleport && targetX != null ? targetX : undefined,
+        isLocalTeleport && targetY != null ? targetY : undefined
+      )
     })
   },
 
@@ -75,17 +104,31 @@ export const PortalEntity = {
     const { position, detectArea, actionTeleport, name } = entity
 
     // detectArea.size => {w, h}
-    // actionTeleport => {mapId, entryId}
+    // actionTeleport => {mapId, entryId, destinationId, targetX, targetY}
 
-    return {
+    const data = {
       type: 'portal',
       x: position.x,
       y: position.y,
       name: name,
       width: detectArea.size.w,
-      height: detectArea.size.h,
-      targetMapId: actionTeleport.mapId,
-      targetEntryId: actionTeleport.entryId
+      height: detectArea.size.h
     }
+
+    // 根据传送类型添加对应字段（使用 != null 来同时排除 null 和 undefined）
+    if (actionTeleport.mapId != null && actionTeleport.entryId != null) {
+      // 跨地图传送
+      data.targetMapId = actionTeleport.mapId
+      data.targetEntryId = actionTeleport.entryId
+    } else if (actionTeleport.destinationId != null) {
+      // 同地图传送（使用目的地实体）
+      data.destinationId = actionTeleport.destinationId
+    } else if (actionTeleport.targetX != null && actionTeleport.targetY != null) {
+      // 同地图传送（使用直接坐标）
+      data.targetX = actionTeleport.targetX
+      data.targetY = actionTeleport.targetY
+    }
+
+    return data
   }
 }

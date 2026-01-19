@@ -99,12 +99,24 @@ export const TriggerSystem = {
 
         for (const actionType of trigger.actions) {
           logger.info(`Pushing Action: ${actionType} for Entity: ${entity.type} (ID: ${entity.id})`)
-          actionQueue.push({
-            source: entity,
-            type: actionType,
-            // 可以附带触发目标，例如 detectArea.results[0]
-            target: entity.detectArea?.results?.[0] || null
-          })
+          
+          // 如果有多个检测结果（例如玩家和敌人都在区域内），则为每个结果生成一个 Action
+          if (entity.detectArea && entity.detectArea.results && entity.detectArea.results.length > 0) {
+            for (const target of entity.detectArea.results) {
+              actionQueue.push({
+                source: entity,
+                type: actionType,
+                target: target
+              })
+            }
+          } else {
+            // 没有检测结果的情况（可能是 onPress 等其他触发方式）
+            actionQueue.push({
+              source: entity,
+              type: actionType,
+              target: null
+            })
+          }
         }
 
         trigger.cooldownTimer = 0.5

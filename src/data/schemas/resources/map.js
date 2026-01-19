@@ -48,8 +48,35 @@ const PortalSpawnSchema = z.object({
     y: z.number(),
     w: z.number(),
     h: z.number(),
-    targetMapId: z.string().optional(), // 可选，如果不填则表示在当前地图内移动
-    targetEntryId: z.string()
+    // 跨地图传送：需要 targetMapId 和 targetEntryId
+    targetMapId: z.string().optional(),
+    targetEntryId: z.string().optional(),
+    // 同地图传送：可以使用 destinationId（推荐）或直接坐标 targetX/targetY
+    destinationId: z.string().optional(),
+    targetX: z.number().optional(),
+    targetY: z.number().optional()
+}).refine(
+    data => {
+        // 必须是跨地图传送或同地图传送之一
+        // 使用 != null 来同时排除 null 和 undefined
+        const isCrossMap = data.targetMapId != null && data.targetEntryId != null
+        const isLocalTeleport = data.destinationId != null || (data.targetX != null && data.targetY != null)
+        return isCrossMap || isLocalTeleport
+    },
+    {
+        message: "Portal must have either (targetMapId + targetEntryId) for cross-map or (destinationId / targetX + targetY) for local teleport"
+    }
+);
+
+const PortalDestinationSchema = z.object({
+    id: z.string(), // 唯一标识符
+    x: z.number(),
+    y: z.number(),
+    name: z.string().optional(),
+    visual: z.object({
+        color: z.string().optional(),
+        size: z.number().optional()
+    }).optional()
 });
 
 const DecorationSchema = z.object({
@@ -111,6 +138,7 @@ export const MapSchema = z.object({
     spawners: z.array(SpawnerSchema).optional().default([]),
     npcs: z.array(NpcSpawnSchema).optional().default([]),
     portals: z.array(PortalSpawnSchema).optional().default([]),
+    portalDestinations: z.array(PortalDestinationSchema).optional().default([]),
 
     // 地图尺寸 (像素)
     width: z.number().optional().default(800),

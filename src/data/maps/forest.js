@@ -8,21 +8,23 @@ export const forest = {
         minYRatio: 0.35
     },
 
+    // 入口定义 - 只用于跨地图传送的入口点
     entryPoints: {
-        default: { x: 100, y: 400 },
-        from_village: { x: 50, y: 400 }, // 从左边（村庄）来，出现在左侧
-        from_demo: { x: 400, y: 480 }    // 从下边（Demo）来，出现在下方 (远离底部 Portal 防止误触)
+        default: { x: 100, y: 400 },      // 默认出生点
+        from_village: { x: 100, y: 400 }, // 从村庄进入时的落点
+        from_demo: { x: 400, y: 450 }     // 从demo_plains进入时的落点
     },
 
+    // 传送门定义
     portals: [
         {
-            // 左侧边缘 -> 回村庄
+            // 跨地图传送：左侧边缘 -> 回村庄
             x: 0, y: 0, w: 20, h: 600,
             targetMapId: 'village',
             targetEntryId: 'from_forest'
         },
         {
-            // 下方边缘 -> 去 Demo
+            // 跨地图传送：下方边缘 -> 去 demo_plains
             x: 0, y: 580, w: 800, h: 20,
             targetMapId: 'demo_plains',
             targetEntryId: 'from_forest'

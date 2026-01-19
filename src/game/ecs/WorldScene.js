@@ -59,6 +59,7 @@ export class WorldScene {
         // 初始化 Environment System
         DetectAreaRenderSystem.init(this.mapData)
         PortalDebugRenderSystem.init(this.mapData)
+        AISenseSystem.init?.(this.mapData)
 
         // 🎯 系统注册表化 (System Registry)
         this.systems = {
@@ -124,6 +125,7 @@ export class WorldScene {
     onMapLoaded(mapData) {
         DetectAreaRenderSystem.init(mapData)
         PortalDebugRenderSystem.init(mapData)
+        AISenseSystem.init?.(mapData)
         console.log('[WorldScene] Map systems reinitialized')
     }
 

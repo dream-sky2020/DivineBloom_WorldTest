@@ -18,7 +18,7 @@ export const DetectAreaSchema = z.object({
     y: z.number().default(0)
   }).default({ x: 0, y: 0 }),
 
-  target: z.string().default('actors'), // 'actors' | 'player'
+  target: z.union([z.string(), z.array(z.string())]).default('actors'), // 'actors' | 'player' | ['player', 'enemy']
   includeTags: z.array(z.string()).default(['player']),
   excludeTags: z.array(z.string()).default(['ghost']),
 

@@ -12,6 +12,7 @@ export const EntityManager = {
     createEnemy: EntityCreator.createEnemy.bind(EntityCreator),
     createNPC: EntityCreator.createNPC.bind(EntityCreator),
     createPortal: EntityCreator.createPortal.bind(EntityCreator),
+    createPortalDestination: EntityCreator.createPortalDestination.bind(EntityCreator),
     createDecoration: EntityCreator.createDecoration.bind(EntityCreator),
     createObstacle: EntityCreator.createObstacle.bind(EntityCreator),
 

@@ -14,9 +14,25 @@ export const ActionDialogueSchema = z.object({
 });
 
 export const ActionTeleportSchema = z.object({
+  // 跨地图传送：需要 mapId 和 entryId
   mapId: z.string().optional(),
-  entryId: z.string().default('default')
-});
+  entryId: z.string().optional(),
+  // 同地图传送：可以使用 destinationId（目的地实体ID）或直接坐标 (targetX, targetY)
+  destinationId: z.string().optional(),
+  targetX: z.number().optional(),
+  targetY: z.number().optional()
+}).refine(
+  data => {
+    // 必须是跨地图传送或同地图传送之一
+    // 注意：需要排除 null 值，因为 null !== undefined 但 null 不是有效值
+    const isCrossMap = data.mapId != null && data.entryId != null
+    const isLocalTeleport = data.destinationId != null || (data.targetX != null && data.targetY != null)
+    return isCrossMap || isLocalTeleport
+  },
+  {
+    message: "Teleport must have either (mapId + entryId) for cross-map or (destinationId / targetX + targetY) for local teleport"
+  }
+);
 
 // --- Actions Factory ---
 
@@ -56,18 +72,23 @@ export const Actions = {
 
   /**
    * 传送行为组件
-   * @param {string} mapId - 目标地图ID
-   * @param {string} entryId - 目标入口ID
+   * @param {string} [mapId] - 目标地图ID（跨地图传送）
+   * @param {string} [entryId] - 目标入口ID（跨地图传送）
+   * @param {string} [destinationId] - 目标目的地实体ID（同地图传送）
+   * @param {number} [targetX] - 目标X坐标（同地图传送，直接坐标）
+   * @param {number} [targetY] - 目标Y坐标（同地图传送，直接坐标）
    */
-  Teleport(mapId, entryId) {
-    if (!ActionTeleportSchema) return { mapId: 'error', entryId: 'error' };
+  Teleport(mapId, entryId, destinationId, targetX, targetY) {
+    if (!ActionTeleportSchema) return { mapId: undefined, entryId: undefined, destinationId: undefined, targetX: undefined, targetY: undefined };
 
-    const result = ActionTeleportSchema.safeParse({ mapId, entryId });
+    const result = ActionTeleportSchema.safeParse({ mapId, entryId, destinationId, targetX, targetY });
     if (result.success) {
       return result.data;
     } else {
       console.error('[Actions] Teleport validation failed', result.error);
-      return { mapId: 'error', entryId: 'error' };
+      console.error('[Actions] Invalid params:', { mapId, entryId, destinationId, targetX, targetY });
+      // 返回一个无效配置，TeleportExecuteSystem 会记录错误但不会执行传送
+      return { mapId: undefined, entryId: undefined, destinationId: undefined, targetX: undefined, targetY: undefined };
     }
   }
 }

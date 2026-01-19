@@ -20,10 +20,11 @@ const ENTITY_FACTORIES = {
 
     // 装饰物工厂
     decorations: (mapData) => {
+        const mapHeight = mapData.height || 600
         mapData.decorations?.forEach(dec => {
             let y = dec.y
             if (y === undefined && dec.yRatio !== undefined) {
-                y = dec.yRatio * 600
+                y = dec.yRatio * mapHeight
             }
 
             EntityManager.createDecoration({
@@ -142,10 +143,33 @@ const ENTITY_FACTORIES = {
                 name: data.name,
                 width: data.w,
                 height: data.h,
+                // 跨地图传送
                 targetMapId: data.targetMapId,
-                targetEntryId: data.targetEntryId
+                targetEntryId: data.targetEntryId,
+                // 同地图传送
+                destinationId: data.destinationId,
+                targetX: data.targetX,
+                targetY: data.targetY
             })
             created.push(portalEntity)
+        })
+        return created
+    },
+
+    // 传送门目的地工厂
+    portalDestinations: (mapData) => {
+        const created = []
+        mapData.portalDestinations?.forEach(data => {
+            const destEntity = EntityManager.createPortalDestination({
+                id: data.id,
+                x: data.x,
+                y: data.y,
+                name: data.name,
+                visual: data.visual
+            })
+            if (destEntity) {
+                created.push(destEntity)
+            }
         })
         return created
     }
@@ -171,6 +195,7 @@ export class ScenarioLoader {
         ENTITY_FACTORIES.background(mapData)
         ENTITY_FACTORIES.decorations(mapData)
         ENTITY_FACTORIES.obstacles(mapData)
+        ENTITY_FACTORIES.portalDestinations(mapData) // 先加载目的地实体
 
         // 2. 创建核心实体
         result.player = ENTITY_FACTORIES.player(mapData, entryId)
@@ -266,6 +291,7 @@ export class ScenarioLoader {
             if (!hasPersistedEntities) {
                 ENTITY_FACTORIES.decorations(mapData)
                 ENTITY_FACTORIES.obstacles(mapData)
+                ENTITY_FACTORIES.portalDestinations(mapData) // 先加载目的地实体
             }
         }
 
@@ -285,7 +311,16 @@ export class ScenarioLoader {
             })
         }
 
-        // 3. 补丁逻辑：如果是旧存档缺失传送门，从地图配置补全
+        // 3. 补丁逻辑：如果是旧存档缺失传送门和目的地，从地图配置补全
+        if (mapData?.portalDestinations) {
+            const hasDestinations = result.entities.some(e => e.type === 'portal_destination')
+            if (!hasDestinations) {
+                console.warn('[ScenarioLoader] Legacy Save: Injecting portal destinations from map data.')
+                const destinations = ENTITY_FACTORIES.portalDestinations(mapData)
+                result.entities.push(...destinations)
+            }
+        }
+        
         if (mapData?.portals) {
             const hasPortals = result.entities.some(e => e.type === 'portal')
             if (!hasPortals) {

@@ -20,8 +20,17 @@ const getPlayer = () => {
  * 用于快速查找实体的缓存映射
  */
 let entityMapCache = new Map();
+let currentMapData = null;
 
 export const AISenseSystem = {
+    /**
+     * 初始化感知系统
+     * @param {object} mapData 
+     */
+    init(mapData) {
+        currentMapData = mapData
+    },
+
     update(dt) {
         // 1. Sense Facts (Battle Results)
         this.senseBattleResult();
@@ -88,7 +97,9 @@ export const AISenseSystem = {
             suspicion: 0,
             // 随机化初始计时器 (0s - 0.1s)，确保感知检测分布在不同帧
             senseTimer: Math.random() * 0.1,
-            lastBattleResult: null
+            lastBattleResult: null,
+            // 传送门感知
+            bestPortal: null // { pos: {x,y}, dest: {x,y}, distImprovement: number }
         })
     },
 
@@ -156,7 +167,93 @@ export const AISenseSystem = {
 
             // 4. 更新疑虑值 (使用 0.1 作为检测间隔的近似值)
             this._updateSuspicion(entity, sensory, aiConfig, 0.1, dt);
+
+            // 5. 感知传送门 (Shortcut Detection)
+            this._sensePortals(entity, sensory, playerPos);
         }
+    },
+
+    /**
+     * 感知本地图内的传送门，判断是否可以作为追逐玩家的捷径
+     */
+    _sensePortals(entity, sensory, playerPos) {
+        if (!playerPos || !currentMapData) {
+            sensory.bestPortal = null;
+            return;
+        }
+
+        const portals = world.with('actionTeleport', 'position');
+        const destinations = world.with('destinationId', 'position');
+        const entityPos = entity.position;
+        let bestPortal = null;
+        let maxImprovement = 0;
+
+        // 计算当前到玩家的直线距离 (近似路径成本)
+        const directDist = Math.sqrt(sensory.distSqToPlayer);
+
+        for (const p of portals) {
+            const { actionTeleport, position: pPos, detectArea } = p;
+            const { mapId, entryId, destinationId, targetX, targetY } = actionTeleport;
+
+            // 判断传送类型（使用 != null 来同时排除 null 和 undefined）
+            const isCrossMap = mapId != null && entryId != null
+            const isLocalTeleport = destinationId != null || (targetX != null && targetY != null)
+
+            // 仅考虑同地图传送门
+            if (isCrossMap) {
+                // 跨地图传送，AI 不考虑（只考虑同地图传送作为捷径）
+                continue;
+            }
+
+            if (!isLocalTeleport) {
+                // 无效的传送门配置
+                continue;
+            }
+
+            // 获取传送目标位置
+            let dest
+            if (destinationId != null) {
+                // 查找目的地实体
+                const destEntity = [...destinations].find(d => d.destinationId === destinationId)
+                if (!destEntity) {
+                    continue; // 找不到目的地实体，跳过
+                }
+                dest = { x: destEntity.position.x, y: destEntity.position.y }
+            } else if (targetX != null && targetY != null) {
+                // 使用直接坐标
+                dest = { x: targetX, y: targetY }
+            } else {
+                continue;
+            }
+
+            // 计算传送门位置（中心点）
+            let portalX = pPos.x;
+            let portalY = pPos.y;
+            if (detectArea && detectArea.offset) {
+                portalX += detectArea.offset.x;
+                portalY += detectArea.offset.y;
+            }
+
+            // 计算通过该传送门的路径成本: 到传送门的距离 + 传送后到玩家的距离
+            const distToPortal = Math.sqrt((portalX - entityPos.x) ** 2 + (portalY - entityPos.y) ** 2);
+            const distFromDestToPlayer = Math.sqrt((dest.x - playerPos.x) ** 2 + (dest.y - playerPos.y) ** 2);
+            const portalRouteDist = distToPortal + distFromDestToPlayer;
+
+            // 如果通过传送门比直着跑能缩短至少 100 像素的距离，则认为是一个好的捷径
+            // 且传送门不能离得太远 (例如超过 800 像素就不考虑了，除非捷径非常大)
+            const improvement = directDist - portalRouteDist;
+            
+            if (improvement > 100 && improvement > maxImprovement) {
+                maxImprovement = improvement;
+                bestPortal = {
+                    pos: { x: portalX, y: portalY },
+                    dest: { x: dest.x, y: dest.y },
+                    improvement: improvement
+                };
+            }
+        }
+
+        sensory.bestPortal = bestPortal;
     },
 
     /**

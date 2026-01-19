@@ -13,13 +13,9 @@ export const DetectAreaSystem = {
     // 1. 获取所有具有 DetectArea 的实体
     const detectors = world.with('detectArea', 'position')
 
-    // 2. 获取潜在目标 (目前主要优化为只检测玩家，后续可扩展)
-    let player = null
+    // 2. 缓存所有具有特定标签的目标集合 (例如 player, enemy)
     const players = world.with('player', 'position')
-    for (const p of players) {
-      player = p
-      break
-    }
+    const enemies = world.with('enemy', 'position')
 
     for (const entity of detectors) {
       // Defensive Check
@@ -35,25 +31,30 @@ export const DetectAreaSystem = {
       if (!detect.includeTags) detect.includeTags = [];
       if (!detect.results) detect.results = [];
 
-      // 目前只实现对 Player 的检测
-      if (detect.target === 'player' || detect.includeTags.includes('player')) {
-        if (player && this.checkCollision(entity, player, detect)) {
-          // General Debug Log
-          logger.debug(`Collision Detected! EntityType: ${entity.type}, ID: ${entity.id}, Target: Player`)
+      // 获取需要检测的目标标签列表
+      const targetTags = Array.isArray(detect.target) ? detect.target : [detect.target];
+      
+      // 合并 includeTags
+      const allTags = new Set([...targetTags, ...detect.includeTags]);
 
-          if (entity.type === 'portal') {
-            logger.debug(`Portal Details - Player: (${player.position.x.toFixed(2)}, ${player.position.y.toFixed(2)}), Center: (${(entity.position.x + detect.offset.x).toFixed(2)}, ${(entity.position.y + detect.offset.y).toFixed(2)})`)
-          } else if (entity.type === 'enemy') {
-            logger.debug(`Enemy Sight Triggered! ID: ${entity.id}`)
-          } else if (entity.type === 'npc') {
-            logger.debug(`NPC Interaction Range! ID: ${entity.id}`)
+      // 检测所有符合标签的目标
+      if (allTags.has('player')) {
+          for (const player of players) {
+              if (this.checkCollision(entity, player, detect)) {
+                  detect.results.push(player);
+              }
           }
-
-          detect.results.push(player)
-        }
       }
 
-      // TODO: 如果 target 是 'actors'，则需要遍历所有 actors 并进行筛选
+      if (allTags.has('enemy')) {
+          for (const enemy of enemies) {
+              if (this.checkCollision(entity, enemy, detect)) {
+                  detect.results.push(enemy);
+              }
+          }
+      }
+
+      // TODO: 未来可扩展对其他类型（如 npc, interactive）的检测
     }
   },
 

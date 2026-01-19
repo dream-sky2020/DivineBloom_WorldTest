@@ -40,8 +40,23 @@ export const ChaseState = {
           const dist = Math.sqrt(distSq)
           const playerPos = aiSensory.playerPos
           
-          aiState.moveDir.x = (playerPos.x - position.x) / dist
-          aiState.moveDir.y = (playerPos.y - position.y) / dist
+          let targetX = playerPos.x
+          let targetY = playerPos.y
+
+          // 如果感知到了更优的传送门捷径，则改为向传送门移动
+          if (aiSensory.bestPortal) {
+              targetX = aiSensory.bestPortal.pos.x
+              targetY = aiSensory.bestPortal.pos.y
+          }
+
+          const dx = targetX - position.x
+          const dy = targetY - position.y
+          const targetDist = Math.sqrt(dx * dx + dy * dy)
+
+          if (targetDist > 0.1) {
+              aiState.moveDir.x = dx / targetDist
+              aiState.moveDir.y = dy / targetDist
+          }
         }
     }
 }

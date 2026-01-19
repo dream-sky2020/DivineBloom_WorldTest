@@ -2,6 +2,7 @@ import { PlayerEntity } from '../definitions/PlayerEntity'
 import { EnemyEntity } from '../definitions/EnemyEntity'
 import { NPCEntity } from '../definitions/NPCEntity'
 import { PortalEntity } from '../definitions/PortalEntity'
+import { PortalDestinationEntity } from '../definitions/PortalDestinationEntity'
 import { GlobalEntity } from '../definitions/GlobalEntity'
 import { DecorationEntity } from '../definitions/DecorationEntity'
 import { ObstacleEntity } from '../definitions/ObstacleEntity'
@@ -21,6 +22,10 @@ export const EntityCreator = {
 
     createPortal(data) {
         return PortalEntity.create(data)
+    },
+
+    createPortalDestination(data) {
+        return PortalDestinationEntity.create(data)
     },
 
     createGlobalManager(data) {
@@ -58,6 +63,10 @@ export const EntityCreator = {
 
         if (type === 'portal') {
             return this.createPortal(data)
+        }
+
+        if (type === 'portal_destination') {
+            return this.createPortalDestination(data)
         }
 
         if (type === 'global_manager') {
