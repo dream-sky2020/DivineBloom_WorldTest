@@ -1,7 +1,0 @@
-feat: implement local map teleportation and portal debug visualization
-
-- Allow portals to teleport within the same map by making targetMapId optional
-- Update TeleportExecuteSystem to handle intra-map teleport by directly moving entity position
-- Add PortalDebugRenderSystem to visualize local teleport paths with dashed lines and destination markers
-- Update map schemas and entity definitions to support optional targetMapId
-- Add a test portal to demo_plains map
