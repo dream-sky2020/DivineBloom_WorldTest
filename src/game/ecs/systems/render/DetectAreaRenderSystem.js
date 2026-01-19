@@ -44,6 +44,11 @@ export const DetectAreaRenderSystem = {
             if (isTriggered) {
                 ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)' // red-500
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.2)'
+            } else if (detectArea.debugColor) {
+                // [NEW] 优先使用组件定义的调试颜色
+                ctx.strokeStyle = detectArea.debugColor
+                // 自动处理填充色透明度
+                ctx.fillStyle = detectArea.debugColor.replace(/[\d.]+\)$/g, '0.1)')
             } else {
                 ctx.strokeStyle = 'rgba(34, 211, 238, 0.6)' // cyan-400
                 ctx.fillStyle = 'rgba(34, 211, 238, 0.1)'

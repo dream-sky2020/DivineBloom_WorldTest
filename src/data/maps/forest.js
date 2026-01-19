@@ -18,14 +18,30 @@ export const forest = {
     // 传送门定义
     portals: [
         {
-            // 跨地图传送：左侧边缘 -> 回村庄
-            x: 0, y: 0, w: 20, h: 600,
+            // 跨地图传送：左侧边缘 -> 回村庄 (强制)
+            x: 0, y: 300, w: 20, h: 200,
+            isForced: true,
             targetMapId: 'village',
             targetEntryId: 'from_forest'
         },
         {
-            // 跨地图传送：下方边缘 -> 去 demo_plains
-            x: 0, y: 580, w: 800, h: 20,
+            // 跨地图传送：左侧入口 -> 回村庄 (非强制)
+            x: 80, y: 380, w: 60, h: 60,
+            isForced: false,
+            targetMapId: 'village',
+            targetEntryId: 'from_forest'
+        },
+        {
+            // 跨地图传送：下方边缘 -> 去 demo_plains (强制)
+            x: 300, y: 580, w: 200, h: 20,
+            isForced: true,
+            targetMapId: 'demo_plains',
+            targetEntryId: 'from_forest'
+        },
+        {
+            // 跨地图传送：下方中心 -> 去 demo_plains (非强制)
+            x: 370, y: 500, w: 60, h: 60,
+            isForced: false,
             targetMapId: 'demo_plains',
             targetEntryId: 'from_forest'
         }

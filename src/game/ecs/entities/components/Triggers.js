@@ -22,13 +22,16 @@ export const DetectAreaSchema = z.object({
   includeTags: z.array(z.string()).default([]),
   excludeTags: z.array(z.string()).default(['ghost']),
 
+  // [NEW] 自定义调试颜色
+  debugColor: z.string().optional(),
+
   // Runtime state (initially empty)
   results: z.array(z.any()).default([])
 });
 
 // 2. Trigger (通用触发器)
 export const TriggerRuleSchema = z.object({
-  type: z.enum(['onEnter', 'onLeave', 'onPress', 'onSight']),
+  type: z.enum(['onEnter', 'onLeave', 'onPress', 'onSight', 'onStay']),
   // Optional flags default to false/undefined logic in System, but let's be explicit where helpful
   requireArea: z.boolean().default(false),
   requireInput: z.boolean().default(false),
@@ -47,6 +50,7 @@ export const TriggerSchema = z.object({
   // Flattened State Properties
   active: z.boolean().default(true),
   triggered: z.boolean().default(false),
+  defaultCooldown: z.number().default(0.5), // 新增：默认冷却时间
   cooldownTimer: z.number().default(0),
   oneShot: z.boolean().default(false),
   oneShotExecuted: z.boolean().default(false),

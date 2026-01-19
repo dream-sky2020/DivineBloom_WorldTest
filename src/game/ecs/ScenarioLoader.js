@@ -143,6 +143,8 @@ const ENTITY_FACTORIES = {
                 name: data.name,
                 width: data.w,
                 height: data.h,
+                // [FIXED] 增加强制传送标志的传递
+                isForced: data.isForced,
                 // 跨地图传送
                 targetMapId: data.targetMapId,
                 targetEntryId: data.targetEntryId,

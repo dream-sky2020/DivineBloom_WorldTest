@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { world } from '@/game/ecs/world'
-import { DetectArea, Trigger } from '@/game/ecs/entities/components/Triggers'
+import { DetectArea, DetectInput, Trigger } from '@/game/ecs/entities/components/Triggers'
 import { Actions } from '@/game/ecs/entities/components/Actions'
 
 // --- Schema Definition ---
@@ -11,6 +11,7 @@ export const PortalEntitySchema = z.object({
   name: z.string().optional(),
   width: z.number(),
   height: z.number(),
+  isForced: z.boolean().optional().default(true),
   // 跨地图传送：需要 targetMapId 和 targetEntryId
   targetMapId: z.string().optional(),
   targetEntryId: z.string().optional(),
@@ -46,7 +47,7 @@ export const PortalEntity = {
       return null;
     }
 
-    const { x, y, name, width, height, targetMapId, targetEntryId, destinationId, targetX, targetY } = result.data;
+    const { x, y, name, width, height, isForced, targetMapId, targetEntryId, destinationId, targetX, targetY } = result.data;
 
     // 判断传送类型（使用 != null 来同时排除 null 和 undefined）
     const isCrossMap = targetMapId != null && targetEntryId != null
@@ -75,17 +76,29 @@ export const PortalEntity = {
       type: 'portal',
       name: portalName,
       position: { x, y },
+      isForced: isForced,
 
       detectArea: DetectArea({
         shape: 'aabb',
         offset: { x: width / 2, y: height / 2 },
         size: { w: width, h: height },
-        target: 'teleportable'  // 扫描具备 'teleportable' 标签的实体
+        // 强制传送门保持探测 teleportable 标签，非强制传送门专门探测玩家(player)以复刻 NPC 行为
+        target: isForced ? 'teleportable' : 'player',
+        // [NEW] 设置调试颜色，强制为紫色，非强制为橙色
+        debugColor: isForced
+          ? 'rgba(168, 85, 247, 0.8)' // purple-500
+          : 'rgba(249, 115, 22, 0.8)'  // orange-500
       }),
 
+      // [NEW] 非强制传送门增加输入检测
+      ...(isForced ? {} : { detectInput: DetectInput({ keys: ['Interact'] }) }),
+
       trigger: Trigger({
-        rules: [{ type: 'onEnter', requireEnterOnly: true }],  // 只在刚进入时触发一次
-        actions: ['TELEPORT']
+        rules: isForced
+          ? [{ type: 'onStay' }]
+          : [{ type: 'onPress', requireArea: true }],
+        actions: ['TELEPORT'],
+        defaultCooldown: isForced ? 0 : 0.8            // 强制传送设为 0 冷却，手动传送设为 0.8s 冷却防止连续触发
       }),
 
       actionTeleport: Actions.Teleport(
@@ -101,7 +114,7 @@ export const PortalEntity = {
   // Portal Serialization
   serialize(entity) {
     // 逆向解构：从 Component 还原配置数据
-    const { position, detectArea, actionTeleport, name } = entity
+    const { position, detectArea, actionTeleport, name, isForced } = entity
 
     // detectArea.size => {w, h}
     // actionTeleport => {mapId, entryId, destinationId, targetX, targetY}
@@ -112,7 +125,8 @@ export const PortalEntity = {
       y: position.y,
       name: name,
       width: detectArea.size.w,
-      height: detectArea.size.h
+      height: detectArea.size.h,
+      isForced: isForced
     }
 
     // 根据传送类型添加对应字段（使用 != null 来同时排除 null 和 undefined）

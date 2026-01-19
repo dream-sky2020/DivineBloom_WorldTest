@@ -26,7 +26,9 @@ export const demo_plains = {
     portals: [
         {
             // 同地图传送：从出生点附近传送到北部遗迹
+            // [TEST] 设置为非强制传送门，需要按互动键
             x: 500, y: 1100, w: 60, h: 60,
+            isForced: false,
             destinationId: 'north_ruins'
         },
         {
@@ -45,14 +47,30 @@ export const demo_plains = {
             destinationId: 'spawn_point'
         },
         {
-            // 跨地图传送：右侧边缘 -> 去村庄
-            x: 3180, y: 0, w: 20, h: 2400,
+            // 跨地图传送：右侧边缘 -> 去村庄 (强制)
+            x: 3180, y: 1000, w: 20, h: 400,
+            isForced: true,
             targetMapId: 'village',
             targetEntryId: 'from_demo'
         },
         {
-            // 跨地图传送：上方边缘 -> 去森林
-            x: 0, y: 0, w: 3200, h: 20,
+            // 跨地图传送：右侧装饰门 -> 去村庄 (非强制)
+            x: 3000, y: 1050, w: 80, h: 100,
+            isForced: false,
+            targetMapId: 'village',
+            targetEntryId: 'from_demo'
+        },
+        {
+            // 跨地图传送：上方边缘 -> 去森林 (强制)
+            x: 1400, y: 0, w: 400, h: 20,
+            isForced: true,
+            targetMapId: 'forest',
+            targetEntryId: 'from_demo'
+        },
+        {
+            // 跨地图传送：上方区域 -> 去森林 (非强制)
+            x: 1570, y: 50, w: 60, h: 60,
+            isForced: false,
             targetMapId: 'forest',
             targetEntryId: 'from_demo'
         }
@@ -64,20 +82,20 @@ export const demo_plains = {
     },
     decorations: [
         { type: 'sprite', spriteId: 'table_0', x: 200, yRatio: 0.6, scale: 0.8 },
-        { 
-            type: 'sprite', 
-            spriteId: 'table_1', 
-            x: 1500, 
-            y: 800, 
+        {
+            type: 'sprite',
+            spriteId: 'table_1',
+            x: 1500,
+            y: 800,
             scale: 0.8,
             // 自定义圆形碰撞体
             collider: { type: 'circle', radius: 30, offsetY: 10 }
         },
-        { 
-            type: 'sprite', 
-            spriteId: 'door_0', 
-            x: 3000, 
-            y: 1100, 
+        {
+            type: 'sprite',
+            spriteId: 'door_0',
+            x: 3000,
+            y: 1100,
             scale: 1.0,
         },
         {

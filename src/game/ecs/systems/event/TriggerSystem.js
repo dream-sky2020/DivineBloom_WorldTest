@@ -119,7 +119,8 @@ export const TriggerSystem = {
           }
         }
 
-        trigger.cooldownTimer = 0.5
+        // 使用组件定义的默认冷却时间，如果没有则默认为 0.5
+        trigger.cooldownTimer = trigger.defaultCooldown !== undefined ? trigger.defaultCooldown : 0.5
       }
     }
   },
@@ -177,21 +178,21 @@ export const TriggerSystem = {
           return false
         }
 
-        if (detectInput.isPressed || detectInput.justPressed) {
-          logger.debug(`Checking 'onPress' rule for Entity: ${entity.type}. IsPressed: ${detectInput.isPressed}, JustPressed: ${detectInput.justPressed}`)
+        if (detectInput.justPressed) {
+          logger.debug(`Checking 'onPress' rule for Entity: ${entity.type}. JustPressed: ${detectInput.justPressed}`)
         }
 
         // 如果需要同时在区域内
         if (rule.requireArea) {
           if (!detectArea || !detectArea.results || detectArea.results.length === 0) {
-            if (detectInput.isPressed || detectInput.justPressed) {
+            if (detectInput.justPressed) {
               logger.debug(`'onPress' rule failed: Not in Area. Entity: ${entity.type}`)
             }
             return false
           }
         }
 
-        const triggered = detectInput.justPressed || detectInput.isPressed
+        const triggered = detectInput.justPressed
         if (triggered) {
           logger.info(`'onPress' rule met! Entity: ${entity.type}`)
         }

@@ -2,8 +2,8 @@ import { world } from '@/game/ecs/world'
 
 /**
  * Portal Debug Render System
- * 负责渲染：传送门与其目的地（Entry Point）之间的连接线，并在目的地打叉标记
- * 特别针对“移动位置”类传送门（同地图传送）
+ * 负责渲染：传送门与其目的地（Entry Point）之间的连接线，并在目的地绘制标记
+ * 专注于展现传送的“指向性”
  */
 
 // 查询所有带有传送行为和位置的实体
@@ -11,17 +11,11 @@ const portals = world.with('actionTeleport', 'position')
 // 查询所有目的地实体
 const destinations = world.with('destinationId', 'position')
 
-let currentMapData = null
-
 export const PortalDebugRenderSystem = {
-    // 渲染层级，放在 Debug 区域
     LAYER: 105,
 
-    /**
-     * @param {object} mapData 
-     */
     init(mapData) {
-        currentMapData = mapData
+        // 保留接口
     },
 
     /**
@@ -33,21 +27,19 @@ export const PortalDebugRenderSystem = {
         const ctx = renderer.ctx
         const camera = renderer.camera || { x: 0, y: 0 }
 
-        // === 第一步：渲染所有目的地实体 ===
+        // 1. 渲染目的地标记 (Circle & Cross)
         this._drawDestinations(ctx, camera)
 
-        // === 第二步：渲染传送门到目的地的连接 ===
+        // 2. 渲染传送门到目的地的连接线 (Lines)
         this._drawPortalConnections(ctx, camera)
     },
 
     /**
-     * 渲染所有目的地实体
+     * 渲染所有目的地实体标记
      */
     _drawDestinations(ctx, camera) {
         for (const dest of destinations) {
             const { position, visual, destinationId, name } = dest
-
-            // 转换为屏幕坐标
             const x = position.x - camera.x
             const y = position.y - camera.y
 
@@ -55,8 +47,7 @@ export const PortalDebugRenderSystem = {
             const size = visual?.size || 20
 
             ctx.save()
-
-            // 1. 绘制目的地圆形标记
+            // 绘制目的地标记
             ctx.beginPath()
             ctx.arc(x, y, size / 2, 0, Math.PI * 2)
             ctx.fillStyle = color.replace(')', ', 0.3)').replace('rgb', 'rgba')
@@ -65,158 +56,76 @@ export const PortalDebugRenderSystem = {
             ctx.lineWidth = 2
             ctx.stroke()
 
-            // 2. 绘制中心十字标记
-            const crossSize = size / 3
+            // 绘制中心十字
+            const cs = size / 3
             ctx.beginPath()
-            ctx.moveTo(x - crossSize, y)
-            ctx.lineTo(x + crossSize, y)
-            ctx.moveTo(x, y - crossSize)
-            ctx.lineTo(x, y + crossSize)
-            ctx.strokeStyle = color
-            ctx.lineWidth = 2
-            ctx.lineCap = 'round'
+            ctx.moveTo(x - cs, y); ctx.lineTo(x + cs, y)
+            ctx.moveTo(x, y - cs); ctx.lineTo(x, y + cs)
             ctx.stroke()
 
-            // 3. 绘制文字标识
+            // 绘制文字
             ctx.fillStyle = color
             ctx.font = 'bold 12px Arial'
             ctx.textAlign = 'center'
             ctx.fillText(name || destinationId, x, y + size / 2 + 15)
-
-            // 4. 查找所有连接到此目的地的传送门，绘制反向连接线
-            this._drawIncomingConnections(ctx, camera, dest, color)
-
             ctx.restore()
         }
     },
 
     /**
-     * 绘制所有连接到指定目的地的传送门（反向连接）
-     */
-    _drawIncomingConnections(ctx, camera, destination, color) {
-        const destId = destination.destinationId
-        const destX = destination.position.x - camera.x
-        const destY = destination.position.y - camera.y
-
-        // 查找所有指向此目的地的传送门
-        for (const portal of portals) {
-            const { actionTeleport, position, detectArea } = portal
-            const { destinationId } = actionTeleport
-
-            if (destinationId !== destId) continue
-
-            // 计算传送门中心
-            let portalX = position.x
-            let portalY = position.y
-            if (detectArea && detectArea.offset) {
-                portalX += detectArea.offset.x
-                portalY += detectArea.offset.y
-            }
-
-            const pX = portalX - camera.x
-            const pY = portalY - camera.y
-
-            // 绘制从目的地到传送门的连接线（较细的虚线）
-            ctx.save()
-            ctx.beginPath()
-            ctx.setLineDash([3, 6])
-            ctx.moveTo(destX, destY)
-            ctx.lineTo(pX, pY)
-            ctx.strokeStyle = color.replace(')', ', 0.4)').replace('rgb', 'rgba')
-            ctx.lineWidth = 1
-            ctx.stroke()
-            ctx.restore()
-        }
-    },
-
-    /**
-     * 渲染传送门到目的地的连接
+     * 渲染从传送门到其目的地的连接线
      */
     _drawPortalConnections(ctx, camera) {
         for (const entity of portals) {
             const { actionTeleport, position, detectArea } = entity
-            const { mapId, entryId, destinationId, targetX, targetY } = actionTeleport
+            const { mapId, destinationId, targetX, targetY } = actionTeleport
 
-            // 判断传送类型（使用 != null 来同时排除 null 和 undefined）
-            const isCrossMap = mapId != null && entryId != null
-            const isLocalTeleport = destinationId != null || (targetX != null && targetY != null)
+            // 仅渲染同地图传送的连线
+            if (mapId != null) continue
 
-            // 仅渲染同地图传送
-            if (isCrossMap) continue
-            if (!isLocalTeleport) continue
+            // 1. 确定起点（传送门中心）
+            const startX = position.x + (detectArea?.offset?.x || 0)
+            const startY = position.y + (detectArea?.offset?.y || 0)
 
-            // 1. 计算起点（传送门中心）
-            let startX = position.x
-            let startY = position.y
-            
-            // 如果有检测区域，使用检测区域中心作为连线起点
-            if (detectArea && detectArea.offset) {
-                startX += detectArea.offset.x
-                startY += detectArea.offset.y
-            }
-
-            // 2. 确定终点（目的地实体或直接坐标）
-            let destX, destY, destEntity
-
+            // 2. 确定终点
+            let destX, destY
             if (destinationId != null) {
-                // 查找目的地实体
-                destEntity = [...destinations].find(d => d.destinationId === destinationId)
+                const destEntity = [...destinations].find(d => d.destinationId === destinationId)
                 if (destEntity) {
                     destX = destEntity.position.x
                     destY = destEntity.position.y
-                } else {
-                    console.warn(`[PortalDebugRenderSystem] Destination '${destinationId}' not found`)
-                    continue
                 }
             } else if (targetX != null && targetY != null) {
-                // 使用直接坐标
                 destX = targetX
                 destY = targetY
-            } else {
-                continue
             }
 
-            // 转换为屏幕坐标
-            const sX = startX - camera.x
-            const sY = startY - camera.y
-            const tX = destX - camera.x
-            const tY = destY - camera.y
+            if (destX == null || destY == null) continue
+
+            // 3. 绘制连接线
+            const sX = startX - camera.x, sY = startY - camera.y
+            const tX = destX - camera.x, tY = destY - camera.y
 
             ctx.save()
-
-            // 3. 绘制连接线 (紫色虚线)
             ctx.beginPath()
             ctx.setLineDash([5, 5])
             ctx.moveTo(sX, sY)
             ctx.lineTo(tX, tY)
-            ctx.strokeStyle = 'rgba(168, 85, 247, 0.6)' // purple-500
+            
+            // 优先使用实体自带的 debugColor，否则使用默认紫色
+            ctx.strokeStyle = detectArea?.debugColor || 'rgba(168, 85, 247, 0.6)'
             ctx.lineWidth = 2
             ctx.stroke()
 
-            // 4. 如果是直接坐标模式（旧式），绘制目的地打叉 (X)
-            if (!destinationId && targetX != null && targetY != null) {
-                const xSize = 12
-                ctx.setLineDash([]) // 实线
+            // 4. 如果是旧式坐标传送，在终点画个 X
+            if (!destinationId) {
+                const xs = 10
+                ctx.setLineDash([])
                 ctx.beginPath()
-                // 第一画 \
-                ctx.moveTo(tX - xSize, tY - xSize)
-                ctx.lineTo(tX + xSize, tY + xSize)
-                // 第二画 /
-                ctx.moveTo(tX + xSize, tY - xSize)
-                ctx.lineTo(tX - xSize, tY + xSize)
-                
-                ctx.strokeStyle = 'rgba(168, 85, 247, 0.9)'
-                ctx.lineWidth = 3
-                ctx.lineCap = 'round'
+                ctx.moveTo(tX - xs, tY - xs); ctx.lineTo(tX + xs, tY + xs)
+                ctx.moveTo(tX + xs, tY - xs); ctx.lineTo(tX - xs, tY + xs)
                 ctx.stroke()
-
-                // 5. 绘制文字标识（显示目标坐标）
-                ctx.fillStyle = 'rgba(168, 85, 247, 1)'
-                ctx.font = 'bold 12px Arial'
-                ctx.textAlign = 'center'
-                ctx.fillText(`(${Math.round(destX)}, ${Math.round(destY)})`, tX, tY + xSize + 15)
             }
-
             ctx.restore()
         }
     }

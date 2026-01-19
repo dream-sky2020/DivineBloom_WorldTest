@@ -52,6 +52,8 @@ const PortalSpawnSchema = z.object({
     y: z.number(),
     w: z.number(),
     h: z.number(),
+    // 是否强制传送 (默认 true，若为 false 则需要按互动键)
+    isForced: z.boolean().optional().default(true),
     // 跨地图传送：需要 targetMapId 和 targetEntryId
     targetMapId: z.string().optional(),
     targetEntryId: z.string().optional(),
