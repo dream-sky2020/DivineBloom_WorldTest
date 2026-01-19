@@ -420,5 +420,60 @@ export const CollisionUtils = {
       x: x + (p.x * cos - p.y * sin),
       y: y + (p.x * sin + p.y * cos)
     }));
+  },
+
+  /**
+   * 强制将实体限制在地图边界内
+   * @param {Object} pos 位置组件 {x, y}
+   * @param {Object} collider 碰撞体组件
+   * @param {Object} mapBounds {width, height}
+   * @returns {boolean} 是否发生了位置修正
+   */
+  resolveMapBounds(pos, collider, mapBounds) {
+    if (!mapBounds) return false;
+
+    let moved = false;
+    const { width, height } = mapBounds;
+
+    // 根据碰撞体类型计算边界偏移
+    let left = 0, right = 0, top = 0, bottom = 0;
+
+    if (collider.type === 'circle') {
+      const r = collider.radius;
+      const ox = collider.offsetX || 0;
+      const oy = collider.offsetY || 0;
+      left = pos.x + ox - r;
+      right = pos.x + ox + r;
+      top = pos.y + oy - r;
+      bottom = pos.y + oy + r;
+
+      if (left < 0) { pos.x += -left; moved = true; }
+      else if (right > width) { pos.x -= (right - width); moved = true; }
+
+      if (top < 0) { pos.y += -top; moved = true; }
+      else if (bottom > height) { pos.y -= (bottom - height); moved = true; }
+    } 
+    else if (collider.type === 'aabb' || collider.type === 'obb') {
+      // 简化处理：使用 AABB 包围盒检查
+      const hw = collider.width / 2;
+      const hh = collider.height / 2;
+      const ox = collider.offsetX || 0;
+      const oy = collider.offsetY || 0;
+      
+      // 如果有旋转，这里其实需要更复杂的 OBB 边界检查，
+      // 但对于地图边界，简单的 AABB 投影通常足够
+      left = pos.x + ox - hw;
+      right = pos.x + ox + hw;
+      top = pos.y + oy - hh;
+      bottom = pos.y + oy + hh;
+
+      if (left < 0) { pos.x += -left; moved = true; }
+      else if (right > width) { pos.x -= (right - width); moved = true; }
+
+      if (top < 0) { pos.y += -top; moved = true; }
+      else if (bottom > height) { pos.y -= (bottom - height); moved = true; }
+    }
+
+    return moved;
   }
 };

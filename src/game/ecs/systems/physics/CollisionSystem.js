@@ -1,5 +1,5 @@
 import { world } from '@/game/ecs/world'
-import { CollisionUtils } from '@/utils/CollisionUtils'
+import { CollisionUtils } from '@/game/ecs/ECSCalculateTool/CollisionUtils'
 
 /**
  * 自定义碰撞处理系统
@@ -12,29 +12,36 @@ export const CollisionSystem = {
   // 迭代次数，防止物体在角落抖动
   ITERATIONS: 2,
 
-  update() {
+  /**
+   * @param {number} dt 
+   * @param {object} [options]
+   * @param {object} [options.mapBounds] { width, height }
+   */
+  update(dt, { mapBounds = null } = {}) {
     for (let n = 0; n < this.ITERATIONS; n++) {
       const entities = [...collidableEntities]
 
+      // 1. 处理实体间的碰撞
       for (let i = 0; i < entities.length; i++) {
         for (let j = i + 1; j < entities.length; j++) {
           const entityA = entities[i]
           const entityB = entities[j]
 
-          // 🎯 修复：增加防御性检查，防止 collider 存在但为 null 的情况
           if (!entityA.collider || !entityB.collider) continue
-
           if (entityA.collider.isStatic && entityB.collider.isStatic) continue
 
-          // 1. Broadphase: 简单的 AABB 距离检查 (初步过滤)
           if (!this._checkBroadphase(entityA, entityB)) continue
 
-          // 2. Narrowphase: 精确碰撞检测
           const mtv = CollisionUtils.checkCollision(entityA, entityB)
-
           if (mtv) {
             this._resolveCollision(entityA, entityB, mtv)
           }
+        }
+
+        // 2. 处理地图边界碰撞 (仅对非静态物体)
+        const entity = entities[i]
+        if (mapBounds && entity.collider && !entity.collider.isStatic) {
+          CollisionUtils.resolveMapBounds(entity.position, entity.collider, mapBounds)
         }
       }
     }

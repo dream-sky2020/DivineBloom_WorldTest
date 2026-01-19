@@ -1,6 +1,8 @@
 export const forest = {
     id: 'forest',
     name: 'Dark Forest',
+    width: 800,
+    height: 600,
 
     constraints: {
         minYRatio: 0.35

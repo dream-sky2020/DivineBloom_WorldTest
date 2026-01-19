@@ -1,6 +1,8 @@
 export const village = {
     id: 'village',
     name: 'Peaceful Village',
+    width: 800,
+    height: 600,
 
     constraints: {
         minYRatio: 0.35

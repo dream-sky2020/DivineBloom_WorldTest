@@ -112,5 +112,9 @@ export const MapSchema = z.object({
     npcs: z.array(NpcSpawnSchema).optional().default([]),
     portals: z.array(PortalSpawnSchema).optional().default([]),
 
+    // 地图尺寸 (像素)
+    width: z.number().optional().default(800),
+    height: z.number().optional().default(600),
+
     spawnPoint: z.object({ x: z.number(), y: z.number() }).optional()
 });

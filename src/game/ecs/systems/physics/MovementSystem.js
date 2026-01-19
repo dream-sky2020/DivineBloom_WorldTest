@@ -15,26 +15,34 @@ import { world } from '@/game/ecs/world'
 const movingEntities = world.with('position', 'velocity')
 
 export const MovementSystem = {
-  update(dt) {
+  /**
+   * @param {number} dt 
+   * @param {object} [options]
+   * @param {object} [options.mapBounds] { width, height }
+   */
+  update(dt, { mapBounds = null } = {}) {
     for (const entity of movingEntities) {
       const { position, velocity, bounds } = entity
 
       // 1. 基础位移 (Euler integration)
-      // 注意：这里不再进行重复的 type guard，假设加载时已校验或在必要时由加载器处理
       position.x += velocity.x * dt
       position.y += velocity.y * dt
 
-      // 2. 立即执行边界约束 (Constraint)
-      // 合并逻辑可以显著减少对 bounds 组件的重复查询开销
+      // 2. 实体自带的 bounds 组件约束
       if (bounds) {
         const { minX, maxX, minY, maxY } = bounds
-        
-        // 只有在坐标超出边界时才进行赋值，减少内存写入
         if (position.x < minX) position.x = minX
         else if (position.x > maxX) position.x = maxX
-        
         if (position.y < minY) position.y = minY
         else if (position.y > maxY) position.y = maxY
+      }
+
+      // 3. 地图全局边界约束
+      if (mapBounds) {
+        if (position.x < 0) position.x = 0
+        else if (position.x > mapBounds.width) position.x = mapBounds.width
+        if (position.y < 0) position.y = 0
+        else if (position.y > mapBounds.height) position.y = mapBounds.height
       }
     }
   }

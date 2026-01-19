@@ -2,6 +2,7 @@ import { EntityManager } from '@/game/ecs/entities/EntityManager'
 import { BackgroundEntity } from '@/game/ecs/entities/definitions/BackgroundEntity'
 import { PlayerConfig } from '@/data/assets'
 import Enemies from '@/data/characters/enemies'
+import { world } from '@/game/ecs/world'
 
 /**
  * 实体创建工厂映射表
@@ -11,8 +12,8 @@ const ENTITY_FACTORIES = {
     // 背景层工厂
     background: (mapData) => {
         if (mapData.background) {
-            const groundW = 2000
-            const groundH = 2000
+            const groundW = mapData.width || 2000
+            const groundH = mapData.height || 2000
             BackgroundEntity.createGround(groundW, groundH, mapData.background.groundColor)
         }
     },
@@ -184,7 +185,62 @@ export class ScenarioLoader {
         
         result.entities.push(...otherEntities)
 
+        // 4. 初始化相机位置 (直接同步到玩家中心)
+        this._initCamera(engine, result.player, mapData)
+
         return result
+    }
+
+    /**
+     * 初始化相机
+     */
+    static _initCamera(engine, player, mapData = null) {
+        if (!player) return
+
+        const globalEntity = world.with('camera', 'globalManager').first
+        if (globalEntity && globalEntity.camera) {
+            const cam = globalEntity.camera
+            const viewportWidth = engine.width
+            const viewportHeight = engine.height
+            const mapWidth = mapData?.width || 800
+            const mapHeight = mapData?.height || 600
+
+            // 检查地图是否大于视口
+            const isMapLargerX = mapWidth > viewportWidth
+            const isMapLargerY = mapHeight > viewportHeight
+
+            let targetX = 0
+            let targetY = 0
+
+            if (isMapLargerX) {
+                targetX = player.position.x - viewportWidth / 2
+                // 裁剪到边界
+                if (cam.useBounds) {
+                    const maxX = mapWidth - viewportWidth
+                    targetX = Math.max(0, Math.min(targetX, maxX))
+                }
+            } else {
+                // 居中
+                targetX = (mapWidth - viewportWidth) / 2
+            }
+
+            if (isMapLargerY) {
+                targetY = player.position.y - viewportHeight / 2
+                // 裁剪到边界
+                if (cam.useBounds) {
+                    const maxY = mapHeight - viewportHeight
+                    targetY = Math.max(0, Math.min(targetY, maxY))
+                }
+            } else {
+                // 居中
+                targetY = (mapHeight - viewportHeight) / 2
+            }
+
+            cam.x = targetX
+            cam.y = targetY
+            cam.targetX = cam.x
+            cam.targetY = cam.y
+        }
     }
 
     /**
@@ -200,11 +256,17 @@ export class ScenarioLoader {
             entities: []
         }
 
-        // 1. 恢复静态背景（通常不随存档改变）
+        // 1. 恢复静态层（背景层不序列化，总是从地图加载）
         if (mapData) {
             ENTITY_FACTORIES.background(mapData)
-            ENTITY_FACTORIES.decorations(mapData)
-            ENTITY_FACTORIES.obstacles(mapData)
+            
+            // 🎯 修复：如果存档中没有实体数据，才从地图加载装饰物和障碍物
+            // 否则这些实体会从 state.entities 中恢复，避免重复加载
+            const hasPersistedEntities = state && state.entities && state.entities.length > 0
+            if (!hasPersistedEntities) {
+                ENTITY_FACTORIES.decorations(mapData)
+                ENTITY_FACTORIES.obstacles(mapData)
+            }
         }
 
         // 2. 从状态列表恢复动态实体
@@ -239,6 +301,9 @@ export class ScenarioLoader {
             result.player = ENTITY_FACTORIES.player(mapData || {}, 'default')
             result.entities.push(result.player)
         }
+
+        // 5. 初始化相机
+        this._initCamera(engine, result.player, mapData)
 
         return result
     }

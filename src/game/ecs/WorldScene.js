@@ -17,6 +17,7 @@ import { DetectAreaSystem } from '@/game/ecs/systems/detect/DetectAreaSystem'
 import { DetectInputSystem } from '@/game/ecs/systems/detect/DetectInputSystem'
 import { TriggerSystem } from '@/game/ecs/systems/event/TriggerSystem'
 import { ExecuteSystem } from '@/game/ecs/systems/execute/ExecuteSystem'
+import { CameraSystem } from '@/game/ecs/systems/camera/CameraSystem'
 import { clearWorld, world } from '@/game/ecs/world'
 import { GlobalEntity } from '@/game/ecs/entities/definitions/GlobalEntity'
 import { EditorGridRenderSystem } from '@/game/ecs/systems/render/EditorGridRenderSystem'
@@ -219,10 +220,18 @@ export class WorldScene {
             }
 
             // 核心逻辑阶段驱动
-            const phases = ['sense', 'intent', 'decision', 'control', 'physics']
+            const phases = ['sense', 'intent', 'decision', 'control']
             phases.forEach(phase => {
                 this.systems.logic[phase].forEach(system => system.update(dt))
             })
+
+            // 物理阶段 (特殊参数处理)
+            const mapWidth = this.mapData.width || 800
+            const mapHeight = this.mapData.height || 600
+            const physicsOptions = {
+                mapBounds: { width: mapWidth, height: mapHeight }
+            }
+            this.systems.logic.physics.forEach(system => system.update(dt, physicsOptions))
 
             // 执行阶段 (特殊参数处理)
             ExecuteSystem.update({
@@ -231,9 +240,16 @@ export class WorldScene {
                 onInteract: this.onInteract,
                 onOpenMenu: this.onOpenMenu
             })
+
+            // 5. 更新相机 (在物理和逻辑之后)
+            CameraSystem.update(dt, {
+                viewportWidth: this.engine.width,
+                viewportHeight: this.engine.height,
+                mapBounds: { width: mapWidth, height: mapHeight }
+            })
         }
 
-        // 4. 场景管理 (始终运行以处理切换请求)
+        // 6. 场景管理 (始终运行以处理切换请求)
         this._updateSceneManagement()
     }
 
@@ -256,6 +272,12 @@ export class WorldScene {
      * @param {Renderer2D} renderer 
      */
     draw(renderer) {
+        // 同步相机状态到渲染器
+        const globalEntity = world.with('camera', 'globalManager').first
+        if (globalEntity && globalEntity.camera) {
+            renderer.setCamera(globalEntity.camera.x, globalEntity.camera.y)
+        }
+
         // 自动渲染管线驱动
         for (const system of this.systems.render) {
             if (system.draw) {

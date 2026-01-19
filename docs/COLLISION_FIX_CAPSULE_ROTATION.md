@@ -51,7 +51,7 @@ _getBroadphaseSize(collider) {
 - ✅ 性能优化：只有真正可能碰撞的实体才会进入 narrowphase
 
 ### 修复 2: 完善防御性检查
-**文件：** `src/utils/CollisionUtils.js`
+**文件：** `src/game/ecs/ECSCalculateTool/CollisionUtils.js`
 
 在 `checkCapsuleCircle` 和 `checkCapsuleCollision` 中添加了防御性检查：
 
@@ -71,7 +71,7 @@ if (!capsule || !circle || !capsule.p1 || !capsule.p2) {
 **文件：** 
 - `src/game/ecs/systems/physics/CollisionSystem.js`
 - `src/game/ecs/systems/render/PhysicsDebugRenderSystem.js`
-- `src/utils/CollisionUtils.js`
+- `src/game/ecs/ECSCalculateTool/CollisionUtils.js`
 
 更新了关键函数的注释，明确说明：
 - MTV（最小位移向量）的方向：**从 A 指向 B**
@@ -145,7 +145,7 @@ ObstacleEntity.create({
 
 ## 相关文件
 - `src/game/ecs/systems/physics/CollisionSystem.js` - 碰撞系统主逻辑
-- `src/utils/CollisionUtils.js` - 碰撞检测数学库
+- `src/game/ecs/ECSCalculateTool/CollisionUtils.js` - 碰撞检测数学库
 - `src/game/ecs/systems/render/PhysicsDebugRenderSystem.js` - 碰撞体可视化
 - `src/game/ecs/entities/definitions/ObstacleEntity.js` - 障碍物实体定义
 - `src/game/ecs/entities/components/Physics.js` - 物理组件定义

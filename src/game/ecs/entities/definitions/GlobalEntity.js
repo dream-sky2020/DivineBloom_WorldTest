@@ -1,11 +1,18 @@
 import { z } from 'zod';
 import { world } from '@/game/ecs/world';
 import { BattleResultSchema } from '@/game/ecs/entities/components/BattleResult';
+import { Camera } from '@/game/ecs/entities/components/Camera';
 
 // --- Schema Definition ---
 export const GlobalEntitySchema = z.object({
     // 可选的战斗结果 (存档时可能不需要保存这个瞬时状态，但Schema里定义它是个好习惯)
-    pendingBattleResult: BattleResultSchema.optional()
+    pendingBattleResult: BattleResultSchema.optional(),
+    camera: z.object({
+        x: z.number().optional(),
+        y: z.number().optional(),
+        lerp: z.number().optional(),
+        useBounds: z.boolean().optional()
+    }).optional()
 });
 
 // --- Entity Definition ---
@@ -22,7 +29,7 @@ export const GlobalEntity = {
             return null;
         }
 
-        const { pendingBattleResult } = result.data;
+        const { pendingBattleResult, camera: cameraData } = result.data;
 
         // Check uniqueness
         const existing = world.with('globalManager').first;
@@ -34,7 +41,10 @@ export const GlobalEntity = {
             type: 'global_manager',
             globalManager: true, // Tag
 
-            persist: true
+            persist: true,
+
+            // 初始化相机
+            camera: Camera.create(cameraData || {})
         };
 
         // 如果初始数据里有战斗结果（例如刚从战斗场景存档恢复？）
