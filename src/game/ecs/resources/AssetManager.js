@@ -1,4 +1,7 @@
 import { AssetManifest } from '@/data/assets'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('AssetManager')
 
 /**
  * 强大的资源管理器
@@ -23,19 +26,30 @@ export class AssetManager {
      */
     loadTexture(assetId) {
         // 1. 检查缓存
-        if (this.textures.has(assetId)) return Promise.resolve(this.textures.get(assetId))
-        if (this.loading.has(assetId)) return this.loading.get(assetId)
+        if (this.textures.has(assetId)) {
+            // 🎯 [DEBUG] 静默返回，避免日志过多
+            return Promise.resolve(this.textures.get(assetId))
+        }
+        if (this.loading.has(assetId)) {
+            logger.info(`⏳ Asset already loading, returning existing promise: ${assetId}`)
+            return this.loading.get(assetId)
+        }
 
         // 2. 查找路径
         const url = AssetManifest[assetId]
         if (!url) {
-            console.warn(`[AssetManager] Asset ID not found in manifest: ${assetId}`)
+            logger.warn(`❌ Asset ID not found in manifest: ${assetId}`)
             return Promise.resolve(null)
         }
+
+        // 🎯 [DEBUG] 开始加载
+        logger.info(`📥 Loading asset: ${assetId} from ${url}`)
 
         // 3. 创建加载任务
         const p = new Promise((resolve, reject) => {
             const img = new Image()
+            const startTime = performance.now()
+
             img.onload = () => {
                 // 性能优化：光栅化为 Canvas
                 // 这对于游戏循环非常重要，可以避免浏览器在每一帧重新解码图片
@@ -48,12 +62,16 @@ export class AssetManager {
                 const ctx = offCanvas.getContext('2d')
                 ctx.drawImage(img, 0, 0)
 
+                const loadTime = (performance.now() - startTime).toFixed(1)
+                logger.info(`✅ Loaded: ${assetId} (${w}x${h}, ${loadTime}ms)`)
+
                 this.textures.set(assetId, offCanvas)
                 this.loading.delete(assetId)
                 resolve(offCanvas)
             }
             img.onerror = (e) => {
-                console.error(`[AssetManager] Failed to load: ${url}`, e)
+                const loadTime = (performance.now() - startTime).toFixed(1)
+                logger.error(`❌ Failed to load: ${assetId} from ${url} (${loadTime}ms)`, e)
                 // 返回一个红色的占位图，防止游戏崩溃
                 const fallback = this._createFallback(32, 32, 'red')
                 this.textures.set(assetId, fallback)
@@ -100,7 +118,7 @@ export class AssetManager {
      * @param {boolean} force 是否强制清理所有资源
      */
     clear(force = false) {
-        console.log(`[AssetManager] Clearing assets (force: ${force})`)
+        logger.info(`Clearing assets (force: ${force})`)
         if (force) {
             this.textures.clear()
         } else {

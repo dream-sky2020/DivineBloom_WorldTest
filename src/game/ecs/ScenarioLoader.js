@@ -5,6 +5,9 @@ import Enemies from '@/data/characters/enemies'
 import { world } from '@/game/ecs/world'
 import { SceneMigration } from './entities/internal/SceneMigration'
 import { EntitySerializer } from './entities/internal/EntitySerializer'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('ScenarioLoader')
 
 /**
  * 实体创建工厂映射表
@@ -310,7 +313,7 @@ export class ScenarioLoader {
                     const rawData = await targetMaps[mapId]();
                     projectBundle.maps[mapId] = this.normalize(rawData);
                 } catch (e) {
-                    console.error(`[ScenarioLoader] Failed to pre-load map ${mapId} for export`, e);
+                    logger.error(`Failed to pre-load map ${mapId} for export`, e);
                 }
             }
         }

@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import { world } from '@/game/ecs/world'
 import { Visuals } from '@/game/ecs/entities/components/Visuals'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('BackgroundEntity')
 
 // --- Schema Definitions ---
 
@@ -22,7 +25,7 @@ export const BackgroundEntity = {
     createGround(width, height, color) {
         const result = BackgroundGroundSchema.safeParse({ width, height, color });
         if (!result.success) {
-            console.error('[BackgroundEntity] Ground validation failed', result.error);
+            logger.error('Ground validation failed', result.error);
             return null;
         }
 

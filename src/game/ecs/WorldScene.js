@@ -26,6 +26,9 @@ import { GlobalEntity } from '@/game/ecs/entities/definitions/GlobalEntity'
 import { EditorGridRenderSystem } from '@/game/ecs/systems/render/EditorGridRenderSystem'
 import { EditorInteractionSystem } from '@/game/ecs/systems/editor/EditorInteractionSystem'
 import { EditorHighlightRenderSystem } from '@/game/ecs/systems/editor/EditorHighlightRenderSystem'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('WorldScene')
 
 /**
  * @typedef {import('@/game/ecs/GameEngine').GameEngine} GameEngine
@@ -129,7 +132,7 @@ export class WorldScene {
         DetectAreaRenderSystem.init(mapData)
         PortalDebugRenderSystem.init(mapData)
         AISenseSystem.init?.(mapData)
-        console.log('[WorldScene] Map systems reinitialized')
+        logger.info('Map systems reinitialized')
     }
 
     /**
@@ -184,7 +187,7 @@ export class WorldScene {
      * 销毁场景，释放资源防止内存泄漏
      */
     destroy() {
-        console.log('[WorldScene] Destroying scene...')
+        logger.info('Destroying scene...')
 
         // 1. 清理引用
         this.player = null

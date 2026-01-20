@@ -56,6 +56,9 @@ import { maps } from '@/data/maps'
 import { useGameStore } from '@/stores/game'
 import { ScenarioLoader } from '@/game/ecs/ScenarioLoader'
 import { gameManager } from '@/game/ecs/GameManager'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('ProjectManager')
 
 const gameStore = useGameStore()
 const worldStore = gameStore.world
@@ -79,7 +82,7 @@ const switchMap = async (mapId) => {
     // 2. 切换场景 (使用 loadMap 强制加载新地图)
     await gameManager.loadMap(mapId)
   } catch (error) {
-    console.error('Failed to switch map:', error)
+    logger.error('Failed to switch map:', error)
     alert(`切换地图失败: ${error.message}`)
   } finally {
     isLoading.value = false
@@ -110,7 +113,7 @@ const handleImportProject = (event) => {
       worldStore.bulkUpdateStates(newStates)
       alert('项目导入成功！请重新加载或切换地图。')
     } catch (err) {
-      console.error('Failed to import project:', err)
+      logger.error('Failed to import project:', err)
       alert('导入失败：文件格式不正确')
     }
   }

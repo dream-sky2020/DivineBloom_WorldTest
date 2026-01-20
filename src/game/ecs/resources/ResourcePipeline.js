@@ -1,3 +1,7 @@
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('ResourcePipeline')
+
 /**
  * 资源加载管线
  * 负责批量加载、缓存管理、进度跟踪
@@ -20,15 +24,33 @@ export class ResourcePipeline {
      * @returns {Promise<void>}
      */
     async loadAssets(assetIds, onProgress = null) {
-        // 过滤掉已加载的资源
-        const toLoad = assetIds.filter(id => !this.isAssetLoaded(id) && !this.assetManager.textures.has(id))
+        // 🎯 [FIX] 过滤掉已加载的资源，同时检查正在加载中的资源
+        const toLoad = assetIds.filter(id => {
+            // 已完全加载
+            if (this.isAssetLoaded(id) || this.assetManager.textures.has(id)) {
+                return false
+            }
+            // 🎯 正在加载中的资源也不需要再次加载（避免重复请求）
+            if (this.assetManager.loading.has(id)) {
+                return false
+            }
+            return true
+        })
 
         if (toLoad.length === 0) {
-            console.log('[ResourcePipeline] All assets already loaded')
+            // 🎯 [FIX] 即使没有新资源需要加载，也要等待正在加载的资源完成
+            const pending = assetIds.filter(id => this.assetManager.loading.has(id))
+            if (pending.length > 0) {
+                logger.info('Waiting for assets in progress:', pending)
+                const waitPromises = pending.map(id => this.assetManager.loading.get(id))
+                await Promise.all(waitPromises)
+            } else {
+                logger.info('All assets already loaded')
+            }
             return
         }
 
-        console.log('[ResourcePipeline] Loading assets:', toLoad)
+        logger.info('Loading assets:', toLoad)
 
         this.isLoading = true
         const total = toLoad.length
@@ -37,7 +59,11 @@ export class ResourcePipeline {
         try {
             const promises = toLoad.map(async (id) => {
                 try {
-                    await this.assetManager.loadTexture(id)
+                    const texture = await this.assetManager.loadTexture(id)
+                    // 🎯 [FIX] 验证加载结果，确保不是空或 fallback
+                    if (!texture) {
+                        logger.warn(`Asset loaded but texture is null: ${id}`)
+                    }
                     this.loadedCache.add(id)
                     loaded++
 
@@ -50,13 +76,13 @@ export class ResourcePipeline {
                         })
                     }
                 } catch (error) {
-                    console.error(`[ResourcePipeline] Failed to load asset: ${id}`, error)
+                    logger.error(`Failed to load asset: ${id}`, error)
                     // 继续加载其他资源，不中断流程
                 }
             })
 
             await Promise.all(promises)
-            console.log('[ResourcePipeline] Load complete:', loaded, '/', total)
+            logger.info(`✅ Load complete: ${loaded} / ${total}`)
         } finally {
             this.isLoading = false
         }
@@ -109,7 +135,7 @@ export class ResourcePipeline {
      */
     clearCache() {
         this.loadedCache.clear()
-        console.log('[ResourcePipeline] Cache cleared')
+        logger.info('Cache cleared')
     }
 
     /**

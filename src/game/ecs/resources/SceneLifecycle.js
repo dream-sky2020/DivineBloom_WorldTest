@@ -2,6 +2,9 @@ import { ScenarioLoader } from '@/game/ecs/ScenarioLoader'
 import { ResourceDeclaration } from './ResourceDeclaration'
 import { Visuals as VisualDefs } from '@/data/visuals'
 import { world } from '@/game/ecs/world'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('SceneLifecycle')
 
 /**
  * 场景生命周期管理
@@ -18,10 +21,10 @@ export class SceneLifecycle {
      * @returns {Promise<{ player: object, entities: array }>}
      */
     static async prepareScene(mapData, engine, entryId = 'default', savedState = null, onProgress = null) {
-        console.log('[SceneLifecycle] Starting scene preparation...')
+        logger.info('Starting scene preparation...')
 
         // Phase 1: 预加载资源（在创建实体之前）
-        console.log('[SceneLifecycle] Phase 1: Preloading assets')
+        logger.info('Phase 1: Preloading assets')
         await this.preloadPhase(mapData, engine, (progress) => {
             if (onProgress) {
                 onProgress({
@@ -32,7 +35,7 @@ export class SceneLifecycle {
         })
 
         // Phase 2: 创建实体
-        console.log('[SceneLifecycle] Phase 2: Creating entities')
+        logger.info('Phase 2: Creating entities')
         const entities = await this.createEntitiesPhase(mapData, engine, entryId, savedState)
 
         if (onProgress) {
@@ -43,18 +46,37 @@ export class SceneLifecycle {
         }
 
         // Phase 3: 验证资源完整性
-        console.log('[SceneLifecycle] Phase 3: Validating resources')
+        logger.info('Phase 3: Validating resources')
         const validation = this.validatePhase(world, engine)
 
-        if (validation.missing.length > 0) {
-            console.warn('[SceneLifecycle] ⚠️ Missing resources detected:', validation.missing)
+        // 🎯 [FIX] 如果有资源正在加载，先等待它们完成
+        if (validation.loading && validation.loading.length > 0) {
+            logger.info(`⏳ Waiting for ${validation.loading.length} assets still loading...`)
+            const loadingAssetIds = [...new Set(validation.loading.map(item => item.assetId))]
+            const waitPromises = loadingAssetIds
+                .map(id => engine.assets.loading && engine.assets.loading.get(id))
+                .filter(Boolean)
+
+            if (waitPromises.length > 0) {
+                await Promise.all(waitPromises)
+                logger.info('✅ Loading assets completed')
+
+                // 重新验证
+                const revalidation = this.validatePhase(world, engine)
+                if (revalidation.missing.length > 0) {
+                    logger.warn('⚠️ Some assets still missing after waiting:', revalidation.missing)
+                    await this.loadMissingAssets(revalidation.missing, engine)
+                }
+            }
+        } else if (validation.missing.length > 0) {
+            logger.warn('⚠️ Missing resources detected:', validation.missing)
             // 尝试补充加载缺失的资源
             await this.loadMissingAssets(validation.missing, engine)
         } else {
-            console.log('[SceneLifecycle] ✅ All resources validated')
+            logger.info('✅ All resources validated')
         }
 
-        console.log('[SceneLifecycle] Scene preparation complete')
+        logger.info('Scene preparation complete')
         return entities
     }
 
@@ -62,10 +84,32 @@ export class SceneLifecycle {
      * Phase 1: 资源预加载
      */
     static async preloadPhase(mapData, engine, onProgress) {
+        // 🎯 [DEBUG] 记录地图信息
+        logger.info(`Preloading map: ${mapData?.id || 'unknown'}`)
+
         if (engine.resources && engine.resources.pipeline) {
+            // 🎯 [DEBUG] 列出需要加载的资源
+            const visualIds = ResourceDeclaration.getMapDependencies(mapData)
+            const assetIds = ResourceDeclaration.resolveAssetIds(visualIds)
+            logger.info(`Required assets (${assetIds.size}):`, Array.from(assetIds))
+
             await engine.resources.pipeline.preloadMap(mapData, onProgress)
+
+            // 🎯 [DEBUG] 验证预加载结果
+            const missing = []
+            for (const assetId of assetIds) {
+                const texture = engine.assets.getTexture(assetId)
+                if (!texture) {
+                    missing.push(assetId)
+                }
+            }
+            if (missing.length > 0) {
+                logger.warn(`❌ Preload incomplete, missing (${missing.length}):`, missing)
+            } else {
+                logger.info(`✅ Preload complete, all ${assetIds.size} assets loaded`)
+            }
         } else {
-            console.warn('[SceneLifecycle] Resource pipeline not available, using fallback')
+            logger.warn('Resource pipeline not available, using fallback')
             // Fallback: 使用旧的加载方式
             const visualIds = ResourceDeclaration.getMapDependencies(mapData)
             await engine.assets.preloadVisuals(Array.from(visualIds), VisualDefs)
@@ -77,10 +121,10 @@ export class SceneLifecycle {
      */
     static async createEntitiesPhase(mapData, engine, entryId, savedState) {
         if (savedState && savedState.entities && savedState.entities.length > 0) {
-            console.log('[SceneLifecycle] Restoring from saved state')
+            logger.info('Restoring from saved state')
             return ScenarioLoader.restore(engine, savedState, mapData)
         } else {
-            console.log('[SceneLifecycle] Loading default scenario')
+            logger.info('Loading default scenario')
             return ScenarioLoader.load(engine, mapData, entryId)
         }
     }
@@ -91,6 +135,7 @@ export class SceneLifecycle {
     static validatePhase(world, engine) {
         const missing = []
         const validated = []
+        const loading = [] // 🎯 [NEW] 跟踪正在加载的资源
 
         for (const entity of world) {
             // 跳过全局管理器
@@ -99,18 +144,38 @@ export class SceneLifecycle {
             if (entity.visual && entity.visual.id) {
                 const visualDef = VisualDefs[entity.visual.id]
                 if (!visualDef) {
-                    console.warn(`[SceneLifecycle] Missing visual definition: ${entity.visual.id}`)
+                    logger.warn(`❌ Missing visual definition: ${entity.visual.id} (entity: ${entity.name || entity.type})`)
                     continue
                 }
 
                 const assetId = visualDef.assetId
-                if (assetId && !engine.assets.getTexture(assetId)) {
+                if (!assetId) {
+                    logger.warn(`❌ Visual definition has no assetId: ${entity.visual.id}`)
+                    continue
+                }
+
+                // 🎯 [FIX] 检查多种状态
+                const texture = engine.assets.getTexture(assetId)
+                const isLoading = engine.assets.loading && engine.assets.loading.has(assetId)
+
+                if (!texture && !isLoading) {
+                    // 完全缺失
                     missing.push({
+                        entityId: entity.id,
+                        entityType: entity.type,
+                        entityName: entity.name,
+                        visualId: entity.visual.id,
+                        assetId: assetId
+                    })
+                } else if (!texture && isLoading) {
+                    // 正在加载中
+                    loading.push({
                         entityId: entity.id,
                         visualId: entity.visual.id,
                         assetId: assetId
                     })
                 } else {
+                    // 已加载
                     validated.push(assetId)
                 }
             }
@@ -118,8 +183,9 @@ export class SceneLifecycle {
 
         return {
             missing: missing,
+            loading: loading, // 🎯 [NEW] 返回加载中的资源
             validated: [...new Set(validated)],
-            total: missing.length + validated.length
+            total: missing.length + loading.length + validated.length
         }
     }
 
@@ -127,7 +193,7 @@ export class SceneLifecycle {
      * 加载缺失的资源（紧急补救）
      */
     static async loadMissingAssets(missingList, engine) {
-        console.log('[SceneLifecycle] Loading missing assets:', missingList.length)
+        logger.info(`Loading missing assets: ${missingList.length}`)
 
         const assetIds = [...new Set(missingList.map(item => item.assetId))]
 
@@ -139,7 +205,7 @@ export class SceneLifecycle {
             await Promise.all(promises)
         }
 
-        console.log('[SceneLifecycle] Missing assets loaded')
+        logger.info('Missing assets loaded')
     }
 
     /**
@@ -156,11 +222,11 @@ export class SceneLifecycle {
      * @param {object} engine 
      */
     static destroyScene(scene, engine) {
-        console.log('[SceneLifecycle] Destroying current scene...')
+        logger.info('Destroying current scene...')
         if (scene && scene.destroy) {
             scene.destroy()
         }
-        
+
         // 可选：清理资源管理器中的非全局资源
         if (engine && engine.assets) {
             engine.assets.clear()

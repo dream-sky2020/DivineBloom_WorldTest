@@ -50,8 +50,8 @@ export const useWorldStore = defineStore('world', () => {
             // 兼容旧格式：只有 entities 数组
             else if (persisted.entities && Array.isArray(persisted.entities)) {
                 currentMapState.value = {
-                    isInitialized: true,
-                    entities: persisted.entities
+            isInitialized: true,
+            entities: persisted.entities
                 };
             } else {
                 currentMapState.value = null;
@@ -113,7 +113,7 @@ export const useWorldStore = defineStore('world', () => {
      * @deprecated 已被 saveState 替代，保留用于向后兼容
      */
     const initCurrentState = (entities) => {
-        console.warn('[WorldStore] initCurrentState is deprecated, use saveState instead');
+        logger.warn('initCurrentState is deprecated, use saveState instead');
         const bundle = {
             header: {
                 version: '1.0.0',

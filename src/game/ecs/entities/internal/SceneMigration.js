@@ -1,3 +1,7 @@
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('SceneMigration')
+
 /**
  * 场景数据迁移器
  * 用于处理不同版本的 ECS 场景导出数据，确保向前兼容
@@ -13,7 +17,7 @@ export const SceneMigration = {
          * 示例：为旧版敌人数据补齐新的 AI 参数
          */
         '1.0.0': (bundle) => {
-            console.log('[SceneMigration] Migrating from 1.0.0 to 1.1.0');
+            logger.info('Migrating from 1.0.0 to 1.1.0');
 
             bundle.entities.forEach(ent => {
                 if (ent.type === 'enemy') {
@@ -48,7 +52,7 @@ export const SceneMigration = {
         while (version !== this.CURRENT_VERSION) {
             const migrationRunner = this.MIGRATIONS[version];
             if (!migrationRunner) {
-                console.warn(`[SceneMigration] No migration path found for version: ${version}`);
+                logger.warn(`No migration path found for version: ${version}`);
                 break;
             }
             bundle = migrationRunner(bundle);
