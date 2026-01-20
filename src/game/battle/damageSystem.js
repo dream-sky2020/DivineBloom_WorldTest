@@ -49,8 +49,9 @@ const executeHpZeroEffect = (target, skill, effect, context, silent) => {
             return true;
 
         case 'call_of_death':
-            // 强制死亡逻辑
-            return false; // 不拦截死亡判定
+        case 'instant_death':
+            // 强制死亡逻辑：直接返回 false，表示不拦截死亡判定
+            return false;
 
         default:
             return false;

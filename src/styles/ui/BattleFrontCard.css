@@ -81,7 +81,9 @@
 
 .bar-fill {
     height: 100%;
-    transition: width 0.3s ease;
+    width: 100%;
+    transform-origin: left;
+    transition: transform 0.3s ease;
 }
 
 .hp .bar-fill {
@@ -94,7 +96,7 @@
 
 .atb .bar-fill {
     background: #fbbf24;
-    transition: width 0.1s linear;
+    transition: transform 0.1s linear;
 }
 
 .bar-text {

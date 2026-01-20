@@ -23,12 +23,12 @@
         <span v-if="enemy.isBoss" class="boss-tag">BOSS</span>
       </div>
       <div class="enemy-hp-container">
-        <div class="enemy-hp-bar" :style="{ width: enemy.hpPercent + '%' }"></div>
+        <div class="enemy-hp-bar" :style="{ transform: `scaleX(${enemy.hpPercent / 100})` }"></div>
         <span class="hp-text">{{ enemy.hp }} / {{ enemy.maxHp }}</span>
       </div>
       <!-- Enemy ATB Bar -->
       <div class="enemy-atb-container">
-        <div class="atb-bar" :class="{ 'no-transition': enemy.atbNoTransition }" :style="{ width: (enemy.atbPercent || 0) + '%' }"></div>
+        <div class="atb-bar" :class="{ 'no-transition': enemy.atbNoTransition }" :style="{ transform: `scaleX(${(enemy.atbPercent || 0) / 100})` }"></div>
       </div>
 
       <!-- Enemy Status Row -->

@@ -88,8 +88,10 @@
 
 .enemy-hp-bar {
   height: 100%;
+  width: 100%;
+  transform-origin: left;
   background: linear-gradient(to right, #dc2626, #ef4444);
-  transition: width 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .enemy-atb-container {
@@ -104,8 +106,10 @@
 
 .atb-bar {
   height: 100%;
+  width: 100%;
+  transform-origin: left;
   background: #fbbf24;
-  transition: width 0.1s linear;
+  transition: transform 0.1s linear;
 }
 
 .hp-text {

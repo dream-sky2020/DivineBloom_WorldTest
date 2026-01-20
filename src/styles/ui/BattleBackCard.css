@@ -84,6 +84,9 @@
 
 .mini-bar {
     height: 6px;
+    width: 100%;
+    transform-origin: left;
+    transition: transform 0.3s ease;
     /* background: #334155; Removed to allow specific color classes to take effect */
     border-radius: 3px;
 }
@@ -106,7 +109,7 @@
 
 .mini-bar.atb {
     height: 100%;
-    transition: width 0.1s linear;
+    transition: transform 0.1s linear;
 }
 
 .back-card-status-row {

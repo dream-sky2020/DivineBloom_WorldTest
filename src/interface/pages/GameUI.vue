@@ -53,7 +53,7 @@
 
             <!-- Layer 2: System UI (Top Level) -->
             <div class="system-layer" :class="{ 'pass-through': currentSystem === 'world-map' }">
-              <transition name="fade" mode="out-in">
+              <transition name="fade">
                 <component 
                   :is="activeSystemComponent" 
                   @change-system="handleSystemChange"
@@ -381,14 +381,19 @@ const showGrid = computed(() => {
 
 // Control Canvas Opacity based on current system
 const canvasStyle = computed(() => {
-  // When in World Map, canvas is fully visible (Opacity 1)
+  // When in World Map, canvas is fully visible
   if (currentSystem.value === 'world-map') {
-    return { opacity: 1, transition: 'opacity 0.3s ease' };
+    return { 
+      opacity: 1,
+      visibility: 'visible'
+    };
   }
   
-  // For other systems (Menu, etc.), user requested 100% transparency (Opacity 0)
-  // If you meant "100% visible", change this to 1.
-  return { opacity: 0, transition: 'opacity 0.3s ease' };
+  // For other systems (Menu, etc.), hide canvas to save performance
+  return { 
+    opacity: 0,
+    visibility: 'hidden'
+  };
 });
 
 const handleSystemChange = (systemId) => {

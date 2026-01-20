@@ -30,7 +30,7 @@ export const CharacterSchema = z.object({
     skills: z.array(ID).optional().default([]), // All skills learned/owned
     equippedActiveSkills: z.array(ID).optional().default([]), // Currently equipped active skills
     equippedPassiveSkills: z.array(ID).optional().default([]), // Currently equipped passive skills
-    fixedPassiveSkills: z.array(ID).optional().default([]), // Fixed passive skills (cannot be unequipped)
+    fixedPassiveSkills: z.array(ID).optional().default(['skill_passive_call_of_death']), // Fixed passive skills (cannot be unequipped)
     activeSkillLimit: z.number().int().min(1).default(6), // Max active slots
     passiveSkillLimit: z.number().int().min(1).default(4), // Max passive slots
     

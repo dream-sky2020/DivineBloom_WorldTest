@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { MapSaveStateSchema } from '@/data/schemas/save';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('WorldStore');
 
 export const useWorldStore = defineStore('world', () => {
     // Current Map State
@@ -28,7 +31,7 @@ export const useWorldStore = defineStore('world', () => {
             };
             MapSaveStateSchema.parse(stateToValidate);
         } catch (e) {
-            console.error('🚨 [WorldStore] Save Validation Failed:', e);
+            logger.error('Save Validation Failed:', e);
             // We proceed anyway for resilience, but log the error
         }
 
@@ -65,7 +68,7 @@ export const useWorldStore = defineStore('world', () => {
             try {
                 MapSaveStateSchema.parse(currentMapState.value);
             } catch (e) {
-                console.error(`🚨 [WorldStore] Load Validation Failed for map ${mapId}:`, e);
+                logger.error(`Load Validation Failed for map ${mapId}:`, e);
                 // Fallback to fresh state if data is corrupted?
                 // currentMapState.value = null; 
             }
@@ -120,7 +123,7 @@ export const useWorldStore = defineStore('world', () => {
         try {
             MapSaveStateSchema.parse(newState);
         } catch (e) {
-            console.error('🚨 [WorldStore] Init State Validation Failed:', e);
+            logger.error('Init State Validation Failed:', e);
         }
 
         currentMapState.value = newState;

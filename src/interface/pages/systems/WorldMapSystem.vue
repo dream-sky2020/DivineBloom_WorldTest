@@ -145,18 +145,18 @@ onUnmounted(() => {
 }
 
 .dialogue-box {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   border: 2px solid #94a3b8;
   border-radius: 8px;
   padding: 24px;
   width: 90%;
   max-width: 800px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(4px);
-  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   pointer-events: auto; /* Ensure clicks work */
+  will-change: transform, opacity;
 }
 
 .dialogue-header {
@@ -199,7 +199,7 @@ onUnmounted(() => {
   font-weight: 600;
   color: #475569;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   text-align: left;
 }
 .choice-btn:hover {
@@ -227,6 +227,9 @@ onUnmounted(() => {
   100% { opacity: 0.6; }
 }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-active, .fade-leave-active { 
+  transition: opacity 0.2s ease; 
+  will-change: opacity;
+}
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

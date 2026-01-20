@@ -31,14 +31,14 @@
           <div class="stat-row hp">
             <label>HP</label>
             <div class="bar-container">
-              <div class="bar-fill" :style="{ width: (character.currentHp / character.maxHp * 100) + '%' }"></div>
+              <div class="bar-fill" :style="{ transform: `scaleX(${character.currentHp / character.maxHp})` }"></div>
               <span class="bar-text">{{ character.currentHp }}/{{ character.maxHp }}</span>
             </div>
           </div>
           <div class="stat-row mp">
             <label>MP</label>
             <div class="bar-container">
-              <div class="bar-fill" :style="{ width: (character.currentMp / character.maxMp * 100) + '%' }"></div>
+              <div class="bar-fill" :style="{ transform: `scaleX(${character.currentMp / character.maxMp})` }"></div>
                <span class="bar-text">{{ character.currentMp }}/{{ character.maxMp }}</span>
             </div>
           </div>

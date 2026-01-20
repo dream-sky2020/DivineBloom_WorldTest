@@ -39,7 +39,9 @@ export const SkillSchema = z.object({
     chain: z.number().optional(),
     decay: z.number().optional(),
     randomHits: z.number().optional(),
-    exclusiveGroup: z.string().optional(),
-    exclusiveGroupPriority: z.number().optional(),
+
+    // 互斥组与优先级 (用于同类被动替换，如死亡处理器)
+    exclusiveGroup: ID.optional(),
+    exclusiveGroupPriority: z.number().int().optional(),
     consumeTurn: z.boolean().optional() // 是否消耗回合，默认为 true
 });

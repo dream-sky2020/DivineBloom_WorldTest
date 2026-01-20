@@ -81,12 +81,33 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 1.2rem 2rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s ease;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: relative;
     overflow: hidden;
+    will-change: transform;
+}
+
+.menu-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 0, 85, 0.5);
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(10px);
+}
+
+.menu-btn:hover::after {
+    opacity: 1;
 }
 
 .menu-btn::before {
@@ -103,9 +124,7 @@
 
 .menu-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 0, 85, 0.5);
     transform: translateX(10px);
-    box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
 }
 
 .menu-btn:hover::before {

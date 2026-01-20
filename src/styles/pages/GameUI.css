@@ -150,6 +150,7 @@
     justify-content: center;
     overflow: hidden;
     z-index: 0;
+    contain: strict;
 }
 
 .layout-spacer {
@@ -173,6 +174,7 @@
     flex-shrink: 0;
     font-family: var(--font-main);
     color: #fff;
+    contain: layout size;
 }
 
 /* Global Canvas (The Actual WebGL/2D Canvas) */
@@ -187,6 +189,7 @@
     left: 0;
     z-index: 0;
     /* Lowest level */
+    will-change: transform;
 }
 
 /* System Layer (Holds UI components like Battle, Menu) */
@@ -206,6 +209,7 @@
     /* Let clicks pass through to canvas if no UI element blocks them */
     display: flex;
     flex-direction: column;
+    contain: layout style;
 }
 
 /* Enable pointer events for actual UI elements inside system-layer */
@@ -391,7 +395,8 @@
 /* Transition */
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease;
+    will-change: opacity;
 }
 
 .fade-enter-from,

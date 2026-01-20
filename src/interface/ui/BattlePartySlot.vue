@@ -29,14 +29,14 @@
           <div class="stat-row hp">
             <label>HP</label>
             <div class="bar-container">
-              <div class="bar-fill" :style="{ width: slot.front.hpPercent + '%' }"></div>
+              <div class="bar-fill" :style="{ transform: `scaleX(${slot.front.hpPercent / 100})` }"></div>
               <span class="bar-text">{{ slot.front.hp }}/{{ slot.front.maxHp }}</span>
             </div>
           </div>
           <div class="stat-row mp">
             <label>MP</label>
             <div class="bar-container">
-              <div class="bar-fill" :style="{ width: slot.front.mpPercent + '%' }"></div>
+              <div class="bar-fill" :style="{ transform: `scaleX(${slot.front.mpPercent / 100})` }"></div>
                <span class="bar-text">{{ slot.front.mp }}/{{ slot.front.maxMp }}</span>
             </div>
           </div>
@@ -44,7 +44,7 @@
            <div class="stat-row atb">
             <label>ATB</label>
             <div class="bar-container">
-              <div class="bar-fill atb-fill" :class="{ 'no-transition': slot.front.atbNoTransition }" :style="{ width: (slot.front.atbPercent || 0) + '%' }"></div>
+              <div class="bar-fill atb-fill" :class="{ 'no-transition': slot.front.atbNoTransition }" :style="{ transform: `scaleX(${(slot.front.atbPercent || 0) / 100})` }"></div>
             </div>
           </div>
           
@@ -92,8 +92,8 @@
           </div>
           <!-- Tiny HP Bar Ring or Underline -->
           <div class="badge-bars">
-            <div class="badge-bar hp" :style="{ width: slot.back.hpPercent + '%' }"></div>
-            <div class="badge-bar mp" :style="{ width: slot.back.mpPercent + '%' }"></div>
+            <div class="badge-bar hp" :style="{ transform: `scaleX(${slot.back.hpPercent / 100})` }"></div>
+            <div class="badge-bar mp" :style="{ transform: `scaleX(${slot.back.mpPercent / 100})` }"></div>
           </div>
         </div>
 
@@ -122,8 +122,8 @@
              </div>
              <div class="back-card-info">
                 <div class="back-card-stats">
-                  <div class="mini-bar hp" :style="{ width: slot.front.hpPercent + '%' }"></div>
-                  <div class="mini-bar mp" :style="{ width: slot.front.mpPercent + '%' }"></div>
+                  <div class="mini-bar hp" :style="{ transform: `scaleX(${slot.front.hpPercent / 100})` }"></div>
+                  <div class="mini-bar mp" :style="{ transform: `scaleX(${slot.front.mpPercent / 100})` }"></div>
                   <div class="mini-bar-container atb-container" :class="slot.front.atbContainerClass">
                       <div 
                          class="mini-bar atb" 
@@ -134,7 +134,7 @@
                                  'no-transition': slot.front.atbNoTransition
                              }
                          ]"
-                         :style="{ width: slot.front.atbPercent + '%' }"
+                         :style="{ transform: `scaleX(${slot.front.atbPercent / 100})` }"
                        ></div>
                   </div>
                   <!-- Mini BP -->
@@ -196,8 +196,8 @@
            <div class="back-card-info">
               <!-- Stats -->
               <div class="back-card-stats">
-                <div class="mini-bar hp" :style="{ width: slot.back.hpPercent + '%' }"></div>
-                <div class="mini-bar mp" :style="{ width: slot.back.mpPercent + '%' }"></div>
+                <div class="mini-bar hp" :style="{ transform: `scaleX(${slot.back.hpPercent / 100})` }"></div>
+                <div class="mini-bar mp" :style="{ transform: `scaleX(${slot.back.mpPercent / 100})` }"></div>
                 <!-- Back Row ATB Bar (Overcharge) -->
                 <div class="mini-bar-container atb-container" :class="slot.back.atbContainerClass">
                     <div 
@@ -209,7 +209,7 @@
                                'no-transition': slot.back.atbNoTransition
                            }
                        ]"
-                       :style="{ width: slot.back.atbPercent + '%' }"
+                       :style="{ transform: `scaleX(${slot.back.atbPercent / 100})` }"
                      ></div>
                 </div>
                 <!-- Mini BP -->

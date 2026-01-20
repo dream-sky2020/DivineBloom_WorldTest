@@ -161,7 +161,7 @@ export const useBattleStore = defineStore('battle', () => {
             spd: data.initialStats.spd || 10,
             mag: data.initialStats.mag || 10,
             // Runtime state
-            skills: filterExclusiveSkills(data.skills || []), // Load skills from data
+            skills: filterExclusiveSkills([...(data.skills || []), ...(data.fixedPassiveSkills || [])]), // Load skills from data
             statusEffects: [],
             isDefending: false,
             atb: 0,

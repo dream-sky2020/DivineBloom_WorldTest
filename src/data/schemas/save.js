@@ -95,19 +95,55 @@ export const SavedObstacleSchema = z.object({
     shape: z.string()
 });
 
+// 对应 GlobalEntity.serialize()
+export const SavedGlobalManagerSchema = z.object({
+    pendingBattleResult: z.object({
+        uuid: z.string(),
+        result: z.object({
+            win: z.boolean().default(false),
+            fled: z.boolean().default(false),
+            drops: z.array(ID).optional(),
+            exp: z.number().optional()
+        })
+    }).optional(),
+    camera: z.object({
+        x: z.number().optional(),
+        y: z.number().optional(),
+        lerp: z.number().optional(),
+        useBounds: z.boolean().optional()
+    }).optional(),
+    inputState: z.object({
+        lastPressed: z.record(z.string(), z.boolean()).optional()
+    }).optional()
+});
+
+// 对应 PortalDestinationEntity.serialize()
+export const SavedPortalDestinationSchema = z.object({
+    id: z.string(),
+    x: z.number(),
+    y: z.number(),
+    name: z.string().optional(),
+    visual: z.object({
+        color: z.string().optional(),
+        size: z.number().optional()
+    }).optional()
+});
+
 /**
  * 包装后的实体存储项
  * 明确区分 type 和 data，解决 "各讲各的" 问题
  */
 export const SavedEntityItemSchema = z.object({
-    type: z.enum(['player', 'enemy', 'npc', 'portal', 'decoration', 'obstacle']),
+    type: z.enum(['player', 'enemy', 'npc', 'portal', 'decoration', 'obstacle', 'portal_destination', 'global_manager']),
     data: z.union([
         SavedPlayerSchema, 
         SavedEnemySchema, 
         SavedNPCSchema, 
         SavedPortalSchema,
         SavedDecorationSchema,
-        SavedObstacleSchema
+        SavedObstacleSchema,
+        SavedPortalDestinationSchema,
+        SavedGlobalManagerSchema
     ])
 });
 

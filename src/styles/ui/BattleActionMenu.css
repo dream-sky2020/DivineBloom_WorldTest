@@ -15,11 +15,10 @@
   position: relative;
   display: flex;
   gap: 0.5rem;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.9);
   padding: 1rem;
   border-radius: 1rem;
   border: 1px solid rgba(255,255,255,0.2);
-  backdrop-filter: blur(10px);
   margin-top: 0; 
   align-items: center;
   flex-wrap: nowrap; /* Force single line */
@@ -79,8 +78,9 @@
   background: #1e293b;
   color: white;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease, box-shadow 0.2s ease;
   gap: 5px;
+  will-change: transform;
 }
 
 .action-btn:hover {
@@ -160,7 +160,7 @@
     background: #1e293b;
     border-radius: 0.5rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .skill-item:hover {
