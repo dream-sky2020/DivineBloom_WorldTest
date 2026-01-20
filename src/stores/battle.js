@@ -148,57 +148,80 @@ export const useBattleStore = defineStore('battle', () => {
     const createUnit = (dbId, isPlayer = false) => {
         const data = charactersDb[dbId];
         if (!data) return null;
+
+        // 获取基础属性，支持直接从 data 覆盖或从 initialStats 获取
+        const maxHp = data.maxHp || data.initialStats.hp;
+        const maxMp = data.maxMp || data.initialStats.mp;
+
         return {
             ...data,
-            uuid: generateUUID(),
-            // Ensure runtime stats are initialized from initialStats
-            currentHp: data.initialStats.hp,
-            maxHp: data.initialStats.hp,
-            currentMp: data.initialStats.mp,
-            maxMp: data.initialStats.mp,
-            atk: data.initialStats.atk || 50,
-            def: data.initialStats.def || 30,
-            spd: data.initialStats.spd || 10,
-            mag: data.initialStats.mag || 10,
-            // Runtime state
-            skills: filterExclusiveSkills([...(data.skills || []), ...(data.fixedPassiveSkills || [])]), // Load skills from data
-            statusEffects: [],
-            isDefending: false,
-            atb: 0,
-            energy: 0, // Energy Points (BP)
+            uuid: data.uuid || generateUUID(),
+            // 运行时 HP/MP：优先使用 data 中定义的 currentHp (用于开场不满血)，否则为满值
+            currentHp: data.currentHp !== undefined ? data.currentHp : (data.initialStats.hp),
+            maxHp: maxHp,
+            currentMp: data.currentMp !== undefined ? data.currentMp : (data.initialStats.mp),
+            maxMp: maxMp,
+
+            // 基础战斗属性：优先使用 data 覆盖，否则从 initialStats 获取
+            atk: data.atk || data.initialStats.atk || 50,
+            def: data.def || data.initialStats.def || 30,
+            mag: data.mag || data.initialStats.mag || 10,
+            spd: data.spd || data.initialStats.spd || 10,
+
+            // 技能：合并初始技能并过滤
+            skills: filterExclusiveSkills([...(data.skills || []), ...(data.fixedPassiveSkills || [])]),
+            
+            // 状态：优先使用 data 中定义的初始状态 (用于开场带 Buff/Debuff)
+            statusEffects: [...(data.statusEffects || [])],
+            
+            // 运行时状态
+            isDefending: data.isDefending || false,
+            atb: data.atb || 0,
+            energy: data.energy || 0, // Energy Points (BP)
             isPlayer: isPlayer,
-            actionCount: 0
+            actionCount: data.actionCount || 0
         };
     };
 
     const hydrateUnit = (state, isPlayer) => {
         if (!state) return null;
 
-        // For players, we filter the skills list to only include equipped and fixed skills
+        // 对于玩家角色，合并已装备和固定技能
         let battleSkills = state.skills || [];
         if (isPlayer) {
             const equippedActive = state.equippedActiveSkills || [];
             const equippedPassive = state.equippedPassiveSkills || [];
             const fixedPassive = state.fixedPassiveSkills || [];
-
-            // Combine all active and passive skills that should be available in battle
             battleSkills = [...equippedActive, ...equippedPassive, ...fixedPassive];
-
-            // Deduplicate and filter exclusive skills
             battleSkills = filterExclusiveSkills([...new Set(battleSkills)]);
         }
 
+        const maxHp = state.maxHp || state.initialStats.hp;
+        const maxMp = state.maxMp || state.initialStats.mp;
+
         return {
             ...state,
-            uuid: generateUUID(),
+            uuid: state.uuid || generateUUID(),
             skills: battleSkills,
-            // Runtime state for battle
-            statusEffects: [],
-            isDefending: false,
-            atb: 0,
-            energy: 0,
+            
+            // 运行时属性：优先保留 state 中的值（用于存档加载/持久化），否则从基础属性初始化
+            currentHp: state.currentHp !== undefined ? state.currentHp : state.initialStats.hp,
+            maxHp: maxHp,
+            currentMp: state.currentMp !== undefined ? state.currentMp : state.initialStats.mp,
+            maxMp: maxMp,
+
+            atk: state.atk || state.initialStats.atk || 50,
+            def: state.def || state.initialStats.def || 30,
+            mag: state.mag || state.initialStats.mag || 10,
+            spd: state.spd || state.initialStats.spd || 10,
+
+            // 状态
+            statusEffects: state.statusEffects ? [...state.statusEffects] : [],
+            isDefending: state.isDefending || false,
+            atb: state.atb || 0,
+            energy: state.energy || 0,
             isPlayer: isPlayer,
-            actionCount: 0
+            actionCount: state.actionCount || 0
         };
     };
 

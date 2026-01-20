@@ -16,7 +16,7 @@ export default {
     initialStats: {
       hp: 50000,
       mp: 9999,
-      str: 50,
+      atk: 50,
       def: 40,
       mag: 40,
       spd: 10
@@ -50,7 +50,7 @@ export default {
     initialStats: {
       hp: 45000,
       mp: 9999,
-      str: 45,
+      atk: 45,
       def: 35,
       mag: 50,
       spd: 15
@@ -84,7 +84,7 @@ export default {
     initialStats: {
       hp: 60000,
       mp: 9999,
-      str: 60,
+      atk: 60,
       def: 45,
       mag: 55,
       spd: 20
@@ -118,7 +118,7 @@ export default {
     initialStats: {
       hp: 70000,
       mp: 9999,
-      str: 50,
+      atk: 50,
       def: 50,
       mag: 65,
       spd: 22

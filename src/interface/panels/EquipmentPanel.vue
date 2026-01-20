@@ -41,9 +41,9 @@
           <div class="stats-grid">
             <div class="stat-row"><span class="label" v-t="'stats.atk'"></span> <span class="value">1,250 <span class="diff-positive">(+45)</span></span></div>
             <div class="stat-row"><span class="label" v-t="'stats.def'"></span> <span class="value">890</span></div>
-            <div class="stat-row"><span class="label" v-t="'stats.matk'"></span> <span class="value">420</span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.mag'"></span> <span class="value">420</span></div>
             <div class="stat-row"><span class="label" v-t="'stats.mdef'"></span> <span class="value">650</span></div>
-            <div class="stat-row"><span class="label" v-t="'stats.agi'"></span> <span class="value">330</span></div>
+            <div class="stat-row"><span class="label" v-t="'stats.spd'"></span> <span class="value">330</span></div>
             <div class="stat-row"><span class="label" v-t="'stats.luck'"></span> <span class="value">120</span></div>
           </div>
         </div>

@@ -19,10 +19,6 @@ export const StatusSchema = z.object({
     // 'none': 不自动减少（用于弹药、光环、永久被动）
     decayMode: z.enum(['turn', 'action', 'none']).optional().default('turn'),
 
-    // 堆叠相关
-    hasStack: z.boolean().optional(),
-    stackLabel: LocalizedStringSchema.optional(),
-
     // 战斗属性
     deathChance: z.number().min(0).max(1).optional(), // 濒死状态下的死亡概率
 

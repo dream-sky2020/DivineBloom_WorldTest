@@ -26,11 +26,11 @@
             <span class="stat-value">62</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label" v-t="'stats.matk'"></span>
+            <span class="stat-label" v-t="'stats.mag'"></span>
             <span class="stat-value">40</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label" v-t="'stats.agi'"></span>
+            <span class="stat-label" v-t="'stats.spd'"></span>
             <span class="stat-value">55</span>
           </div>
         </div>

@@ -25,14 +25,6 @@ export default {
             ko: '현재 남은 탄약 수. 다 쓰면 재장전이 필요하다.'
         },
         decayMode: 'none', // 不自动减少
-        hasStack: true, // 启用层数/强度显示
-        stackLabel: { // 可选：用于UI显示层数含义
-            zh: '发',
-            'zh-TW': '發',
-            en: 'rds',
-            ja: '発',
-            ko: '발'
-        },
         effects: []
     },
     'status_chambered_count': {
@@ -61,14 +53,6 @@ export default {
             ko: '탄약이 장전되어 있음'
         },
         decayMode: 'none', // 不自动减少
-        hasStack: true,
-        stackLabel: {
-            zh: '发',
-            'zh-TW': '發',
-            en: 'rds',
-            ja: '発',
-            ko: '발'
-        },
         effects: []
     },
 }

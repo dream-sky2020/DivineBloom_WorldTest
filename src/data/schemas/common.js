@@ -17,7 +17,7 @@ export const LocalizedStringSchema = z.object({
 export const StatsSchema = z.object({
     hp: z.number().optional(),
     mp: z.number().optional(),
-    str: z.number().optional(),
+    atk: z.number().optional(),
     def: z.number().optional(),
     mag: z.number().optional(),
     spd: z.number().optional()

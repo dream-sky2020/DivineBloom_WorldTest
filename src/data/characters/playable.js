@@ -14,7 +14,7 @@ export default {
     initialStats: {
       hp: 4500,
       mp: 150,
-      str: 18,
+      atk: 18,
       def: 12,
       mag: 8,
       spd: 10
@@ -48,7 +48,7 @@ export default {
     initialStats: {
       hp: 3380,
       mp: 220,
-      str: 14,
+      atk: 14,
       def: 10,
       mag: 20,
       spd: 14
@@ -96,7 +96,7 @@ export default {
     initialStats: {
       hp: 3300,
       mp: 300,
-      str: 6,
+      atk: 6,
       def: 8,
       mag: 25,
       spd: 12
@@ -130,7 +130,7 @@ export default {
     initialStats: {
       hp: 4550,
       mp: 160,
-      str: 22,
+      atk: 22,
       def: 10,
       mag: 5,
       spd: 18
@@ -164,7 +164,7 @@ export default {
     initialStats: {
       hp: 5600,
       mp: 180,
-      str: 24,
+      atk: 24,
       def: 14,
       mag: 5,
       spd: 16
@@ -198,7 +198,7 @@ export default {
     initialStats: {
       hp: 3400,
       mp: 250,
-      str: 10,
+      atk: 10,
       def: 10,
       mag: 18,
       spd: 12
@@ -258,7 +258,7 @@ export default {
     initialStats: {
       hp: 3350,
       mp: 320,
-      str: 5,
+      atk: 5,
       def: 8,
       mag: 26,
       spd: 15

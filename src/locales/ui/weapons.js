@@ -82,6 +82,13 @@ export default {
     en: 'Shield',
     ja: '盾',
     ko: '방패'
+  },
+  dagger: {
+    zh: '短剑',
+    'zh-TW': '短劍',
+    en: 'Dagger',
+    ja: '短剣',
+    ko: '단검'
   }
 }
 

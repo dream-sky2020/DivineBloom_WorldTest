@@ -27,41 +27,6 @@ export default {
     ja: '防御力',
     ko: '방어력'
   },
-  matk: {
-    zh: '魔法攻击',
-    'zh-TW': '魔法攻擊',
-    en: 'M.Attack',
-    ja: '魔法攻撃',
-    ko: '마법공격'
-  },
-  mdef: {
-    zh: '魔法防御',
-    'zh-TW': '魔法防禦',
-    en: 'M.Defense',
-    ja: '魔法防御',
-    ko: '마법방어'
-  },
-  agi: {
-    zh: '敏捷',
-    'zh-TW': '敏捷',
-    en: 'Agility',
-    ja: '素早さ',
-    ko: '민첩'
-  },
-  luck: {
-    zh: '幸运',
-    'zh-TW': '幸運',
-    en: 'Luck',
-    ja: '運',
-    ko: '운'
-  },
-  str: {
-    zh: '力量',
-    'zh-TW': '力量',
-    en: 'Strength',
-    ja: '力',
-    ko: '힘'
-  },
   mag: {
     zh: '魔力',
     'zh-TW': '魔力',
@@ -75,6 +40,27 @@ export default {
     en: 'Speed',
     ja: '素早さ',
     ko: '속도'
+  },
+  mdef: {
+    zh: '魔法防御',
+    'zh-TW': '魔法防禦',
+    en: 'M.Defense',
+    ja: '魔法防御',
+    ko: '마법방어'
+  },
+  // 额外属性 (UI展示)
+  agi: {
+    zh: '敏捷',
+    'zh-TW': '敏捷',
+    en: 'Agility',
+    ja: '素早さ',
+    ko: '민첩'
+  },
+  luck: {
+    zh: '幸运',
+    'zh-TW': '幸運',
+    en: 'Luck',
+    ja: '運',
+    ko: '운'
   }
 }
-

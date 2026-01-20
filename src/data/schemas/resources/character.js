@@ -20,11 +20,37 @@ export const CharacterSchema = z.object({
     initialStats: z.object({
         hp: z.number(),
         mp: z.number(),
-        str: z.number(),
+        atk: z.number(), // 攻击力 (对应原 str)
         def: z.number(),
         mag: z.number(),
         spd: z.number()
     }),
+
+    // --- 战斗运行时属性 (Battle Runtime) ---
+    // 这些属性在静态数据中可选，用于定义初始状态（如半血开场、自带状态等）
+    uuid: z.string().optional(),
+    currentHp: z.number().optional(),
+    maxHp: z.number().optional(),
+    currentMp: z.number().optional(),
+    maxMp: z.number().optional(),
+
+    // 基础战斗属性镜像（可选，默认从 initialStats 获取）
+    atk: z.number().optional(),
+    def: z.number().optional(),
+    mag: z.number().optional(),
+    spd: z.number().optional(),
+
+    statusEffects: z.array(z.object({
+        id: ID,
+        duration: z.number().int().optional().default(3),
+        value: z.any().optional()
+    })).optional().default([]),
+
+    isDefending: z.boolean().optional().default(false),
+    atb: z.number().optional().default(0),
+    energy: z.number().optional().default(0), // BP 点数
+    isPlayer: z.boolean().optional().default(false),
+    actionCount: z.number().int().optional().default(0),
     
     // Skill System
     skills: z.array(ID).optional().default([]), // All skills learned/owned

@@ -1,0 +1,8 @@
+refactor: modernize character stats and implement runtime battle initialization
+
+- Rename 'str' to 'atk' across schemas, locales, and character data for consistency.
+- Update CharacterSchema to include optional battle runtime properties (currentHp, statusEffects, etc.).
+- Enhance BattleStore to support initializing units with pre-defined health and status effects.
+- Add 'Wounded Scout' enemy to demonstrate initial debuffs and partial health spawning.
+- Remove unused stacking fields from StatusSchema and clean up special status data.
+- Update UI components to use consistent stat keys (mag, spd).
