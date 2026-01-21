@@ -78,5 +78,9 @@ export {
 } from '@/game/ecs/entities/definitions/GlobalEntity.js';
 
 export {
+    SceneConfigSchema
+} from '@/game/ecs/entities/components/SceneConfig.js';
+
+export {
     ObstacleEntitySchema
 } from '@/game/ecs/entities/definitions/ObstacleEntity.js';

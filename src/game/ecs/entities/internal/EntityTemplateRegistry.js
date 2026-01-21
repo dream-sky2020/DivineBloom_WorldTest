@@ -116,6 +116,7 @@ export class EntityTemplateRegistry {
             getDefaultData: (mousePos) => ({
                 x: mousePos?.x || 400,
                 y: mousePos?.y || 300,
+                name: '障碍物',
                 width: 40,
                 height: 40,
                 shape: 'aabb'  // 修改为小写
@@ -155,6 +156,7 @@ export class EntityTemplateRegistry {
             getDefaultData: (mousePos) => ({
                 x: mousePos?.x || 400,
                 y: mousePos?.y || 300,
+                name: '圆形障碍',
                 radius: 30,
                 shape: 'circle'  // 修改为小写
             })

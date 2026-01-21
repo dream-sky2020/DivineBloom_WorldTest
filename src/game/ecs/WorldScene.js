@@ -256,9 +256,11 @@ export class WorldScene {
                 })
             })
 
-            // 物理阶段 (特殊参数处理)
-            const mapWidth = this.mapData.width || 800
-            const mapHeight = this.mapData.height || 600
+            // 物理阶段 (优先从 SceneConfig 组件读取动态数据)
+            const sceneConfigEntity = world.with('sceneConfig').first;
+            const mapWidth = sceneConfigEntity ? sceneConfigEntity.sceneConfig.width : (this.mapData.width || 800);
+            const mapHeight = sceneConfigEntity ? sceneConfigEntity.sceneConfig.height : (this.mapData.height || 600);
+
             const physicsOptions = {
                 mapBounds: { width: mapWidth, height: mapHeight }
             }

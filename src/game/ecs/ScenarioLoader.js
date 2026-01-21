@@ -1,5 +1,6 @@
 import { EntityManager } from '@/game/ecs/entities/EntityManager'
 import { BackgroundEntity } from '@/game/ecs/entities/definitions/BackgroundEntity'
+import { SceneEntity } from '@/game/ecs/entities/definitions/SceneEntity'
 import { PlayerConfig } from '@/data/assets'
 import Enemies from '@/data/characters/enemies'
 import { world } from '@/game/ecs/world'
@@ -16,6 +17,9 @@ const logger = createLogger('ScenarioLoader')
 const ENTITY_FACTORIES = {
     // 背景层工厂
     background: (config) => {
+        // 创建场景配置实体 (ECS 数据驱动)
+        SceneEntity.create(config)
+
         if (config && config.groundColor) {
             const groundW = config.width || 2000
             const groundH = config.height || 2000
@@ -161,7 +165,10 @@ export class ScenarioLoader {
         source.obstacles?.forEach(obs => {
             entities.push({
                 type: 'obstacle',
-                data: { ...obs }
+                data: { 
+                    name: obs.name || `Obstacle_${obs.shape || 'Box'}`,
+                    ...obs 
+                }
             })
         })
 
@@ -251,14 +258,28 @@ export class ScenarioLoader {
             .map(ent => EntitySerializer.serialize(ent))
             .filter(Boolean)
 
-        // [FIX] 尝试从世界中查找地面实体以获取背景色和尺寸，解决切换场景时 Ground 消失的问题
-        const groundEntity = Array.from(world).find(e => e.type === 'background_ground');
-        const groundColor = groundEntity?.visual?.color || '#000';
-        const groundW = groundEntity?.visual?.width || 3200;
-        const groundH = groundEntity?.visual?.height || 2400;
+        // [FIX] 优先从 SceneConfig 组件获取场景元数据，解决切换场景或编辑后的持久化问题
+        const sceneConfigEntity = world.with('sceneConfig').first;
+        let groundW, groundH, groundColor, sceneName;
+
+        if (sceneConfigEntity) {
+            const config = sceneConfigEntity.sceneConfig;
+            groundW = config.width;
+            groundH = config.height;
+            groundColor = config.groundColor;
+            sceneName = config.name;
+        } else {
+            // 备选方案：尝试从世界中查找地面实体以获取背景色和尺寸
+            const groundEntity = Array.from(world).find(e => e.type === 'background_ground');
+            groundColor = groundEntity?.visual?.color || '#000';
+            groundW = groundEntity?.visual?.width || 3200;
+            groundH = groundEntity?.visual?.height || 2400;
+            sceneName = 'Unknown Scene';
+        }
 
         const config = {
             id: mapId,
+            name: sceneName,
             width: groundW,
             height: groundH,
             groundColor: groundColor

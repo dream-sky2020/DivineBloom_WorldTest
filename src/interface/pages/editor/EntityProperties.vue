@@ -2,7 +2,12 @@
   <div class="entity-properties">
     <template v-if="localEntityState">
       <div class="inspector-header">
-        <span class="entity-type-tag">{{ localEntityState.type || 'ENTITY' }}</span>
+        <span 
+          class="entity-type-tag"
+          :style="localEntityState.inspector?.tagColor ? { backgroundColor: localEntityState.inspector.tagColor, color: 'white' } : {}"
+        >
+          {{ localEntityState.inspector?.tagName || localEntityState.type || 'ENTITY' }}
+        </span>
         <button 
           v-if="localEntityState.inspector?.allowDelete !== false" 
           class="header-delete-btn" 

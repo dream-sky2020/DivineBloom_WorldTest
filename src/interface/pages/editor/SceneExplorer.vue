@@ -20,8 +20,13 @@
         @contextmenu="handleRightClick($event, e)"
       >
         <div class="entity-info">
-          <span v-if="e.globalManager" class="entity-type global">Global</span>
-          <span v-else class="entity-type">{{ e.type || 'Unknown' }}</span>
+          <span 
+            class="entity-type" 
+            :class="{ global: e.globalManager }"
+            :style="e.inspector?.tagColor ? { backgroundColor: e.inspector.tagColor, color: 'white' } : {}"
+          >
+            {{ e.inspector?.tagName || e.type || 'Unknown' }}
+          </span>
           <span class="entity-name">{{ e.name || (e.globalManager ? 'Global Manager' : '(无名称)') }}</span>
         </div>
         <div class="entity-meta">

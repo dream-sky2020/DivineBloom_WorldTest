@@ -6,6 +6,7 @@ import { Inspector } from '@/game/ecs/entities/components/Inspector'
 export const ObstacleEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
+  name: z.string().optional().default('Obstacle'),
   width: z.number().optional(),
   height: z.number().optional(),
   radius: z.number().optional(),
@@ -16,6 +17,7 @@ export const ObstacleEntitySchema = z.object({
 });
 
 const INSPECTOR_FIELDS = [
+  { path: 'name', label: '名称', type: 'text' },
   { path: 'position.x', label: '坐标 X', type: 'number' },
   { path: 'position.y', label: '坐标 Y', type: 'number' },
   { path: 'collider.type', label: '形状类型', type: 'text', tip: 'AABB, CIRCLE, POLYGON, SEGMENT' },
@@ -33,10 +35,11 @@ export const ObstacleEntity = {
       return null;
     }
 
-    const { x, y, width, height, radius, p1, p2, rotation, shape } = result.data;
+    const { x, y, name, width, height, radius, p1, p2, rotation, shape } = result.data;
 
     return world.add({
       type: 'obstacle',
+      name: name,
       position: { x, y },
       collider: Physics.Collider({
         type: shape,
@@ -56,6 +59,7 @@ export const ObstacleEntity = {
   serialize(entity) {
     return {
       type: 'obstacle',
+      name: entity.name,
       x: entity.position.x,
       y: entity.position.y,
       width: entity.collider.width,

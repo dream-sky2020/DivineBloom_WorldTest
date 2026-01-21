@@ -8,10 +8,12 @@ export const Inspector = {
     /**
      * 创建 Inspector 组件
      * @param {Object} config 配置信息
-     * @param {Array} config.groups 分组显示 (可选)
-     * @param {Array} config.fields 字段映射
-     * @param {boolean} config.allowDelete 是否允许删除
-     * @param {number} config.priority 场景浏览器排序优先级（越高越靠前，默认 0）
+     * @param {string} [config.tagName] UI 显示的标签名称 (如 "Global", "Config")
+     * @param {string} [config.tagColor] 标签的背景颜色 (CSS 颜色值)
+     * @param {Array} [config.groups] 分组显示 (可选)
+     * @param {Array} [config.fields] 字段映射
+     * @param {boolean} [config.allowDelete] 是否允许删除
+     * @param {number} [config.priority] 场景浏览器排序优先级（越高越靠前，默认 0）
      * 
      * field 结构:
      * {
@@ -23,8 +25,10 @@ export const Inspector = {
      *   props: Object    // 传给 input 的额外属性，如 { min: 0, max: 100, step: 1 }
      * }
      */
-    create({ groups = [], fields = [], allowDelete = true, priority = 0 } = {}) {
+    create({ tagName = null, tagColor = null, groups = [], fields = [], allowDelete = true, priority = 0 } = {}) {
         return {
+            tagName,
+            tagColor,
             groups,
             fields,
             allowDelete,

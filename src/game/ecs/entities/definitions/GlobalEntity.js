@@ -60,6 +60,7 @@ export const GlobalEntity = {
 
         const entity = {
             type: 'global_manager',
+            name: 'Global Manager',
             globalManager: true, // Tag
 
             persist: true,
@@ -77,7 +78,9 @@ export const GlobalEntity = {
             mousePosition: MousePosition.create(),
 
             // [NEW] 添加 Inspector
-            inspector: Inspector.create({ 
+            inspector: Inspector.create({
+                tagName: 'Global',
+                tagColor: '#7c3aed', // 紫色
                 fields: INSPECTOR_FIELDS,
                 allowDelete: false, // 全局管理器禁止删除
                 priority: 1000 // 最高优先级，始终显示在场景浏览器顶部
