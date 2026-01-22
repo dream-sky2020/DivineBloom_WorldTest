@@ -63,7 +63,17 @@ export const PortalDestinationEntity = {
       isStatic: true,
 
       // [NEW] 添加 Inspector
-      inspector: Inspector.create({ fields: INSPECTOR_FIELDS })
+      inspector: Inspector.create({ 
+        fields: INSPECTOR_FIELDS,
+        hitPriority: 60,
+        // 目的地是一个点，我们定义一个稍大的编辑框方便点击
+        editorBox: {
+          w: 32,
+          h: 32,
+          anchorX: 0.5,
+          anchorY: 0.5
+        }
+      })
     })
   },
 

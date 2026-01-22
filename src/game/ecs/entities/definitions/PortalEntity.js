@@ -123,7 +123,17 @@ export const PortalEntity = {
       ),
 
       // [NEW] 添加 Inspector
-      inspector: Inspector.create({ fields: INSPECTOR_FIELDS })
+      inspector: Inspector.create({ 
+        fields: INSPECTOR_FIELDS,
+        hitPriority: 70,
+        // 传送门通常没有视觉，我们显式定义一个编辑框，方便点击
+        editorBox: {
+          w: width,
+          h: height,
+          anchorX: 0,
+          anchorY: 0
+        }
+      })
     })
   },
 

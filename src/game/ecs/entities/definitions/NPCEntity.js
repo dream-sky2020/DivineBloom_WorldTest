@@ -82,7 +82,10 @@ export const NPCEntity = {
       ),
 
       // [NEW] 添加 Inspector
-      inspector: Inspector.create({ fields: INSPECTOR_FIELDS })
+      inspector: Inspector.create({ 
+        fields: INSPECTOR_FIELDS,
+        hitPriority: 80
+      })
     })
 
     return entity

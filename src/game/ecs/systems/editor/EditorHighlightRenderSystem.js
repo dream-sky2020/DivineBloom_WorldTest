@@ -30,42 +30,19 @@ export const EditorHighlightRenderSystem = {
         continue;
       }
 
-      const { x, y } = entity.position;
-      const screenX = x - camera.x;
-      const screenY = y - camera.y;
+      // 使用统一的边界计算逻辑
+      const bounds = EditorInteractionSystem.getEntityBounds(entity);
+      if (!bounds) continue;
+
+      const screenX = bounds.left - camera.x;
+      const screenY = bounds.top - camera.y;
 
       // 剔除屏幕外 (稍微多留一点边距)
-      if (screenX < -100 || screenX > renderer.width + 100 || 
-          screenY < -100 || screenY > renderer.height + 100) continue;
+      if (screenX < -200 || screenX > renderer.width + 200 || 
+          screenY < -200 || screenY > renderer.height + 200) continue;
 
-      // 确定框体大小和位置
-      let w = 32, h = 32, ax = 0.5, ay = 1.0;
       let label = entity.name || entity.type || 'Entity';
-
-      if (entity.visual) {
-        const def = Visuals[entity.visual.id];
-        if (def) {
-          w = (def.layout?.width) || 32;
-          h = (def.layout?.height) || 32;
-          ax = def.anchor?.x ?? 0.5;
-          ay = def.anchor?.y ?? 1.0;
-        }
-      } else if (entity.detectArea && entity.detectArea.size) {
-        w = entity.detectArea.size.w;
-        h = entity.detectArea.size.h;
-        // 传送门等 detectArea 通常是居中计算 offset
-        if (entity.detectArea.offset) {
-          const centerX = screenX + entity.detectArea.offset.x;
-          const centerY = screenY + entity.detectArea.offset.y;
-          this.drawBox(ctx, centerX - w/2, centerY - h/2, w, h, isSelected, isDragging, label, x, y);
-          continue;
-        }
-        ax = 0; ay = 0;
-      }
-
-      const left = screenX - w * ax;
-      const top = screenY - h * ay;
-      this.drawBox(ctx, left, top, w, h, isSelected, isDragging, label, x, y);
+      this.drawBox(ctx, screenX, screenY, bounds.w, bounds.h, isSelected, isDragging, label, entity.position.x, entity.position.y);
     }
 
     ctx.restore();

@@ -71,12 +71,12 @@ export const EditorInteractionSystem = {
     // 4. 处理右键点击 (Right Click) - 统一处理所有右键事件
     if (mouse.rightJustPressed) {
       const hit = this.findEntityAt(worldX, worldY);
-      
+
       if (hit) {
         // 右键点击到了实体
         this.selectedEntity = hit;
         gameManager.editor.selectedEntity = hit;
-        
+
         // 触发实体右键菜单回调
         if (this.onEntityRightClick) {
           this.onEntityRightClick(hit, { worldX, worldY, screenX: mouse.screenX, screenY: mouse.screenY });
@@ -92,64 +92,75 @@ export const EditorInteractionSystem = {
   },
 
   /**
+   * 统一获取实体的编辑边界框
+   */
+  getEntityBounds(entity) {
+    if (!entity.position) return null;
+
+    const inspector = entity.inspector;
+    let w = 32, h = 32, ax = 0.5, ay = 1.0, ox = 0, oy = 0;
+
+    // 1. 优先使用 Inspector 定义的 editorBox
+    if (inspector && inspector.editorBox) {
+      const box = inspector.editorBox;
+      w = box.w ?? w;
+      h = box.h ?? h;
+      ax = box.anchorX ?? ax;
+      ay = box.anchorY ?? ay;
+      ox = box.offsetX ?? 0;
+      oy = box.offsetY ?? 0;
+    }
+    // 2. 其次使用 Visuals 定义
+    else if (entity.visual) {
+      const def = Visuals[entity.visual.id];
+      if (def) {
+        w = (def.layout?.width) || 32;
+        h = (def.layout?.height) || 32;
+        ax = def.anchor?.x ?? 0.5;
+        ay = def.anchor?.y ?? 1.0;
+      }
+    }
+    // 3. 最后考虑 detectArea (针对传送门等无视觉实体)
+    else if (entity.detectArea && entity.detectArea.size) {
+      w = entity.detectArea.size.w;
+      h = entity.detectArea.size.h;
+      if (entity.detectArea.offset) {
+        ox = entity.detectArea.offset.x;
+        oy = entity.detectArea.offset.y;
+        ax = 0.5; ay = 0.5; // detectArea 通常是中心对齐
+      } else {
+        ax = 0; ay = 0;
+      }
+    }
+
+    const left = entity.position.x + ox - w * ax;
+    const top = entity.position.y + oy - h * ay;
+
+    return { left, top, w, h, ax, ay, ox, oy };
+  },
+
+  /**
    * 查找坐标下的实体
    */
   findEntityAt(x, y) {
-    const entities = world.with('position'); // 只要有位置，就应该是可编辑的
+    const entities = world.with('position');
     let bestHit = null;
-    let maxZ = -Infinity;
+    let maxPriority = -Infinity;
 
     for (const entity of entities) {
-      const { position, visual, detectArea } = entity;
+      const bounds = this.getEntityBounds(entity);
+      if (!bounds) continue;
 
-      let w = 16;
-      let h = 16;
-      let ax = 0.5;
-      let ay = 0.5;
+      const { left, top, w, h } = bounds;
 
-      if (visual) {
-        const def = Visuals[visual.id];
-        if (def) {
-          w = (def.layout?.width) || 32;
-          h = (def.layout?.height) || 32;
-          ax = def.anchor?.x ?? 0.5;
-          ay = def.anchor?.y ?? 1.0;
-        }
-      } else if (detectArea && detectArea.size) {
-        // 如果没有视觉但有检测区域（如传送门）
-        w = detectArea.size.w;
-        h = detectArea.size.h;
-        ax = 0; // 传送门默认 x,y 是左上角
-        ay = 0;
+      if (x >= left && x <= left + w && y >= top && y <= top + h) {
+        // 优先级判断：hitPriority > priority > zIndex
+        const priority = entity.inspector?.hitPriority ??
+          (entity.inspector?.priority ? entity.inspector.priority * 10 : 0) ??
+          entity.zIndex ?? 0;
 
-        // 如果 detectArea 有 offset，需要调整
-        if (detectArea.offset) {
-          // 我们的 PortalEntity 是把 x,y 作为左上角，然后 offset 是 size/2
-          // 实际上 AABB 系统判断时用的是 position.x + offset.x +/- size.w/2
-          // 所以中心点在 position.x + offset.x
-          const centerX = position.x + detectArea.offset.x;
-          const centerY = position.y + detectArea.offset.y;
-          const left = centerX - w / 2;
-          const right = centerX + w / 2;
-          const top = centerY - h / 2;
-          const bottom = centerY + h / 2;
-
-          if (x >= left && x <= right && y >= top && y <= bottom) {
-            return entity; // 传送门通常不多，直接返回
-          }
-          continue;
-        }
-      }
-
-      const left = position.x - w * ax;
-      const right = position.x + w * (1 - ax);
-      const top = position.y - h * ay;
-      const bottom = position.y + h * (1 - ay);
-
-      if (x >= left && x <= right && y >= top && y <= bottom) {
-        const z = entity.zIndex || 0;
-        if (z >= maxZ) {
-          maxZ = z;
+        if (priority >= maxPriority) {
+          maxPriority = priority;
           bestHit = entity;
         }
       }

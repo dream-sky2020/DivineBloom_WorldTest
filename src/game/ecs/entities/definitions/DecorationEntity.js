@@ -84,7 +84,10 @@ export const DecorationEntity = {
             visual: visualComponent,
             zIndex: zIndex,
             // 🎯 添加 Inspector 映射组件
-            inspector: Inspector.create({ fields: INSPECTOR_FIELDS })
+            inspector: Inspector.create({
+                fields: INSPECTOR_FIELDS,
+                hitPriority: 40
+            })
         };
 
         if (collider) {

@@ -83,7 +83,8 @@ export const GlobalEntity = {
                 tagColor: '#7c3aed', // 紫色
                 fields: INSPECTOR_FIELDS,
                 allowDelete: false, // 全局管理器禁止删除
-                priority: 1000 // 最高优先级，始终显示在场景浏览器顶部
+                priority: 1000, // 最高优先级，始终显示在场景浏览器顶部
+                hitPriority: 1000 // 点击优先级也设为最高
             }),
 
             // [NEW] 命令队列

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { world } from '@/game/ecs/world'
 import { Visuals } from '@/game/ecs/entities/components/Visuals'
+import { Inspector } from '@/game/ecs/entities/components/Inspector'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('BackgroundEntity')
@@ -37,6 +38,13 @@ export const BackgroundEntity = {
             position: { x: 0, y: 0 },
             visual: Visuals.Rect(d.width, d.height, d.color),
             zIndex: -100, // 最底层
+            // [NEW] 添加 Inspector
+            inspector: Inspector.create({
+                tagName: 'Background',
+                tagColor: '#64748b',
+                allowDelete: false,
+                hitPriority: 10 // 背景点击优先级最低
+            })
         })
     },
 

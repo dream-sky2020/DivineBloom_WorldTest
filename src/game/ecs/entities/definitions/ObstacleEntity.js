@@ -52,7 +52,10 @@ export const ObstacleEntity = {
         isStatic: true // 障碍物通常是静态的
       }),
       // [NEW] 添加 Inspector
-      inspector: Inspector.create({ fields: INSPECTOR_FIELDS })
+      inspector: Inspector.create({ 
+        fields: INSPECTOR_FIELDS,
+        hitPriority: 50 
+      })
     });
   },
 

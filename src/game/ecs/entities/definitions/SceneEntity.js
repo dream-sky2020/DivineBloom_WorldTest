@@ -40,7 +40,8 @@ export const SceneEntity = {
                 tagColor: '#10b981', // 绿色
                 fields: INSPECTOR_FIELDS,
                 allowDelete: false, // 场景配置禁止删除
-                priority: 900       // 优先级仅次于全局管理器
+                priority: 900,      // 优先级仅次于全局管理器
+                hitPriority: 900
             }),
 
             // 标记为场景唯一实体，通常不需要物理组件

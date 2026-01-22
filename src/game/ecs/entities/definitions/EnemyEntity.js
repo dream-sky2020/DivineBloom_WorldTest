@@ -130,7 +130,10 @@ export const EnemyEntity = {
       ),
 
       // [NEW] 添加 Inspector 映射
-      inspector: Inspector.create({ fields: INSPECTOR_FIELDS })
+      inspector: Inspector.create({
+        fields: INSPECTOR_FIELDS,
+        hitPriority: 80
+      })
     })
 
     // [REMOVED] Vision Indicator Entity

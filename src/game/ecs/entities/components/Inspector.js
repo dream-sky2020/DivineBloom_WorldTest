@@ -14,6 +14,8 @@ export const Inspector = {
      * @param {Array} [config.fields] 字段映射
      * @param {boolean} [config.allowDelete] 是否允许删除
      * @param {number} [config.priority] 场景浏览器排序优先级（越高越靠前，默认 0）
+     * @param {number} [config.hitPriority] 编辑器点击优先级 (数字越大越先被选中)
+     * @param {Object} [config.editorBox] 手动指定编辑器交互框 { w, h, anchorX, anchorY, offsetX, offsetY }
      * 
      * field 结构:
      * {
@@ -25,14 +27,16 @@ export const Inspector = {
      *   props: Object    // 传给 input 的额外属性，如 { min: 0, max: 100, step: 1 }
      * }
      */
-    create({ tagName = null, tagColor = null, groups = [], fields = [], allowDelete = true, priority = 0 } = {}) {
+    create({ tagName = null, tagColor = null, groups = [], fields = [], allowDelete = true, priority = 0, hitPriority = 0, editorBox = null } = {}) {
         return {
             tagName,
             tagColor,
             groups,
             fields,
             allowDelete,
-            priority
+            priority,
+            hitPriority,
+            editorBox
         };
     }
 };
