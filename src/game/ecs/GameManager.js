@@ -31,8 +31,20 @@ class GameManager {
             editMode: false,
             // 侧边栏布局配置
             layout: {
-                left: ['project-manager', 'entity-creator', 'scene-explorer'], // 添加实体创建器
-                right: ['entity-properties'] // 右侧面板列表
+                left: [
+                    { 
+                        id: 'group-left-1', 
+                        activeId: 'project-manager', 
+                        panels: ['project-manager', 'entity-creator', 'scene-explorer'] 
+                    }
+                ],
+                right: [
+                    { 
+                        id: 'group-right-1', 
+                        activeId: 'entity-properties', 
+                        panels: ['entity-properties'] 
+                    }
+                ]
             }
         })
 

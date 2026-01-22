@@ -24,10 +24,8 @@
           @dragover.prevent
           @drop="onDrop($event, 'left')"
         >
-          <div v-for="panelId in gameManager.editor.layout.left" :key="panelId" class="sidebar-panel-wrapper">
-            <SidebarPanel :id="panelId" :title="getPanelTitle(panelId)" side="left">
-              <component :is="getPanelComponent(panelId)" />
-            </SidebarPanel>
+          <div v-for="group in gameManager.editor.layout.left" :key="group.id" class="sidebar-panel-wrapper">
+            <TabbedPanelGroup :group="group" side="left" />
           </div>
           <div v-if="gameManager.editor.layout.left.length === 0" class="sidebar-placeholder">
             <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">左侧无面板</h3>
@@ -92,10 +90,8 @@
           @dragover.prevent
           @drop="onDrop($event, 'right')"
         >
-          <div v-for="panelId in gameManager.editor.layout.right" :key="panelId" class="sidebar-panel-wrapper">
-            <SidebarPanel :id="panelId" :title="getPanelTitle(panelId)" side="right">
-              <component :is="getPanelComponent(panelId)" />
-            </SidebarPanel>
+          <div v-for="group in gameManager.editor.layout.right" :key="group.id" class="sidebar-panel-wrapper">
+            <TabbedPanelGroup :group="group" side="right" />
           </div>
           <div v-if="gameManager.editor.layout.right.length === 0" class="sidebar-placeholder">
             <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">右侧无面板</h3>
@@ -270,11 +266,8 @@ import BattleSystem from '@/interface/pages/systems/BattleSystem.vue';
 import DialogueSystem from '@/interface/pages/systems/DialogueSystem.vue';
 import DevToolsSystem from '@/interface/pages/systems/DevToolsSystem.vue';
 import DevTools from '@/interface/pages/DevTools.vue';
-import SidebarPanel from '@/interface/pages/editor/SidebarPanel.vue';
-import SceneExplorer from '@/interface/pages/editor/SceneExplorer.vue';
-import EntityProperties from '@/interface/pages/editor/EntityProperties.vue';
-import ProjectManager from '@/interface/pages/editor/ProjectManager.vue';
-import EntityCreator from '@/interface/pages/editor/EntityCreator.vue';
+import TabbedPanelGroup from '@/interface/pages/editor/TabbedPanelGroup.vue';
+import { getPanelTitle, getPanelComponent } from '@/game/interface/editor/PanelRegistry';
 
 // Context Menu State
 const contextMenu = ref({
@@ -787,43 +780,42 @@ const deleteEntity = (entity) => {
 };
 
 // Panel Management Helpers
-const getPanelTitle = (id) => {
-  const titles = {
-    'scene-explorer': '场景浏览器',
-    'entity-properties': '属性编辑',
-    'project-manager': '项目管理',
-    'entity-creator': '创建实体'
-  };
-  return titles[id] || id;
-};
-
-const getPanelComponent = (id) => {
-  const components = {
-    'scene-explorer': SceneExplorer,
-    'entity-properties': EntityProperties,
-    'project-manager': ProjectManager,
-    'entity-creator': EntityCreator
-  };
-  return components[id];
-};
-
 const onDrop = (e, targetSide) => {
   const panelId = e.dataTransfer.getData('panelId');
+  const sourceGroupId = e.dataTransfer.getData('sourceGroupId');
   const sourceSide = e.dataTransfer.getData('sourceSide');
   
-  if (!panelId || sourceSide === targetSide) return;
+  if (!panelId) return;
 
   const layout = gameManager.editor.layout;
+
+  // 1. 如果源和目标侧边栏不同，或者是在侧边栏空白处释放
+  // 我们创建一个新组并把面板移过去
   
-  // 从来源移除
-  layout[sourceSide] = layout[sourceSide].filter(id => id !== panelId);
-  
-  // 添加到目标
-  if (!layout[targetSide].includes(panelId)) {
-    layout[targetSide].push(panelId);
+  // 从原组移除
+  if (sourceGroupId) {
+    const sourceGroup = layout[sourceSide].find(g => g.id === sourceGroupId);
+    if (sourceGroup) {
+      sourceGroup.panels = sourceGroup.panels.filter(id => id !== panelId);
+      if (sourceGroup.activeId === panelId) {
+        sourceGroup.activeId = sourceGroup.panels[0];
+      }
+      if (sourceGroup.panels.length === 0) {
+        layout[sourceSide] = layout[sourceSide].filter(g => g.id !== sourceGroupId);
+      }
+    }
   }
+
+  // 2. 在目标侧边栏创建新组
+  const newGroup = {
+    id: `group-${Date.now()}`,
+    activeId: panelId,
+    panels: [panelId]
+  };
+  layout[targetSide].push(newGroup);
 };
 </script>
 
 <style scoped src="@styles/pages/GameUI.css"></style>
+<style scoped src="@styles/editor/Sidebar.css"></style>
 <style src="@styles/ui/ContextMenu.css"></style>

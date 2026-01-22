@@ -1,0 +1,158 @@
+.entity-creator {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 分类标签 */
+.category-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+  overflow-x: auto;
+}
+
+.category-tab {
+  padding: 6px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.category-tab:hover {
+  background: #334155;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+.category-tab.active {
+  background: #1e40af;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* 模板容器 */
+.templates-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+/* 模板卡片 */
+.template-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 100px;
+}
+
+.template-card:hover {
+  background: #334155;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+}
+
+.template-card:active {
+  transform: translateY(0);
+}
+
+.template-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.template-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.template-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.template-desc {
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+/* 提示区域 */
+.creator-hint {
+  padding: 8px 12px;
+  background: #0f172a;
+  border-top: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hint-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.hint-icon {
+  font-size: 14px;
+}
+
+.hint-text {
+  line-height: 1.4;
+}
+
+/* 滚动条样式 */
+.templates-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.templates-container::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.templates-container::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+.templates-container::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
