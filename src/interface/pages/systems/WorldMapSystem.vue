@@ -18,7 +18,7 @@
 
     <!-- NEW Dialogue Overlay (Connected to DialogueStore) -->
     <transition name="fade">
-      <div v-if="dialogueStore.isActive" class="dialogue-overlay pointer-events-auto" @click="handleOverlayClick">
+      <div v-if="dialogueStore.isActive" class="dialogue-overlay pointer-events-auto" @click="ctrl.handleOverlayClick()">
         <div class="dialogue-box" @click.stop>
           
           <!-- Speaker Name -->
@@ -55,86 +55,21 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
-import { gameManager } from '@/game/ecs/GameManager'
-import { useGameStore } from '@/stores/game'
-import { world } from '@/game/ecs/world'
+import { onMounted, onUnmounted } from 'vue'
+import { WorldMapController } from '@/game/interface/world/WorldMapController'
 
 const emit = defineEmits(['change-system'])
-const gameStore = useGameStore()
-const worldStore = gameStore.world
-const dialogueStore = gameStore.dialogue
+const ctrl = new WorldMapController()
 
-// 专门用于 UI 展示的响应式数据
-const debugInfo = ref({ x: 0, y: 0, lastInput: '' })
-
-const handleOverlayClick = () => {
-  dialogueStore.advance()
-}
-
-// UI Sync Loop (independent of GameEngine loop)
-let uiRafId = 0
-function syncUI() {
-  const scene = gameManager.currentScene.value
-  const engine = gameManager.engine
-
-  if (!scene || !engine) {
-      uiRafId = requestAnimationFrame(syncUI)
-      return
-  }
-  
-  const player = scene.player
-  if (!player) { // Player might not be ready
-      uiRafId = requestAnimationFrame(syncUI)
-      return
-  }
-  
-  // Count chasing enemies
-  let chasingCount = 0
-  if (scene.gameEntities) {
-      const entities = scene.gameEntities
-      for (let i = 0; i < entities.length; i++) {
-          const e = entities[i]
-          if (e.entity && e.entity.aiState && e.entity.aiState.state === 'chase') {
-              chasingCount++
-          }
-      }
-  }
-
-  // Get mouse position from global entity
-  const globalEntity = world.with('globalManager', 'mousePosition').first
-  const mouseX = globalEntity?.mousePosition?.worldX || 0
-  const mouseY = globalEntity?.mousePosition?.worldY || 0
-
-  // Update Reactive State
-  debugInfo.value = {
-    x: player.position ? player.position.x : 0,
-    y: player.position ? player.position.y : 0,
-    mouseX: mouseX,
-    mouseY: mouseY,
-    lastInput: engine.input.lastInput,
-    chasingCount
-  }
-  
-  uiRafId = requestAnimationFrame(syncUI)
-}
+const debugInfo = ctrl.debugInfo
+const dialogueStore = ctrl.dialogueStore
 
 onMounted(async () => {
-  // 1. Start/Resume World Map
-  // Canvas is handled globally in GameUI.vue
-  await gameManager.startWorldMap()
-
-  // 2. Start UI Loop
-  syncUI()
+  await ctrl.start()
 })
 
 onUnmounted(() => {
-  cancelAnimationFrame(uiRafId)
-
-  // Save State when leaving
-  if (gameManager.currentScene.value) {
-    worldStore.saveState(gameManager.currentScene.value)
-  }
+  ctrl.stop()
 })
 </script>
 

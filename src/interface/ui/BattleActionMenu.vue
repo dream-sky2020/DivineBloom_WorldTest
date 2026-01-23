@@ -132,6 +132,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import GameIcon from '@/interface/ui/GameIcon.vue';
+import { getLocalizedText } from '@/utils/i18nUtils';
 
 const props = defineProps({
   activeCharacter: Object,
@@ -167,13 +168,7 @@ defineEmits([
   'adjust-boost'
 ]);
 
-const { t, locale } = useI18n();
-
-const getLocalizedText = (obj) => {
-    if (!obj) return '';
-    if (typeof obj === 'string') return obj;
-    return obj[locale.value] || obj.en || obj.zh || '';
-};
+const { t } = useI18n();
 </script>
 
 <style scoped src="@styles/ui/BattleActionMenu.css"></style>
