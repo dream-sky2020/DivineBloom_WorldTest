@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ID, LocalizedStringSchema } from '../common.js';
+import { ID } from '../common.js';
+import { LocalizedStringSchema } from './localization.js';
 
 // --- 标签 (Tag) Schema ---
 export const TagSchema = z.object({

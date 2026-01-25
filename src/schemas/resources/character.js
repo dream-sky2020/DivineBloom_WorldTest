@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import {
     ID,
-    LocalizedStringSchema,
     createTagReference,
     createTagsReference,
     createSkillsReference,
     createStatusListReference
 } from '../common.js';
+import { LocalizedStringSchema } from './localization.js';
 
 // --- 掉落物 (Drop) Schema ---
 export const DropSchema = z.object({
@@ -22,7 +22,7 @@ export const CharacterSchema = z.object({
     name: LocalizedStringSchema,
     role: createTagReference("引用了不存在的 Role 标签"), // e.g. "roles.monster"
     element: createTagReference("引用了不存在的 Element 标签"), // e.g. "elements.water"
-    weaponType: z.string(), // e.g. "weapons.none" (TODO: 是否也需要标签校验？)
+    weaponType: createTagReference("引用了不存在的 Weapon 标签"), // e.g. "weapons.none"
 
     // --- 基础战斗属性 (Base Stats) ---
     hp: z.number(),

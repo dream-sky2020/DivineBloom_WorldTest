@@ -74,12 +74,21 @@ export default {
         },
         description: {
             zh: '生命值归零时直接死亡。没有任何特殊的生存手段。',
-            en: 'Directly die when HP reaches zero. No special survival means.'
+            'zh-TW': '生命值歸零時直接死亡。沒有任何特殊的生存手段。',
+            en: 'Directly die when HP reaches zero. No special survival means.',
+            ja: 'HPが0になった時、即座に死亡する。特殊な生存手段は一切ない。',
+            ko: '생명력이 0이 되면 즉시 사망합니다. 어떤 특수한 생존 수단도 없습니다.'
         }
     },
     'skill_passive_hero_revive': {
         id: 'skill_passive_hero_revive',
-        name: { zh: '英雄涅槃', en: 'Heroic Rebirth' },
+        name: {
+            zh: '英雄涅槃',
+            'zh-TW': '英雄涅槃',
+            en: 'Heroic Rebirth',
+            ja: '英雄の涅槃',
+            ko: '영웅의 열반'
+        },
         exclusiveGroup: 'death_handler',
         exclusiveGroupPriority: 5,
         type: "skillTypes.passive",
@@ -108,7 +117,10 @@ export default {
         ],
         description: {
             zh: '血量归零时立即回满血量并进入【涅槃濒死】状态（仅10%死亡率）。每场战斗触发1次。',
-            en: 'Fully restore HP when it reaches zero and enter Heroic Dying state (only 10% death rate). Once per battle.'
+            'zh-TW': '血量歸零時立即回滿血量並進入【涅槃瀕死】狀態（僅10%死亡率）。每場戰鬥觸發1次。',
+            en: 'Fully restore HP when it reaches zero and enter Heroic Dying state (only 10% death rate). Once per battle.',
+            ja: 'HPが0になった時、即座に全回復し【涅槃瀕死】状態になる（死亡率わずか10%）。1回の戦闘につき1回のみ発動。',
+            ko: '생명력이 0이 되면 즉시 모든 생명력을 회복하고 【열반 빈사】 상태가 됩니다 (사망률 단 10%). 전투당 1회 발동.'
         }
     },
     'skill_passive_sprite_rebirth': {
@@ -140,7 +152,10 @@ export default {
         ],
         description: {
             zh: '生命值归零时不会死亡，而是进入3回合的【灵体化】状态。状态结束后将满血复活。',
-            en: 'Will not die when HP reaches zero, instead entering Spirit Form for 3 turns. Will revive with full HP after the state ends.'
+            'zh-TW': '生命值歸零時不會死亡，而是進入3回合的【靈體化】狀態。狀態結束後將滿血復活。',
+            en: 'Will not die when HP reaches zero, instead entering Spirit Form for 3 turns. Will revive with full HP after the state ends.',
+            ja: 'HPが0になっても死亡せず、3ターンの間【霊体化】状態になる。状態終了後、HP全快で復活する。',
+            ko: '생명력이 0이 되어도 사망하지 않고, 대신 3턴 동안 【영체화】 상태가 됩니다. 상태 종료 후 모든 생명력을 회복하며 부활합니다.'
         }
     },
     'skill_passive_mortal_coil': {
@@ -171,11 +186,17 @@ export default {
         ],
         subText: {
             zh: '基本生命',
-            en: 'Basic Life'
+            'zh-TW': '基本生命',
+            en: 'Basic Life',
+            ja: '基本生命',
+            ko: '기본 생명'
         },
         description: {
             zh: '生命值归零时进入【天命已至】状态。在此状态下再次受击将必定死亡。',
-            en: 'When HP reaches zero, enter Fate Sealed state. Taking any further damage results in immediate death.'
+            'zh-TW': '生命值歸零時進入【天命已至】狀態。在此狀態下再次受擊將必定死亡。',
+            en: 'When HP reaches zero, enter Fate Sealed state. Taking any further damage results in immediate death.',
+            ja: 'HPが0になった時、【天命尽きたり】状態になる。この状態で再度ダメージを受けると確実に死亡する。',
+            ko: '생명력이 0이 되면 【천명에 이름】 상태가 됩니다. 이 상태에서 다시 피해를 입으면 반드시 사망합니다.'
         }
     }
 }

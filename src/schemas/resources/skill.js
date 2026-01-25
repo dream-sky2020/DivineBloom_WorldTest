@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import {
     ID,
-    LocalizedStringSchema,
     createTagReference,
     createTagsReference,
     EntityRegistry
 } from '../common.js';
+import { LocalizedStringSchema } from './localization.js';
 import { SkillEffectSchema } from '../effects.js';
 
 // --- 技能 (Skill) Schema ---
@@ -38,7 +38,7 @@ const SkillCostSchema = z.object({
 export const SkillSchema = z.object({
     id: ID,
     name: LocalizedStringSchema,
-    type: z.string(), // "skillTypes.active" (TODO: 是否也需要标签校验？)
+    type: createTagReference("引用了不存在的 Skill Type 标签"), // "skillTypes.active"
     category: createTagReference("引用了不存在的 Skill Category 标签"), // "cat_skill_magic"
 
     // 可选

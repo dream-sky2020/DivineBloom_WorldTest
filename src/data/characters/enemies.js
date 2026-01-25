@@ -9,7 +9,13 @@ export default {
     skills: ['skill_enemy_slime_shot', 'skill_passive_attack_up', 'skill_passive_call_of_death'], // Slime Shot (Active) + Attack Up (Passive)
     tags: ['roles.monster', 'element_water', 'status_elemental', 'trait_nature'],
     spriteId: 'enemy_slime',
-    description: { zh: '常见的胶状怪物。', en: 'A common gelatinous monster.' },
+    description: { 
+      zh: '常见的胶状怪物。', 
+      'zh-TW': '常見的膠狀怪物。',
+      en: 'A common gelatinous monster.',
+      ja: '一般的なゼリー状のモンスター。',
+      ko: '일반적인 젤리 형태의 몬스터.'
+    },
     drops: [
       { itemId: 'item_material_slime_gel', chance: 0.8, minQty: 1, maxQty: 2 }, // Slime Gel
       { itemId: 'item_consumable_potion', chance: 0.1, minQty: 1, maxQty: 1 }     // Potion (example)
@@ -25,7 +31,13 @@ export default {
     skills: ['skill_enemy_vampiric_bite', 'skill_passive_call_of_death'], // Vampiric Bite
     tags: ['roles.monster', 'element_wind', 'status_elemental'],
     spriteId: 'default',
-    description: { zh: '行动敏捷的飞行怪物。', en: 'An agile flying monster.' },
+    description: { 
+      zh: '行动敏捷的飞行怪物。', 
+      'zh-TW': '行動敏捷的飛行怪物。',
+      en: 'An agile flying monster.',
+      ja: '動きの素早い飛行モンスター。',
+      ko: '행동이 민첩한 비행 몬스터.'
+    },
     drops: [
       { itemId: 'item_material_bat_fang', chance: 0.6, minQty: 1, maxQty: 1 } // Bat Fang
     ]
@@ -40,7 +52,13 @@ export default {
     skills: ['skill_enemy_pack_bite', 'skill_passive_attack_up', 'skill_passive_call_of_death'], // Pack Bite + Attack Up
     tags: ['roles.monster', 'element_earth', 'status_phys_attr'],
     spriteId: 'default',
-    description: { zh: '凶猛的群居野兽。', en: 'A ferocious pack beast.' },
+    description: { 
+      zh: '凶猛的群居野兽。', 
+      'zh-TW': '凶猛的群居野獸。',
+      en: 'A ferocious pack beast.',
+      ja: '凶暴な群れをなす野獣。',
+      ko: '흉포한 무리 생활을 하는 야수.'
+    },
     drops: [
       { itemId: 'item_material_wolf_pelt', chance: 0.5, minQty: 1, maxQty: 1 }, // Wolf Pelt
       { itemId: 'item_material_bat_fang', chance: 0.2, minQty: 1, maxQty: 1 }  // Bat Fang (maybe they ate a bat?) - Just example
@@ -56,7 +74,13 @@ export default {
     skills: ['skill_enemy_shield_bash', 'skill_support_shield', 'skill_passive_call_of_death'], // Shield Bash + Shield (Buff)
     tags: ['roles.monster', 'element_metal', 'status_phys_attr', 'status_armor'],
     spriteId: 'default',
-    description: { zh: '全副武装的巡逻者。', en: 'A fully armed patroller.' },
+    description: { 
+      zh: '全副武装的巡逻者。', 
+      'zh-TW': '全副武裝的巡邏者。',
+      en: 'A fully armed patroller.',
+      ja: '完全武装したパトロール。',
+      ko: '완전 무장한 순찰자.'
+    },
     drops: [
       { itemId: 'item_material_iron_scrap', chance: 0.7, minQty: 1, maxQty: 3 }, // Iron Scrap
       { itemId: 'item_consumable_elixir', chance: 0.1, minQty: 1, maxQty: 1 }     // Elixir
@@ -64,7 +88,13 @@ export default {
   },
   'character_wounded_scout': {
     id: 'character_wounded_scout',
-    name: { zh: '负伤的斥候', en: 'Wounded Scout' },
+    name: { 
+      zh: '负伤的斥候', 
+      'zh-TW': '負傷的斥候',
+      en: 'Wounded Scout',
+      ja: '負傷した斥候',
+      ko: '부상당한 정찰병'
+    },
     role: "roles.monster",
     element: "element_wind",
     weaponType: "weapons.dagger",
@@ -76,7 +106,13 @@ export default {
     ],
     tags: ['roles.monster', 'element_wind', 'status_phys_attr', 'status_blood', 'trait_dying'],
     spriteId: 'default',
-    description: { zh: '一名在战斗中负伤的敌人斥候，看起来已经虚弱不堪。', en: 'An enemy scout wounded in battle, looking quite weak.' },
+    description: { 
+      zh: '一名在战斗中负伤的敌人斥候，看起来已经虚弱不堪。', 
+      'zh-TW': '一名在戰鬥中負傷的敵人斥候，看起來已經虛弱不堪。',
+      en: 'An enemy scout wounded in battle, looking quite weak.',
+      ja: '戦闘で負傷した敵の斥候。かなり弱っているようだ。',
+      ko: '전투 중 부상을 입은 적군 정찰병입니다. 매우 약해 보입니다.'
+    },
     drops: [
       { itemId: 'item_material_slime_gel', chance: 0.5, minQty: 1, maxQty: 1 }
     ]
@@ -91,7 +127,13 @@ export default {
     skills: ['skill_passive_sprite_rebirth', 'skill_enemy_vampiric_bite'],
     tags: ['roles.monster', 'element_wind', 'trait_spirit', 'trait_rebirth'],
     spriteId: 'default',
-    description: { zh: '一种贪婪的精灵，即便肉身毁灭也能通过灵体不断重生。', en: 'A greedy sprite that can constantly revive through its spirit form even if its physical body is destroyed.' },
+    description: { 
+      zh: '一种贪婪的精灵，即便肉身毁灭也能通过灵体不断重生。', 
+      'zh-TW': '一種貪婪的精靈，即便肉身毀滅也能通過靈體不斷重生。',
+      en: 'A greedy sprite that can constantly revive through its spirit form even if its physical body is destroyed.',
+      ja: '強欲な精霊。肉体が滅んでも霊体を通じて再生し続ける。',
+      ko: '탐욕스러운 정령입니다. 육신이 파괴되어도 영체를 통해 끊임없이 부활합니다.'
+    },
     drops: [
       { itemId: 'item_material_essence', chance: 0.3, minQty: 1, maxQty: 1 }
     ]

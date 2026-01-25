@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ID, LocalizedStringSchema, createTagReference, createTagsReference } from '../common.js';
+import { ID, createTagReference, createTagsReference } from '../common.js';
+import { LocalizedStringSchema } from './localization.js';
 import { StatusEffectSchema } from '../effects.js';
 
 // --- 状态 (Status) Schema ---
@@ -8,7 +9,7 @@ import { StatusEffectSchema } from '../effects.js';
 export const StatusSchema = z.object({
     id: ID,
     name: LocalizedStringSchema,
-    type: z.string(), // "statusTypes.buff" (TODO: 是否也需要标签校验？)
+    type: createTagReference("引用了不存在的 Status Type 标签"), // "statusTypes.buff"
     icon: z.string().optional(),
     subText: LocalizedStringSchema.optional(),
     description: LocalizedStringSchema.optional(),

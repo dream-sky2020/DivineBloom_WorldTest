@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import {
     ID,
-    LocalizedStringSchema,
     StatsSchema,
     createTagReference,
     createTagsReference,
     createStatusReference
 } from '../common.js';
+import { LocalizedStringSchema } from './localization.js';
 
 // --- 物品 (Item) Schema ---
 

@@ -20,6 +20,41 @@ export default {
         },
         color: '#ff4444'
     },
+    'character_emperor_shenwu': {
+        id: 'character_emperor_shenwu',
+        name: { zh: '神武皇帝', en: 'Emperor Shenwu' },
+        color: '#fbbf24'
+    },
+    'character_shahryar': {
+        id: 'character_shahryar',
+        name: { zh: '山鲁亚尔', en: 'Shahryar' },
+        color: '#f87171'
+    },
+    'character_hefietian': {
+        id: 'character_hefietian',
+        name: { zh: '赫绯天', en: 'Hefietian' },
+        color: '#ef4444'
+    },
+    'character_yibitian': {
+        id: 'character_yibitian',
+        name: { zh: '疫碧天', en: 'Yibitian' },
+        color: '#10b981'
+    },
+    'character_don_quixote': {
+        id: 'character_don_quixote',
+        name: { zh: '堂吉诃德', en: 'Don Quixote' },
+        color: '#60a5fa'
+    },
+    'character_jia_baoyu': {
+        id: 'character_jia_baoyu',
+        name: { zh: '贾宝玉', en: 'Jia Baoyu' },
+        color: '#f472b6'
+    },
+    'character_scheherazade': {
+        id: 'character_scheherazade',
+        name: { zh: '山鲁佐德', en: 'Scheherazade' },
+        color: '#a855f7'
+    },
     'trait_nature': {
         id: 'trait_nature',
         name: { zh: '自然', en: 'Nature' },

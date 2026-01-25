@@ -96,3 +96,4 @@ export * from './maps.js';
 export * from './dialogues.js';
 export * from './assets.js';
 export * from './visuals.js';
+export * from './locales.js';

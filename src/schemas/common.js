@@ -180,41 +180,6 @@ export const createItemsReference = createReferencesInternal('items', "包含了
 export const createCharacterReference = createReferenceInternal('characters', "引用了不存在的角色 ID");
 export const createCharactersReference = createReferencesInternal('characters', "包含了不存在的角色 ID");
 
-// 多语言字符串 Schema (具备审计功能)
-export const LocalizedStringSchema = z.object({
-    zh: z.string().min(1, "中文翻译不能为空"),
-    'zh-TW': z.string().optional(),
-    en: z.string().optional(),
-    ja: z.string().optional(),
-    ko: z.string().optional()
-}).superRefine((data, ctx) => {
-    if (!LocalizationConfig.enableAudit) return;
-
-    // 尝试寻找父级实体的 ID
-    // 在 Zod 树中，我们可以尝试通过 ctx.path 来定位，但最简单的是记录路径
-    // 如果路径是空的，说明是顶层调用
-
-    // 检查核心必须语言 (Error)
-    const missingRequired = LocalizationConfig.requiredLanguages.filter(lang => !data[lang]);
-    if (missingRequired.length > 0) {
-        EntityRegistry.recordTranslationGap({
-            path: ctx.path,
-            missing: missingRequired,
-            severity: 'error'
-        });
-    }
-
-    // 检查扩展可选语言 (Warning)
-    const missingOptional = LocalizationConfig.optionalLanguages.filter(lang => !data[lang]);
-    if (missingOptional.length > 0) {
-        EntityRegistry.recordTranslationGap({
-            path: ctx.path,
-            missing: missingOptional,
-            severity: 'warning'
-        });
-    }
-});
-
 // 基础属性 Schema
 export const StatsSchema = z.object({
     hp: z.number().optional(),

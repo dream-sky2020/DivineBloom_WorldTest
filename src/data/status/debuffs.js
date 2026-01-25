@@ -242,11 +242,29 @@ export default {
   },
   'status_stun': {
     id: 'status_stun',
-    name: { zh: '眩晕', en: 'Stun' },
+    name: { 
+      zh: '眩晕', 
+      'zh-TW': '眩暈',
+      en: 'Stun',
+      ja: '眩暈',
+      ko: '기절'
+    },
     type: "statusTypes.debuff",
     icon: "icon_stun",
-    subText: { zh: '无法行动', en: 'Stunned' },
-    description: { zh: '处于眩晕状态，无法采取任何行动。', en: 'Stunned and cannot take any action.' },
+    subText: { 
+      zh: '无法行动', 
+      'zh-TW': '無法行動',
+      en: 'Stunned',
+      ja: '行動不能',
+      ko: '행동 불가'
+    },
+    description: { 
+      zh: '处于眩晕状态，无法采取任何行动。', 
+      'zh-TW': '處於眩暈狀態，無法採取任何行動。',
+      en: 'Stunned and cannot take any action.',
+      ja: 'スタン状態になり、一切の行動ができなくなる。',
+      ko: '기절 상태가 되어 아무런 행동도 할 수 없습니다.'
+    },
     tags: ['status_negative', 'status_debuff', 'status_stun'],
     effects: [
       { trigger: 'checkAction', type: 'stun', chance: 1.0 }
@@ -254,9 +272,21 @@ export default {
   },
   'status_all': {
     id: 'status_all',
-    name: { zh: '全部异常', en: 'All Debuffs' },
+    name: { 
+      zh: '全部异常', 
+      'zh-TW': '全部異常',
+      en: 'All Debuffs',
+      ja: '全異常状態',
+      ko: '모든 상태 이상'
+    },
     type: "statusTypes.debuff",
-    description: { zh: '代表所有异常状态的特殊标识。', en: 'Special identifier representing all status ailments.' },
+    description: { 
+      zh: '代表所有异常状态的特殊标识。', 
+      'zh-TW': '代表所有異常狀態的特殊標識。',
+      en: 'Special identifier representing all status ailments.',
+      ja: 'すべての異常状態を表す特殊な識別子。',
+      ko: '모든 상태 이상을 나타내는 특수 식별자입니다.'
+    },
     tags: ['status_negative', 'status_debuff'],
     effects: []
   }

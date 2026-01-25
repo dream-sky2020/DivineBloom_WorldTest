@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ID } from '../common.js';
+import { ID, createCharactersReference } from '../common.js';
+import { LocalizedStringSchema } from './localization.js';
 
 // --- 地图 (Map) Schema ---
 
@@ -24,7 +25,7 @@ const SpawnerOptionsSchema = z.object({
 });
 
 const SpawnerSchema = z.object({
-    enemyIds: z.array(ID),
+    enemyIds: createCharactersReference("刷怪点引用了不存在的敌人 ID"),
     count: z.number(),
     area: z.object({
         x: z.number(),
@@ -39,7 +40,7 @@ const NpcSpawnSchema = z.object({
     x: z.number(),
     y: z.number(),
     dialogueId: z.string(),
-    name: z.string().optional(), // Made optional to support village.js
+    name: LocalizedStringSchema.optional(), // 使用多语言结构
     spriteId: z.string(),
     sx: z.number().optional(),
     sy: z.number().optional(),
@@ -121,8 +122,8 @@ const ObstacleSchema = z.object({
 });
 
 export const MapSchema = z.object({
-    id: z.string(),
-    name: z.string(),
+    id: ID,
+    name: LocalizedStringSchema, // 使用多语言结构
     constraints: z.object({
         minYRatio: z.number().optional()
     }).optional(),
