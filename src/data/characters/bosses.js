@@ -1,5 +1,6 @@
 export default {
   'character_emperor_shenwu': {
+    atb: -100,
     id: 'character_emperor_shenwu',
     name: {
       zh: '神武皇帝',
@@ -33,6 +34,7 @@ export default {
     ]
   },
   'character_shahryar': {
+    atb: -100,
     id: 'character_shahryar',
     name: {
       zh: '山鲁亚尔',
@@ -66,6 +68,7 @@ export default {
     ]
   },
   'character_hefietian': {
+    atb: -100,
     id: 'character_hefietian',
     name: {
       zh: '赫绯天',
@@ -99,6 +102,7 @@ export default {
     ]
   },
   'character_yibitian': {
+    atb: -100,
     id: 'character_yibitian',
     name: {
       zh: '疫碧天',

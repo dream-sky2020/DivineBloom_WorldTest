@@ -126,7 +126,8 @@ export const iconMap = {
   icon_run: "🏃",
   icon_bp_plus: "➕",
   icon_bp_minus: "➖",
-  icon_bp_cancel: "✖️"
+  icon_bp_cancel: "✖️",
+  icon_gears: "⚙️"
 };
 
 /**

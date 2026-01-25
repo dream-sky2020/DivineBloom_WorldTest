@@ -113,6 +113,10 @@
           <GameIcon class="icon" name="icon_switch" />
           <span class="label">{{ t('battle.actionSwitch') }}</span>
         </button>
+        <button class="action-btn reorganize" @click="$emit('action', 'reorganize')">
+          <GameIcon class="icon" name="icon_gears" />
+          <span class="label">{{ t('battle.actionReorganize') }}</span>
+        </button>
          <button class="action-btn skip" @click="$emit('action', 'skip')">
           <GameIcon class="icon" name="icon_skip" />
           <span class="label">{{ t('battle.actionSkip') }}</span>

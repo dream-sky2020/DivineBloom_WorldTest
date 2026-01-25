@@ -1,8 +1,8 @@
 <template>
   <div class="panel-container">
     
-    <!-- 顶部：角色切换 Tabs -->
-    <div class="character-tabs">
+    <!-- 顶部：角色切换 Tabs (仅在非锁定模式下显示) -->
+    <div class="character-tabs" v-if="!lockCharacterId">
       <div 
         v-for="char in partyMembers" 
         :key="char.id" 
@@ -15,6 +15,12 @@
       </div>
     </div>
 
+    <!-- 锁定模式下的标题 -->
+    <div class="locked-character-header" v-else>
+       <span class="char-name">{{ getLocalizedName(activeCharacter?.name) }}</span>
+       <span class="char-role">{{ getLocalizedRole(activeCharacter?.role) }}</span>
+    </div>
+
     <!-- 已装备技能栏 (Equipped Loadout) -->
     <div class="loadout-panel" v-if="activeCharacter">
       <!-- 主动技能槽 -->
@@ -22,29 +28,31 @@
         <h3 class="section-title" v-t="'skillTypes.active'">Active Skills</h3>
         <div class="skills-row">
           <div 
-            v-for="(skillId, index) in activeCharacter.equippedActiveSkills" 
-            :key="'active-' + index"
-            class="skill-slot equipped-active group hover-effect"
-            :class="{ selected: selectedSkillId === skillId }"
-            @click="selectSkill(skillId)"
-            @dblclick="handleUnequip(skillId, false)"
-            :title="getLocalizedName(getSkill(skillId)?.name)"
+            v-for="index in activeCharacter.activeSkillLimit" 
+            :key="'active-slot-' + (index - 1)"
+            class="skill-slot group hover-effect"
+            :class="{ 
+              'equipped-active': activeCharacter.equippedActiveSkills[index - 1], 
+              'empty': !activeCharacter.equippedActiveSkills[index - 1],
+              'selected': selectedSkillId === activeCharacter.equippedActiveSkills[index - 1] && activeCharacter.equippedActiveSkills[index - 1] !== null,
+              'valid-target': selectedSkill && !isPassive(selectedSkill) && !isEquipped(selectedSkill.id) && !activeCharacter.equippedActiveSkills[index - 1]
+            }"
+            @click="handleSlotClick(index - 1, false)"
           >
-            <span class="skill-icon">
-                <GameIcon :name="getSkill(skillId)?.icon || 'icon_unknown'" />
-            </span>
-            <div class="slot-badge">{{ index + 1 }}</div>
-          </div>
-          <!-- Empty Slots -->
-          <div 
-            v-for="i in (activeCharacter.activeSkillLimit - activeCharacter.equippedActiveSkills.length)" 
-            :key="'empty-active-' + i"
-            class="skill-slot empty group hover-effect"
-            :class="{ 'valid-target': selectedSkill && !isPassive(selectedSkill) && !isEquipped(selectedSkill.id) }"
-            @click="handleEmptySlotClick(false)"
-          >
-            <span class="empty-plus">+</span>
-            <div class="slot-badge empty-badge">{{ activeCharacter.equippedActiveSkills.length + i }}</div>
+            <!-- Slot Content -->
+            <template v-if="activeCharacter.equippedActiveSkills[index - 1]">
+              <span class="skill-icon">
+                  <GameIcon :name="getSkill(activeCharacter.equippedActiveSkills[index - 1])?.icon || 'icon_unknown'" />
+              </span>
+              <div class="unequip-trigger" @dblclick.stop="handleUnequipSlot(index - 1, false)"></div>
+            </template>
+            <template v-else>
+              <span class="empty-plus">+</span>
+            </template>
+            
+            <div class="slot-badge" :class="{ 'empty-badge': !activeCharacter.equippedActiveSkills[index - 1] }">
+                {{ index }}
+            </div>
           </div>
         </div>
       </div>
@@ -56,29 +64,28 @@
       <div class="loadout-section">
         <h3 class="section-title" v-t="'skillTypes.passive'">Passive Skills</h3>
         <div class="skills-row">
-          <!-- 已装备被动技能 (Equipped) -->
           <div 
-            v-for="(skillId, index) in activeCharacter.equippedPassiveSkills" 
-            :key="'passive-' + index"
-            class="skill-slot passive-active rounded-circle group hover-effect"
-            :class="{ selected: selectedSkillId === skillId }"
-            @click="selectSkill(skillId)"
-            @dblclick="handleUnequip(skillId, true)"
-             :title="getLocalizedName(getSkill(skillId)?.name)"
+            v-for="index in activeCharacter.passiveSkillLimit" 
+            :key="'passive-slot-' + (index - 1)"
+            class="skill-slot passive-slot rounded-circle group hover-effect"
+            :class="{ 
+              'passive-active': activeCharacter.equippedPassiveSkills[index - 1], 
+              'passive-empty': !activeCharacter.equippedPassiveSkills[index - 1],
+              'selected': selectedSkillId === activeCharacter.equippedPassiveSkills[index - 1] && activeCharacter.equippedPassiveSkills[index - 1] !== null,
+              'valid-target': selectedSkill && isPassive(selectedSkill) && !isEquipped(selectedSkill.id) && !activeCharacter.equippedPassiveSkills[index - 1]
+            }"
+            @click="handleSlotClick(index - 1, true)"
           >
-            <span class="skill-icon">
-                <GameIcon :name="getSkill(skillId)?.icon || 'icon_unknown'" />
-            </span>
-          </div>
-          <!-- Empty Slots -->
-          <div 
-            v-for="i in Math.max(0, activeCharacter.passiveSkillLimit - activeCharacter.equippedPassiveSkills.length)" 
-            :key="'empty-passive-' + i"
-            class="skill-slot passive-empty rounded-circle group hover-effect"
-            :class="{ 'valid-target': selectedSkill && isPassive(selectedSkill) && !isEquipped(selectedSkill.id) }"
-            @click="handleEmptySlotClick(true)"
-          >
-            <span class="empty-plus">+</span>
+            <!-- Slot Content -->
+            <template v-if="activeCharacter.equippedPassiveSkills[index - 1]">
+              <span class="skill-icon">
+                  <GameIcon :name="getSkill(activeCharacter.equippedPassiveSkills[index - 1])?.icon || 'icon_unknown'" />
+              </span>
+              <div class="unequip-trigger" @dblclick.stop="handleUnequipSlot(index - 1, true)"></div>
+            </template>
+            <template v-else>
+              <span class="empty-plus">+</span>
+            </template>
           </div>
         </div>
       </div>
@@ -197,14 +204,30 @@ import MarqueeText from '@/interface/ui/MarqueeText.vue';
 const { t, locale } = useI18n();
 const partyStore = usePartyStore();
 
+const props = defineProps({
+  lockCharacterId: {
+    type: String,
+    default: null
+  }
+});
+
+const emit = defineEmits(['change']);
+
 // Initialize Party if needed (e.g. if accessed from menu before battle)
 partyStore.initParty();
 
 // State
-const selectedCharId = ref(null);
+const selectedCharId = ref(props.lockCharacterId);
 const filterType = ref('all'); // all, active, passive
 const selectedSkillId = ref(null);
 const selectedSkillIndex = ref(0);
+
+// Watch for prop changes to update selection if locked
+watch(() => props.lockCharacterId, (newId) => {
+    if (newId) {
+        selectedCharId.value = newId;
+    }
+});
 
 // Initialize selectedCharId
 const partyMembers = computed(() => {
@@ -320,20 +343,22 @@ const selectSkill = (id) => {
     selectedSkillId.value = id;
 };
 
-const handleEmptySlotClick = (isPassiveSlot) => {
-    if (!selectedSkill.value) return;
-    
-    const skillIsPassive = isPassive(selectedSkill.value);
-    
-    // Type mismatch check
-    if (skillIsPassive !== isPassiveSlot) return;
-    
-    // Already equipped check
-    if (isEquipped(selectedSkill.value.id)) return;
-    
-    // Capacity check
-    if (canEquip(selectedSkill.value)) {
-        handleEquip(selectedSkill.value.id, skillIsPassive);
+const handleSlotClick = (index, isPassiveSlot) => {
+    const currentList = isPassiveSlot ? activeCharacter.value.equippedPassiveSkills : activeCharacter.value.equippedActiveSkills;
+    const currentSkillId = currentList[index];
+
+    if (currentSkillId) {
+        // If slot has a skill, select it
+        selectSkill(currentSkillId);
+    } else if (selectedSkill.value) {
+        // If slot is empty and a skill is selected, try to equip it here
+        const skillIsPassive = isPassive(selectedSkill.value);
+        if (skillIsPassive === isPassiveSlot) {
+            // Check if already equipped elsewhere
+            if (!isEquipped(selectedSkill.value.id)) {
+                handleEquip(selectedSkill.value.id, index, isPassiveSlot);
+            }
+        }
     }
 };
 
@@ -342,9 +367,19 @@ const handleToggleEquip = (skill) => {
     
     const passive = isPassive(skill);
     if (isEquipped(skill.id)) {
-        handleUnequip(skill.id, passive);
-    } else if (canEquip(skill)) {
-        handleEquip(skill.id, passive);
+        // Find slot and unequip
+        const list = passive ? activeCharacter.value.equippedPassiveSkills : activeCharacter.value.equippedActiveSkills;
+        const index = list.indexOf(skill.id);
+        if (index !== -1) {
+            handleUnequipSlot(index, passive);
+        }
+    } else {
+        // Equip to first available slot
+        const list = passive ? activeCharacter.value.equippedPassiveSkills : activeCharacter.value.equippedActiveSkills;
+        const emptyIndex = list.indexOf(null);
+        if (emptyIndex !== -1) {
+            handleEquip(skill.id, emptyIndex, passive);
+        }
     }
 };
 
@@ -357,16 +392,23 @@ const canEquip = (skill) => {
     if (!activeCharacter.value) return false;
     const passive = isPassive(skill);
     const list = passive ? activeCharacter.value.equippedPassiveSkills : activeCharacter.value.equippedActiveSkills;
-    const limit = passive ? activeCharacter.value.passiveSkillLimit : activeCharacter.value.activeSkillLimit;
-    return list.length < limit;
+    return list.includes(null);
 };
 
-const handleEquip = (skillId, isPassiveSkill) => {
-    partyStore.equipSkill(selectedCharId.value, skillId, isPassiveSkill);
+const handleEquip = (skillId, slotIndex, isPassiveSkill) => {
+    if (partyStore.equipSkillToSlot(selectedCharId.value, skillId, slotIndex, isPassiveSkill)) {
+        emit('change');
+    }
+};
+
+const handleUnequipSlot = (slotIndex, isPassiveSkill) => {
+    partyStore.unequipSkillFromSlot(selectedCharId.value, slotIndex, isPassiveSkill);
+    emit('change');
 };
 
 const handleUnequip = (skillId, isPassiveSkill) => {
     partyStore.unequipSkill(selectedCharId.value, skillId, isPassiveSkill);
+    emit('change');
 };
 
 </script>

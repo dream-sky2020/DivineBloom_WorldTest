@@ -9,10 +9,10 @@ export class BattleController {
         this.battleStore = this.gameStore.battle;
         this.settingsStore = this.gameStore.settings;
 
-        const { 
-            battleState, 
-            waitingForInput, 
-            activeCharacter, 
+        const {
+            battleState,
+            waitingForInput,
+            activeCharacter,
             partySlotsDisplay,
             pendingAction,
             validTargetIds
@@ -29,6 +29,9 @@ export class BattleController {
         this.compactPartyMode = ref(true);
         this.showSkillMenu = ref(false);
         this.showItemMenu = ref(false);
+        this.showEquipmentMenu = ref(false);
+        this.hasReorganized = ref(false); // Reactive track if changes were made
+        this.originalSkillState = null; // Snapshot of skills when opening reorganization
 
         // 绑定方法以确保在作为事件处理器传递时 this 指向正确
         this.selectSkill = this.selectSkill.bind(this);
@@ -53,9 +56,9 @@ export class BattleController {
         this.characterSkills = computed(() => {
             const char = this.activeCharacter.value;
             if (!char) return [];
-            
-            const skillIds = (char.equippedActiveSkills && char.equippedActiveSkills.length > 0) 
-                ? char.equippedActiveSkills 
+
+            const skillIds = (char.equippedActiveSkills && char.equippedActiveSkills.length > 0)
+                ? char.equippedActiveSkills
                 : (char.skills || []);
 
             return skillIds.map(id => {
@@ -104,13 +107,13 @@ export class BattleController {
 
     selectSkill(skill) {
         if (!this.battleStore.checkSkillUsability(skill.id)) return;
-        
+
         const needsSelection = ['ally', 'deadAlly', 'enemy'].includes(skill.targetType);
         if (needsSelection) {
-            this.battleStore.setPendingAction({ 
-                type: 'skill', 
-                targetType: skill.targetType, 
-                data: { skillId: skill.id } 
+            this.battleStore.setPendingAction({
+                type: 'skill',
+                targetType: skill.targetType,
+                data: { skillId: skill.id }
             });
         } else {
             this.battleStore.playerAction('skill', skill.id);
@@ -123,10 +126,10 @@ export class BattleController {
         const needsSelection = ['ally', 'deadAlly', 'enemy'].includes(targetType);
 
         if (needsSelection) {
-            this.battleStore.setPendingAction({ 
-                type: 'item', 
-                targetType: targetType, 
-                data: { itemId: item.id } 
+            this.battleStore.setPendingAction({
+                type: 'item',
+                targetType: targetType,
+                data: { itemId: item.id }
             });
         } else {
             this.battleStore.playerAction('item', { itemId: item.id, targetId: null });
@@ -147,19 +150,78 @@ export class BattleController {
         } else if (action.type === 'item') {
             this.battleStore.playerAction('item', { itemId: action.data.itemId, targetId: unit.uuid });
         }
-        
+
         this.battleStore.setPendingAction(null);
     }
 
     handleAction(actionType) {
         if (actionType === 'attack') {
-            this.battleStore.setPendingAction({ 
-                type: 'attack', 
-                targetType: 'enemy', 
-                data: {} 
+            this.battleStore.setPendingAction({
+                type: 'attack',
+                targetType: 'enemy',
+                data: {}
             });
+        } else if (actionType === 'reorganize') {
+            this.showEquipmentMenu.value = true;
+            this.hasReorganized.value = false;
+
+            // Snapshot original state
+            const char = this.activeCharacter.value;
+            if (char) {
+                const member = this.gameStore.party.members[char.id];
+                if (member) {
+                    this.originalSkillState = {
+                        active: [...member.equippedActiveSkills],
+                        passive: [...member.equippedPassiveSkills]
+                    };
+                }
+            }
         } else {
             this.battleStore.playerAction(actionType);
         }
+    }
+
+    confirmReorganize() {
+        this.showEquipmentMenu.value = false;
+        if (this.hasReorganized.value) {
+            this.battleStore.playerAction('reorganize');
+        }
+        this.hasReorganized.value = false;
+        this.originalSkillState = null;
+    }
+
+    cancelReorganize() {
+        if (this.hasReorganized.value) {
+            this.resetReorganize();
+        }
+        this.showEquipmentMenu.value = false;
+        this.hasReorganized.value = false;
+        this.originalSkillState = null;
+    }
+
+    resetReorganize() {
+        if (!this.originalSkillState || !this.activeCharacter.value) return;
+        const char = this.activeCharacter.value;
+        const member = this.gameStore.party.members[char.id];
+        if (member) {
+            member.equippedActiveSkills = [...this.originalSkillState.active];
+            member.equippedPassiveSkills = [...this.originalSkillState.passive];
+            this.markReorganized();
+        }
+    }
+
+    markReorganized() {
+        const char = this.activeCharacter.value;
+        if (!char || !this.originalSkillState) return;
+
+        const member = this.gameStore.party.members[char.id];
+        if (!member) return;
+
+        const currentActive = JSON.stringify(member.equippedActiveSkills);
+        const currentPassive = JSON.stringify(member.equippedPassiveSkills);
+        const originalActive = JSON.stringify(this.originalSkillState.active);
+        const originalPassive = JSON.stringify(this.originalSkillState.passive);
+
+        this.hasReorganized.value = (currentActive !== originalActive || currentPassive !== originalPassive);
     }
 }

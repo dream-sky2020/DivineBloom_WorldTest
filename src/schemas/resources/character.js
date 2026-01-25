@@ -53,8 +53,8 @@ export const CharacterSchema = z.object({
 
     // Skill System
     skills: createSkillsReference("拥有的技能列表包含不存在的 ID").optional().default([]),
-    equippedActiveSkills: createSkillsReference("装备的主动技能包含不存在的 ID").optional().default([]),
-    equippedPassiveSkills: createSkillsReference("装备的被动技能包含不存在的 ID").optional().default([]),
+    equippedActiveSkills: createSkillsReference("装备的主动技能包含不存在的 ID").default(Array(6).fill(null)),
+    equippedPassiveSkills: createSkillsReference("装备的被动技能包含不存在的 ID").default(Array(4).fill(null)),
     fixedPassiveSkills: createSkillsReference("固定被动技能包含不存在的 ID").optional().default(['skill_passive_call_of_death']),
     activeSkillLimit: z.number().int().min(1).default(6), // Max active slots
     passiveSkillLimit: z.number().int().min(1).default(4), // Max passive slots

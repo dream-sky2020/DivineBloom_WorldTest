@@ -144,10 +144,10 @@ const createReferenceInternal = (type, defaultError) => (errorMessage = defaultE
 };
 
 const createReferencesInternal = (type, defaultError) => (errorMessage = defaultError) => {
-    return z.array(ID).superRefine((ids, ctx) => {
+    return z.array(ID.nullable()).superRefine((ids, ctx) => {
         if (!Array.isArray(ids)) return;
 
-        const missing = ids.filter(id => !EntityRegistry.has(type, id));
+        const missing = ids.filter(id => id !== null && !EntityRegistry.has(type, id));
         if (missing.length > 0) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,

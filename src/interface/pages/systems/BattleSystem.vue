@@ -48,6 +48,36 @@
       @adjust-boost="battleStore.adjustBoost"
     />
 
+    <!-- Equipment/Reorganize Overlay -->
+    <div class="equipment-overlay" v-if="showEquipmentMenu">
+      <div class="equipment-container">
+        <div class="equipment-header">
+          <h3>{{ t('battle.actionReorganize') }}</h3>
+          <div class="header-btns">
+            <button 
+                class="reset-btn" 
+                @click="ctrl.resetReorganize()" 
+                :class="{ 'btn-disabled': !hasReorganized }"
+                :disabled="!hasReorganized"
+            >{{ t('battle.reset') || 'Reset' }}</button>
+            <button 
+                class="confirm-btn" 
+                @click="ctrl.confirmReorganize()" 
+                :class="{ 'btn-disabled': !hasReorganized }"
+                :disabled="!hasReorganized"
+            >{{ t('battle.confirm') || 'OK' }}</button>
+            <button class="cancel-btn" @click="ctrl.cancelReorganize()">{{ t('battle.cancel') }}</button>
+          </div>
+        </div>
+        <div class="equipment-body">
+          <SkillsPanel 
+            :lock-character-id="activeCharacter?.id"
+            @change="ctrl.markReorganized()" 
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- Battle Log Display -->
     <BattleLog :battle-log="battleLog" />
 
@@ -78,9 +108,12 @@ import BattleTopBar from '@/interface/ui/BattleTopBar.vue';
 import BattleSpeedControl from '@/interface/ui/BattleSpeedControl.vue';
 import BattleViewToggle from '@/interface/ui/BattleViewToggle.vue';
 import BattleLog from '@/interface/ui/BattleLog.vue';
+import SkillsPanel from '@/interface/panels/SkillsPanel.vue';
+import { useI18n } from 'vue-i18n';
 
 const emit = defineEmits(['change-system']);
 
+const { t } = useI18n();
 const gameStore = useGameStore();
 const battleStore = gameStore.battle;
 const settingsStore = gameStore.settings;
@@ -90,6 +123,8 @@ const partyViewMode = ctrl.partyViewMode;
 const compactPartyMode = ctrl.compactPartyMode;
 const showSkillMenu = ctrl.showSkillMenu;
 const showItemMenu = ctrl.showItemMenu;
+const showEquipmentMenu = ctrl.showEquipmentMenu;
+const hasReorganized = ctrl.hasReorganized;
 
 // 提取计算属性以保持模板中的响应性
 const isSelectingTarget = ctrl.isSelectingTarget;

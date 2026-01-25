@@ -58,6 +58,31 @@
     color: var(--blue-300);
 }
 
+/* Locked Character Header */
+.locked-character-header {
+    height: 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(30, 41, 59, 0.6);
+    border: 2px solid var(--blue-400);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    gap: 0.25rem;
+}
+
+.locked-character-header .char-name {
+    color: white;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.locked-character-header .char-role {
+    color: var(--blue-300);
+    font-size: 0.75rem;
+}
+
 /* Equipment Content Layout */
 .equipment-content {
     flex: 1;

@@ -170,10 +170,10 @@ export const useBattleStore = defineStore('battle', () => {
 
             // 技能：合并初始技能并过滤
             skills: filterExclusiveSkills([...(data.skills || []), ...(data.fixedPassiveSkills || [])]),
-            
+
             // 状态：优先使用 data 中定义的初始状态 (用于开场带 Buff/Debuff)
             statusEffects: [...(data.statusEffects || [])],
-            
+
             // 运行时状态
             isDefending: data.isDefending || false,
             atb: data.atb || 0,
@@ -189,8 +189,8 @@ export const useBattleStore = defineStore('battle', () => {
         // 对于玩家角色，合并已装备和固定技能
         let battleSkills = state.skills || [];
         if (isPlayer) {
-            const equippedActive = state.equippedActiveSkills || [];
-            const equippedPassive = state.equippedPassiveSkills || [];
+            const equippedActive = (state.equippedActiveSkills || []).filter(id => id !== null);
+            const equippedPassive = (state.equippedPassiveSkills || []).filter(id => id !== null);
             const fixedPassive = state.fixedPassiveSkills || [];
             battleSkills = [...equippedActive, ...equippedPassive, ...fixedPassive];
             battleSkills = filterExclusiveSkills([...new Set(battleSkills)]);
@@ -203,7 +203,7 @@ export const useBattleStore = defineStore('battle', () => {
             ...state,
             uuid: state.uuid || generateUUID(),
             skills: battleSkills,
-            
+
             // 运行时属性：优先保留 state 中的值（用于存档加载/持久化），否则从基础属性初始化
             currentHp: state.currentHp !== undefined ? state.currentHp : state.hp,
             maxHp: maxHp,
@@ -683,6 +683,8 @@ export const useBattleStore = defineStore('battle', () => {
             actor.energy = Math.min(6, (actor.energy || 0) + 1);
             log('battle.skipTurn', { name: actor.name });
             // Optionally log energy gain?
+        } else if (actionType === 'reorganize') {
+            log('battle.reorganize', { name: actor.name });
         } else if (actionType === 'run') {
             runAway();
             return;

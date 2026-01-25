@@ -60,10 +60,24 @@ export const usePartyStore = defineStore('party', () => {
         initialIds.forEach(id => {
             const dbChar = charactersDb[id];
             if (dbChar) {
-                // Initialize skills logic
-                // If DB has empty equipped lists, try to auto-equip from skills pool
-                let equippedActive = dbChar.equippedActiveSkills ? [...dbChar.equippedActiveSkills] : [];
-                let equippedPassive = dbChar.equippedPassiveSkills ? [...dbChar.equippedPassiveSkills] : [];
+                const activeLimit = dbChar.activeSkillLimit || 6;
+                const passiveLimit = dbChar.passiveSkillLimit || 4;
+
+                // Initialize slots with null
+                let equippedActive = Array(activeLimit).fill(null);
+                let equippedPassive = Array(passiveLimit).fill(null);
+                
+                // If DB has skills, try to auto-equip them into slots
+                const dbEquippedActive = dbChar.equippedActiveSkills || [];
+                const dbEquippedPassive = dbChar.equippedPassiveSkills || [];
+
+                dbEquippedActive.forEach((skillId, index) => {
+                    if (index < activeLimit) equippedActive[index] = skillId;
+                });
+                dbEquippedPassive.forEach((skillId, index) => {
+                    if (index < passiveLimit) equippedPassive[index] = skillId;
+                });
+
                 let fixedPassive = dbChar.fixedPassiveSkills ? [...dbChar.fixedPassiveSkills] : [];
                 
                 // Force include core death passives as fixed if not present
@@ -71,22 +85,21 @@ export const usePartyStore = defineStore('party', () => {
                     fixedPassive.push('skill_passive_call_of_death');
                 }
                 
-                if (equippedActive.length === 0 && equippedPassive.length === 0 && dbChar.skills && dbChar.skills.length > 0) {
-                     // Auto-equip logic
-                     const activeLimit = dbChar.activeSkillLimit || 6;
-                     const passiveLimit = dbChar.passiveSkillLimit || 4;
-                     
+                // Auto-equip logic if slots are completely empty
+                if (dbEquippedActive.length === 0 && dbEquippedPassive.length === 0 && dbChar.skills && dbChar.skills.length > 0) {
+                     let aIdx = 0;
+                     let pIdx = 0;
                      for (const skillId of dbChar.skills) {
                         const skill = skillsDb[skillId];
                         if (!skill) continue;
                         
                         if (skill.type === 'skillTypes.passive' || (skillId >= 400 && skillId < 500)) {
-                            if (equippedPassive.length < passiveLimit) {
-                                equippedPassive.push(skillId);
+                            if (pIdx < passiveLimit) {
+                                equippedPassive[pIdx++] = skillId;
                             }
                         } else {
-                            if (equippedActive.length < activeLimit) {
-                                equippedActive.push(skillId);
+                            if (aIdx < activeLimit) {
+                                equippedActive[aIdx++] = skillId;
                             }
                         }
                      }
@@ -113,19 +126,44 @@ export const usePartyStore = defineStore('party', () => {
         if (!member || !dbChar) return false;
 
         const targetList = isPassive ? member.equippedPassiveSkills : member.equippedActiveSkills;
-        const limit = isPassive ? (dbChar.passiveSkillLimit || 4) : (dbChar.activeSkillLimit || 6);
-
+        
         // Check if already equipped
         if (targetList.includes(skillId)) return true; // Already equipped
 
-        // Check limit
-        if (targetList.length >= limit) return false; // Full
+        // Find first empty slot
+        const emptyIndex = targetList.indexOf(null);
+        if (emptyIndex === -1) return false; // Full
 
         // Check if own the skill
         const allSkills = dbChar.skills || [];
         if (!allSkills.includes(skillId)) return false; // Don't own it
 
-        targetList.push(skillId);
+        targetList[emptyIndex] = skillId;
+        return true;
+    };
+
+    const equipSkillToSlot = (characterId, skillId, slotIndex, isPassive = false) => {
+        const member = members.value[characterId];
+        const dbChar = charactersDb[characterId];
+        if (!member || !dbChar) return false;
+
+        const targetList = isPassive ? member.equippedPassiveSkills : member.equippedActiveSkills;
+        const limit = isPassive ? (dbChar.passiveSkillLimit || 4) : (dbChar.activeSkillLimit || 6);
+
+        if (slotIndex < 0 || slotIndex >= limit) return false;
+
+        // Check if own the skill
+        const allSkills = dbChar.skills || [];
+        if (!allSkills.includes(skillId)) return false;
+
+        // Check if already equipped in another slot
+        const existingIndex = targetList.indexOf(skillId);
+        if (existingIndex !== -1 && existingIndex !== slotIndex) {
+            // Remove from old slot
+            targetList[existingIndex] = null;
+        }
+
+        targetList[slotIndex] = skillId;
         return true;
     };
 
@@ -141,8 +179,25 @@ export const usePartyStore = defineStore('party', () => {
         const targetList = isPassive ? member.equippedPassiveSkills : member.equippedActiveSkills;
         const index = targetList.indexOf(skillId);
         if (index > -1) {
-            targetList.splice(index, 1);
+            targetList[index] = null;
         }
+    };
+
+    const unequipSkillFromSlot = (characterId, slotIndex, isPassive = false) => {
+        const member = members.value[characterId];
+        if (!member) return;
+
+        const targetList = isPassive ? member.equippedPassiveSkills : member.equippedActiveSkills;
+        const skillId = targetList[slotIndex];
+        
+        if (!skillId) return;
+
+        // Cannot unequip fixed skills
+        if (isPassive && member.fixedPassiveSkills && member.fixedPassiveSkills.includes(skillId)) {
+            return;
+        }
+
+        targetList[slotIndex] = null;
     };
 
     // 获取完整的战斗用角色对象（合并 DB 数据和运行时状态）
@@ -158,8 +213,11 @@ export const usePartyStore = defineStore('party', () => {
         if (!runtime || !db) return null;
 
         // Merge equipped skills from runtime, fallback to DB if runtime missing (shouldn't happen after init)
-        const equippedActive = runtime.equippedActiveSkills || db.equippedActiveSkills || [];
-        const equippedPassive = runtime.equippedPassiveSkills || db.equippedPassiveSkills || [];
+        const activeLimit = db.activeSkillLimit || 6;
+        const passiveLimit = db.passiveSkillLimit || 4;
+        
+        const equippedActive = runtime.equippedActiveSkills || Array(activeLimit).fill(null);
+        const equippedPassive = runtime.equippedPassiveSkills || Array(passiveLimit).fill(null);
         const fixedPassive = runtime.fixedPassiveSkills || db.fixedPassiveSkills || [];
 
         return {
@@ -177,12 +235,11 @@ export const usePartyStore = defineStore('party', () => {
             mag: db.mag || 10,
             
             skills: db.skills || [], // All learned skills
-            equippedActiveSkills: equippedActive,
-            equippedPassiveSkills: equippedPassive,
-            fixedPassiveSkills: fixedPassive,
-            // For backward compatibility or ease of use in battle, we might want to expose a combined 'battleSkills'
-            // or let the battle system handle the split. 
-            // The battle system currently uses .skills. We should probably update BattleSystem to use equippedActiveSkills.
+            equippedActiveSkills: [...equippedActive],
+            equippedPassiveSkills: [...equippedPassive],
+            fixedPassiveSkills: [...fixedPassive],
+            activeSkillLimit: activeLimit,
+            passiveSkillLimit: passiveLimit
         };
     };
 
@@ -210,7 +267,9 @@ export const usePartyStore = defineStore('party', () => {
         getCharacterState,
         updatePartyAfterBattle,
         equipSkill,
+        equipSkillToSlot,
         unequipSkill,
+        unequipSkillFromSlot,
         reset,
         serialize,
         loadState
