@@ -28,7 +28,7 @@ export default {
     },
     'cat_skill_support': {
         id: 'cat_skill_support',
-        name: { zh: '辅助', en: 'Support', 'zh-TW': '辅助', ja: '補助', ko: '보조' },
+        name: { zh: '辅助', en: 'Support', 'zh-TW': '輔助', ja: '補助', ko: '보조' },
         description: { zh: '提供治疗、护盾 or 增益效果的技能。', en: 'Skills that provide healing, shields, or buffs.', 'zh-TW': '提供治療、護盾或增益效果的技能。', ja: '回復、シールド、またはバフ効果を提供するスキル。', ko: '치유, 보호막 또는 버프 효과를 제공하는 스킬.' },
         color: '#00ffcc'
     },

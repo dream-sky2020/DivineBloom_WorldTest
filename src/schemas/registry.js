@@ -1,3 +1,9 @@
+/**
+ * Schema 注册表 (Zod Definitions Registry)
+ * 用于统一导出所有的 Zod Schema 定义，供业务逻辑和 ECS 组件校验使用。
+ * 注意：此处仅导出定义，不包含具体的数据库实例。
+ */
+
 export * from './common.js';
 export * from './save.js';
 export * from './effects.js';
@@ -12,7 +18,6 @@ export * from './resources/map.js';
 export * from './resources/tag.js';
 
 // Component Schemas (ECS Components)
-// Re-export Schemas from component files to maintain backward compatibility for imports
 export {
     VisualSpriteSchema,
     VisualRectSchema,
@@ -47,7 +52,6 @@ export {
 export {
     BattleResultSchema
 } from '@/game/ecs/entities/components/BattleResult.js';
-
 
 // Entity Definition Schemas
 export {
@@ -85,15 +89,3 @@ export {
 export {
     ObstacleEntitySchema
 } from '@/game/ecs/entities/definitions/ObstacleEntity.js';
-
-// Data Indexers (Managers)
-export * from './skills.js';
-export * from './items.js';
-export * from './characters.js';
-export * from './status.js';
-export * from './tags.js';
-export * from './maps.js';
-export * from './dialogues.js';
-export * from './assets.js';
-export * from './visuals.js';
-export * from './locales.js';

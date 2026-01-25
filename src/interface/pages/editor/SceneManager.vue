@@ -54,7 +54,7 @@
 
 <script setup>
 import { computed, ref, inject } from 'vue'
-import { maps } from '@schema/maps'
+import { schemasManager } from '@/schemas/SchemasManager'
 import { useGameStore } from '@/stores/game'
 import { ScenarioLoader } from '@/game/ecs/ScenarioLoader'
 import { gameManager } from '@/game/ecs/GameManager'
@@ -68,7 +68,7 @@ const logger = createLogger('SceneManager')
 
 const gameStore = useGameStore()
 const worldStore = gameStore.world
-const availableMaps = Object.keys(maps)
+const availableMaps = computed(() => schemasManager.mapIds)
 const currentMapId = computed(() => worldStore.currentMapId)
 const isLoading = ref(false)
 const loadingMapId = ref('')
@@ -122,7 +122,7 @@ const switchMap = async (mapId) => {
 }
 
 const handleExportProject = async () => {
-  const bundle = await ScenarioLoader.exportProject(gameManager.engine, worldStore.worldStates, maps)
+  const bundle = await ScenarioLoader.exportProject(gameManager.engine, worldStore.worldStates, schemasManager.mapLoaders)
   const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')

@@ -1,35 +1,9 @@
+import { schemasManager } from './SchemasManager.js';
+
 /**
  * 静态物品数据库
- * ID 规则: 
- * 1000-1999: 消耗品 (Consumables)
- * 2000-2999: 武器 (Weapons)
- * 3000-3999: 防具 (Armor)
- * 4000-4999: 饰品 (Accessories)
- * 5000-5999: 材料 (Materials)
- * 6000-6999: 弹药 (Ammo)
- * 9000-9999: 关键道具 (Key Items)
+ * 兼容旧版导出，现在由 SchemasManager 统一管理
  */
+export const itemsDb = schemasManager.items;
 
-// 使用 Vite 的 glob 导入功能自动加载 @data/items 下的所有 .js 文件
-// eager: true 确保是同步加载，保持 itemsDb 的直接可用性
-const modules = import.meta.glob('@data/items/*.js', { eager: true })
-import { ItemSchema, createMapValidator, EntityRegistry } from './index.js'
-import { tagsDb } from './tags.js' // 确保标签注册表先初始化
-import { statusDb } from './status.js' // 物品效果可能引用状态
-
-const rawItemsDb = {}
-
-// 聚合所有模块导出的物品数据
-for (const path in modules) {
-  const mod = modules[path]
-  // 合并模块的默认导出到 itemsDb
-  Object.assign(rawItemsDb, mod.default || mod)
-}
-
-// 注册所有物品 ID
-EntityRegistry.register('items', Object.keys(rawItemsDb));
-
-// 运行时校验
-// 任何物品配置错误都会导致游戏启动中断并抛出详细错误
-const validateItems = createMapValidator(ItemSchema, 'ItemsDb');
-export const itemsDb = validateItems(rawItemsDb);
+export default itemsDb;

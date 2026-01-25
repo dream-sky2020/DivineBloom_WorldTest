@@ -133,7 +133,8 @@ const { t, locale } = useI18n();
 const getLocalizedText = (input) => {
   if (!input) return '';
   if (typeof input === 'object') {
-    return input[locale.value] || input['en'] || input['zh'] || Object.values(input)[0] || '';
+    // 优先使用当前语言，回退到中文，再回退到任意第一个可用语言
+    return input[locale.value] || input['zh'] || input['en'] || input['ja'] || input['ko'] || Object.values(input)[0] || '';
   }
   return t(input);
 };
@@ -153,7 +154,8 @@ const getTagStyle = (tagId) => {
   if (!tag || !tag.color) return {};
   return {
     borderColor: tag.color,
-    boxShadow: `inset 0 0 4px ${tag.color}44`
+    boxShadow: `inset 0 0 4px ${tag.color}44`,
+    color: tag.color // 增加文字颜色支持
   };
 };
 
@@ -179,9 +181,9 @@ const charactersList = computed(() => {
   return Object.values(charactersDb).map(c => ({
     ...c,
     icon: 'icon_user', // Default icon for characters
-    subText: c.role,
-    footerLeft: c.element,
-    footerRight: c.weaponType,
+    subText: tagsDb[c.role]?.name,
+    footerLeft: tagsDb[c.element]?.name,
+    footerRight: tagsDb[c.weaponType]?.name,
     // Add custom tag for grid
     tag: 'Lv.1'
   }));
@@ -191,7 +193,7 @@ const itemsList = computed(() => {
   return Object.values(itemsDb).map(i => ({
     ...i,
     // Ensure properties exist for grid
-    footerLeft: i.type,
+    footerLeft: tagsDb[i.type]?.name,
     footerRight: '' 
   }));
 });
@@ -199,16 +201,16 @@ const itemsList = computed(() => {
 const skillsList = computed(() => {
   return Object.values(skillsDb).map(s => ({
     ...s,
-    footerLeft: s.category,
+    footerLeft: tagsDb[s.category]?.name,
     footerRight: s.cost,
-    highlight: s.type === 'Active' // Just for visual flair
+    highlight: s.type === 'skillTypes.active'
   }));
 });
 
 const statusList = computed(() => {
   return Object.values(statusDb).map(s => ({
     ...s,
-    footerLeft: s.type,
+    footerLeft: tagsDb[s.type]?.name,
     footerRight: ''
   }));
 });
@@ -260,38 +262,53 @@ const onItemSelect = (item) => {
 // Helpers
 const getSubtitle = (item) => {
   if (!item) return '';
-  if (currentTab.value === 'characters') return t(item.role);
-  return getLocalizedText(item.subText) || t(item.type);
+  if (currentTab.value === 'characters') return getTagName(item.role);
+  if (currentTab.value === 'tags') return item.id;
+  
+  // 对于物品、技能和状态，显示 subText 或分类标签
+  const sub = getLocalizedText(item.subText);
+  if (sub) return sub;
+
+  const typeField = item.type || item.category;
+  return typeField ? getTagName(typeField) : '';
 };
 
 const detailProperties = computed(() => {
   if (!selectedItem.value) return {};
   const i = selectedItem.value;
-  
+  // 获取原始数据以确保访问到最新结构
+  const raw = currentTab.value === 'tags' ? i : (
+               currentTab.value === 'characters' ? charactersDb[i.id] : 
+               currentTab.value === 'items' ? itemsDb[i.id] :
+               currentTab.value === 'skills' ? skillsDb[i.id] :
+               currentTab.value === 'status' ? statusDb[i.id] : null);
+
+  if (!raw) return {};
+
   if (currentTab.value === 'characters') {
     return {
-      [t('labels.element')]: t(i.element),
-      [t('labels.weapon')]: t(i.weaponType),
-      [t('labels.role')]: t(i.role)
+      [t('labels.element')]: getTagName(raw.element),
+      [t('labels.weapon')]: getTagName(raw.weaponType),
+      [t('labels.role')]: getTagName(raw.role)
     };
   }
   if (currentTab.value === 'items') {
     return {
-      [t('labels.type')]: t(i.type),
-      [t('labels.effect')]: getLocalizedText(i.subText)
+      [t('labels.type')]: getTagName(raw.type),
+      [t('labels.effect')]: getLocalizedText(raw.subText)
     };
   }
   if (currentTab.value === 'skills') {
     return {
-      [t('labels.category')]: t(i.category),
-      [t('labels.cost')]: i.cost, 
-      [t('labels.type')]: t(i.type)
+      [t('labels.category')]: getTagName(raw.category),
+      [t('labels.cost')]: raw.cost, 
+      [t('labels.type')]: getTagName(raw.type)
     };
   }
   if (currentTab.value === 'status') {
     return {
-      [t('labels.type')]: t(i.type),
-      [t('labels.effect')]: getLocalizedText(i.subText)
+      [t('labels.type')]: getTagName(raw.type),
+      [t('labels.effect')]: getLocalizedText(raw.subText)
     };
   }
   return {};

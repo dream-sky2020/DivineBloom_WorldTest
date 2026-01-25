@@ -5,16 +5,16 @@
  * 或: npm run validate-data
  */
 
-import { validateAllGameData } from '../src/data/schemas/validator.js';
+import { validateAllGameData } from '../src/schemas/validator.js';
 
 console.log('🚀 启动数据验证工具...\n');
 
 validateAllGameData({ throwOnError: false })
     .then((results) => {
-        const hasErrors = 
-            (results.skills?.errors.length || 0) + 
+        const hasErrors =
+            (results.skills?.errors.length || 0) +
             (results.statuses?.errors.length || 0) > 0;
-        
+
         if (hasErrors) {
             console.log('\n⚠️  发现数据错误，请查看上方详细信息');
             process.exit(1);

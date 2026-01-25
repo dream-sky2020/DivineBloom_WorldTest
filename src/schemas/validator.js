@@ -93,17 +93,17 @@ export const validateAllGameData = async () => {
         // 清空之前的注册表问题，准备重新验证
         EntityRegistry.clearIssues();
 
-        // 动态导入数据
-        const { skillsDb } = await import('./skills.js');
-        const { statusDb } = await import('./status.js');
-        const { itemsDb } = await import('./items.js');
-        const { charactersDb } = await import('./characters.js');
+        // 使用 SchemasManager 执行全量重新验证
+        const { schemasManager } = await import('./SchemasManager.js');
+        
+        // 强制重新初始化（可选，如果需要刷新数据）
+        // schemasManager.init(); 
 
-        // 执行验证
-        results.skills = validateSkillsDb(skillsDb);
-        results.statuses = validateStatusDb(statusDb);
-        results.items = validateItemsDb(itemsDb);
-        results.characters = validateCharactersDb(charactersDb);
+        // 执行验证并获取结果
+        results.skills = validateSkillsDb(schemasManager.skills);
+        results.statuses = validateStatusDb(schemasManager.status);
+        results.items = validateItemsDb(schemasManager.items);
+        results.characters = validateCharactersDb(schemasManager.characters);
 
         // 获取注册表错误（重复 ID 等）
         results.registry = {

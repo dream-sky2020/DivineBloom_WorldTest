@@ -15,7 +15,7 @@ const logger = createConsola({
  * @param {string} tag - The tag to display (e.g., 'BATTLE', 'ECS')
  */
 export const createLogger = (tag) => {
-    return logger.withTag(tag);
+  return logger.withTag(tag);
 }
 
 export default logger;

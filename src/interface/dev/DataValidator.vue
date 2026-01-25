@@ -148,7 +148,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { validateAllGameData } from '@schema/validator.js';
+import { validateAllGameData } from '@/schemas/validator.js';
 
 const isValidating = ref(false);
 const results = ref(null);

@@ -30,6 +30,15 @@ export class BattleController {
         this.showSkillMenu = ref(false);
         this.showItemMenu = ref(false);
 
+        // 绑定方法以确保在作为事件处理器传递时 this 指向正确
+        this.selectSkill = this.selectSkill.bind(this);
+        this.selectItem = this.selectItem.bind(this);
+        this.handleTargetClick = this.handleTargetClick.bind(this);
+        this.handleAction = this.handleAction.bind(this);
+        this.isSlotActive = this.isSlotActive.bind(this);
+        this.startLoop = this.startLoop.bind(this);
+        this.stopLoop = this.stopLoop.bind(this);
+
         this.animationFrameId = null;
         this.lastTime = 0;
 
