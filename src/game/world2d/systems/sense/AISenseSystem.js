@@ -1,5 +1,5 @@
 import { world } from '@world2d/world'
-import { canSeePlayer } from '@/game/ai/utils'
+import { canSeePlayer } from '@world2d/ECSCalculateTool/AIUtils'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('AISenseSystem')

@@ -1,4 +1,4 @@
-import { changeState } from '@/game/ai/utils'
+import { changeState } from '@world2d/ECSCalculateTool/AIUtils'
 import { SteeringTool } from '@world2d/ECSCalculateTool/SteeringTool'
 
 export const FleeState = {

@@ -45,4 +45,3 @@ export function canSeePlayer(entity, distSq, playerPos) {
     }
     return false
   }
-

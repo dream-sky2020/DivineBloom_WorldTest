@@ -5,7 +5,7 @@ import { skillsDb } from '@schema/skills';
 import { itemsDb } from '@schema/items';
 import { useInventoryStore } from './inventory';
 import { usePartyStore } from './party';
-import { getEnemyAction } from '@/game/ai';
+import { getEnemyAction } from '@/game/battle/ai';
 import { calculateDamage, applyDamage, applyHeal } from '@/game/battle/damageSystem';
 import { processEffect, processTurnStatuses } from '@/game/battle/effectSystem';
 import { applyStatus, removeStatus, checkCrowdControl } from '@/game/battle/statusSystem';
