@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
 import { Physics, ShapeType } from '@world2d/entities/components/Physics'
-import { Inspector } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 export const ObstacleEntitySchema = z.object({
   x: z.number(),
@@ -24,7 +24,8 @@ const INSPECTOR_FIELDS = [
   { path: 'collider.width', label: '宽度', type: 'number', props: { min: 0 } },
   { path: 'collider.height', label: '高度', type: 'number', props: { min: 0 } },
   { path: 'collider.radius', label: '半径', type: 'number', props: { min: 0 } },
-  { path: 'collider.rotation', label: '旋转', type: 'number', tip: '弧度值' }
+  { path: 'collider.rotation', label: '旋转', type: 'number', tip: '弧度值' },
+  ...EDITOR_INSPECTOR_FIELDS
 ];
 
 export const ObstacleEntity = {
@@ -37,7 +38,7 @@ export const ObstacleEntity = {
 
     const { x, y, name, width, height, radius, p1, p2, rotation, shape } = result.data;
 
-    return world.add({
+    const entity = {
       type: 'obstacle',
       name: name,
       position: { x, y },
@@ -49,14 +50,22 @@ export const ObstacleEntity = {
         p1,
         p2,
         rotation,
-        isStatic: true // 障碍物通常是静态的
+        isStatic: true
       }),
-      // [NEW] 添加 Inspector
-      inspector: Inspector.create({ 
-        fields: INSPECTOR_FIELDS,
-        hitPriority: 50 
-      })
+    };
+
+    entity.inspector = Inspector.create({ 
+      fields: INSPECTOR_FIELDS,
+      hitPriority: 50,
+      editorBox: {
+          w: width || (radius ? radius * 2 : 32),
+          h: height || (radius ? radius * 2 : 32),
+          anchorX: 0.5,
+          anchorY: 0.5
+      }
     });
+
+    return world.add(entity);
   },
 
   serialize(entity) {
@@ -74,4 +83,4 @@ export const ObstacleEntity = {
       shape: entity.collider.type
     };
   }
-};
+}

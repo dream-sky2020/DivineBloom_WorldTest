@@ -1,12 +1,13 @@
 import { world } from '@world2d/world'
-import { Visuals } from '@schema/visuals'
 import { editorManager } from '@/game/editor/core/EditorCore'
+import { toRaw } from 'vue'
 
 /**
  * Editor Interaction System
  * 负责编辑模式下的鼠标交互：点击选中、拖拽移动、右键菜单
  */
 export const EditorInteractionSystem = {
+  // 注意：这个 selectedEntity 仅作为内部记录，外部应以 editorManager.selectedEntity 为准
   selectedEntity: null,
   isDragging: false,
   dragOffset: { x: 0, y: 0 },
@@ -18,6 +19,13 @@ export const EditorInteractionSystem = {
     const { mouse } = input;
     const { camera } = renderer;
 
+    // 同步选中的实体（防止从外部 UI 修改了选中状态但系统不知道）
+    // 使用 toRaw 确保比较的是原始对象
+    const currentSelected = toRaw(editorManager.selectedEntity);
+    if (toRaw(this.selectedEntity) !== currentSelected) {
+      this.selectedEntity = currentSelected;
+    }
+
     // 世界坐标 (World Coordinates)
     const worldX = mouse.x + camera.x;
     const worldY = mouse.y + camera.y;
@@ -27,12 +35,13 @@ export const EditorInteractionSystem = {
       const hit = this.findEntityAt(worldX, worldY);
 
       if (hit) {
-        this.selectedEntity = hit;
-        editorManager.selectedEntity = hit; // Sync with reactive state
+        const rawHit = toRaw(hit);
+        this.selectedEntity = rawHit;
+        editorManager.selectedEntity = rawHit; // Sync with reactive state
         this.isDragging = true;
-        this.dragOffset.x = hit.position.x - worldX;
-        this.dragOffset.y = hit.position.y - worldY;
-        console.log('[Editor] Selected:', hit.name || hit.id || hit.uuid || 'unnamed');
+        this.dragOffset.x = rawHit.position.x - worldX;
+        this.dragOffset.y = rawHit.position.y - worldY;
+        console.log('[Editor] Selected:', rawHit.name || rawHit.id || rawHit.uuid || 'unnamed');
       } else {
         this.selectedEntity = null;
         editorManager.selectedEntity = null; // Sync with reactive state
@@ -40,7 +49,9 @@ export const EditorInteractionSystem = {
     }
 
     // 2. 处理拖拽逻辑 (MouseMove while Down)
-    const target = editorManager.selectedEntity;
+    // 始终从 editorManager 获取最新目标
+    const target = toRaw(editorManager.selectedEntity);
+    
     if (this.isDragging && target && target.position) {
       if (mouse.isDown) {
         // 更新位置 (通过响应式代理更新，Vue 就能感知到)
@@ -73,13 +84,14 @@ export const EditorInteractionSystem = {
       const hit = this.findEntityAt(worldX, worldY);
 
       if (hit) {
+        const rawHit = toRaw(hit);
         // 右键点击到了实体
-        this.selectedEntity = hit;
-        editorManager.selectedEntity = hit;
+        this.selectedEntity = rawHit;
+        editorManager.selectedEntity = rawHit;
 
         // 触发实体右键菜单回调
         if (this.onEntityRightClick) {
-          this.onEntityRightClick(hit, { worldX, worldY, screenX: mouse.screenX, screenY: mouse.screenY });
+          this.onEntityRightClick(rawHit, { worldX, worldY, screenX: mouse.screenX, screenY: mouse.screenY });
         }
       } else {
         // 右键点击空白地面
@@ -93,50 +105,52 @@ export const EditorInteractionSystem = {
 
   /**
    * 统一获取实体的编辑边界框
+   * 严格遵循 Inspector 定义，实现编辑器与渲染组件 (Sprite) 的解耦
    */
   getEntityBounds(entity) {
     if (!entity.position) return null;
 
     const inspector = entity.inspector;
-    let w = 32, h = 32, ax = 0.5, ay = 1.0, ox = 0, oy = 0;
+    
+    // 默认参数 (如果没有任何定义)
+    let w = 32, h = 32, ax = 0.5, ay = 1.0, ox = 0, oy = 0, scale = 1.0;
 
-    // 1. 优先使用 Inspector 定义的 editorBox
+    // 1. 核心来源：Inspector 定义的 editorBox
     if (inspector && inspector.editorBox) {
       const box = inspector.editorBox;
       w = box.w ?? w;
       h = box.h ?? h;
       ax = box.anchorX ?? ax;
       ay = box.anchorY ?? ay;
-      ox = box.offsetX ?? 0;
-      oy = box.offsetY ?? 0;
+      ox = box.offsetX ?? ox;
+      oy = box.offsetY ?? oy;
+      scale = box.scale ?? scale;
     }
-    // 2. 其次使用 Visuals 定义
-    else if (entity.visual) {
-      const def = Visuals[entity.visual.id];
-      if (def) {
-        w = (def.layout?.width) || 32;
-        h = (def.layout?.height) || 32;
-        ax = def.anchor?.x ?? 0.5;
-        ay = def.anchor?.y ?? 1.0;
-      }
-    }
-    // 3. 最后考虑 detectArea (针对传送门等无视觉实体)
-    else if (entity.detectArea && entity.detectArea.size) {
-      w = entity.detectArea.size.w;
-      h = entity.detectArea.size.h;
-      if (entity.detectArea.offset) {
-        ox = entity.detectArea.offset.x;
-        oy = entity.detectArea.offset.y;
-        ax = 0.5; ay = 0.5; // detectArea 通常是中心对齐
-      } else {
-        ax = 0; ay = 0;
+    // 2. 备选来源：针对无视觉资源但有探测区域的实体（如保底逻辑）
+    else if (entity.detectArea) {
+      if (entity.detectArea.size) {
+        w = entity.detectArea.size.w;
+        h = entity.detectArea.size.h;
+        ax = 0.5; ay = 0.5;
+        ox = entity.detectArea.offset?.x ?? 0;
+        oy = entity.detectArea.offset?.y ?? 0;
+      } else if (entity.detectArea.radius) {
+        w = entity.detectArea.radius * 2;
+        h = entity.detectArea.radius * 2;
+        ax = 0.5; ay = 0.5;
+        ox = entity.detectArea.offset?.x ?? 0;
+        oy = entity.detectArea.offset?.y ?? 0;
       }
     }
 
-    const left = entity.position.x + ox - w * ax;
-    const top = entity.position.y + oy - h * ay;
+    // 应用缩放 (仅使用来自 Inspector 的定义)
+    const finalW = w * scale;
+    const finalH = h * scale;
 
-    return { left, top, w, h, ax, ay, ox, oy };
+    const left = entity.position.x + ox - finalW * ax;
+    const top = entity.position.y + oy - finalH * ay;
+
+    return { left, top, w: finalW, h: finalH, ax, ay, ox, oy };
   },
 
   /**

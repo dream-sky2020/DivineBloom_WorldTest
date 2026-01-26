@@ -5,7 +5,7 @@ import { Sprite } from '@world2d/entities/components/Sprite'
 import { Animation } from '@world2d/entities/components/Animation'
 import { Physics } from '@world2d/entities/components/Physics'
 import { Actions } from '@world2d/entities/components/Actions'
-import { Inspector } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 // --- Schema Definition ---
 
@@ -30,7 +30,8 @@ const INSPECTOR_FIELDS = [
   { path: 'actionDialogue.dialogueId', label: '对话 ID', type: 'text', tip: '对应 dialogues 文件夹中的配置' },
   { path: 'detectArea.radius', label: '交互半径', type: 'number', tip: '玩家靠近多少距离可以触发对话', props: { min: 10 } },
   { path: 'sprite.id', label: '立绘 ID', type: 'text' },
-  { path: 'sprite.scale', label: '缩放比例', type: 'number', props: { step: 0.1, min: 0.1 } }
+  { path: 'sprite.scale', label: '缩放比例', type: 'number', props: { step: 0.1, min: 0.1 } },
+  ...EDITOR_INSPECTOR_FIELDS
 ];
 
 export const NPCEntity = {
@@ -43,18 +44,14 @@ export const NPCEntity = {
     }
     
     const { x, y, name, config } = result.data;
-    
-    // ... (logic)
-
     const { dialogueId, spriteId, range, scale } = config;
 
-    const entity = world.add({
+    const entity = {
       type: 'npc',
-      name: name || `NPC_${dialogueId}`, // 如果没传名字，用对话ID兜底
+      name: name || `NPC_${dialogueId}`,
       position: { x, y },
       npc: true,
       
-      // [NEW ARCHITECTURE]
       detectArea: DetectArea({ shape: 'circle', radius: range, target: 'player' }),
       detectInput: DetectInput({ keys: ['Interact'] }),
       trigger: Trigger({ 
@@ -63,30 +60,20 @@ export const NPCEntity = {
       }),
       
       actionDialogue: Actions.Dialogue(dialogueId),
-
-      // [LEGACY COMPATIBILITY]
-      interaction: {
-        type: 'dialogue',
-        id: dialogueId,
-        range: range
-      },
-
-      // 🎯 自定义碰撞体 (静态圆形)
+      interaction: { type: 'dialogue', id: dialogueId, range: range },
       collider: Physics.Circle(15, true),
-      
       bounds: Physics.Bounds(),
-
       sprite: Sprite.create(spriteId, { scale }),
       animation: Animation.create('default'),
+    };
 
-      // [NEW] 添加 Inspector
-      inspector: Inspector.create({ 
-        fields: INSPECTOR_FIELDS,
-        hitPriority: 80
-      })
-    })
+    entity.inspector = Inspector.create({ 
+      fields: INSPECTOR_FIELDS,
+      hitPriority: 80,
+      editorBox: { w: 32, h: 48, scale: 1 }
+    });
 
-    return entity
+    return world.add(entity);
   },
 
   serialize(entity) {

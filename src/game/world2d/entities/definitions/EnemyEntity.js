@@ -7,7 +7,7 @@ import { Animation } from '@world2d/entities/components/Animation'
 import { Physics } from '@world2d/entities/components/Physics'
 import { AI } from '@world2d/entities/components/AI'
 import { Actions } from '@world2d/entities/components/Actions'
-import { Inspector } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 // --- Schema Definition ---
 
@@ -54,7 +54,8 @@ const INSPECTOR_FIELDS = [
   { path: 'aiConfig.visionRadius', label: '视野半径', type: 'number', tip: '敌人发现目标的距离', props: { min: 0 } },
   { path: 'aiConfig.speed', label: '移动速度', type: 'number', props: { step: 10, min: 0 } },
   { path: 'aiConfig.patrolRadius', label: '巡逻半径', type: 'number', tip: '仅对巡逻型 AI 有效', props: { min: 0 } },
-  { path: 'aiConfig.stunDuration', label: '眩晕时长', type: 'number', tip: '战斗逃跑或被特殊技能击中后的瘫痪时间', props: { step: 0.1, min: 0 } }
+  { path: 'aiConfig.stunDuration', label: '眩晕时长', type: 'number', tip: '战斗逃跑或被特殊技能击中后的瘫痪时间', props: { step: 0.1, min: 0 } },
+  ...EDITOR_INSPECTOR_FIELDS
 ];
 
 export const EnemyEntity = {
@@ -66,13 +67,11 @@ export const EnemyEntity = {
     }
 
     const { x, y, name, battleGroup, options } = result.data;
-
-    // Generate UUID if not present
     const uuid = options.uuid || Math.random().toString(36).substr(2, 9);
     const isStunned = options.isStunned;
     const visualId = options.spriteId;
 
-    const entity = world.add({
+    const entity = {
       type: 'enemy',
       name: name || `Enemy_${visualId}`,
       position: { x, y },
@@ -80,41 +79,28 @@ export const EnemyEntity = {
       detectable: Detectable(['enemy', 'teleportable']),
       enemy: true,
 
-      // [NEW ARCHITECTURE]
-      detectArea: DetectArea({ shape: 'circle', radius: 40, target: 'player' }), // 敌人依然只探测玩家标签来触发战斗
+      detectArea: DetectArea({ shape: 'circle', radius: 40, target: 'player' }),
       trigger: Trigger({
-        rules: [{
-          type: 'onEnter',
-          // [NEW] Added Condition
-          condition: 'notStunned'
-        }],
+        rules: [{ type: 'onEnter', condition: 'notStunned' }],
         actions: ['BATTLE']
       }),
 
       actionBattle: Actions.Battle(battleGroup, uuid),
-
-      // [LEGACY COMPATIBILITY] - Keeping for safety if other systems access it directly
-      interaction: {
-        battleGroup: battleGroup,
-        uuid: uuid
-      },
-
-      // 🎯 自定义碰撞体 (圆形)
+      interaction: { battleGroup, uuid },
       collider: Physics.Circle(15),
-
       bounds: Physics.Bounds(),
 
       aiConfig: AI.Config(
         options.aiType,
         options.visionRadius,
         options.speed,
-        { // Extra options
+        {
           visionType: options.visionType,
           visionAngle: options.visionAngle,
           visionProximity: options.visionProximity,
           suspicionTime: options.suspicionTime,
           minYRatio: options.minYRatio,
-          homePosition: options.homePosition || { x, y }, // 优先使用保存的家位置，否则使用初始坐标
+          homePosition: options.homePosition || { x, y },
           patrolRadius: options.patrolRadius,
           detectedState: options.detectedState || (options.aiType === 'flee' ? 'flee' : 'chase'),
           stunDuration: options.stunDuration,
@@ -123,22 +109,17 @@ export const EnemyEntity = {
       ),
 
       aiState: AI.State(isStunned, options.stunnedTimer),
-
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create(isStunned ? 'stunned' : 'idle'),
+    };
 
-      // [NEW] 添加 Inspector 映射
-      inspector: Inspector.create({
-        fields: INSPECTOR_FIELDS,
-        hitPriority: 80
-      })
-    })
+    entity.inspector = Inspector.create({
+      fields: INSPECTOR_FIELDS,
+      hitPriority: 80,
+      editorBox: { w: 40, h: 60, scale: 1 }
+    });
 
-    // [REMOVED] Vision Indicator Entity
-    // Vision rendering is now handled by AIVisionRenderSystem which queries the enemy entity directly.
-    // No need for a separate attached entity.
-
-    return entity
+    return world.add(entity);
   },
 
   serialize(entity) {

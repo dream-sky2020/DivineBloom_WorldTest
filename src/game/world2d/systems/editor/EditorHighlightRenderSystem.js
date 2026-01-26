@@ -1,6 +1,8 @@
 import { EditorInteractionSystem } from './EditorInteractionSystem';
 import { Visuals } from '@schema/visuals';
 import { world } from '@world2d/world';
+import { editorManager } from '@/game/editor/core/EditorCore';
+import { toRaw } from 'vue';
 
 /**
  * Editor Highlight Render System
@@ -13,17 +15,21 @@ export const EditorHighlightRenderSystem = {
 
   draw(renderer) {
     const { ctx, camera } = renderer;
-    const entities = world; // 遍历所有实体，不只是带位置的
+    const entities = world; 
+
+    // 获取当前选中的实体 (原始对象)
+    const selectedEntity = toRaw(editorManager.selectedEntity);
 
     ctx.save();
 
     for (const entity of entities) {
-      const isSelected = entity === EditorInteractionSystem.selectedEntity;
+      const rawEntity = toRaw(entity);
+      const isSelected = rawEntity === selectedEntity;
       const isDragging = isSelected && EditorInteractionSystem.isDragging;
 
       // 如果没有位置，只在选中时特殊处理
-      if (!entity.position) {
-        if (isSelected && entity.globalManager) {
+      if (!rawEntity.position) {
+        if (isSelected && rawEntity.globalManager) {
           // 全局管理实体在选中时，在左上角绘制一个固定标识
           this.drawGlobalIndicator(ctx, isDragging);
         }
@@ -31,18 +37,22 @@ export const EditorHighlightRenderSystem = {
       }
 
       // 使用统一的边界计算逻辑
-      const bounds = EditorInteractionSystem.getEntityBounds(entity);
+      const bounds = EditorInteractionSystem.getEntityBounds(rawEntity);
       if (!bounds) continue;
 
       const screenX = bounds.left - camera.x;
       const screenY = bounds.top - camera.y;
 
       // 剔除屏幕外 (稍微多留一点边距)
-      if (screenX < -200 || screenX > renderer.width + 200 || 
-          screenY < -200 || screenY > renderer.height + 200) continue;
+      // [FIX] 增加对 renderer.width/height 为 0 的兼容处理
+      const viewW = renderer.width || 2000;
+      const viewH = renderer.height || 2000;
 
-      let label = entity.name || entity.type || 'Entity';
-      this.drawBox(ctx, screenX, screenY, bounds.w, bounds.h, isSelected, isDragging, label, entity.position.x, entity.position.y);
+      if (screenX < -500 || screenX > viewW + 500 || 
+          screenY < -500 || screenY > viewH + 500) continue;
+
+      let label = rawEntity.name || rawEntity.type || 'Entity';
+      this.drawBox(ctx, screenX, screenY, bounds.w, bounds.h, isSelected, isDragging, label, rawEntity.position.x, rawEntity.position.y);
     }
 
     ctx.restore();

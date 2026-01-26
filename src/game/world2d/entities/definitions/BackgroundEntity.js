@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
 import { Sprite } from '@world2d/entities/components/Sprite'
-import { Inspector } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('BackgroundEntity')
@@ -14,15 +14,17 @@ export const BackgroundGroundSchema = z.object({
     color: z.string().default('#000000')
 });
 
+const INSPECTOR_FIELDS = [
+    { path: 'name', label: '名称', type: 'text' },
+    { path: 'rect.width', label: '宽度', type: 'number' },
+    { path: 'rect.height', label: '高度', type: 'number' },
+    { path: 'sprite.tint', label: '颜色', type: 'color' },
+    ...EDITOR_INSPECTOR_FIELDS
+];
+
 // --- Entity Definition ---
 
 export const BackgroundEntity = {
-    /**
-     * 创建地面实体 (底层颜色)
-     * @param {number} width 
-     * @param {number} height 
-     * @param {string} color 
-     */
     createGround(width, height, color) {
         const result = BackgroundGroundSchema.safeParse({ width, height, color });
         if (!result.success) {
@@ -32,21 +34,25 @@ export const BackgroundEntity = {
 
         const d = result.data;
 
-        return world.add({
+        const entity = {
             type: 'background_ground',
             name: 'Ground',
             position: { x: 0, y: 0 },
             sprite: Sprite.create('rect', { tint: d.color }),
             rect: { width: d.width, height: d.height },
-            zIndex: -100, // 最底层
-            // [NEW] 添加 Inspector
-            inspector: Inspector.create({
-                tagName: 'Background',
-                tagColor: '#64748b',
-                allowDelete: false,
-                hitPriority: 10 // 背景点击优先级最低
-            })
-        })
+            zIndex: -100,
+        };
+
+        entity.inspector = Inspector.create({
+            tagName: 'Background',
+            tagColor: '#64748b',
+            fields: INSPECTOR_FIELDS,
+            allowDelete: false,
+            hitPriority: 10,
+            editorBox: { w: d.width, h: d.height, anchorX: 0, anchorY: 0 }
+        });
+
+        return world.add(entity);
     },
 
     serialize(entity) {

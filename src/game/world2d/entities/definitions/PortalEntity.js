@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { world } from '@world2d/world'
 import { DetectArea, DetectInput, Trigger } from '@world2d/entities/components/Triggers'
 import { Actions } from '@world2d/entities/components/Actions'
-import { Inspector } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 // --- Schema Definition ---
 
@@ -13,24 +13,18 @@ export const PortalEntitySchema = z.object({
   width: z.number(),
   height: z.number(),
   isForced: z.boolean().optional().default(true),
-  // 跨地图传送：需要 targetMapId 和 targetEntryId
   targetMapId: z.string().optional(),
   targetEntryId: z.string().optional(),
-  // 同地图传送：可以使用 destinationId（推荐）或直接坐标 targetX/targetY
   destinationId: z.string().optional(),
   targetX: z.number().optional(),
   targetY: z.number().optional()
 }).refine(
   data => {
-    // 必须是跨地图传送或同地图传送之一
-    // 使用 != null 来同时排除 null 和 undefined
     const isCrossMap = data.targetMapId != null && data.targetEntryId != null
     const isLocalTeleport = data.destinationId != null || (data.targetX != null && data.targetY != null)
     return isCrossMap || isLocalTeleport
   },
-  {
-    message: "Portal must have either (targetMapId + targetEntryId) for cross-map teleport or (destinationId / targetX + targetY) for local teleport"
-  }
+  { message: "Portal must have either (targetMapId + targetEntryId) for cross-map teleport or (destinationId / targetX + targetY) for local teleport" }
 );
 
 // --- Entity Definition ---
@@ -42,18 +36,14 @@ const INSPECTOR_FIELDS = [
   { path: 'detectArea.size.w', label: '触发宽度', type: 'number' },
   { path: 'detectArea.size.h', label: '触发高度', type: 'number' },
   { path: 'isForced', label: '强制传送', type: 'checkbox', tip: '勾选则触碰即走，不勾选需按交互键' },
-  { path: 'actionTeleport.mapId', label: '目标地图', type: 'text', tip: '跨地图传送时填写' },
-  { path: 'actionTeleport.entryId', label: '入口 ID', type: 'text', tip: '跨地图传送时填写' },
-  { path: 'actionTeleport.destinationId', label: '同图目的地', type: 'text', tip: '同一地图内跳转时填写' }
+  { path: 'actionTeleport.mapId', label: '目标地图', type: 'text' },
+  { path: 'actionTeleport.entryId', label: '入口 ID', type: 'text' },
+  { path: 'actionTeleport.destinationId', label: '同图目的地', type: 'text' },
+  ...EDITOR_INSPECTOR_FIELDS
 ];
 
 export const PortalEntity = {
-  /**
-   * Create a Portal entity
-   * @param {z.infer<typeof PortalEntitySchema>} data
-   */
   create(data) {
-    // Validate Input
     const result = PortalEntitySchema.safeParse(data);
     if (!result.success) {
       console.error('[PortalEntity] Validation failed', result.error);
@@ -61,59 +51,28 @@ export const PortalEntity = {
     }
 
     const { x, y, name, width, height, isForced, targetMapId, targetEntryId, destinationId, targetX, targetY } = result.data;
-
-    // 判断传送类型（使用 != null 来同时排除 null 和 undefined）
     const isCrossMap = targetMapId != null && targetEntryId != null
     const isLocalTeleport = destinationId != null || (targetX != null && targetY != null)
 
-    // 生成默认名称
-    let portalName = name
-    if (!portalName) {
-      if (isCrossMap) {
-        portalName = `To_${targetMapId}_${targetEntryId}`
-      } else if (destinationId) {
-        portalName = `To_${destinationId}`
-      } else if (targetX != null && targetY != null) {
-        portalName = `Local_Teleport_${targetX}_${targetY}`
-      }
-    }
+    let portalName = name || (isCrossMap ? `To_${targetMapId}_${targetEntryId}` : destinationId ? `To_${destinationId}` : `Teleport_${targetX}_${targetY}`);
 
-    // Offset calculation:
-    // Portal position is usually top-left or center? 
-    // Assuming x,y passed here are top-left of the zone (based on usual Tiled map export).
-    // Our AABB detect system expects a center position for the entity + offset.
-    // If entity.position is set to {x,y}, and we want the box to be from x to x+w:
-    // With offset { w/2, h/2 } and size { w, h }, center is x+w/2, box is [x, x+w].
-
-    return world.add({
+    const entity = {
       type: 'portal',
       name: portalName,
       position: { x, y },
       isForced: isForced,
-
       detectArea: DetectArea({
         shape: 'aabb',
         offset: { x: width / 2, y: height / 2 },
         size: { w: width, h: height },
-        // 强制传送门保持探测 teleportable 标签，非强制传送门专门探测玩家(player)以复刻 NPC 行为
         target: isForced ? 'teleportable' : 'player',
-        // [NEW] 设置调试颜色，强制为紫色，非强制为橙色
-        debugColor: isForced
-          ? 'rgba(168, 85, 247, 0.8)' // purple-500
-          : 'rgba(249, 115, 22, 0.8)'  // orange-500
+        debugColor: isForced ? 'rgba(168, 85, 247, 0.8)' : 'rgba(249, 115, 22, 0.8)'
       }),
-
-      // [NEW] 非强制传送门增加输入检测
-      ...(isForced ? {} : { detectInput: DetectInput({ keys: ['Interact'] }) }),
-
       trigger: Trigger({
-        rules: isForced
-          ? [{ type: 'onStay' }]
-          : [{ type: 'onPress', requireArea: true }],
+        rules: isForced ? [{ type: 'onStay' }] : [{ type: 'onPress', requireArea: true }],
         actions: ['TELEPORT'],
-        defaultCooldown: isForced ? 0 : 0.8            // 强制传送设为 0 冷却，手动传送设为 0.8s 冷却防止连续触发
+        defaultCooldown: isForced ? 0 : 0.8
       }),
-
       actionTeleport: Actions.Teleport(
         isCrossMap ? targetMapId : undefined,
         isCrossMap ? targetEntryId : undefined,
@@ -121,30 +80,23 @@ export const PortalEntity = {
         isLocalTeleport && targetX != null ? targetX : undefined,
         isLocalTeleport && targetY != null ? targetY : undefined
       ),
+    };
 
-      // [NEW] 添加 Inspector
-      inspector: Inspector.create({ 
-        fields: INSPECTOR_FIELDS,
-        hitPriority: 70,
-        // 传送门通常没有视觉，我们显式定义一个编辑框，方便点击
-        editorBox: {
-          w: width,
-          h: height,
-          anchorX: 0,
-          anchorY: 0
-        }
-      })
-    })
+    if (!isForced) {
+        entity.detectInput = DetectInput({ keys: ['Interact'] });
+    }
+
+    entity.inspector = Inspector.create({ 
+      fields: INSPECTOR_FIELDS,
+      hitPriority: 70,
+      editorBox: { w: width, h: height, anchorX: 0, anchorY: 0 }
+    });
+
+    return world.add(entity);
   },
 
-  // Portal Serialization
   serialize(entity) {
-    // 逆向解构：从 Component 还原配置数据
     const { position, detectArea, actionTeleport, name, isForced } = entity
-
-    // detectArea.size => {w, h}
-    // actionTeleport => {mapId, entryId, destinationId, targetX, targetY}
-
     const data = {
       type: 'portal',
       x: position.x,
@@ -154,21 +106,15 @@ export const PortalEntity = {
       height: detectArea.size.h,
       isForced: isForced
     }
-
-    // 根据传送类型添加对应字段（使用 != null 来同时排除 null 和 undefined）
     if (actionTeleport.mapId != null && actionTeleport.entryId != null) {
-      // 跨地图传送
       data.targetMapId = actionTeleport.mapId
       data.targetEntryId = actionTeleport.entryId
     } else if (actionTeleport.destinationId != null) {
-      // 同地图传送（使用目的地实体）
       data.destinationId = actionTeleport.destinationId
     } else if (actionTeleport.targetX != null && actionTeleport.targetY != null) {
-      // 同地图传送（使用直接坐标）
       data.targetX = actionTeleport.targetX
       data.targetY = actionTeleport.targetY
     }
-
-    return data
+    return data;
   }
 }

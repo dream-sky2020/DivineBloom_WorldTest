@@ -5,7 +5,7 @@ import { Sprite } from '@world2d/entities/components/Sprite'
 import { Animation } from '@world2d/entities/components/Animation'
 import { Physics } from '@world2d/entities/components/Physics'
 import { Detectable } from '@world2d/entities/components/Triggers'
-import { Inspector } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 // --- Schema Definition ---
 
@@ -24,7 +24,8 @@ const INSPECTOR_FIELDS = [
   { path: 'position.y', label: '坐标 Y', type: 'number' },
   { path: 'speed', label: '基础速度', type: 'number', props: { min: 0, step: 10 } },
   { path: 'fastSpeed', label: '奔跑速度', type: 'number', props: { min: 0, step: 10 } },
-  { path: 'sprite.scale', label: '缩放', type: 'number', props: { min: 0.1, step: 0.1 } }
+  { path: 'sprite.scale', label: '缩放', type: 'number', props: { min: 0.1, step: 0.1 } },
+  ...EDITOR_INSPECTOR_FIELDS
 ];
 
 export const PlayerEntity = {
@@ -37,37 +38,29 @@ export const PlayerEntity = {
 
     const { x, y, name, scale } = result.data;
 
-    const entity = world.add({
-      type: 'player', // 方便序列化识别
+    const entity = {
+      type: 'player',
       name: name,
       position: { x, y },
       velocity: Physics.Velocity(),
       detectable: Detectable(['player', 'teleportable']),
-
-      // 玩家特有属性
       input: true,
-      player: true, // Tag
-
-      // 移动参数 (来自 PlayerConfig 或默认)
+      player: true,
       speed: PlayerConfig.speed || 200,
       fastSpeed: PlayerConfig.fastSpeed || 320,
-
-      // 🎯 自定义碰撞体 (圆形)
       collider: Physics.Circle(12),
-
       bounds: Physics.Bounds(),
-
       sprite: Sprite.create('hero', { scale }),
       animation: Animation.create('idle'),
+    };
 
-      // [NEW] 添加 Inspector
-      inspector: Inspector.create({ 
-        fields: INSPECTOR_FIELDS,
-        hitPriority: 100
-      })
-    })
+    entity.inspector = Inspector.create({ 
+      fields: INSPECTOR_FIELDS,
+      hitPriority: 100,
+      editorBox: { w: 32, h: 48, scale: 1 }
+    });
 
-    return entity
+    return world.add(entity);
   },
 
   serialize(entity) {

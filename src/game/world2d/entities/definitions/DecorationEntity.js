@@ -3,7 +3,7 @@ import { world } from '@world2d/world'
 import { Sprite } from '@world2d/entities/components/Sprite'
 import { Animation } from '@world2d/entities/components/Animation'
 import { Physics } from '@world2d/entities/components/Physics'
-import { Inspector } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 // --- Schema Definition ---
 
@@ -41,7 +41,8 @@ const INSPECTOR_FIELDS = [
     { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 } },
     { path: 'zIndex', label: '层级', type: 'number', tip: '控制重叠顺序，背景通常在 -50 以下', props: { step: 1 } },
     { path: 'sprite.id', label: '资源 ID', type: 'text', tip: '对应 assets 中的 ID' },
-    { path: 'sprite.scale', label: '缩放比例', type: 'number', props: { step: 0.1, min: 0.1 } }
+    { path: 'sprite.scale', label: '缩放比例', type: 'number', props: { step: 0.1, min: 0.1 } },
+    ...EDITOR_INSPECTOR_FIELDS
 ];
 
 export const DecorationEntity = {
@@ -71,19 +72,13 @@ export const DecorationEntity = {
             rectComponent = { width: 20, height: 20, color: 'magenta' };
         }
 
-        // 🎯 碰撞体处理逻辑
         if (customCollider) {
-            // 如果有自定义配置，优先使用自定义配置
-            collider = Physics.Collider({
-                ...customCollider,
-                isStatic: customCollider.isStatic ?? true
-            });
+            collider = Physics.Collider({ ...customCollider, isStatic: customCollider.isStatic ?? true });
         } else if (rect && !spriteId) {
-            // 如果是纯矩形且没有自定义碰撞体，默认加一个 AABB 碰撞体
             collider = Physics.Box(rect.width, rect.height, true);
         }
 
-        const entityData = {
+        const entity = {
             type: 'decoration',
             name: name,
             position: { x, y },
@@ -91,18 +86,19 @@ export const DecorationEntity = {
             animation: animationComponent,
             rect: rectComponent,
             zIndex: zIndex,
-            // 🎯 添加 Inspector 映射组件
-            inspector: Inspector.create({
-                fields: INSPECTOR_FIELDS,
-                hitPriority: 40
-            })
         };
 
         if (collider) {
-            entityData.collider = collider;
+            entity.collider = collider;
         }
 
-        return world.add(entityData)
+        entity.inspector = Inspector.create({
+            fields: INSPECTOR_FIELDS,
+            hitPriority: 40,
+            editorBox: { w: rectComponent?.width || 32, h: rectComponent?.height || 32, scale: 1 }
+        });
+
+        return world.add(entity)
     },
 
     serialize(entity) {

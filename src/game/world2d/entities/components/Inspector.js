@@ -15,17 +15,7 @@ export const Inspector = {
      * @param {boolean} [config.allowDelete] 是否允许删除
      * @param {number} [config.priority] 场景浏览器排序优先级（越高越靠前，默认 0）
      * @param {number} [config.hitPriority] 编辑器点击优先级 (数字越大越先被选中)
-     * @param {Object} [config.editorBox] 手动指定编辑器交互框 { w, h, anchorX, anchorY, offsetX, offsetY }
-     * 
-     * field 结构:
-     * {
-     *   path: string,    // 对应实体的属性路径，如 'position.x'
-     *   label: string,   // 中文显示名称
-     *   type: string,    // UI 类型: 'text', 'number', 'checkbox', 'select', 'asset'
-     *   tip: string,     // 悬浮注释/帮助文本
-     *   options: Array,  // 如果是 select 类型，提供的选项
-     *   props: Object    // 传给 input 的额外属性，如 { min: 0, max: 100, step: 1 }
-     * }
+     * @param {Object} [config.editorBox] 手动指定编辑器交互框 { w, h, anchorX, anchorY, offsetX, offsetY, scale }
      */
     create({ tagName = null, tagColor = null, groups = [], fields = [], allowDelete = true, priority = 0, hitPriority = 0, editorBox = null } = {}) {
         return {
@@ -36,7 +26,29 @@ export const Inspector = {
             allowDelete,
             priority,
             hitPriority,
-            editorBox
+            // 确保 editorBox 始终是一个对象，方便通过 path 修改属性
+            editorBox: {
+                w: 32,
+                h: 32,
+                anchorX: 0.5,
+                anchorY: 1.0,
+                offsetX: 0,
+                offsetY: 0,
+                scale: 1.0,
+                ...(editorBox || {})
+            }
         };
     }
 };
+
+/**
+ * 统一的编辑器属性字段，可合并到各实体的 INSPECTOR_FIELDS 中
+ */
+export const EDITOR_INSPECTOR_FIELDS = [
+    { path: 'inspector.hitPriority', label: '点击优先级', type: 'number', tip: '数字越大越优先被选中', props: { step: 1 } },
+    { path: 'inspector.editorBox.w', label: '交互宽', type: 'number', props: { min: 0 } },
+    { path: 'inspector.editorBox.h', label: '交互高', type: 'number', props: { min: 0 } },
+    { path: 'inspector.editorBox.scale', label: '交互缩放', type: 'number', props: { step: 0.1, min: 0 } },
+    { path: 'inspector.editorBox.offsetX', label: '交互偏移 X', type: 'number' },
+    { path: 'inspector.editorBox.offsetY', label: '交互偏移 Y', type: 'number' }
+];
