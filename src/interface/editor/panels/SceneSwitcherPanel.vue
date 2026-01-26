@@ -67,7 +67,7 @@ const { openContextMenu } = inject('editorContextMenu');
 const logger = createLogger('SceneSwitcherPanel')
 
 const gameStore = useGameStore()
-const worldStore = gameStore.world
+const worldStore = gameStore.world2d
 const availableMaps = computed(() => schemasManager.mapIds)
 const currentMapId = computed(() => worldStore.currentMapId)
 const isLoading = ref(false)

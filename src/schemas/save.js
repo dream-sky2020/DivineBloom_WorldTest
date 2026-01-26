@@ -148,7 +148,7 @@ export const SavedEntityItemSchema = z.object({
 });
 
 // --- 地图运行时状态 (Map Runtime State) ---
-// 对应 worldStore.currentMapState
+// 对应 world2dStore.currentMapState
 export const MapSaveStateSchema = z.object({
     isInitialized: z.boolean().optional(), // Add optional because sometimes we just save entities
     entities: z.array(SavedEntityItemSchema)

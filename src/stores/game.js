@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { useInventoryStore } from './inventory';
 import { usePartyStore } from './party';
 import { useQuestStore } from './quest';
-import { useWorldStore } from './world';
+import { useWorld2dStore } from './world2d';
 import { useBattleStore } from './battle';
 import { useDialogueStore } from './dialogue';
 import { useSettingsStore } from './settings';
@@ -18,7 +18,7 @@ export const useGameStore = defineStore('game', () => {
     const inventory = useInventoryStore();
     const party = usePartyStore();
     const quest = useQuestStore();
-    const world = useWorldStore();
+    const world2d = useWorld2dStore();
     const battle = useBattleStore();
     const dialogue = useDialogueStore();
     const settings = useSettingsStore();
@@ -69,7 +69,7 @@ export const useGameStore = defineStore('game', () => {
                 inventory: inventory.serialize(),
                 party: party.serialize(),
                 quest: quest.serialize(),
-                world: world.serialize(),
+                world: world2d.serialize(),
                 // Battle 和 Dialogue 状态通常不保存，除非需要中断恢复
             }
         };
@@ -109,7 +109,7 @@ export const useGameStore = defineStore('game', () => {
             if (saveData.data.inventory) inventory.loadState(saveData.data.inventory);
             if (saveData.data.party) party.loadState(saveData.data.party);
             if (saveData.data.quest) quest.loadState(saveData.data.quest);
-            if (saveData.data.world) world.loadState(saveData.data.world);
+            if (saveData.data.world) world2d.loadState(saveData.data.world);
 
             isGameRunning.value = true;
             startGameTimer();
@@ -131,7 +131,7 @@ export const useGameStore = defineStore('game', () => {
         inventory.reset();
         party.reset();
         quest.reset();
-        world.reset();
+        world2d.reset();
         battle.reset();
         dialogue.reset();
         // settings 不重置，属于系统层级
@@ -165,7 +165,7 @@ export const useGameStore = defineStore('game', () => {
         inventory,
         party,
         quest,
-        world,
+        world2d,
         battle,
         dialogue,
         settings,

@@ -137,7 +137,7 @@ class GameManager {
         logger.info('Switching to World Map')
 
         const gameStore = useGameStore()
-        const worldStore = gameStore.world
+        const worldStore = gameStore.world2d
         const battleStore = gameStore.battle
 
         // Handle return from battle
@@ -168,7 +168,7 @@ class GameManager {
      */
     async loadMap(mapId, entryId = 'default') {
         const gameStore = useGameStore()
-        const worldStore = gameStore.world
+        const worldStore = gameStore.world2d
 
         // If we have a SceneManager, let it handle the transition
         // This handles ECS clearing, data loading, etc.
@@ -245,7 +245,7 @@ class GameManager {
         logger.info('Encounter:', enemyGroup)
         const gameStore = useGameStore()
         const battleStore = gameStore.battle
-        const worldStore = gameStore.world
+        const worldStore = gameStore.world2d
 
         // Save Map State before battle (optional, for safety)
         if (this.currentScene.value) {

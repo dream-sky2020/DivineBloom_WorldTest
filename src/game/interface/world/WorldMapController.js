@@ -6,7 +6,7 @@ import { world } from '@world2d/world';
 export class WorldMapController {
     constructor() {
         this.gameStore = useGameStore();
-        this.worldStore = this.gameStore.world;
+        this.worldStore = this.gameStore.world2d;
         this.dialogueStore = this.gameStore.dialogue;
 
         this.debugInfo = ref({ x: 0, y: 0, lastInput: '' });

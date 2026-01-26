@@ -4,9 +4,9 @@ import { MapSaveStateSchema } from '@schema/save';
 import { ScenarioLoader } from '@world2d/ScenarioLoader';
 import { createLogger } from '@/utils/logger';
 
-const logger = createLogger('WorldStore');
+const logger = createLogger('World2dStore');
 
-export const useWorldStore = defineStore('world', () => {
+export const useWorld2dStore = defineStore('world2d', () => {
     // Current Map State
     const currentMapId = ref('demo_plains');
     const currentMapState = ref(null); // { playerPos, enemies, isInitialized }
@@ -50,8 +50,8 @@ export const useWorldStore = defineStore('world', () => {
             // 兼容旧格式：只有 entities 数组
             else if (persisted.entities && Array.isArray(persisted.entities)) {
                 currentMapState.value = {
-            isInitialized: true,
-            entities: persisted.entities
+                    isInitialized: true,
+                    entities: persisted.entities
                 };
             } else {
                 currentMapState.value = null;
@@ -73,13 +73,6 @@ export const useWorldStore = defineStore('world', () => {
     };
 
     const applyBattleResult = (result, enemyUuid) => {
-        // ... (rest of function as is)
-        // Simplified for brevity in tool call since we're not changing logic inside here much, 
-        // but need to be careful not to overwrite the file with missing code.
-        // Wait, I must rewrite the FULL file content or use search_replace.
-        // I will use write but need the full content.
-        // Let's copy the helper function first.
-
         // Helper to remove enemy from entity list
         const handleEntities = (entities) => {
             if (!entities) return [];

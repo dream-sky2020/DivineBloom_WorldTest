@@ -14,7 +14,7 @@ const logger = createLogger('SceneManager')
 export class SceneManager {
     /**
      * @param {import('@world2d/GameEngine').GameEngine} engine 
-     * @param {import('@/stores/world').useWorldStore} worldStore 
+     * @param {import('@/stores/world2d').useWorld2dStore} worldStore 
      */
     constructor(engine, worldStore) {
         this.engine = engine
