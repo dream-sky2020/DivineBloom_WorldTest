@@ -1,8 +1,5 @@
 import { actionQueue, eventQueue, world } from '@world2d/world'
-import { BattleExecuteSystem } from '@world2d/systems/execute/BattleExecuteSystem'
-import { DialogueExecuteSystem } from '@world2d/systems/execute/DialogueExecuteSystem'
-import { TeleportExecuteSystem } from '@world2d/systems/execute/TeleportExecuteSystem'
-import { EditorInteractionSystem } from '@world2d/systems/editor/EditorInteractionSystem'
+import { getSystem } from '@world2d/SystemRegistry'
 import { entityTemplateRegistry } from '@world2d/entities/internal/EntityTemplateRegistry'
 import { editorManager } from '@/game/editor/core/EditorCore'
 import { createLogger } from '@/utils/logger'
@@ -87,16 +84,16 @@ export const ExecuteSystem = {
     switch (type) {
       // --- 游戏逻辑动作 (Actions) ---
       case 'BATTLE':
-        BattleExecuteSystem.handle(source, callbacks);
+        getSystem('battle-execute').handle(source, callbacks);
         break;
 
       case 'DIALOGUE':
-        DialogueExecuteSystem.handle(source, callbacks);
+        getSystem('dialogue-execute').handle(source, callbacks);
         break;
 
       case 'TELEPORT':
         // Teleport 期望的是整个 request 对象作为参数
-        TeleportExecuteSystem.handle(item, callbacks, mapData);
+        getSystem('teleport-execute').handle(item, callbacks, mapData);
         break;
 
       // --- 编辑器/UI 指令 (Commands) ---
@@ -142,8 +139,9 @@ export const ExecuteSystem = {
     }
     
     // 同步交互系统状态
-    if (EditorInteractionSystem.selectedEntity === entity) {
-      EditorInteractionSystem.selectedEntity = null;
+    const editorInteraction = getSystem('editor-interaction')
+    if (editorInteraction && editorInteraction.selectedEntity === entity) {
+      editorInteraction.selectedEntity = null;
     }
 
     world.remove(entity);

@@ -1,32 +1,7 @@
 import { EntityManager } from '@world2d/entities/EntityManager'
-import { BackgroundRenderSystem } from '@world2d/systems/render/BackgroundRenderSystem'
-import { VisualRenderSystem } from '@world2d/systems/render/VisualRenderSystem'
-import { PhysicsDebugRenderSystem } from '@world2d/systems/render/PhysicsDebugRenderSystem'
-import { AIVisionRenderSystem } from '@world2d/systems/render/AIVisionRenderSystem'
-import { AIPatrolDebugRenderSystem } from '@world2d/systems/render/AIPatrolDebugRenderSystem'
-import { StatusRenderSystem } from '@world2d/systems/render/StatusRenderSystem'
-import { DetectAreaRenderSystem } from '@world2d/systems/render/DetectAreaRenderSystem'
-import { PortalDebugRenderSystem } from '@world2d/systems/render/PortalDebugRenderSystem'
-import { InputSenseSystem } from '@world2d/systems/sense/InputSenseSystem'
-import { AISenseSystem } from '@world2d/systems/sense/AISenseSystem'
-import { MousePositionSenseSystem } from '@world2d/systems/sense/MousePositionSenseSystem'
-import { PlayerIntentSystem } from '@world2d/systems/intent/PlayerIntentSystem'
-import { PlayerControlSystem } from '@world2d/systems/control/PlayerControlSystem'
-import { EnemyAIIntentSystem } from '@world2d/systems/intent/EnemyAIIntentSystem'
-import { EnemyControlSystem } from '@world2d/systems/control/EnemyControlSystem'
-import { MovementSystem } from '@world2d/systems/physics/MovementSystem'
-import { CollisionSystem } from '@world2d/systems/physics/CollisionSystem'
-import { DetectAreaSystem } from '@world2d/systems/detect/DetectAreaSystem'
-import { DetectInputSystem } from '@world2d/systems/detect/DetectInputSystem'
-import { TriggerSystem } from '@world2d/systems/event/TriggerSystem'
-import { ExecuteSystem } from '@world2d/systems/execute/ExecuteSystem'
-import { CameraSystem } from '@world2d/systems/camera/CameraSystem'
-import { TimeSystem } from '@world2d/systems/time/TimeSystem'
+import { getSystem } from '@world2d/SystemRegistry'
 import { clearWorld, world } from '@world2d/world'
 import { GlobalEntity } from '@world2d/entities/definitions/GlobalEntity'
-import { EditorGridRenderSystem } from '@world2d/systems/render/EditorGridRenderSystem'
-import { EditorInteractionSystem } from '@world2d/systems/editor/EditorInteractionSystem'
-import { EditorHighlightRenderSystem } from '@world2d/systems/editor/EditorHighlightRenderSystem'
 import { editorManager } from '@/game/editor/core/EditorCore'
 import { createLogger } from '@/utils/logger'
 
@@ -64,37 +39,63 @@ export class WorldScene {
         this.entryId = entryId
 
         // 初始化 Environment System
-        DetectAreaRenderSystem.init(this.mapData)
-        PortalDebugRenderSystem.init(this.mapData)
-        AISenseSystem.init?.(this.mapData)
+        getSystem('detect-area-render').init(this.mapData)
+        getSystem('portal-debug-render').init(this.mapData)
+        getSystem('ai-sense').init?.(this.mapData)
 
         // 🎯 系统注册表化 (System Registry)
         this.systems = {
             // 逻辑阶段 (Logic Phases)
             logic: {
-                sense: [AISenseSystem, DetectAreaSystem, DetectInputSystem, MousePositionSenseSystem],
-                intent: [PlayerIntentSystem, EnemyAIIntentSystem],
-                decision: [TriggerSystem],
-                control: [PlayerControlSystem, EnemyControlSystem],
-                physics: [MovementSystem, CollisionSystem],
-                execution: [ExecuteSystem]
+                sense: [
+                    getSystem('ai-sense'),
+                    getSystem('detect-area'),
+                    getSystem('detect-input'),
+                    getSystem('mouse-position-sense')
+                ],
+                intent: [
+                    getSystem('player-intent'),
+                    getSystem('enemy-ai-intent')
+                ],
+                decision: [
+                    getSystem('trigger')
+                ],
+                control: [
+                    getSystem('player-control'),
+                    getSystem('enemy-control')
+                ],
+                physics: [
+                    getSystem('movement'),
+                    getSystem('collision')
+                ],
+                execution: [
+                    getSystem('execute')
+                ]
             },
             // 渲染管线 (Render Pipeline)
             render: [
-                BackgroundRenderSystem, // Layer 10
-                AIPatrolDebugRenderSystem, // Layer 12
-                AIVisionRenderSystem,   // Layer 15
-                VisualRenderSystem,     // Layer 20
-                StatusRenderSystem,     // Layer 30
-                PhysicsDebugRenderSystem, // Layer 110
-                DetectAreaRenderSystem,  // Layer 100 (Debug)
-                PortalDebugRenderSystem  // Layer 105 (Portal Debug)
+                getSystem('background-render'),      // Layer 10
+                getSystem('ai-patrol-debug-render'), // Layer 12
+                getSystem('ai-vision-render'),       // Layer 15
+                getSystem('visual-render'),          // Layer 20
+                getSystem('status-render'),          // Layer 30
+                getSystem('physics-debug-render'),   // Layer 110
+                getSystem('detect-area-render'),     // Layer 100 (Debug)
+                getSystem('portal-debug-render')     // Layer 105 (Portal Debug)
             ],
             // 编辑器阶段 (Editor Phases)
             editor: {
-                sense: [InputSenseSystem, MousePositionSenseSystem],
-                interaction: [EditorInteractionSystem],
-                render: [EditorGridRenderSystem, EditorHighlightRenderSystem]
+                sense: [
+                    getSystem('input-sense'),
+                    getSystem('mouse-position-sense')
+                ],
+                interaction: [
+                    getSystem('editor-interaction')
+                ],
+                render: [
+                    getSystem('editor-grid-render'),
+                    getSystem('editor-highlight-render')
+                ]
             }
         }
 
@@ -131,9 +132,9 @@ export class WorldScene {
      * Map Loaded Callback
      */
     onMapLoaded(mapData) {
-        DetectAreaRenderSystem.init(mapData)
-        PortalDebugRenderSystem.init(mapData)
-        AISenseSystem.init?.(mapData)
+        getSystem('detect-area-render').init(mapData)
+        getSystem('portal-debug-render').init(mapData)
+        getSystem('ai-sense').init?.(mapData)
         logger.info('Map systems reinitialized')
     }
 
@@ -160,8 +161,11 @@ export class WorldScene {
         this.systems.render = this.systems.render.filter(s => !this.systems.editor.render.includes(s))
 
         // 重置交互状态
-        EditorInteractionSystem.selectedEntity = null
-        EditorInteractionSystem.isDragging = false
+        const editorInteraction = getSystem('editor-interaction')
+        if (editorInteraction) {
+            editorInteraction.selectedEntity = null
+            editorInteraction.isDragging = false
+        }
         editorManager.selectedEntity = null
     }
 
@@ -212,8 +216,8 @@ export class WorldScene {
         this.lastDt = dt
 
         // 1. 始终运行的系统 (动画、时间等)
-        VisualRenderSystem.update(dt)
-        TimeSystem.update(dt)
+        getSystem('visual-render').update(dt)
+        getSystem('time').update(dt)
 
         // 2. 编辑器模式逻辑
         if (this.editMode) {
@@ -225,7 +229,7 @@ export class WorldScene {
 
         // 3. 编辑器命令处理 (始终执行，不受暂停影响)
         // 这样可以确保编辑器的删除、保存等操作能够立即响应
-        ExecuteSystem.update({
+        getSystem('execute').update({
             onEncounter: this.onEncounter,
             onSwitchMap: null,
             onInteract: this.onInteract,
@@ -239,7 +243,7 @@ export class WorldScene {
         if (!isPaused && !this.isTransitioning) {
             // 如果不在编辑模式，才更新常规输入感知
             if (!this.editMode) {
-                InputSenseSystem.update(dt, this.engine.input)
+                getSystem('input-sense').update(dt, this.engine.input)
             }
 
             // 核心逻辑阶段驱动
@@ -247,7 +251,7 @@ export class WorldScene {
             phases.forEach(phase => {
                 this.systems.logic[phase].forEach(system => {
                     // MousePositionSenseSystem 需要 engine 对象而不仅仅是 input
-                    if (system === MousePositionSenseSystem) {
+                    if (system === getSystem('mouse-position-sense')) {
                         system.update(dt, this.engine)
                     } else {
                         system.update(dt)
@@ -266,7 +270,7 @@ export class WorldScene {
             this.systems.logic.physics.forEach(system => system.update(dt, physicsOptions))
 
             // 5. 更新相机 (在物理和逻辑之后)
-            CameraSystem.update(dt, {
+            getSystem('camera').update(dt, {
                 viewportWidth: this.engine.width,
                 viewportHeight: this.engine.height,
                 mapBounds: { width: mapWidth, height: mapHeight }

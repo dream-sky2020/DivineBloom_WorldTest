@@ -304,8 +304,8 @@ const openContextMenu = (e, items) => {
 // Provide context menu to children
 import { provide } from 'vue';
 import { world } from '@world2d/world';
+import { getSystem } from '@world2d/SystemRegistry';
 import { entityTemplateRegistry } from '@world2d/entities/internal/EntityTemplateRegistry';
-import { EditorInteractionSystem } from '@world2d/systems/editor/EditorInteractionSystem';
 import { toRaw } from 'vue';
 provide('editorContextMenu', { openContextMenu, closeContextMenu });
 
@@ -545,8 +545,11 @@ onMounted(() => {
   }
 
   // 设置右键点击回调（统一在 EditorInteractionSystem 中处理）
-  EditorInteractionSystem.onEntityRightClick = handleEntityRightClick;
-  EditorInteractionSystem.onEmptyRightClick = handleEmptyRightClick;
+  const editorInteraction = getSystem('editor-interaction')
+  if (editorInteraction) {
+    editorInteraction.onEntityRightClick = handleEntityRightClick;
+    editorInteraction.onEmptyRightClick = handleEmptyRightClick;
+  }
 });
 
 onUnmounted(() => {
