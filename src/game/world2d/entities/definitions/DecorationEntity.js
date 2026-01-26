@@ -3,7 +3,7 @@ import { world } from '@world2d/world'
 import { Sprite } from '@world2d/entities/components/Sprite'
 import { Animation } from '@world2d/entities/components/Animation'
 import { Physics } from '@world2d/entities/components/Physics'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS, SPRITE_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 // --- Schema Definition ---
 
@@ -36,12 +36,12 @@ export const DecorationEntitySchema = z.object({
 // --- Entity Definition ---
 
 const INSPECTOR_FIELDS = [
-    { path: 'name', label: '名称', type: 'text', tip: '该装饰物的显示名称' },
-    { path: 'position.x', label: '坐标 X', type: 'number', props: { step: 1 } },
-    { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 } },
-    { path: 'zIndex', label: '层级', type: 'number', tip: '控制重叠顺序，背景通常在 -50 以下', props: { step: 1 } },
-    { path: 'sprite.id', label: '资源 ID', type: 'text', tip: '对应 assets 中的 ID' },
-    { path: 'sprite.scale', label: '缩放比例', type: 'number', props: { step: 0.1, min: 0.1 } },
+    { path: 'name', label: '名称', type: 'text', tip: '该装饰物的显示名称', group: '基本属性' },
+    { path: 'position.x', label: '坐标 X', type: 'number', props: { step: 1 }, group: '基本属性' },
+    { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 }, group: '基本属性' },
+    { path: 'zIndex', label: '层级', type: 'number', tip: '控制重叠顺序，背景通常在 -50 以下', props: { step: 1 }, group: '深度排序' },
+    { path: 'sprite.id', label: '资源 ID', type: 'text', tip: '对应 assets 中的 ID', group: '精灵 (Sprite)' },
+    ...SPRITE_INSPECTOR_FIELDS,
     ...EDITOR_INSPECTOR_FIELDS
 ];
 

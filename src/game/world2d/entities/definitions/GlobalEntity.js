@@ -29,13 +29,13 @@ export const GlobalEntitySchema = z.object({
 // --- Entity Definition ---
 
 const INSPECTOR_FIELDS = [
-    { path: 'timer.totalTime', label: '运行总时长', type: 'number', tip: '场景运行的累计秒数', props: { readonly: true, step: 0.001 } },
-    { path: 'timer.running', label: '启用计时器', type: 'checkbox', tip: '控制场景时间的流动' },
-    { path: 'camera.x', label: '相机位置 X', type: 'number', props: { step: 1 } },
-    { path: 'camera.y', label: '相机位置 Y', type: 'number', props: { step: 1 } },
-    { path: 'camera.lerp', label: '相机平滑系数', type: 'number', tip: '0-1 之间，1 为即时跟随', props: { step: 0.01, min: 0, max: 1 } },
-    { path: 'mousePosition.worldX', label: '鼠标 X (世界)', type: 'number', tip: '鼠标在游戏世界中的 X 坐标', props: { readonly: true } },
-    { path: 'mousePosition.worldY', label: '鼠标 Y (世界)', type: 'number', tip: '鼠标在游戏世界中的 Y 坐标', props: { readonly: true } },
+    { path: 'timer.totalTime', label: '运行总时长', type: 'number', tip: '场景运行的累计秒数', props: { readonly: true, step: 0.001 }, group: '时间控制' },
+    { path: 'timer.running', label: '启用计时器', type: 'checkbox', tip: '控制场景时间的流动', group: '时间控制' },
+    { path: 'camera.x', label: '相机位置 X', type: 'number', props: { step: 1 }, group: '相机设置' },
+    { path: 'camera.y', label: '相机位置 Y', type: 'number', props: { step: 1 }, group: '相机设置' },
+    { path: 'camera.lerp', label: '相机平滑系数', type: 'number', tip: '0-1 之间，1 为即时跟随', props: { step: 0.01, min: 0, max: 1 }, group: '相机设置' },
+    { path: 'mousePosition.worldX', label: '鼠标 X (世界)', type: 'number', tip: '鼠标在游戏世界中的 X 坐标', props: { readonly: true }, group: '调试信息' },
+    { path: 'mousePosition.worldY', label: '鼠标 Y (世界)', type: 'number', tip: '鼠标在游戏世界中的 Y 坐标', props: { readonly: true }, group: '调试信息' },
     ...EDITOR_INSPECTOR_FIELDS
 ];
 

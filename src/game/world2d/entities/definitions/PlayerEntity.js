@@ -5,7 +5,7 @@ import { Sprite } from '@world2d/entities/components/Sprite'
 import { Animation } from '@world2d/entities/components/Animation'
 import { Physics } from '@world2d/entities/components/Physics'
 import { Detectable } from '@world2d/entities/components/Triggers'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS, SPRITE_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 
 // --- Schema Definition ---
 
@@ -19,12 +19,12 @@ export const PlayerEntitySchema = z.object({
 // --- Entity Definition ---
 
 const INSPECTOR_FIELDS = [
-  { path: 'name', label: '名称', type: 'text' },
-  { path: 'position.x', label: '坐标 X', type: 'number' },
-  { path: 'position.y', label: '坐标 Y', type: 'number' },
-  { path: 'speed', label: '基础速度', type: 'number', props: { min: 0, step: 10 } },
-  { path: 'fastSpeed', label: '奔跑速度', type: 'number', props: { min: 0, step: 10 } },
-  { path: 'sprite.scale', label: '缩放', type: 'number', props: { min: 0.1, step: 0.1 } },
+  { path: 'name', label: '名称', type: 'text', group: '基本属性' },
+  { path: 'position.x', label: '坐标 X', type: 'number', group: '基本属性' },
+  { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
+  { path: 'speed', label: '基础速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
+  { path: 'fastSpeed', label: '奔跑速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
+  ...SPRITE_INSPECTOR_FIELDS,
   ...EDITOR_INSPECTOR_FIELDS
 ];
 
@@ -54,7 +54,7 @@ export const PlayerEntity = {
       animation: Animation.create('idle'),
     };
 
-    entity.inspector = Inspector.create({ 
+    entity.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
       hitPriority: 100,
       editorBox: { w: 32, h: 48, scale: 1 }

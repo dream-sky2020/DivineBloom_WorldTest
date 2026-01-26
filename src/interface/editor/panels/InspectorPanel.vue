@@ -21,13 +21,21 @@
           🗑️ 删除
         </button>
       </div>
-      <div class="inspector-body">
-        <!-- 🎯 方案：声明式 Inspector 映射 -->
-        <template v-if="localEntityState.inspector">
-          <section class="prop-section">
-            <h4>实体属性 (Inspector)</h4>
-            
-            <div v-for="field in localEntityState.inspector.fields" :key="field.path" class="prop-group" :class="{ 'checkbox-group': field.type === 'checkbox' }">
+    <div class="inspector-body">
+      <!-- 🎯 方案：声明式 Inspector 映射 -->
+      <template v-if="localEntityState.inspector">
+        <div v-for="group in groupedFields" :key="group.name" class="inspector-group-section">
+          <div 
+            class="group-header" 
+            @click="toggleGroup(group.name)"
+            :class="{ 'is-collapsed': collapsedGroups[group.name] }"
+          >
+            <span class="group-title">{{ group.name }}</span>
+            <span class="group-icon">{{ collapsedGroups[group.name] ? '▶' : '▼' }}</span>
+          </div>
+          
+          <div v-show="!collapsedGroups[group.name]" class="group-content">
+            <div v-for="field in group.fields" :key="field.path" class="prop-group" :class="{ 'checkbox-group': field.type === 'checkbox' }">
               <div v-if="field.type !== 'checkbox'" class="label-row">
                 <label>{{ field.label }}</label>
                 <span v-if="field.tip" class="info-icon" :title="field.tip">?</span>
@@ -81,13 +89,23 @@
                 {{ getNestedValue(localEntityState, field.path) }}
               </div>
 
+              <!-- 颜色类型 -->
+              <input 
+                v-else-if="field.type === 'color'"
+                :value="getNestedValue(localEntityState, field.path)"
+                @input="setNestedValue(localEntityState, field.path, $event.target.value)"
+                type="color"
+                v-bind="field.props"
+              />
+
               <!-- 其他类型占位 -->
               <div v-else class="unsupported-type">
                 不支持的字段类型: {{ field.type }}
               </div>
             </div>
-          </section>
-        </template>
+          </div>
+        </div>
+      </template>
 
         <!-- 只有在没有 inspector 时才显示旧的硬编码内容 (或者作为兜底) -->
         <template v-else>
@@ -268,7 +286,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, toRaw } from 'vue'
+import { ref, onMounted, onUnmounted, toRaw, computed } from 'vue'
 import { world } from '@world2d/world'
 import { editorManager } from '@/game/editor/core/EditorCore'
 import EditorPanel from '../components/EditorPanel.vue'
@@ -276,6 +294,32 @@ import EditorPanel from '../components/EditorPanel.vue'
 // 属性编辑同步
 const localEntityState = ref(null)
 const lastUpdate = ref(Date.now())
+
+// 分组展开收起状态
+const collapsedGroups = ref({})
+
+const toggleGroup = (groupName) => {
+  collapsedGroups.value[groupName] = !collapsedGroups.value[groupName];
+}
+
+const groupedFields = computed(() => {
+  if (!localEntityState.value?.inspector?.fields) return [];
+  
+  const fields = localEntityState.value.inspector.fields;
+  const groups = [];
+  const groupMap = {};
+
+  fields.forEach(field => {
+    const groupName = field.group || '基本属性'; // 默认分组
+    if (!groupMap[groupName]) {
+      groupMap[groupName] = { name: groupName, fields: [] };
+      groups.push(groupMap[groupName]);
+    }
+    groupMap[groupName].fields.push(field);
+  });
+
+  return groups;
+});
 
 const confirmDelete = () => {
   const entity = localEntityState.value;

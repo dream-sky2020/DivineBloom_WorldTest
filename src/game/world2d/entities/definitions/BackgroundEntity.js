@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
 import { Sprite } from '@world2d/entities/components/Sprite'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS, SPRITE_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('BackgroundEntity')
@@ -15,10 +15,10 @@ export const BackgroundGroundSchema = z.object({
 });
 
 const INSPECTOR_FIELDS = [
-    { path: 'name', label: '名称', type: 'text' },
-    { path: 'rect.width', label: '宽度', type: 'number' },
-    { path: 'rect.height', label: '高度', type: 'number' },
-    { path: 'sprite.tint', label: '颜色', type: 'color' },
+    { path: 'name', label: '名称', type: 'text', group: '基本属性' },
+    { path: 'rect.width', label: '宽度', type: 'number', group: '几何尺寸' },
+    { path: 'rect.height', label: '高度', type: 'number', group: '几何尺寸' },
+    ...SPRITE_INSPECTOR_FIELDS,
     ...EDITOR_INSPECTOR_FIELDS
 ];
 
