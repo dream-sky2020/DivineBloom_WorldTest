@@ -14,7 +14,11 @@ export default defineConfig({
       '@styles': path.resolve(__dirname, './src/styles'),
       '@schema': path.resolve(__dirname, './src/schemas'),
       '@data': path.resolve(__dirname, './src/data'),
-      '@world2d': path.resolve(__dirname, './src/game/world2d')
+      '@world2d': path.resolve(__dirname, './src/game/world2d'),
+      '@components': path.resolve(__dirname, './src/game/world2d/definitions/components'),
+      '@entities': path.resolve(__dirname, './src/game/world2d/definitions/entities'),
+      '@definitions': path.resolve(__dirname, './src/game/world2d/definitions'),
+      '@systems': path.resolve(__dirname, './src/game/world2d/systems')
     }
   }
 })

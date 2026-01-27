@@ -4,11 +4,13 @@
  * 统一管理所有可创建的实体类型，提供模板信息供编辑器使用
  */
 
-import { NPCEntity } from '../definitions/NPCEntity'
-import { DecorationEntity } from '../definitions/DecorationEntity'
-import { ObstacleEntity } from '../definitions/ObstacleEntity'
-import { PortalEntity } from '../definitions/PortalEntity'
-import { PortalDestinationEntity } from '../definitions/PortalDestinationEntity'
+import { 
+    NPCEntity, 
+    DecorationEntity, 
+    ObstacleEntity, 
+    PortalEntity, 
+    PortalDestinationEntity 
+} from '@entities'
 
 /**
  * 实体模板定义

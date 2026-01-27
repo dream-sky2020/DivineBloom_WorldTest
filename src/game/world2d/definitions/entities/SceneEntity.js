@@ -1,6 +1,5 @@
 import { world } from '@world2d/world';
-import { SceneConfig } from '@world2d/entities/components/SceneConfig';
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector';
+import { SceneConfig, Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
 
 const INSPECTOR_FIELDS = [
     { path: 'sceneConfig.id', label: '场景 ID', type: 'text', props: { readonly: true }, group: '基础信息' },

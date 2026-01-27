@@ -1,5 +1,5 @@
-import { EntityCreator } from './internal/EntityCreator'
-import { EntitySerializer } from './internal/EntitySerializer'
+import { EntityCreator } from '@definitions/internal/EntityCreator'
+import { EntitySerializer } from '@definitions/internal/EntitySerializer'
 
 /**
  * 实体管理器 (Facade)

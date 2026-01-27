@@ -13,7 +13,7 @@
 import { gameManager } from './GameManager'
 import { world } from './world'
 import { ScenarioLoader } from './ScenarioLoader'
-import { entityTemplateRegistry } from './entities/internal/EntityTemplateRegistry'
+import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('World2DFacade')

@@ -1,13 +1,15 @@
 import { z } from 'zod';
 import { world } from '@world2d/world';
-import { BattleResultSchema, BATTLE_RESULT_INSPECTOR_FIELDS } from '@world2d/entities/components/BattleResult';
-import { Camera } from '@world2d/entities/components/Camera';
-import { Timer, TimerSchema } from '@world2d/entities/components/Timer';
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector';
-import { Commands } from '@world2d/entities/components/Commands';
-import { MousePosition } from '@world2d/entities/components/MousePosition';
-import { Party, PartySchema } from '@world2d/entities/components/Party';
-import { Inventory, InventorySchema } from '@world2d/entities/components/Inventory';
+import { 
+  BattleResultSchema, BATTLE_RESULT_INSPECTOR_FIELDS,
+  Camera,
+  Timer, TimerSchema,
+  Inspector, EDITOR_INSPECTOR_FIELDS,
+  Commands,
+  MousePosition,
+  Party, PartySchema,
+  Inventory, InventorySchema 
+} from '@components'
 
 // --- Schema Definition ---
 export const GlobalEntitySchema = z.object({

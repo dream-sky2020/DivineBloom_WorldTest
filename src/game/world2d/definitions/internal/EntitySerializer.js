@@ -1,11 +1,13 @@
-import { EnemyEntity } from '../definitions/EnemyEntity'
-import { PlayerEntity } from '../definitions/PlayerEntity'
-import { NPCEntity } from '../definitions/NPCEntity'
-import { PortalEntity } from '../definitions/PortalEntity'
-import { PortalDestinationEntity } from '../definitions/PortalDestinationEntity'
-import { GlobalEntity } from '../definitions/GlobalEntity'
-import { DecorationEntity } from '../definitions/DecorationEntity'
-import { ObstacleEntity } from '../definitions/ObstacleEntity'
+import { 
+    EnemyEntity, 
+    PlayerEntity, 
+    NPCEntity, 
+    PortalEntity, 
+    PortalDestinationEntity, 
+    GlobalEntity, 
+    DecorationEntity, 
+    ObstacleEntity 
+} from '@entities'
 
 export const EntitySerializer = {
     serialize(entity) {

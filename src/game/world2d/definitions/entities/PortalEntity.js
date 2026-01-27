@@ -1,8 +1,10 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { DetectArea, DetectInput, Trigger } from '@world2d/entities/components/Triggers'
-import { Actions } from '@world2d/entities/components/Actions'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { 
+  DetectArea, DetectInput, Trigger,
+  Actions,
+  Inspector, EDITOR_INSPECTOR_FIELDS 
+} from '@components'
 
 // --- Schema Definition ---
 

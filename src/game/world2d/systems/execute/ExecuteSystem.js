@@ -1,6 +1,6 @@
 import { actionQueue, eventQueue, world } from '@world2d/world'
 import { getSystem } from '@world2d/SystemRegistry'
-import { entityTemplateRegistry } from '@world2d/entities/internal/EntityTemplateRegistry'
+import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry'
 import { editorManager } from '@/game/editor/core/EditorCore'
 import { createLogger } from '@/utils/logger'
 

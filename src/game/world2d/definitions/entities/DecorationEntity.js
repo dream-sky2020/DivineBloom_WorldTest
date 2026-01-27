@@ -1,9 +1,11 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { Sprite, SPRITE_INSPECTOR_FIELDS } from '@world2d/entities/components/Sprite'
-import { Animation } from '@world2d/entities/components/Animation'
-import { Physics } from '@world2d/entities/components/Physics'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { 
+  Sprite, SPRITE_INSPECTOR_FIELDS,
+  Animation,
+  Physics,
+  Inspector, EDITOR_INSPECTOR_FIELDS 
+} from '@components'
 
 // --- Schema Definition ---
 

@@ -1,5 +1,5 @@
 import { world } from '@world2d/world'
-import { SceneTransition } from '@world2d/entities/components/Requests'
+import { SceneTransition } from '@components'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('TeleportSystem')

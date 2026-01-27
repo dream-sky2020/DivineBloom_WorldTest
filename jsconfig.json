@@ -13,6 +13,18 @@
       ],
       "@world2d/*": [
         "src/game/world2d/*"
+      ],
+      "@components/*": [
+        "src/game/world2d/definitions/components/*"
+      ],
+      "@entities/*": [
+        "src/game/world2d/definitions/entities/*"
+      ],
+      "@definitions/*": [
+        "src/game/world2d/definitions/*"
+      ],
+      "@systems/*": [
+        "src/game/world2d/systems/*"
       ]
     },
     "target": "ESNext",

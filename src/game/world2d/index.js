@@ -42,7 +42,7 @@ export { ScenarioLoader } from './ScenarioLoader'
 /**
  * @deprecated 请使用 world2d.spawnEntity() 方法
  */
-export { entityTemplateRegistry } from './entities/internal/EntityTemplateRegistry'
+export { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry'
 
 /**
  * @deprecated 仅供系统内部使用，外部不应访问
@@ -52,7 +52,7 @@ export { getSystem } from './SystemRegistry'
 /**
  * @deprecated 仅供特殊情况使用（如编辑器深度集成）
  */
-export { EntityManager } from './entities/EntityManager'
+export { EntityManager } from '@definitions'
 
 // ==================== 组件导出（编辑器和高级用途） ====================
 // 这些仅用于特殊场景（如编辑器直接操作 ECS）
@@ -61,7 +61,7 @@ export { EntityManager } from './entities/EntityManager'
  * ECS 组件（编辑器用）
  * @deprecated 外部不应直接操作组件，请使用 world2d API
  */
-export * from './entities/components/BattleResult'
+export * from '@components'
 
 // ==================== 未来计划 ====================
 // 版本 1.0: 创建 World2DFacade ✅

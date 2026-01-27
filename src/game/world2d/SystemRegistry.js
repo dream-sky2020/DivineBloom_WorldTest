@@ -8,55 +8,55 @@
 // --- 导入所有系统 ---
 
 // Camera
-import { CameraSystem } from './systems/camera/CameraSystem';
+import { CameraSystem } from '@systems/camera/CameraSystem';
 
 // Control
-import { EnemyControlSystem } from './systems/control/EnemyControlSystem';
-import { PlayerControlSystem } from './systems/control/PlayerControlSystem';
+import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
+import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
 
 // Detect
-import { DetectAreaSystem } from './systems/detect/DetectAreaSystem';
-import { DetectInputSystem } from './systems/detect/DetectInputSystem';
+import { DetectAreaSystem } from '@systems/detect/DetectAreaSystem';
+import { DetectInputSystem } from '@systems/detect/DetectInputSystem';
 
 // Editor
-import { EditorHighlightRenderSystem } from './systems/editor/EditorHighlightRenderSystem';
-import { EditorInteractionSystem } from './systems/editor/EditorInteractionSystem';
+import { EditorHighlightRenderSystem } from '@systems/editor/EditorHighlightRenderSystem';
+import { EditorInteractionSystem } from '@systems/editor/EditorInteractionSystem';
 
 // Event
-import { TriggerSystem } from './systems/event/TriggerSystem';
+import { TriggerSystem } from '@systems/event/TriggerSystem';
 
 // Execute
-import { BattleExecuteSystem } from './systems/execute/BattleExecuteSystem';
-import { DialogueExecuteSystem } from './systems/execute/DialogueExecuteSystem';
-import { ExecuteSystem } from './systems/execute/ExecuteSystem';
-import { TeleportExecuteSystem } from './systems/execute/TeleportExecuteSystem';
+import { BattleExecuteSystem } from '@systems/execute/BattleExecuteSystem';
+import { DialogueExecuteSystem } from '@systems/execute/DialogueExecuteSystem';
+import { ExecuteSystem } from '@systems/execute/ExecuteSystem';
+import { TeleportExecuteSystem } from '@systems/execute/TeleportExecuteSystem';
 
 // Intent
-import { EnemyAIIntentSystem } from './systems/intent/EnemyAIIntentSystem';
-import { PlayerIntentSystem } from './systems/intent/PlayerIntentSystem';
+import { EnemyAIIntentSystem } from '@systems/intent/EnemyAIIntentSystem';
+import { PlayerIntentSystem } from '@systems/intent/PlayerIntentSystem';
 
 // Physics
-import { CollisionSystem } from './systems/physics/CollisionSystem';
-import { MovementSystem } from './systems/physics/MovementSystem';
+import { CollisionSystem } from '@systems/physics/CollisionSystem';
+import { MovementSystem } from '@systems/physics/MovementSystem';
 
 // Render
-import { AIPatrolDebugRenderSystem } from './systems/render/AIPatrolDebugRenderSystem';
-import { AIVisionRenderSystem } from './systems/render/AIVisionRenderSystem';
-import { BackgroundRenderSystem } from './systems/render/BackgroundRenderSystem';
-import { DetectAreaRenderSystem } from './systems/render/DetectAreaRenderSystem';
-import { EditorGridRenderSystem } from './systems/render/EditorGridRenderSystem';
-import { PhysicsDebugRenderSystem } from './systems/render/PhysicsDebugRenderSystem';
-import { PortalDebugRenderSystem } from './systems/render/PortalDebugRenderSystem';
-import { StatusRenderSystem } from './systems/render/StatusRenderSystem';
-import { VisualRenderSystem } from './systems/render/VisualRenderSystem';
+import { AIPatrolDebugRenderSystem } from '@systems/render/AIPatrolDebugRenderSystem';
+import { AIVisionRenderSystem } from '@systems/render/AIVisionRenderSystem';
+import { BackgroundRenderSystem } from '@systems/render/BackgroundRenderSystem';
+import { DetectAreaRenderSystem } from '@systems/render/DetectAreaRenderSystem';
+import { EditorGridRenderSystem } from '@systems/render/EditorGridRenderSystem';
+import { PhysicsDebugRenderSystem } from '@systems/render/PhysicsDebugRenderSystem';
+import { PortalDebugRenderSystem } from '@systems/render/PortalDebugRenderSystem';
+import { StatusRenderSystem } from '@systems/render/StatusRenderSystem';
+import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
 
 // Sense
-import { AISenseSystem } from './systems/sense/AISenseSystem';
-import { InputSenseSystem } from './systems/sense/InputSenseSystem';
-import { MousePositionSenseSystem } from './systems/sense/MousePositionSenseSystem';
+import { AISenseSystem } from '@systems/sense/AISenseSystem';
+import { InputSenseSystem } from '@systems/sense/InputSenseSystem';
+import { MousePositionSenseSystem } from '@systems/sense/MousePositionSenseSystem';
 
 // Time
-import { TimeSystem } from './systems/time/TimeSystem';
+import { TimeSystem } from '@systems/time/TimeSystem';
 
 /**
  * 系统类型枚举，用于分类管理

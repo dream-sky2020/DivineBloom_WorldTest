@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
 
 // --- Schema Definition ---
 

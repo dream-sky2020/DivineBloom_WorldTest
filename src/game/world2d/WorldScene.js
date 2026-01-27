@@ -1,7 +1,7 @@
-import { EntityManager } from '@world2d/entities/EntityManager'
+import { EntityManager } from '@definitions'
 import { getSystem } from '@world2d/SystemRegistry'
 import { clearWorld, world } from '@world2d/world'
-import { GlobalEntity } from '@world2d/entities/definitions/GlobalEntity'
+import { GlobalEntity } from '@entities'
 import { editorManager } from '@/game/editor/core/EditorCore'
 import { createLogger } from '@/utils/logger'
 

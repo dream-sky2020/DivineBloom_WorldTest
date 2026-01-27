@@ -1,11 +1,10 @@
-import { EntityManager } from '@world2d/entities/EntityManager'
-import { BackgroundEntity } from '@world2d/entities/definitions/BackgroundEntity'
-import { SceneEntity } from '@world2d/entities/definitions/SceneEntity'
+import { EntityManager } from '@definitions'
+import { BackgroundEntity, SceneEntity } from '@entities'
 import { PlayerConfig } from '@schema/assets'
 import Enemies from '@/data/characters/enemies'
 import { world } from '@world2d/world'
-import { SceneMigration } from './entities/internal/SceneMigration'
-import { EntitySerializer } from './entities/internal/EntitySerializer'
+import { SceneMigration } from '@definitions/internal/SceneMigration'
+import { EntitySerializer } from '@definitions/internal/EntitySerializer'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('ScenarioLoader')

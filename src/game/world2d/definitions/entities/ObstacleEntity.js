@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { Physics, ShapeType } from '@world2d/entities/components/Physics'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { Physics, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
 
 export const ObstacleEntitySchema = z.object({
   x: z.number(),

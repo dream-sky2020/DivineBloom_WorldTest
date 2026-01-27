@@ -1,11 +1,13 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { DetectArea, DetectInput, Trigger } from '@world2d/entities/components/Triggers'
-import { Sprite, SPRITE_INSPECTOR_FIELDS } from '@world2d/entities/components/Sprite'
-import { Animation } from '@world2d/entities/components/Animation'
-import { Physics } from '@world2d/entities/components/Physics'
-import { Actions } from '@world2d/entities/components/Actions'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@world2d/entities/components/Inspector'
+import { 
+  DetectArea, DetectInput, Trigger,
+  Sprite, SPRITE_INSPECTOR_FIELDS,
+  Animation,
+  Physics,
+  Actions,
+  Inspector, EDITOR_INSPECTOR_FIELDS 
+} from '@components'
 
 // --- Schema Definition ---
 

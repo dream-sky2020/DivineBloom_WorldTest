@@ -1,6 +1,6 @@
 import { world, clearWorld } from '@world2d/world'
 import { ScenarioLoader } from '@world2d/ScenarioLoader'
-import { EntityManager } from '@world2d/entities/EntityManager'
+import { EntityManager } from '@definitions'
 import { getMapData } from '@schema/maps'
 import { createLogger } from '@/utils/logger'
 import { SceneLifecycle } from '@world2d/resources/SceneLifecycle'

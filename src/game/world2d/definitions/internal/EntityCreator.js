@@ -1,11 +1,13 @@
-import { PlayerEntity } from '../definitions/PlayerEntity'
-import { EnemyEntity } from '../definitions/EnemyEntity'
-import { NPCEntity } from '../definitions/NPCEntity'
-import { PortalEntity } from '../definitions/PortalEntity'
-import { PortalDestinationEntity } from '../definitions/PortalDestinationEntity'
-import { GlobalEntity } from '../definitions/GlobalEntity'
-import { DecorationEntity } from '../definitions/DecorationEntity'
-import { ObstacleEntity } from '../definitions/ObstacleEntity'
+import { 
+    PlayerEntity, 
+    EnemyEntity, 
+    NPCEntity, 
+    PortalEntity, 
+    PortalDestinationEntity, 
+    GlobalEntity, 
+    DecorationEntity, 
+    ObstacleEntity 
+} from '@entities'
 
 export const EntityCreator = {
     createEnemy(data) {
