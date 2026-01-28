@@ -4,17 +4,10 @@ import {
     createTagReference,
     createTagsReference,
     createSkillsReference,
-    createStatusListReference
+    createStatusListReference,
 } from '../common.js';
 import { LocalizedStringSchema } from './localization.js';
-
-// --- 掉落物 (Drop) Schema ---
-export const DropSchema = z.object({
-    itemId: ID,         // 物品ID
-    chance: z.number().min(0).max(1), // 掉落概率 0-1
-    minQty: z.number().int().min(1).default(1), // 最小数量
-    maxQty: z.number().int().min(1).default(1), // 最大数量
-});
+import { DropSchema } from './drop.js';
 
 // --- 角色 (Character) Schema ---
 export const CharacterSchema = z.object({

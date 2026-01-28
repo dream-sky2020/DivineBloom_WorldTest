@@ -194,4 +194,37 @@ export default {
             ko: 'MP 50과 최대 MP의 2%를 회복하는 물약.'
         }
     },
+    item_consumable_elixir: {
+        id: "item_consumable_elixir",
+        name: {
+            zh: '圣灵药',
+            'zh-TW': '聖靈藥',
+            en: 'Elixir',
+            ja: 'エリクサー',
+            ko: '엘릭서'
+        },
+        type: "itemTypes.consumable",
+        targetType: "ally",
+        tags: ['item_consumable', 'rarity_epic', 'status_healing', 'status_resource', 'status_positive'],
+        effects: [
+            { type: "fullRestore" }
+        ],
+        icon: "icon_potion_elixir",
+        subText: {
+            zh: '全恢复',
+            'zh-TW': '全恢復',
+            en: 'Full Restore',
+            ja: '全回復',
+            ko: '전체 회복'
+        },
+        footerLeft: "itemTypes.consumable",
+        description: {
+            zh: '完全恢复一名队友的生命值与魔法值。',
+            'zh-TW': '完全恢復一名隊友的生命值與魔法值。',
+            en: 'Fully restores HP and MP of one ally.',
+            ja: '味方一人のHPとMPを全回復する。',
+            ko: '아군 한 명의 HP와 MP를 완전히 회복시킨다.'
+        }
+    }
+,
 }

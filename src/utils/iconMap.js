@@ -8,9 +8,10 @@ export const iconMap = {
   icon_potion: "🧪",
   icon_herb: "🌱",
   icon_tent: "⛺",
-  icon_feather: "🪶",
-  icon_feather_all: "🪶", // Mass Revive Item
+  icon_feather: "🧹",
+  icon_feather_all: "🧹", // Mass Revive Item
   icon_potion_splash: "🧪", // Splashing Potion
+  icon_potion_elixir: "🍶",
   icon_bomb: "💣",
   icon_bomb_ice: "🧊",
 
@@ -57,6 +58,7 @@ export const iconMap = {
   icon_material_dust: "✨",
   icon_material_crystal: "🔮",
   icon_material_essence: "🏺",
+  icon_material_essence_rare: "⚱️",
 
   // Skills
   icon_slash: "⚔️", // 可以复用 icon_sword，但区分语意更好
@@ -68,7 +70,7 @@ export const iconMap = {
   icon_heal: "💚",
   icon_heal_all: "💖", // Mass Heal
   icon_dispel: "🧼",
-  icon_dispel_all: "🫧",
+  icon_dispel_all: "🧹",
   icon_revive: "✨",
   icon_revive_all: "🌟", // Mass Revive Skill
   icon_strength: "🦾",

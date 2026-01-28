@@ -1,8 +1,13 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, reactive, toRefs } from 'vue';
 import { skillsDb } from '@schema/skills';
 import { itemsDb } from '@schema/items';
 import { usePartyStore } from './party';
+
+// --- Runtime Contexts ---
+import { createBattleRuntimeContext } from '@schema/runtime/BattleRuntimeContext';
+import { createInterfereRuntimeContext } from '@schema/runtime/InterfereRuntimeContext';
+// ------------------------
 
 // --- Battle System Facade Integration ---
 import { battleFacade } from '@/game/battle';
@@ -17,28 +22,35 @@ const logger = createLogger('BattleStore');
 export const useBattleStore = defineStore('battle', () => {
     const partyStore = usePartyStore();
 
-    // --- State ---
-    const enemies = ref([]);
-    const partySlots = ref([]);
-    const turnCount = ref(1);
-    const battleState = ref('idle'); // idle, active, victory, defeat
-    const battleLog = ref([]);
-    const atbPaused = ref(false);
-    const activeUnit = ref(null); // The unit currently acting (Player or Enemy)
-    const boostLevel = ref(0); // Manually controlled BP usage for the current turn
-    const triggeredEnemyUuid = ref(null);
-    const lastBattleResult = ref(null); // { result: 'victory'|'defeat'|'flee', enemyUuid: string }
-    const waitingForInput = ref(false); // Controls UI visibility
-    const pendingAction = ref(null); // { type, id, targetType, data }
-    const validTargetIds = ref([]);
+    // --- State (Managed by BattleRuntimeContext) ---
+    const runtime = reactive(createBattleRuntimeContext());
+    const {
+        enemies,
+        partySlots,
+        turnCount,
+        battlePhase: battleState,
+        atbPaused,
+        activeUnit,
+        boostLevel,
+        waitingForInput,
+        pendingAction,
+        validTargetIds,
+        triggeredEnemyUuid,
+        lastBattleResult
+    } = toRefs(runtime);
 
-    // --- Register Callbacks to Facade ---
-    battleFacade.registerCallbacks({
+    // Additional UI State
+    const battleLog = ref([]);
+
+    // --- Register Callbacks to Facade via InterfereRuntimeContext ---
+    const interfere = createInterfereRuntimeContext({
         log: (key, params) => log(key, params),
-        onDamage: (data) => {
+        onDamagePop: (target, value) => {
             // Future: Trigger UI floating text here
         }
     });
+
+    battleFacade.registerCallbacks(interfere);
 
     // --- Getters ---
     const activeCharacter = computed(() => {
@@ -124,14 +136,14 @@ export const useBattleStore = defineStore('battle', () => {
 
     // Initialize Battle
     const initBattle = (enemyList, enemyUuid = null) => {
-        // Reset state
-        turnCount.value = 1;
+        // Reset state using BattleRuntimeContext
+        const newState = createBattleRuntimeContext({
+            triggeredEnemyUuid: enemyUuid,
+            battlePhase: 'active'
+        });
+        Object.assign(runtime, newState);
+
         battleLog.value = [];
-        activeUnit.value = null;
-        atbPaused.value = false;
-        waitingForInput.value = false;
-        triggeredEnemyUuid.value = enemyUuid;
-        lastBattleResult.value = null;
 
         // Setup Party Base State
         partyStore.initParty();
@@ -145,7 +157,6 @@ export const useBattleStore = defineStore('battle', () => {
 
         enemies.value = newEnemies;
         partySlots.value = newPartySlots;
-        battleState.value = 'active';
 
         // Process Battle Start (Log & Passives)
         const allUnits = [
@@ -326,13 +337,9 @@ export const useBattleStore = defineStore('battle', () => {
     };
 
     const reset = () => {
-        turnCount.value = 1;
-        battleState.value = 'idle';
+        const newState = createBattleRuntimeContext();
+        Object.assign(runtime, newState);
         battleLog.value = [];
-        activeUnit.value = null;
-        atbPaused.value = false;
-        enemies.value = [];
-        partySlots.value = [];
     };
 
     const clearLog = () => {

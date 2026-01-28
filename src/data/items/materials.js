@@ -137,5 +137,23 @@ export default {
             ja: '非常に危険な濃縮された病原体。',
             ko: '매우 위험한 농축된 병원체.'
         }
+    },
+    item_material_essence: {
+        id: "item_material_essence",
+        name: { zh: '精灵精华', 'zh-TW': '精靈精華', en: 'Sprite Essence', ja: '精霊のエッセンス', ko: '정령의 정수' },
+        type: 'itemTypes.material',
+        icon: 'icon_material_essence_rare',
+        tags: ['item_material', 'rarity_rare', 'element_wind'],
+        subText: { zh: '稀有材料', 'zh-TW': '稀有材料', en: 'Rare Material', ja: 'レア素材', ko: '희귀 재료' },
+        footerLeft: 'itemTypes.material',
+        price: 300,
+        description: {
+            zh: '从精灵身上提取的精华物质。',
+            'zh-TW': '從精靈身上提取的精華物質。',
+            en: 'Essence extracted from sprites.',
+            ja: '精霊から抽出されたエッセンス。',
+            ko: '정령에게서 추출한 정수.'
+        }
     }
+
 }
