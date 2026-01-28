@@ -1,16 +1,35 @@
 import { findUnit, getAlive, getDead, isDead } from './utils';
 import { getTeamContext } from './team';
+import { createTargetingRuntimeContext } from '@schema/runtime/TargetingRuntimeContext';
 
 /**
  * 解析具体的目标逻辑
+ * @param {Object|TargetingRuntimeContext} input 包含环境和参数的对象或上下文
+ * @param {string} targetType 目标筛选类型 (如果 input 是上下文，则此参数可选)
  */
-export const resolveTargets = ({ partySlots, enemies, actor, targetId }, targetType) => {
+export const resolveTargets = (input, targetType) => {
+    // 1. 初始化或提取上下文
+    let ctx;
+    if (input.isResolved !== undefined) {
+        ctx = input;
+    } else {
+        ctx = createTargetingRuntimeContext({
+            ...input,
+            targetType: targetType || input.targetType
+        });
+    }
+
+    const { partySlots, enemies, actor, targetId, targetType: finalType } = ctx;
     const targets = [];
     if (!actor) return targets;
 
+    // 2. 获取阵营上下文
     const { myTeam, oppTeam } = getTeamContext(actor, partySlots, enemies);
+    ctx.myTeam = myTeam;
+    ctx.oppTeam = oppTeam;
 
-    switch (targetType) {
+    // 3. 执行筛选逻辑
+    switch (finalType) {
         case 'single':
         case 'enemy':
             let target = targetId ? findUnit(oppTeam, targetId) : null;
@@ -87,5 +106,7 @@ export const resolveTargets = ({ partySlots, enemies, actor, targetId }, targetT
             break;
     }
 
+    ctx.targets = targets;
+    ctx.isResolved = true;
     return targets;
 };

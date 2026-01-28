@@ -1,4 +1,5 @@
 import { statusDb } from '@schema/status';
+import { createEffectRuntimeContext } from '@schema/runtime/EffectRuntimeContext';
 import { executeSingleEffect } from './dispatcher';
 
 /**
@@ -7,16 +8,33 @@ import { executeSingleEffect } from './dispatcher';
 export const processEffect = (effect, target, actor, skill = null, context, silent = false, previousResult = 0) => {
     if (!effect) return 0;
 
+    // 1. 计算触发次数
     let times = effect.times || 1;
     if (effect.minTimes && effect.maxTimes && effect.maxTimes >= effect.minTimes) {
         times = Math.floor(Math.random() * (effect.maxTimes - effect.minTimes + 1)) + effect.minTimes;
     }
 
-    let totalResult = 0;
+    // 2. 创建效果上下文
+    const effectContext = createEffectRuntimeContext({
+        actor,
+        target,
+        effect,
+        skill,
+        multiplier: context.energyMult || 1.0,
+        totalTimes: times,
+        previousResult,
+        silent
+    });
+
+    // 3. 循环执行单次效果
     for (let i = 0; i < times; i++) {
-        totalResult += executeSingleEffect(effect, target, actor, skill, context, silent, previousResult);
+        effectContext.currentIteration = i;
+        const result = executeSingleEffect(effectContext, context);
+        effectContext.totalResult += result;
+        effectContext.previousResult = result; // 为下一段提供参考
     }
-    return totalResult;
+
+    return effectContext.totalResult;
 };
 
 /**

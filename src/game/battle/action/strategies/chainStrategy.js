@@ -1,8 +1,8 @@
 import * as SkillSystem from '../../skillSystem';
 import * as EffectSystem from '../../effectSystem';
 
-export const chainStrategy = (actor, action, skillData, context) => {
-    const { log, enemies } = context;
+export const chainStrategy = (actionContext) => {
+    const { actor, action, skillData, log, enemies } = actionContext;
     
     const initialTarget = enemies.find(e => e.uuid === action.targetId || e.id === action.targetId);
     const hits = SkillSystem.resolveChainSequence(skillData, initialTarget, enemies);
@@ -14,7 +14,7 @@ export const chainStrategy = (actor, action, skillData, context) => {
             if (finalEffect.type === 'damage') {
                 finalEffect.value *= multiplier;
             }
-            const val = EffectSystem.processEffect(finalEffect, target, actor, skillData, context, true);
+            const val = EffectSystem.processEffect(finalEffect, target, actor, skillData, actionContext, true);
             if (finalEffect.type === 'damage') damageDealt += val;
         });
 

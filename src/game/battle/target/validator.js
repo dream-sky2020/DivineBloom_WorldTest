@@ -1,50 +1,78 @@
 import { getAlive, getDead } from './utils';
 import { getTeamContext } from './team';
+import { createTargetingRuntimeContext } from '@schema/runtime/TargetingRuntimeContext';
 
 /**
  * 获取所有合法的目标 UUID 列表
  */
-export const getValidTargetIds = ({ partySlots, enemies, actor }, targetType) => {
+export const getValidTargetIds = (input, targetType) => {
+    // 1. 初始化或提取上下文
+    let ctx;
+    if (input.isResolved !== undefined) {
+        ctx = input;
+    } else {
+        ctx = createTargetingRuntimeContext({
+            ...input,
+            targetType: targetType || input.targetType
+        });
+    }
+
+    const { partySlots, enemies, actor, targetType: finalType } = ctx;
     if (!actor) return [];
 
     const { myTeam, oppTeam } = getTeamContext(actor, partySlots, enemies);
+    ctx.myTeam = myTeam;
+    ctx.oppTeam = oppTeam;
 
-    switch (targetType) {
+    let validIds = [];
+    switch (finalType) {
         case 'single':
         case 'enemy':
         case 'allEnemies':
         case 'all':
         case 'randomEnemy':
-            return getAlive(oppTeam).map(u => u.uuid);
+            validIds = getAlive(oppTeam).map(u => u.uuid);
+            break;
         
         case 'ally':
         case 'allAllies':
-            return getAlive(myTeam).map(u => u.uuid);
+            validIds = getAlive(myTeam).map(u => u.uuid);
+            break;
         
         case 'deadAlly':
         case 'allDeadAllies':
-            return getDead(myTeam).map(u => u.uuid);
+            validIds = getDead(myTeam).map(u => u.uuid);
+            break;
         
         case 'deadEnemy':
-            return getDead(oppTeam).map(u => u.uuid);
+            validIds = getDead(oppTeam).map(u => u.uuid);
+            break;
         
         case 'self':
-            return [actor.uuid];
+            validIds = [actor.uuid];
+            break;
         
         case 'allUnits':
-            return [...getAlive(myTeam), ...getAlive(oppTeam)].map(u => u.uuid);
+            validIds = [...getAlive(myTeam), ...getAlive(oppTeam)].map(u => u.uuid);
+            break;
         
         case 'allOtherUnits':
-            return [...getAlive(myTeam), ...getAlive(oppTeam)]
+            validIds = [...getAlive(myTeam), ...getAlive(oppTeam)]
                 .filter(u => u.uuid !== actor.uuid)
                 .map(u => u.uuid);
+            break;
         
         case 'allOtherAllies':
-            return getAlive(myTeam)
+            validIds = getAlive(myTeam)
                 .filter(u => u.uuid !== actor.uuid)
                 .map(u => u.uuid);
+            break;
         
         default:
-            return [];
+            validIds = [];
+            break;
     }
+
+    ctx.validTargetIds = validIds;
+    return validIds;
 };

@@ -1,8 +1,8 @@
 import * as EffectSystem from '../../effectSystem';
 import * as DamageSystem from '../../damageSystem';
 
-export const standardStrategy = (actor, targets, action, skillData, effects, context) => {
-    const { log } = context;
+export const standardStrategy = (actionContext) => {
+    const { actor, targets, action, skillData, effects, log } = actionContext;
 
     // 攻击专用日志
     if (action.type === 'attack' && targets.length > 0 && log) {
@@ -15,11 +15,11 @@ export const standardStrategy = (actor, targets, action, skillData, effects, con
 
         effectsToProcess.forEach(eff => {
             if (action.type === 'attack' && eff.type === 'damage') {
-                const dmg = DamageSystem.calculateDamage(actor, target, null, null, context.energyMult);
-                DamageSystem.applyDamage(target, dmg, context);
+                const dmg = DamageSystem.calculateDamage(actor, target, null, null, actionContext.energyMult);
+                DamageSystem.applyDamage(target, dmg, actionContext);
                 lastResult = dmg;
             } else {
-                lastResult = EffectSystem.processEffect(eff, target, actor, skillData, context, false, lastResult);
+                lastResult = EffectSystem.processEffect(eff, target, actor, skillData, actionContext, false, lastResult);
             }
         });
     });

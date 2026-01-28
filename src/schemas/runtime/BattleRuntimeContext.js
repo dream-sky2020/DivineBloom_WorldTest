@@ -11,13 +11,10 @@ import { LootSchema } from '../resources/drop.js';
 
 export const BattleRuntimeContextSchema = z.object({
     // --- 参与者 ---
-    partySlots: z.array(z.object({
-        front: CharacterSchema.nullable(),
-        back: CharacterSchema.nullable()
-    })).default([]),   // 玩家队伍槽位 { front, back }
+    partySlots: z.array(z.any()).default([]),   // 保持引用
     
-    enemies: z.array(CharacterSchema).default([]),      // 存活的敌人列表
-    allUnits: z.array(CharacterSchema).default([]),     // 所有战斗单位的扁平化列表（只读缓存）
+    enemies: z.array(z.any()).default([]),      // 保持引用
+    allUnits: z.array(z.any()).default([]),     // 保持引用
 
     // --- 状态追踪 ---
     turnCount: z.number().int().min(1).default(1),     // 当前回合数 (从1开始)

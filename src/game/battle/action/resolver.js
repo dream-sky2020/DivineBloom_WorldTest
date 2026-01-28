@@ -36,5 +36,12 @@ export const resolveActionData = (actor, action) => {
     // AI 或特定动作可以覆盖目标类型
     if (action.targetType) targetType = action.targetType;
 
-    return { skillData, targetType, effects, consumeTurn, logKey, logParams };
+    return { 
+        skillData, 
+        targetType, 
+        effects, 
+        consumeTurn, 
+        logKey, 
+        logParams: logParams || {} 
+    };
 };

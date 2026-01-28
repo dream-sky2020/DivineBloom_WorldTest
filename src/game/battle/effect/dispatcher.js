@@ -21,19 +21,19 @@ const handlers = {
     fullRestore: specialHandler
 };
 
-export const executeSingleEffect = (effect, target, actor, skill, context, silent, previousResult) => {
-    const { energyMult } = context;
-    const multiplier = energyMult || 1.0;
+export const executeSingleEffect = (effectContext, battleContext) => {
+    const { effect, target, actor, skill, silent, multiplier, previousResult } = effectContext;
 
     // Handle target redirection
     let effectiveTarget = target;
     if (effect.target === 'self' && actor) {
         effectiveTarget = actor;
+        effectContext.isRedirection = true;
     }
 
     const handler = handlers[effect.type];
     if (handler) {
-        return handler(effect, effectiveTarget, actor, skill, context, silent, multiplier, previousResult);
+        return handler(effect, effectiveTarget, actor, skill, battleContext, silent, multiplier, previousResult);
     }
 
     console.warn('Unknown effect type:', effect.type);

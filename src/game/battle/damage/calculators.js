@@ -1,4 +1,5 @@
 import { statusDb } from '@schema/status';
+import { createDamageRuntimeContext } from '@schema/runtime/DamageRuntimeContext';
 
 /**
  * 计算带状态加成的属性值
@@ -63,38 +64,58 @@ export const applyDamageVariance = (amount, effect) => {
 };
 
 /**
- * 核心伤害计算器
+ * 核心伤害计算器 (使用 DamageRuntimeContext 重构)
  */
 export const calculateDamage = (attacker, defender, skill = null, effect = null, damageMultiplier = 1.0) => {
-    let atk = getStatWithModifiers(attacker, 'atk');
-    let def = getStatWithModifiers(defender, 'def');
-    let multiplier = (effect && effect.value) ? effect.value : 1.0;
+    // 1. 初始化上下文
+    const ctx = createDamageRuntimeContext({
+        attacker,
+        defender,
+        skill,
+        effect,
+        actionMultiplier: damageMultiplier || 1.0,
+        baseMultiplier: (effect && typeof effect.value === 'number') ? effect.value : 1.0
+    });
 
-    if (damageMultiplier) {
-        multiplier *= damageMultiplier;
-    }
+    // 2. 基础属性提取
+    ctx.atk = getStatWithModifiers(attacker, 'atk');
+    ctx.def = getStatWithModifiers(defender, 'def');
 
+    // 3. 处理缩放逻辑 (Magic / Def Scaling)
     if (skill || (effect && effect.scaling)) {
         const isMagic = (skill && skill.category === 'cat_skill_magic') || (effect && effect.scaling === 'mag');
         const isDefScaling = (effect && effect.scaling === 'def');
 
         if (isMagic) {
-            def *= 0.7;
-            const mag = getStatWithModifiers(attacker, 'mag');
-            atk = mag * 1.2;
-            if (skill && skill.element === 'element_fire') multiplier *= 1.1;
+            ctx.def *= 0.7; // 魔法攻击无视部分防御
+            ctx.atk = getStatWithModifiers(attacker, 'mag') * 1.2;
+            
+            // 属性修正 (此处可扩展为更通用的属性系统)
+            if (skill && skill.element === 'element_fire') {
+                ctx.elementMultiplier *= 1.1;
+            }
         } else if (isDefScaling) {
-            atk = getStatWithModifiers(attacker, 'def');
+            ctx.atk = getStatWithModifiers(attacker, 'def');
         }
     }
 
-    let damage = calculateBaseDamage(atk, def, multiplier);
-
+    // 4. 处理防御状态
     if (defender.isDefending) {
-        damage *= 0.5;
+        ctx.isBlocked = true;
+        ctx.actionMultiplier *= 0.5;
     }
 
-    damage = applyDamageVariance(damage, effect);
+    // 5. 计算基础伤害
+    const totalMultiplier = ctx.baseMultiplier * ctx.actionMultiplier * ctx.elementMultiplier;
+    let damage = calculateBaseDamage(ctx.atk, ctx.def, totalMultiplier);
 
-    return Math.floor(damage * 10);
+    // 6. 应用随机波动
+    const beforeVariance = damage;
+    damage = applyDamageVariance(damage, effect);
+    ctx.variance = damage / (beforeVariance || 1);
+
+    // 7. 最终取整并放大 (保持原有的 * 10 逻辑)
+    ctx.finalDamage = Math.floor(damage * 10);
+
+    return ctx.finalDamage;
 };
