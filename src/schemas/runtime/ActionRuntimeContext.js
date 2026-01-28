@@ -31,6 +31,13 @@ export const ActionRuntimeContextSchema = z.object({
     logKey: z.string().nullable().default(null),
     logParams: z.record(z.any()).default({}),
     
+    // --- 溯源追踪 ---
+    modifiers: z.array(z.object({
+        source: z.string(),
+        value: z.any(),
+        type: z.string()
+    })).default([]),
+    
     // --- 目标信息 ---
     targets: z.array(z.any()).default([]),         // 保持单位引用数组
     initialTargetId: ID.nullable().default(null),

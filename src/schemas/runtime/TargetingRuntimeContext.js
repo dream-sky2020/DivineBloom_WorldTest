@@ -28,6 +28,17 @@ export const TargetingRuntimeContextSchema = z.object({
     
     // --- 标志位 ---
     isResolved: z.boolean().default(false),
+
+    // --- 延迟日志 ---
+    logKey: z.string().nullable().default(null),
+    logParams: z.record(z.any()).default({}),
+
+    // --- 溯源追踪 ---
+    modifiers: z.array(z.object({
+        source: z.string(),
+        value: z.any(),
+        type: z.string() // 如 "redirect", "filter"
+    })).default([]),
 });
 
 /**

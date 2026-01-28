@@ -35,14 +35,18 @@ export const DamageRuntimeContextSchema = z.object({
     // --- 随机波动 ---
     variance: z.number().default(1.0),       // 最终随机生成的波动系数
 
+    // --- 延迟日志 ---
+    logKey: z.string().nullable().default(null),
+    logParams: z.record(z.any()).default({}),
+
     // --- 结果 ---
     finalDamage: z.number().default(0),      // 最终计算出的伤害数值
     
-    // --- 扩展记录 (用于日志或被动触发) ---
+    // --- 溯源追踪 (用于日志或被动触发) ---
     modifiers: z.array(z.object({
         source: z.string(),
-        value: z.number(),
-        type: z.enum(['add', 'mult'])
+        value: z.any(),
+        type: z.string()
     })).default([]),
 });
 

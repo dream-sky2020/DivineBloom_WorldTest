@@ -44,7 +44,18 @@ export const BattleRuntimeContextSchema = z.object({
     lastBattleResult: z.any().nullable().default(null),
     
     // --- 时间系统 ---
-    lastTickTime: z.number().default(0)                // ATB 系统最后一次更新的时间戳
+    lastTickTime: z.number().default(0),                // ATB 系统最后一次更新的时间戳
+
+    // --- 延迟日志 ---
+    logKey: z.string().nullable().default(null),
+    logParams: z.record(z.any()).default({}),
+
+    // --- 溯源追踪 ---
+    modifiers: z.array(z.object({
+        source: z.string(),
+        value: z.any(),
+        type: z.string()
+    })).default([]),
 });
 
 /**

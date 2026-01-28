@@ -20,6 +20,17 @@ export const EffectRuntimeContextSchema = z.object({
     // --- 修正参数 ---
     multiplier: z.number().default(1.0),
     
+    // --- 延迟日志 ---
+    logKey: z.string().nullable().default(null),
+    logParams: z.record(z.any()).default({}),
+
+    // --- 溯源追踪 ---
+    modifiers: z.array(z.object({
+        source: z.string(),
+        value: z.any(),
+        type: z.string()
+    })).default([]),
+    
     // --- 迭代状态 ---
     totalTimes: z.number().int().min(1).default(1),
     currentIteration: z.number().int().min(0).default(0),
