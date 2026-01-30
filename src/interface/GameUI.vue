@@ -52,11 +52,54 @@
 
             <!-- Layer 2: System UI (Top Level) -->
             <div class="system-layer">
+              <!-- UI 层完全与游戏逻辑解耦，只负责展示数据 -->
+              <div class="ui-overlay pointer-events-auto" v-if="debugInfo">
+                <div><span v-t="'worldMap.position'"></span>: x={{ Math.round(debugInfo.x) }}, y={{ Math.round(debugInfo.y) }}</div>
+                <div style="color: #60a5fa;">🖱️ 鼠标位置: x={{ Math.round(debugInfo.mouseX) }}, y={{ Math.round(debugInfo.mouseY) }}</div>
+                <div><span v-t="'worldMap.lastInput'"></span>: {{ debugInfo.lastInput || $t('common.unknown') }}</div>
+                
+                <!-- Enemy Alert Status -->
+                <div v-if="debugInfo.chasingCount > 0" style="color: #ef4444; font-weight: bold;">
+                  ⚠️ {{ debugInfo.chasingCount }} Enemies Chasing!
+                </div>
+                
+                <div v-t="'worldMap.moveControls'"></div>
+              </div>
+
+              <!-- NEW Dialogue Overlay (Connected to DialogueStore) -->
               <transition name="fade">
-                <component 
-                  :is="activeSystemComponent" 
-                  @change-system="handleSystemChange"
-                />
+                <div v-if="dialogueStore.isActive" class="dialogue-overlay pointer-events-auto" @click="worldMapCtrl.handleOverlayClick()">
+                  <div class="dialogue-box" @click.stop>
+                    
+                    <!-- Speaker Name -->
+                    <div class="dialogue-header">
+                      <span class="speaker-name">{{ $t(`roles.${dialogueStore.speaker}`) || dialogueStore.speaker }}</span>
+                    </div>
+                    
+                    <!-- Text Content -->
+                    <div class="dialogue-content">
+                      {{ $t(dialogueStore.currentText) }}
+                    </div>
+
+                    <!-- Choices Area -->
+                    <div v-if="dialogueStore.currentOptions.length > 0" class="choices-container">
+                      <button 
+                        v-for="(opt, idx) in dialogueStore.currentOptions" 
+                        :key="idx"
+                        class="choice-btn"
+                        @click="dialogueStore.selectOption(opt.value)"
+                      >
+                        {{ $t(opt.label) }}
+                      </button>
+                    </div>
+
+                    <!-- Continue Hint (Only if no choices) -->
+                    <div v-else class="dialogue-hint" @click="dialogueStore.advance">
+                      Click to continue... ▼
+                    </div>
+
+                  </div>
+                </div>
               </transition>
             </div>
         </div>
@@ -126,18 +169,6 @@
         <h2 class="dev-title" v-t="'dev.title'"></h2>
         
         <div class="dev-grid">
-          <div class="dev-card">
-            <h3 v-t="'dev.uiSwitcher'"></h3>
-            <div class="btn-group">
-              <button 
-                :class="{ active: currentSystem === 'world-map' }" 
-                @click="handleSystemChange('world-map')"
-                v-t="'dev.systems.worldMap'"
-              >
-              </button>
-            </div>
-          </div>
-
           <div class="dev-card">
             <h3 v-t="'dev.debugActions'"></h3>
             <div class="btn-group">
@@ -218,15 +249,27 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, provide, toRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '@/stores/game';
-import { world2d } from '@world2d'; // ✅ 使用统一接口
+import { world2d, getSystem } from '@world2d'; 
 import { editorManager } from '@/game/editor/core/EditorCore';
 import { createLogger } from '@/utils/logger';
+import { WorldMapController } from '@/game/interface/world/WorldMapController';
 
-import WorldMapSystem from '@/interface/pages/systems/WorldMapSystem.vue';
 import TabbedPanelGroup from '@/interface/editor/components/TabbedPanelGroup.vue';
+
+const logger = createLogger('GameUI');
+const { locale } = useI18n();
+const gameStore = useGameStore();
+const settingsStore = gameStore.settings;
+const currentSystem = ref(world2d.state.system);
+const gameCanvas = ref(null);
+
+// World Map Controller Integration
+const worldMapCtrl = new WorldMapController();
+const debugInfo = worldMapCtrl.debugInfo;
+const dialogueStore = worldMapCtrl.dialogueStore;
 
 // Context Menu State
 const contextMenu = ref({
@@ -257,18 +300,7 @@ const openContextMenu = (e, items) => {
   setTimeout(() => document.addEventListener('click', handleOutsideClick), 0);
 };
 
-// Provide context menu to children
-import { provide } from 'vue';
-import { toRaw } from 'vue';
-import { getSystem } from '@world2d'; // ✅ 导入 getSystem
 provide('editorContextMenu', { openContextMenu, closeContextMenu });
-
-const logger = createLogger('GameUI');
-const { locale } = useI18n();
-const gameStore = useGameStore();
-const settingsStore = gameStore.settings;
-const currentSystem = ref(world2d.state.system); // ✅ 使用统一接口
-const gameCanvas = ref(null);
 
 // Sidebar Resize & Collapse State
 const DEFAULT_SIDEBAR_WIDTH = 320;
@@ -276,21 +308,16 @@ const leftSidebarWidth = ref(DEFAULT_SIDEBAR_WIDTH);
 const rightSidebarWidth = ref(DEFAULT_SIDEBAR_WIDTH);
 const isLeftCollapsed = ref(false);
 const isRightCollapsed = ref(false);
-const resizingSidebar = ref(null); // 'left' or 'right'
-const showSidebars = ref(false); // 手动控制侧边栏显示
+const resizingSidebar = ref(null);
+const showSidebars = ref(false);
 
 // Reactive Edit Mode State
 const isEditMode = computed(() => editorManager.editMode);
 
 // Determine if sidebars should be visible
 const shouldShowSidebars = computed(() => {
-  // 如果手动开启了侧边栏，则显示
   if (showSidebars.value) return true;
-  
-  // 如果在编辑模式下，则显示
   if (isEditMode.value) return true;
-  
-  // 某些系统默认不显示侧边栏
   return false;
 });
 
@@ -338,7 +365,6 @@ const handleMouseMove = (e) => {
     if (isRightCollapsed.value && newWidth > 60) isRightCollapsed.value = false;
   }
   
-  // Update canvas size during resize
   nextTick(resizeCanvas);
 };
 
@@ -347,7 +373,6 @@ const stopResizing = () => {
   document.removeEventListener('mousemove', handleMouseMove);
   document.removeEventListener('mouseup', stopResizing);
   document.body.style.cursor = '';
-  // Final sync
   nextTick(resizeCanvas);
 };
 
@@ -376,49 +401,27 @@ watch(() => world2d.state.system, (newSystem) => {
   }
 });
 
-// Watch for edit mode changes to resize canvas
 watch(isEditMode, (newVal) => {
   if (newVal) {
-    // 开启编辑模式时，自动展开侧边栏
     isLeftCollapsed.value = false;
     isRightCollapsed.value = false;
     showSidebars.value = true;
   }
-  // Wait for DOM updates
   setTimeout(resizeCanvas, 0);
-});
-
-const activeSystemComponent = computed(() => {
-  switch (currentSystem.value) {
-    case 'world-map': return WorldMapSystem;
-    default: return WorldMapSystem;
-  }
 });
 
 // Determine if we should show the background grid
 const showGrid = computed(() => {
-  // Always show grid if in Edit Mode
   if (isEditMode.value) return true;
-
-  // Most systems in this ECS-only project will show the grid or world
   return true;
 });
 
-// Control Canvas Opacity based on current system
 const canvasStyle = computed(() => {
   return { 
     opacity: 1,
     visibility: 'visible'
   };
 });
-
-const handleSystemChange = (systemId) => {
-  logger.info('System change requested:', systemId);
-  // Update local state (for immediate feedback if needed)
-  currentSystem.value = systemId;
-  // Also update GameManager state to keep them in sync
-  world2d.state.system = systemId;
-};
 
 // Canvas Resizing Logic
 const resizeCanvas = () => {
@@ -441,16 +444,13 @@ const resizeCanvas = () => {
   const scaleX = availableWidth / targetWidth;
   const scaleY = availableHeight / targetHeight;
   
-  // Scale to fit within the viewport
   let scale = Math.min(scaleX, scaleY);
-  scale = scale * 0.98; // Slightly more margin for the new layout
+  scale = scale * 0.98;
 
   canvas.style.transform = `scale(${scale})`;
 }
 
-// Keyboard shortcuts
 const handleKeyDown = (e) => {
-  // Ctrl + E: Toggle Edit Mode
   if (e.ctrlKey && e.key.toLowerCase() === 'e') {
     e.preventDefault();
     toggleEditMode();
@@ -458,7 +458,7 @@ const handleKeyDown = (e) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', resizeCanvas);
   window.addEventListener('keydown', handleKeyDown);
   resizeCanvas();
@@ -468,7 +468,9 @@ onMounted(() => {
     world2d.init(gameCanvas.value);
   }
 
-  // 设置右键点击回调（统一在 EditorInteractionSystem 中处理）
+  // Start World Map Controller
+  await worldMapCtrl.start();
+
   const editorInteraction = getSystem('editor-interaction')
   if (editorInteraction) {
     editorInteraction.onEntityRightClick = handleEntityRightClick;
@@ -479,9 +481,9 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', resizeCanvas);
   window.removeEventListener('keydown', handleKeyDown);
+  worldMapCtrl.stop();
 });
 
-// Debug Actions
 const logState = () => {
   logger.info('Current System:', currentSystem.value);
 };
@@ -492,7 +494,6 @@ const toggleEditMode = () => {
 
 const toggleSidebars = () => {
   showSidebars.value = !showSidebars.value;
-  // 切换侧边栏后，重新调整 canvas 大小
   nextTick(resizeCanvas);
 };
 
@@ -506,6 +507,7 @@ const togglePause = () => {
 
 const exportScene = () => {
   const bundle = world2d.exportCurrentScene();
+  const mapId = world2d.state.mapId || 'unknown';
   
   const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -522,25 +524,19 @@ const setLanguage = (lang) => {
   settingsStore.setLanguage(lang);
 };
 
-// 处理 canvas 右键菜单事件
 const handleContextMenu = (e) => {
-  // 在编辑模式下，禁用浏览器默认右键菜单
   if (isEditMode.value && currentSystem.value === 'world-map') {
     e.preventDefault();
   }
-  // 非编辑模式或非世界地图系统，允许默认行为
 };
 
-// 处理空白地面右键点击
 const handleEmptyRightClick = (mouseInfo) => {
   const worldX = Math.round(mouseInfo.worldX);
   const worldY = Math.round(mouseInfo.worldY);
 
-  // ✅ 延迟获取（避免循环依赖）
   const entityTemplateRegistry = world2d.getEntityTemplateRegistry();
   const templates = entityTemplateRegistry.getAll();
 
-  // 构建右键菜单
   const menuItems = [
     {
       icon: '📍',
@@ -556,7 +552,6 @@ const handleEmptyRightClick = (mouseInfo) => {
     }
   ];
 
-  // 添加实体模板选项（分组）
   const gameplayTemplates = templates.filter(t => t.category === 'gameplay');
   const envTemplates = templates.filter(t => t.category === 'environment');
 
@@ -592,7 +587,6 @@ const handleEmptyRightClick = (mouseInfo) => {
     });
   }
 
-  // 显示菜单（使用屏幕坐标）
   const fakeEvent = {
     preventDefault: () => {},
     clientX: mouseInfo.screenX,
@@ -602,14 +596,11 @@ const handleEmptyRightClick = (mouseInfo) => {
   openContextMenu(fakeEvent, menuItems);
 };
 
-// 在指定位置创建实体
 const createEntityAtPosition = (templateId, x, y) => {
   try {
-    // ✅ 延迟获取（避免循环依赖）
     const world = world2d.getWorld();
     const entityTemplateRegistry = world2d.getEntityTemplateRegistry();
     
-    // 通过命令系统创建实体
     const globalEntity = world.with('commands').first;
     if (globalEntity) {
       globalEntity.commands.queue.push({
@@ -621,7 +612,6 @@ const createEntityAtPosition = (templateId, x, y) => {
       });
       logger.info(`Entity creation requested at (${x}, ${y})`);
     } else {
-      // 降级方案：直接创建
       const entity = entityTemplateRegistry.createEntity(templateId, null, { x, y });
       if (entity) {
         logger.info(`Entity created at (${x}, ${y})`, entity);
@@ -634,18 +624,15 @@ const createEntityAtPosition = (templateId, x, y) => {
   }
 };
 
-// 处理实体右键点击
 const handleEntityRightClick = (entity, mouseInfo) => {
   if (!entity) return;
 
-  // 构建实体信息
   const entityName = entity.name || '未命名实体';
   const entityType = entity.type || '未知类型';
   const posX = entity.position ? Math.round(entity.position.x) : 'N/A';
   const posY = entity.position ? Math.round(entity.position.y) : 'N/A';
   const canDelete = entity.inspector?.allowDelete !== false;
 
-  // 构建右键菜单
   const menuItems = [
     {
       icon: '📋',
@@ -667,7 +654,6 @@ const handleEntityRightClick = (entity, mouseInfo) => {
     }
   ];
 
-  // 添加操作选项
   if (canDelete) {
     menuItems.push({
       icon: '🗑️',
@@ -684,7 +670,6 @@ const handleEntityRightClick = (entity, mouseInfo) => {
     });
   }
 
-  // 显示菜单（使用屏幕坐标）
   const fakeEvent = {
     preventDefault: () => {},
     clientX: mouseInfo.screenX,
@@ -694,7 +679,6 @@ const handleEntityRightClick = (entity, mouseInfo) => {
   openContextMenu(fakeEvent, menuItems);
 };
 
-// 删除实体
 const deleteEntity = (entity) => {
   if (!entity) return;
   
@@ -705,13 +689,9 @@ const deleteEntity = (entity) => {
   
   const name = entity.name || entity.type || '未命名实体';
   if (confirm(`确定要删除实体 "${name}" 吗？`)) {
-    // 使用 toRaw 获取原始实体对象
     const rawEntity = toRaw(entity);
-    
-    // ✅ 延迟获取（避免循环依赖）
     const world = world2d.getWorld();
     
-    // 发送删除命令
     const globalEntity = world.with('commands').first;
     if (globalEntity) {
       globalEntity.commands.queue.push({
@@ -724,12 +704,10 @@ const deleteEntity = (entity) => {
       logger.info('Entity deleted directly:', name);
     }
     
-    // 清除选中状态
     editorManager.selectedEntity = null;
   }
 };
 
-// Panel Management Helpers
 const onDrop = (e, targetSide) => {
   const panelId = e.dataTransfer.getData('panelId');
   const sourceGroupId = e.dataTransfer.getData('sourceGroupId');
@@ -737,7 +715,6 @@ const onDrop = (e, targetSide) => {
   
   if (!panelId) return;
 
-  // 使用中心化的移动逻辑，position 为空表示直接追加到侧边栏末尾
   editorManager.movePanel({
     panelId,
     sourceSide,
@@ -751,3 +728,122 @@ const onDrop = (e, targetSide) => {
 <style scoped src="@styles/pages/GameUI.css"></style>
 <style scoped src="@styles/editor/Sidebar.css"></style>
 <style src="@styles/ui/ContextMenu.css"></style>
+
+<style scoped>
+/* World Map System Styles Integrated */
+.ui-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  padding: 16px;
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  pointer-events: auto;
+  z-index: 50;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dialogue-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 60px;
+  z-index: 100;
+}
+
+.dialogue-box {
+  background: rgba(255, 255, 255, 0.98);
+  border: 2px solid #94a3b8;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 800px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  will-change: transform, opacity;
+}
+
+.dialogue-header {
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+  align-self: flex-start;
+}
+
+.speaker-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.dialogue-content {
+  font-size: 1.25rem;
+  color: #334155;
+  line-height: 1.6;
+  min-height: 3rem;
+  margin-bottom: 20px;
+}
+
+.choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.choice-btn {
+  padding: 12px 20px;
+  background: white;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  text-align: left;
+}
+.choice-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+  transform: translateX(5px);
+}
+
+.dialogue-hint {
+  align-self: flex-end;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  cursor: pointer;
+  animation: pulse 2s infinite;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.fade-enter-active, .fade-leave-active { 
+  transition: opacity 0.2s ease; 
+  will-change: opacity;
+}
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>
