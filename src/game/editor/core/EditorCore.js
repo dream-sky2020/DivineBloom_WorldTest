@@ -10,7 +10,7 @@ import HierarchyPanel from '@/interface/editor/panels/HierarchyPanel.vue';
 import InspectorPanel from '@/interface/editor/panels/InspectorPanel.vue';
 import SceneSwitcherPanel from '@/interface/editor/panels/SceneSwitcherPanel.vue';
 import EntityPalettePanel from '@/interface/editor/panels/EntityPalettePanel.vue';
-import BattleLogPanel from '@/interface/editor/panels/BattleLogPanel.vue';
+// import BattleLogPanel from '@/interface/editor/panels/BattleLogPanel.vue'; // 暂时禁用，等待战斗系统实现
 import PanelNotFound from '@/interface/editor/components/PanelNotFound.vue';
 
 const logger = createLogger('EditorCore');
@@ -23,7 +23,7 @@ const PANEL_COMPONENTS = {
     'entity-properties': markRaw(InspectorPanel),
     'scene-manager': markRaw(SceneSwitcherPanel),
     'entity-creator': markRaw(EntityPalettePanel),
-    'battle-log': markRaw(BattleLogPanel)
+    // 'battle-log': markRaw(BattleLogPanel) // 暂时禁用，等待战斗系统实现
 };
 
 class EditorCore {

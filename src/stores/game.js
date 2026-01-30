@@ -4,7 +4,6 @@ import { ref } from 'vue';
 import { usePartyStore } from './party';
 import { useQuestStore } from './quest';
 import { useWorld2dStore } from './world2d';
-import { useBattleStore } from './battle';
 import { useDialogueStore } from './dialogue';
 import { useSettingsStore } from './settings';
 import { useAudioStore } from './audio';
@@ -17,7 +16,6 @@ export const useGameStore = defineStore('game', () => {
     const party = usePartyStore();
     const quest = useQuestStore();
     const world2d = useWorld2dStore();
-    const battle = useBattleStore();
     const dialogue = useDialogueStore();
     const settings = useSettingsStore();
     const audio = useAudioStore();
@@ -129,7 +127,6 @@ export const useGameStore = defineStore('game', () => {
         party.reset();
         quest.reset();
         world2d.reset();
-        battle.reset();
         dialogue.reset();
         // settings 不重置，属于系统层级
     };
@@ -162,7 +159,6 @@ export const useGameStore = defineStore('game', () => {
         party,
         quest,
         world2d,
-        battle,
         dialogue,
         settings,
         audio,

@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import { world } from '@world2d/world';
-import { 
-  BattleResultSchema, BATTLE_RESULT_INSPECTOR_FIELDS,
-  Camera,
-  Timer, TimerSchema,
-  Inspector, EDITOR_INSPECTOR_FIELDS,
-  Commands,
-  MousePosition
+import {
+    // BattleResultSchema, BATTLE_RESULT_INSPECTOR_FIELDS, // 暂时禁用，等待战斗系统实现
+    Camera,
+    Timer, TimerSchema,
+    Inspector, EDITOR_INSPECTOR_FIELDS,
+    Commands,
+    MousePosition
 } from '@components'
 
 // --- Schema Definition ---
 export const GlobalEntitySchema = z.object({
-    pendingBattleResult: BattleResultSchema.optional(),
+    // pendingBattleResult: BattleResultSchema.optional(), // 暂时禁用，等待战斗系统实现
     camera: z.object({
         x: z.number().optional(),
         y: z.number().optional(),
@@ -34,7 +34,7 @@ const INSPECTOR_FIELDS = [
     { path: 'camera.lerp', label: '相机平滑系数', type: 'number', tip: '0-1 之间，1 为即时跟随', props: { step: 0.01, min: 0, max: 1 }, group: '相机设置' },
     { path: 'mousePosition.worldX', label: '鼠标 X (世界)', type: 'number', tip: '鼠标在游戏世界中的 X 坐标', props: { readonly: true }, group: '调试信息' },
     { path: 'mousePosition.worldY', label: '鼠标 Y (世界)', type: 'number', tip: '鼠标在游戏世界中的 Y 坐标', props: { readonly: true }, group: '调试信息' },
-    ...BATTLE_RESULT_INSPECTOR_FIELDS,
+    // ...BATTLE_RESULT_INSPECTOR_FIELDS, // 暂时禁用，等待战斗系统实现
     ...EDITOR_INSPECTOR_FIELDS
 ];
 
@@ -46,7 +46,7 @@ export const GlobalEntity = {
             return null;
         }
 
-        const { pendingBattleResult, camera: cameraData, inputState, timer: timerData } = result.data;
+        const { /* pendingBattleResult, */ camera: cameraData, inputState, timer: timerData } = result.data;
 
         const existing = world.with('globalManager').first;
         if (existing) {
@@ -74,16 +74,17 @@ export const GlobalEntity = {
             hitPriority: 1000
         });
 
-        if (pendingBattleResult) {
-            entity.battleResult = pendingBattleResult;
-        }
+        // 暂时禁用，等待战斗系统实现
+        // if (pendingBattleResult) {
+        //     entity.battleResult = pendingBattleResult;
+        // }
 
         return world.add(entity);
     },
 
     serialize(entity) {
         const data = {};
-        if (entity.battleResult) data.pendingBattleResult = entity.battleResult;
+        // if (entity.battleResult) data.pendingBattleResult = entity.battleResult; // 暂时禁用，等待战斗系统实现
         if (entity.camera) data.camera = { ...entity.camera };
         if (entity.inputState) data.inputState = entity.inputState;
         if (entity.timer) data.timer = { ...entity.timer };

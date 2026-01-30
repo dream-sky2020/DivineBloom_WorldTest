@@ -49,16 +49,16 @@ export const ExecuteSystem = {
     const playerEntity = world.with('player', 'playerIntent').first;
     if (playerEntity) {
       if (playerEntity.playerIntent.wantsToOpenMenu) {
-         if (callbacks.onOpenMenu) {
-             callbacks.onOpenMenu();
-             playerEntity.playerIntent.wantsToOpenMenu = false;
-         }
+        if (callbacks.onOpenMenu) {
+          callbacks.onOpenMenu();
+          playerEntity.playerIntent.wantsToOpenMenu = false;
+        }
       }
       if (playerEntity.playerIntent.wantsToOpenShop) {
-         if (callbacks.onOpenShop) {
-             callbacks.onOpenShop();
-             playerEntity.playerIntent.wantsToOpenShop = false;
-         }
+        if (callbacks.onOpenShop) {
+          callbacks.onOpenShop();
+          playerEntity.playerIntent.wantsToOpenShop = false;
+        }
       }
     }
 
@@ -91,29 +91,47 @@ export const ExecuteSystem = {
 
     switch (type) {
       // --- 游戏逻辑动作 (Actions) ---
-      case 'BATTLE':
-        getSystem('battle-execute').handle(source, callbacks);
+      case 'BATTLE': {
+        const battleSystem = getSystem('battle-execute');
+        if (battleSystem) {
+          battleSystem.handle(source, callbacks);
+        } else {
+          logger.warn('战斗系统未实现，无法处理 BATTLE 动作', { source });
+        }
         break;
+      }
 
-      case 'DIALOGUE':
-        getSystem('dialogue-execute').handle(source, callbacks);
+      case 'DIALOGUE': {
+        const dialogueSystem = getSystem('dialogue-execute');
+        if (dialogueSystem) {
+          dialogueSystem.handle(source, callbacks);
+        } else {
+          logger.warn('对话系统未找到，无法处理 DIALOGUE 动作', { source });
+        }
         break;
+      }
 
-      case 'TELEPORT':
-        // Teleport 期望的是整个 request 对象作为参数
-        getSystem('teleport-execute').handle(item, callbacks, mapData);
+      case 'TELEPORT': {
+        const teleportSystem = getSystem('teleport-execute');
+        if (teleportSystem) {
+          // Teleport 期望的是整个 request 对象作为参数
+          teleportSystem.handle(item, callbacks, mapData);
+        } else {
+          logger.warn('传送系统未找到，无法处理 TELEPORT 动作', { item });
+        }
         break;
+      }
 
       // --- 编辑器/UI 指令 (Commands) ---
       case 'DELETE_ENTITY':
       case 'DELETE':
         this.handleDelete(payload.entity || target || source, callbacks);
         break;
-      
+
       case 'CREATE_ENTITY':
         this.handleCreateEntity(payload, callbacks);
         break;
-      
+
       case 'SAVE_SCENE':
         if (callbacks.onSaveScene) callbacks.onSaveScene(payload);
         break;
@@ -132,7 +150,7 @@ export const ExecuteSystem = {
    */
   handleDelete(entity, callbacks) {
     if (!entity) return;
-    
+
     // 安全检查
     if (entity.globalManager || entity.inspector?.allowDelete === false) {
       logger.warn('Attempted to delete a protected entity:', entity.type);
@@ -140,12 +158,12 @@ export const ExecuteSystem = {
     }
 
     logger.info('Deleting entity:', entity.type, entity.id || entity.uuid);
-    
+
     // 同步 UI 状态
     if (editorManager.selectedEntity === entity) {
       editorManager.selectedEntity = null;
     }
-    
+
     // 同步交互系统状态
     const editorInteraction = getSystem('editor-interaction')
     if (editorInteraction && editorInteraction.selectedEntity === entity) {
@@ -162,7 +180,7 @@ export const ExecuteSystem = {
    */
   handleCreateEntity(payload, callbacks) {
     const { templateId, position, customData = {} } = payload;
-    
+
     if (!templateId) {
       logger.error('CREATE_ENTITY: templateId is required');
       return;
@@ -173,10 +191,10 @@ export const ExecuteSystem = {
     try {
       // 使用模板注册表创建实体
       const entity = entityTemplateRegistry.createEntity(templateId, customData, position);
-      
+
       if (entity) {
         logger.info(`Entity created successfully:`, entity.type, entity.name);
-        
+
         // 自动选中新创建的实体（方便用户立即编辑）
         editorManager.selectedEntity = entity;
       } else {

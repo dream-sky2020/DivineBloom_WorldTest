@@ -22,7 +22,7 @@ class GameManager {
 
         // Reactive Global State
         this.state = reactive({
-            system: 'main-menu', // main-menu, world-map, battle, etc.
+            system: 'world-map', // Default to world-map for ECS scene project
             isPaused: false
         })
 
@@ -138,14 +138,15 @@ class GameManager {
 
         const gameStore = useGameStore()
         const worldStore = gameStore.world2d
-        const battleStore = gameStore.battle
+        // const battleStore = gameStore.battle // 暂时禁用，等待战斗系统实现
 
         // Handle return from battle
-        if (battleStore.lastBattleResult) {
-            const { result, enemyUuid } = battleStore.lastBattleResult
-            worldStore.applyBattleResult(result, enemyUuid)
-            battleStore.lastBattleResult = null
-        }
+        // 暂时禁用，等待战斗系统实现
+        // if (battleStore.lastBattleResult) {
+        //     const { result, enemyUuid } = battleStore.lastBattleResult
+        //     worldStore.applyBattleResult(result, enemyUuid)
+        //     battleStore.lastBattleResult = null
+        // }
 
         this.state.system = 'world-map'
         this.resume()
@@ -245,7 +246,7 @@ class GameManager {
     _onEncounter(enemyGroup, enemyUuid) {
         logger.info('Encounter:', enemyGroup)
         const gameStore = useGameStore()
-        const battleStore = gameStore.battle
+        // const battleStore = gameStore.battle // 暂时禁用，等待战斗系统实现
         const worldStore = gameStore.world2d
 
         // Save Map State before battle (optional, for safety)
@@ -253,8 +254,11 @@ class GameManager {
             worldStore.saveState(this.currentScene.value)
         }
 
-        battleStore.initBattle(enemyGroup, enemyUuid)
-        this.startBattle()
+        // 暂时禁用，等待战斗系统实现
+        // battleStore.initBattle(enemyGroup, enemyUuid)
+        // this.startBattle()
+
+        logger.warn('战斗系统暂未实现，遭遇敌人:', enemyGroup)
     }
 
     _onInteract(interaction) {

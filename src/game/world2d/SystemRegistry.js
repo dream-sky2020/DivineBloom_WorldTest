@@ -26,7 +26,6 @@ import { EditorInteractionSystem } from '@systems/editor/EditorInteractionSystem
 import { TriggerSystem } from '@systems/event/TriggerSystem';
 
 // Execute
-import { BattleExecuteSystem } from '@systems/execute/BattleExecuteSystem';
 import { DialogueExecuteSystem } from '@systems/execute/DialogueExecuteSystem';
 import { ExecuteSystem } from '@systems/execute/ExecuteSystem';
 import { TeleportExecuteSystem } from '@systems/execute/TeleportExecuteSystem';
@@ -99,7 +98,6 @@ export const Registry = {
 
     // --- Execution & Events ---
     'execute': ExecuteSystem,
-    'battle-execute': BattleExecuteSystem,
     'dialogue-execute': DialogueExecuteSystem,
     'teleport-execute': TeleportExecuteSystem,
     'trigger': TriggerSystem,

@@ -1,7 +1,6 @@
 export * from './Actions'
 export * from './AI'
 export * from './Animation'
-export * from './BattleResult'
 export * from './Camera'
 export * from './Commands'
 export * from './Inspector'

@@ -51,7 +51,7 @@
             <div class="grid-overlay" v-show="showGrid"></div>
 
             <!-- Layer 2: System UI (Top Level) -->
-            <div class="system-layer" :class="{ 'pass-through': currentSystem === 'world-map' || (currentSystem === 'battle' && isEditMode) }">
+            <div class="system-layer">
               <transition name="fade">
                 <component 
                   :is="activeSystemComponent" 
@@ -100,8 +100,7 @@
       </div>
     </div>
 
-    <!-- Developer Tools Overlay -->
-    <DevTools v-if="showDevTools" @close="showDevTools = false" />
+    <!-- Developer Tools Overlay removed -->
 
     <!-- Context Menu -->
     <div 
@@ -131,47 +130,10 @@
             <h3 v-t="'dev.uiSwitcher'"></h3>
             <div class="btn-group">
               <button 
-                :class="{ active: currentSystem === 'main-menu' }" 
-                @click="handleSystemChange('main-menu')"
-                v-t="'dev.systems.mainMenu'"
-              >
-              </button>
-              <button 
                 :class="{ active: currentSystem === 'world-map' }" 
                 @click="handleSystemChange('world-map')"
                 v-t="'dev.systems.worldMap'"
               >
-              </button>
-              <button 
-                :class="{ active: currentSystem === 'battle' }" 
-                @click="handleSystemChange('battle')"
-                v-t="'dev.systems.battle'"
-              >
-              </button>
-              <button 
-                :class="{ active: currentSystem === 'shop' }" 
-                @click="handleSystemChange('shop')"
-                v-t="'dev.systems.shop'"
-              >
-              </button>
-              <button 
-                :class="{ active: currentSystem === 'encyclopedia' }" 
-                @click="handleSystemChange('encyclopedia')"
-                v-t="'dev.systems.encyclopedia'"
-              >
-              </button>
-              <button 
-                :class="{ active: currentSystem === 'list-menu' }" 
-                @click="handleSystemChange('list-menu')"
-                v-t="'dev.systems.listMenu'"
-              >
-              </button>
-              <button 
-                :class="{ active: currentSystem === 'dev-tools' }" 
-                @click="handleSystemChange('dev-tools')"
-                class="dev-tools-btn"
-              >
-                🛠️ 实验性工具
               </button>
             </div>
           </div>
@@ -263,15 +225,7 @@ import { world2d } from '@world2d'; // ✅ 使用统一接口
 import { editorManager } from '@/game/editor/core/EditorCore';
 import { createLogger } from '@/utils/logger';
 
-import MainMenuSystem from '@/interface/pages/systems/MainMenuSystem.vue';
-import ListMenuSystem from '@/interface/pages/systems/ListMenuSystem.vue';
-import ShopSystem from '@/interface/pages/systems/ShopSystem.vue';
-import EncyclopediaSystem from '@/interface/pages/systems/EncyclopediaSystem.vue';
 import WorldMapSystem from '@/interface/pages/systems/WorldMapSystem.vue';
-import BattleSystem from '@/interface/pages/systems/BattleSystem.vue';
-import DialogueSystem from '@/interface/pages/systems/DialogueSystem.vue';
-import DevToolsSystem from '@/interface/pages/systems/DevToolsSystem.vue';
-import DevTools from '@/interface/pages/DevTools.vue';
 import TabbedPanelGroup from '@/interface/editor/components/TabbedPanelGroup.vue';
 
 // Context Menu State
@@ -315,7 +269,6 @@ const gameStore = useGameStore();
 const settingsStore = gameStore.settings;
 const currentSystem = ref(world2d.state.system); // ✅ 使用统一接口
 const gameCanvas = ref(null);
-const showDevTools = ref(false);
 
 // Sidebar Resize & Collapse State
 const DEFAULT_SIDEBAR_WIDTH = 320;
@@ -437,15 +390,8 @@ watch(isEditMode, (newVal) => {
 
 const activeSystemComponent = computed(() => {
   switch (currentSystem.value) {
-    case 'main-menu': return MainMenuSystem;
-    case 'list-menu': return ListMenuSystem;
-    case 'shop': return ShopSystem;
-    case 'encyclopedia': return EncyclopediaSystem;
     case 'world-map': return WorldMapSystem;
-    case 'battle': return BattleSystem;
-    case 'dialogue': return DialogueSystem;
-    case 'dev-tools': return DevToolsSystem;
-    default: return MainMenuSystem;
+    default: return WorldMapSystem;
   }
 });
 
@@ -454,43 +400,15 @@ const showGrid = computed(() => {
   // Always show grid if in Edit Mode
   if (isEditMode.value) return true;
 
-  // Hide grid for opaque full-screen systems to prevent "white line" artifacts at edges
-  const opaqueSystems = [
-    'main-menu', 
-    'battle', 
-    'encyclopedia', 
-    'shop', // Has blur, but better to hide grid to be clean
-    'list-menu', 
-    'dev-tools' // Hide grid for dev tools
-  ];
-  return !opaqueSystems.includes(currentSystem.value);
+  // Most systems in this ECS-only project will show the grid or world
+  return true;
 });
 
 // Control Canvas Opacity based on current system
 const canvasStyle = computed(() => {
-  // Systems that should show the ECS scene in the background
-  const showBackgroundSystems = [
-    'main-menu',
-    'world-map', 
-    'battle', 
-    'shop', 
-    'list-menu', 
-    'encyclopedia', 
-    'dialogue', 
-    'dev-tools'
-  ];
-
-  if (showBackgroundSystems.includes(currentSystem.value)) {
-    return { 
-      opacity: 1,
-      visibility: 'visible'
-    };
-  }
-  
-  // For other systems (Menu, etc.), hide canvas to save performance
   return { 
-    opacity: 0,
-    visibility: 'hidden'
+    opacity: 1,
+    visibility: 'visible'
   };
 });
 
@@ -537,68 +455,6 @@ const handleKeyDown = (e) => {
     e.preventDefault();
     toggleEditMode();
     logger.info('Edit mode toggled via shortcut');
-  }
-
-  // Ctrl+Shift+D: Toggle Dev Tools (switch to dev-tools system)
-  if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-    e.preventDefault();
-    if (currentSystem.value === 'dev-tools') {
-      // If already in dev-tools, go back to world-map or last system
-      const returnTo = ['world-map', 'battle', 'shop', 'encyclopedia'].includes(currentSystem.value) 
-        ? currentSystem.value : 'world-map';
-      currentSystem.value = returnTo;
-      world2d.state.system = returnTo;
-    } else {
-      // Switch to dev-tools
-      currentSystem.value = 'dev-tools';
-      world2d.state.system = 'dev-tools';
-    }
-    logger.info('Dev Tools system toggled:', currentSystem.value);
-  }
-
-  // ` or ~ key: Quick toggle dev-tools (terminal console)
-  // 波浪号键快速打开终端
-  if ((e.key === '`' || e.key === '~') && !e.ctrlKey && !e.altKey && !e.shiftKey) {
-    // 避免在输入框中触发
-    const activeElement = document.activeElement;
-    const isInputActive = activeElement && (
-      activeElement.tagName === 'INPUT' || 
-      activeElement.tagName === 'TEXTAREA' ||
-      activeElement.isContentEditable
-    );
-    
-    if (!isInputActive) {
-      e.preventDefault();
-      if (currentSystem.value === 'dev-tools') {
-        // If already in dev-tools, go back
-        currentSystem.value = 'world-map';
-        world2d.state.system = 'world-map';
-      } else {
-        // Switch to dev-tools
-        currentSystem.value = 'dev-tools';
-        world2d.state.system = 'dev-tools';
-      }
-      logger.info('Dev Tools quick toggle via ~ key:', currentSystem.value);
-    }
-  }
-
-  // Escape: Close Dev Tools and return to previous system
-  if (e.key === 'Escape') {
-    if (currentSystem.value === 'dev-tools') {
-      e.preventDefault();
-      currentSystem.value = 'world-map';
-      world2d.state.system = 'world-map';
-      logger.info('Dev Tools closed via Escape');
-    } else if (showDevTools.value) {
-      e.preventDefault();
-      showDevTools.value = false;
-    }
-  }
-
-  // Keep the overlay dev tools for quick access (legacy)
-  if (e.ctrlKey && e.shiftKey && e.key === 'X') {
-    e.preventDefault();
-    showDevTools.value = !showDevTools.value;
   }
 };
 

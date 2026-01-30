@@ -50,9 +50,10 @@ export {
     ActionsTeleportSchema
 } from '@components';
 
-export {
-    BattleResultSchema
-} from '@components';
+// 暂时禁用，等待战斗系统实现
+// export {
+//     BattleResultSchema
+// } from '@components';
 
 // Entity Definition Schemas
 export {
