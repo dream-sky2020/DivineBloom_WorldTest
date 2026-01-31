@@ -34,6 +34,25 @@
                  </button>
                </template>
             </div>
+
+            <!-- 侧边栏模式选择 - 使用与上方统一的按钮样式 -->
+            <div class="dev-sub-section">
+              <h4 class="sub-title">侧边栏布局模式</h4>
+              <div class="btn-group half-split">
+                <button 
+                  @click="editor.sidebarMode = 'push'" 
+                  :class="{ active: editor.sidebarMode === 'push' }"
+                >
+                  <span class="icon">📐</span> 挤占空间
+                </button>
+                <button 
+                  @click="editor.sidebarMode = 'overlay'" 
+                  :class="{ active: editor.sidebarMode === 'overlay' }"
+                >
+                  <span class="icon">🖼️</span> 覆盖画面
+                </button>
+              </div>
+            </div>
           </div>
   
           <!-- 语言设置 -->
@@ -83,7 +102,59 @@
   </script>
   
   <style scoped>
-  /* 这里放置原本在 GameUI.css 中关于 .dev-panel-section 及其内部的所有样式 */
   @import "@/styles/pages/GameUI.css"; 
-  /* 注意：实际操作时，我会建议将相关的 CSS 从 GameUI.css 彻底搬迁到这个组件的 <style> 里 */
+  
+  .dev-sub-section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .sub-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  /* 统一按钮样式，使其与 GameUI.css 中的按钮一致 */
+  .btn-group.half-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn-group button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+
+  .btn-group button:hover {
+    background: #334155;
+    color: white;
+  }
+
+  .btn-group button.active {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+  }
+
+  .icon {
+    font-size: 14px;
+  }
   </style>

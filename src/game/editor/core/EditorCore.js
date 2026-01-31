@@ -31,7 +31,8 @@ class EditorCore {
             selectedEntity: null,
             layout: savedLayout || JSON.parse(JSON.stringify(DefaultLayout)),
             target: null,
-            currentSystemId: null
+            currentSystemId: null,
+            sidebarMode: 'push' // 'push' or 'overlay'
         });
 
         watch(() => this.state.layout, (newLayout) => {
@@ -150,6 +151,8 @@ class EditorCore {
     get hasTarget() { return !!this.state.target; }
     get selectedEntity() { return this.state.selectedEntity; }
     set selectedEntity(val) { this.state.selectedEntity = val; }
+    get sidebarMode() { return this.state.sidebarMode; }
+    set sidebarMode(val) { this.state.sidebarMode = val; }
 }
 
 export const editorManager = new EditorCore();

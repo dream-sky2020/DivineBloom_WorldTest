@@ -1,14 +1,17 @@
+import { reactive } from 'vue';
 import { editorManager } from './core/EditorCore';
 import { world2d } from '@world2d';
 
 /**
  * 编辑器模块对外统一接口
  */
-export const editor = {
+export const editor = reactive({
     // 数据属性 (只读代理)
     get layout() { return editorManager.layout; },
     get editMode() { return editorManager.editMode; },
     get selectedEntity() { return editorManager.selectedEntity; },
+    get sidebarMode() { return editorManager.sidebarMode; },
+    set sidebarMode(val) { editorManager.sidebarMode = val; },
 
     // 核心操作
     toggleEditMode() {
@@ -37,4 +40,4 @@ export const editor = {
         
         console.log('Editor: Scene exported', mapId);
     }
-};
+});

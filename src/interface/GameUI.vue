@@ -2,39 +2,14 @@
   <div class="page-scroller">
     <!-- Viewport 1: Game Canvas (100vh) -->
     <div class="viewport-section" :class="{ 'is-resizing': !!resizingSidebar }">
-      <!-- Left Sidebar -->
-      <div 
-        class="sidebar-container left-sidebar" 
-        v-if="shouldShowSidebars"
-        :class="{ 'is-collapsed': isLeftCollapsed }"
-        :style="sidebarStyles.left"
-      >
-        <div class="sidebar-controls">
-          <button @click="toggleCollapse('left')" class="control-btn collapse-btn" :title="isLeftCollapsed ? '展开' : '折叠'">
-            {{ isLeftCollapsed ? '▶' : '◀' }}
-          </button>
-          <button v-if="!isLeftCollapsed" @click="resetSidebar('left')" class="control-btn reset-btn" title="重置宽度">
-            ↺
-          </button>
-        </div>
-
-        <div 
-          class="sidebar-content" 
-          v-show="!isLeftCollapsed"
-          @dragover.prevent
-          @drop="onDrop($event, 'left')"
-        >
-          <div v-for="group in editor.layout.left" :key="group.id" class="sidebar-panel-wrapper">
-            <TabbedPanelGroup :group="group" side="left" />
-          </div>
-          <div v-if="editor.layout.left.length === 0" class="sidebar-placeholder">
-            <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">左侧无面板</h3>
-          </div>
-        </div>
-
-        <!-- Resize Handle -->
-        <div class="resize-handle right" @mousedown.stop="startResizing('left')"></div>
-      </div>
+      <!-- Sidebars Interface -->
+      <EditorSidebars 
+        :show="shouldShowSidebars"
+        :editor-ctrl="editorCtrl"
+        @update:layout="onLayoutUpdate"
+        @update:resizing="resizingSidebar = $event"
+        @resize-canvas="resizeCanvas"
+      />
 
       <!-- Main Canvas Area (Isolated Absolute Layer) -->
       <div class="canvas-container" :style="canvasContainerStyle">
@@ -107,40 +82,6 @@
 
       <!-- Layout Spacer (Maintains flex flow and provides size reference) -->
       <div class="layout-spacer"></div>
-
-      <!-- Right Sidebar -->
-      <div 
-        class="sidebar-container right-sidebar" 
-        v-if="shouldShowSidebars"
-        :class="{ 'is-collapsed': isRightCollapsed }"
-        :style="sidebarStyles.right"
-      >
-        <!-- Resize Handle -->
-        <div class="resize-handle left" @mousedown.stop="startResizing('right')"></div>
-
-        <div class="sidebar-controls">
-          <button v-if="!isRightCollapsed" @click="resetSidebar('right')" class="control-btn reset-btn" title="重置宽度">
-            ↺
-          </button>
-          <button @click="toggleCollapse('right')" class="control-btn collapse-btn" :title="isRightCollapsed ? '展开' : '折叠'">
-            {{ isRightCollapsed ? '◀' : '▶' }}
-          </button>
-        </div>
-
-        <div 
-          class="sidebar-content" 
-          v-show="!isRightCollapsed"
-          @dragover.prevent
-          @drop="onDrop($event, 'right')"
-        >
-          <div v-for="group in editor.layout.right" :key="group.id" class="sidebar-panel-wrapper">
-            <TabbedPanelGroup :group="group" side="right" />
-          </div>
-          <div v-if="editor.layout.right.length === 0" class="sidebar-placeholder">
-            <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">右侧无面板</h3>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Developer Tools Overlay removed -->
@@ -180,8 +121,7 @@ import { WorldMapController } from '@/game/interface/WorldMapController';
 import { CanvasManager } from '@/game/interface/CanvasManager';
 import { EditorInteractionController } from '@/game/editor/core/EditorInteractionController';
 import DevDashboard from './DevDashboard.vue';
-
-import TabbedPanelGroup from '@/interface/editor/components/TabbedPanelGroup.vue';
+import EditorSidebars from './EditorSidebars.vue';
 
 const logger = createLogger('GameUI');
 const currentSystem = ref(world2d.state.system);
@@ -232,17 +172,17 @@ const openContextMenu = (e, items) => {
 
 provide('editorContextMenu', { openContextMenu, closeContextMenu });
 
-// Sidebar Resize & Collapse State
-const DEFAULT_SIDEBAR_WIDTH = 320;
-const leftSidebarWidth = ref(DEFAULT_SIDEBAR_WIDTH);
-const rightSidebarWidth = ref(DEFAULT_SIDEBAR_WIDTH);
-const isLeftCollapsed = ref(false);
-const isRightCollapsed = ref(false);
-const resizingSidebar = ref(null);
+// Sidebar Layout State
+const sidebarLayout = ref({ left: 0, right: 0 });
 const showSidebars = ref(false);
+
+const onLayoutUpdate = (layout) => {
+  sidebarLayout.value = layout;
+};
 
 // Reactive Edit Mode State
 const isEditMode = computed(() => editor.editMode);
+const resizingSidebar = ref(null); // Keep for UI class binding if needed, or remove if unused
 
 // Determine if sidebars should be visible
 const shouldShowSidebars = computed(() => {
@@ -252,78 +192,15 @@ const shouldShowSidebars = computed(() => {
 });
 
 const canvasContainerStyle = computed(() => {
-  const left = shouldShowSidebars.value ? (isLeftCollapsed.value ? 40 : leftSidebarWidth.value) : 0;
-  const right = shouldShowSidebars.value ? (isRightCollapsed.value ? 40 : rightSidebarWidth.value) : 0;
+  const isOverlay = editor.sidebarMode === 'overlay';
   
   return {
-    left: `${left}px`,
-    right: `${right}px`
+    left: isOverlay ? '0px' : `${sidebarLayout.value.left}px`,
+    right: isOverlay ? '0px' : `${sidebarLayout.value.right}px`
   };
 });
 
-const sidebarStyles = computed(() => {
-  return {
-    left: {
-      width: isLeftCollapsed.value ? '40px' : `${leftSidebarWidth.value}px`,
-      transition: 'none'
-    },
-    right: {
-      width: isRightCollapsed.value ? '40px' : `${rightSidebarWidth.value}px`,
-      transition: 'none'
-    }
-  };
-});
-
-// Sidebar Interaction Handlers
-const startResizing = (side) => {
-  resizingSidebar.value = side;
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', stopResizing);
-  document.body.style.cursor = 'col-resize';
-};
-
-const handleMouseMove = (e) => {
-  if (!resizingSidebar.value) return;
-
-  if (resizingSidebar.value === 'left') {
-    const newWidth = Math.max(150, Math.min(600, e.clientX));
-    leftSidebarWidth.value = newWidth;
-    if (isLeftCollapsed.value && newWidth > 60) isLeftCollapsed.value = false;
-  } else {
-    const newWidth = Math.max(150, Math.min(600, window.innerWidth - e.clientX));
-    rightSidebarWidth.value = newWidth;
-    if (isRightCollapsed.value && newWidth > 60) isRightCollapsed.value = false;
-  }
-  
-  nextTick(resizeCanvas);
-};
-
-const stopResizing = () => {
-  resizingSidebar.value = null;
-  document.removeEventListener('mousemove', handleMouseMove);
-  document.removeEventListener('mouseup', stopResizing);
-  document.body.style.cursor = '';
-  nextTick(resizeCanvas);
-};
-
-const resetSidebar = (side) => {
-  if (side === 'left') {
-    leftSidebarWidth.value = DEFAULT_SIDEBAR_WIDTH;
-    isLeftCollapsed.value = false;
-  } else {
-    rightSidebarWidth.value = DEFAULT_SIDEBAR_WIDTH;
-    isRightCollapsed.value = false;
-  }
-  nextTick(resizeCanvas);
-};
-
-const toggleCollapse = (side) => {
-  if (side === 'left') isLeftCollapsed.value = !isLeftCollapsed.value;
-  else isRightCollapsed.value = !isRightCollapsed.value;
-  nextTick(resizeCanvas);
-};
-
-// Sync with GameManager state
+// Canvas Resizing Logic
 watch(() => world2d.state.system, (newSystem) => {
   if (newSystem && currentSystem.value !== newSystem) {
     currentSystem.value = newSystem;
@@ -334,11 +211,14 @@ watch(() => world2d.state.system, (newSystem) => {
 // 同步编辑模式下的侧边栏显示
 watch(() => editor.editMode, (newVal) => {
   if (newVal) {
-    isLeftCollapsed.value = false;
-    isRightCollapsed.value = false;
     showSidebars.value = true;
   }
   setTimeout(resizeCanvas, 0);
+});
+
+// 监听侧边栏布局模式变化
+watch(() => editor.sidebarMode, () => {
+  nextTick(resizeCanvas);
 });
 
 // Determine if we should show the background grid
@@ -435,10 +315,7 @@ const handleContextMenu = (e) => {
   }
 };
 
-const onDrop = (e, side) => editorCtrl.handlePanelDrop(e, side);
-
 </script>
 
 <style scoped src="@styles/pages/GameUI.css"></style>
-<style scoped src="@styles/editor/Sidebar.css"></style>
 <style src="@styles/ui/ContextMenu.css"></style>
