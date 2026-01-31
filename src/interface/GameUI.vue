@@ -24,10 +24,10 @@
           @dragover.prevent
           @drop="onDrop($event, 'left')"
         >
-          <div v-for="group in editorManager.layout.left" :key="group.id" class="sidebar-panel-wrapper">
+          <div v-for="group in editor.layout.left" :key="group.id" class="sidebar-panel-wrapper">
             <TabbedPanelGroup :group="group" side="left" />
           </div>
-          <div v-if="editorManager.layout.left.length === 0" class="sidebar-placeholder">
+          <div v-if="editor.layout.left.length === 0" class="sidebar-placeholder">
             <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">左侧无面板</h3>
           </div>
         </div>
@@ -133,10 +133,10 @@
           @dragover.prevent
           @drop="onDrop($event, 'right')"
         >
-          <div v-for="group in editorManager.layout.right" :key="group.id" class="sidebar-panel-wrapper">
+          <div v-for="group in editor.layout.right" :key="group.id" class="sidebar-panel-wrapper">
             <TabbedPanelGroup :group="group" side="right" />
           </div>
-          <div v-if="editorManager.layout.right.length === 0" class="sidebar-placeholder">
+          <div v-if="editor.layout.right.length === 0" class="sidebar-placeholder">
             <h3 style="padding: 16px; color: #94a3b8; font-size: 14px;">右侧无面板</h3>
           </div>
         </div>
@@ -164,105 +164,26 @@
     </div>
 
     <!-- Viewport 2: Developer Dashboard (Local) -->
-    <div class="dev-panel-section">
-      <div class="dev-container">
-        <div class="dev-header-inline">
-          <h2 class="dev-title" v-t="'dev.title'"></h2>
-
-        </div>
-        
-        <div class="dev-grid">
-          <div class="dev-card">
-            <h3 v-t="'dev.debugActions'"></h3>
-            <div class="btn-group">
-               <!-- 全局通用操作 -->
-               <button @click="logState" v-t="'dev.actions.logState'"></button>
-               <button @click="toggleEditMode" :class="{ active: isEditMode }">
-                 {{ isEditMode ? '关闭编辑模式 (Ctrl+E)' : '开启编辑模式 (Ctrl+E)' }}
-               </button>
-               <button @click="toggleSidebars" :class="{ active: showSidebars }">
-                 {{ showSidebars ? '隐藏侧边栏' : '显示侧边栏' }}
-               </button>
-               <button @click="editorManager.resetToWorkspace('world-editor')">
-                 🔄 重置编辑器布局
-               </button>
-               
-               <!-- 大地图专属操作 -->
-               <template v-if="currentSystem === 'world-map'">
-                <button @click="togglePause" :class="{ warn: world2d.state.isPaused }">
-                  {{ world2d.state.isPaused ? '恢复运行' : '暂停运行' }}
-                 </button>
-                 <button 
-                   @click="exportScene" 
-                   :style="{ 
-                     background: isEditMode ? '#059669' : '#1e40af', 
-                     color: 'white' 
-                   }"
-                 >
-                   {{ isEditMode ? '📥 导出场景布局' : '📸 捕捉运行快照' }}
-                 </button>
-               </template>
-            </div>
-          </div>
-
-          <div class="dev-card">
-            <h3 v-t="'system.language'"></h3>
-            <div class="btn-group">
-              <button 
-                :class="{ active: settingsStore.language === 'zh' }" 
-                @click="setLanguage('zh')"
-              >
-                简体中文
-              </button>
-              <button 
-                :class="{ active: settingsStore.language === 'zh-TW' }" 
-                @click="setLanguage('zh-TW')"
-              >
-                繁體中文
-              </button>
-              <button 
-                :class="{ active: settingsStore.language === 'en' }" 
-                @click="setLanguage('en')"
-              >
-                English
-              </button>
-              <button 
-                :class="{ active: settingsStore.language === 'ja' }" 
-                @click="setLanguage('ja')"
-              >
-                日本語
-              </button>
-              <button 
-                :class="{ active: settingsStore.language === 'ko' }" 
-                @click="setLanguage('ko')"
-              >
-                한국어
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <DevDashboard 
+      :show-sidebars="showSidebars"
+      @toggle-sidebars="toggleSidebars"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, provide } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useGameStore } from '@/stores/game';
 import { world2d, getSystem } from '@world2d'; 
-import { editorManager } from '@/game/editor/core/EditorCore';
+import { editor } from '@/game/editor';
 import { createLogger } from '@/utils/logger';
 import { WorldMapController } from '@/game/interface/WorldMapController';
 import { CanvasManager } from '@/game/interface/CanvasManager';
 import { EditorInteractionController } from '@/game/editor/core/EditorInteractionController';
+import DevDashboard from './DevDashboard.vue';
 
 import TabbedPanelGroup from '@/interface/editor/components/TabbedPanelGroup.vue';
 
 const logger = createLogger('GameUI');
-const { locale } = useI18n();
-const gameStore = useGameStore();
-const settingsStore = gameStore.settings;
 const currentSystem = ref(world2d.state.system);
 const gameCanvas = ref(null);
 
@@ -321,7 +242,7 @@ const resizingSidebar = ref(null);
 const showSidebars = ref(false);
 
 // Reactive Edit Mode State
-const isEditMode = computed(() => editorManager.editMode);
+const isEditMode = computed(() => editor.editMode);
 
 // Determine if sidebars should be visible
 const shouldShowSidebars = computed(() => {
@@ -410,7 +331,8 @@ watch(() => world2d.state.system, (newSystem) => {
   }
 });
 
-watch(isEditMode, (newVal) => {
+// 同步编辑模式下的侧边栏显示
+watch(() => editor.editMode, (newVal) => {
   if (newVal) {
     isLeftCollapsed.value = false;
     isRightCollapsed.value = false;
@@ -498,44 +420,13 @@ onUnmounted(() => {
   worldMapCtrl.stop();
 });
 
-const logState = () => {
-  logger.info('Current System:', currentSystem.value);
-};
-
 const toggleEditMode = () => {
-  world2d.toggleEditMode();
+  editor.toggleEditMode();
 };
 
 const toggleSidebars = () => {
   showSidebars.value = !showSidebars.value;
   nextTick(resizeCanvas);
-};
-
-const togglePause = () => {
-  if (world2d.state.isPaused) {
-    world2d.resume();
-  } else {
-    world2d.pause();
-  }
-};
-
-const exportScene = () => {
-  const bundle = world2d.exportCurrentScene();
-  const mapId = world2d.state.mapId || 'unknown';
-  
-  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${mapId}_scene_export_${new Date().getTime()}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
-  
-  logger.info('Scene data exported:', mapId);
-};
-
-const setLanguage = (lang) => {
-  settingsStore.setLanguage(lang);
 };
 
 const handleContextMenu = (e) => {
@@ -544,21 +435,8 @@ const handleContextMenu = (e) => {
   }
 };
 
-const onDrop = (e, targetSide) => {
-  const panelId = e.dataTransfer.getData('panelId');
-  const sourceGroupId = e.dataTransfer.getData('sourceGroupId');
-  const sourceSide = e.dataTransfer.getData('sourceSide');
-  
-  if (!panelId) return;
+const onDrop = (e, side) => editorCtrl.handlePanelDrop(e, side);
 
-  editorManager.movePanel({
-    panelId,
-    sourceSide,
-    sourceGroupId,
-    targetSide,
-    position: 'bottom'
-  });
-};
 </script>
 
 <style scoped src="@styles/pages/GameUI.css"></style>

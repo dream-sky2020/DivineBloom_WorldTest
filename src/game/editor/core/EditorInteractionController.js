@@ -116,4 +116,20 @@ export class EditorInteractionController {
             preventDefault: () => {}
         }, items);
     }
+    // 在 EditorInteractionController 类中增加此方法
+    handlePanelDrop(event, targetSide) {
+        const panelId = event.dataTransfer.getData('panelId');
+        const sourceGroupId = event.dataTransfer.getData('sourceGroupId');
+        const sourceSide = event.dataTransfer.getData('sourceSide');
+        
+        if (!panelId) return;
+
+        editorManager.movePanel({
+            panelId,
+            sourceSide,
+            sourceGroupId,
+            targetSide,
+            position: 'bottom'
+        });
+    }
 }
