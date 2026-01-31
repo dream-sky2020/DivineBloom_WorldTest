@@ -1,16 +1,11 @@
-import { reactive, watch, markRaw, h } from 'vue';
+import { reactive, watch, markRaw, h, defineAsyncComponent } from 'vue';
 import { createLogger } from '@/utils/logger';
 import { Capabilities } from './EditorCapabilities';
 import { SystemSpecs, Workspaces, DefaultLayout } from '../config/WorkspacePresets';
 import { PANEL_TITLES, PANEL_ICONS, PANEL_REQUIREMENTS } from '../config/PanelRegistry';
 import { PanelLayoutService } from './PanelLayoutService';
 
-// 导入面板组件
-import HierarchyPanel from '@/interface/editor/panels/HierarchyPanel.vue';
-import InspectorPanel from '@/interface/editor/panels/InspectorPanel.vue';
-import SceneSwitcherPanel from '@/interface/editor/panels/SceneSwitcherPanel.vue';
-import EntityPalettePanel from '@/interface/editor/panels/EntityPalettePanel.vue';
-// import BattleLogPanel from '@/interface/editor/panels/BattleLogPanel.vue'; // 暂时禁用，等待战斗系统实现
+// 导入面板组件 (使用 defineAsyncComponent 避免循环依赖)
 import PanelNotFound from '@/interface/editor/components/PanelNotFound.vue';
 
 const logger = createLogger('EditorCore');
@@ -19,11 +14,11 @@ const logger = createLogger('EditorCore');
  * 面板组件注册表
  */
 const PANEL_COMPONENTS = {
-    'scene-explorer': markRaw(HierarchyPanel),
-    'entity-properties': markRaw(InspectorPanel),
-    'scene-manager': markRaw(SceneSwitcherPanel),
-    'entity-creator': markRaw(EntityPalettePanel),
-    // 'battle-log': markRaw(BattleLogPanel) // 暂时禁用，等待战斗系统实现
+    'scene-explorer': defineAsyncComponent(() => import('@/interface/editor/panels/HierarchyPanel.vue')),
+    'entity-properties': defineAsyncComponent(() => import('@/interface/editor/panels/InspectorPanel.vue')),
+    'scene-manager': defineAsyncComponent(() => import('@/interface/editor/panels/SceneSwitcherPanel.vue')),
+    'entity-creator': defineAsyncComponent(() => import('@/interface/editor/panels/EntityPalettePanel.vue')),
+    'battle-log': defineAsyncComponent(() => import('@/interface/editor/panels/BattleLogPanel.vue'))
 };
 
 class EditorCore {

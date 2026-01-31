@@ -207,7 +207,7 @@ for (const entity of world) {
 - ✅ `src/game/world2d/index.js` - 统一入口
 
 ### 控制器
-- ✅ `src/game/interface/world/WorldMapController.js`
+- ✅ `src/game/interface/WorldMapController.js`
 
 ### Stores
 - ✅ `src/stores/world2d.js`

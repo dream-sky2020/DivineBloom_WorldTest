@@ -8,7 +8,7 @@ export const DefaultLayout = {
         {
             id: 'group-left-default',
             activeId: 'scene-manager',
-            panels: ['scene-manager', 'entity-creator', 'scene-explorer', 'battle-log']
+            panels: ['scene-manager', 'entity-creator', 'scene-explorer']
         }
     ],
     right: [
@@ -25,31 +25,31 @@ export const DefaultLayout = {
  */
 export const SystemSpecs = {
     'main-menu': {
-        capabilities: [Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE, Capabilities.BATTLE_LOG],
+        capabilities: [Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE],
         workspace: 'world-editor'
     },
     'world-map': {
-        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE, Capabilities.BATTLE_LOG],
+        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE],
         workspace: 'world-editor'
     },
     'battle': {
-        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE, Capabilities.BATTLE_LOG],
+        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE],
         workspace: 'battle-inspector'
     },
     'shop': {
-        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE, Capabilities.BATTLE_LOG],
+        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE],
         workspace: 'world-editor'
     },
     'list-menu': {
-        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE, Capabilities.BATTLE_LOG],
+        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE],
         workspace: 'world-editor'
     },
     'encyclopedia': {
-        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE, Capabilities.BATTLE_LOG],
+        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE],
         workspace: 'world-editor'
     },
     'dev-tools': {
-        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE, Capabilities.BATTLE_LOG],
+        capabilities: [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION, Capabilities.SCENE_TREE],
         workspace: 'world-editor'
     }
 };
@@ -63,8 +63,8 @@ export const Workspaces = {
         left: [
             {
                 id: 'group-left-battle',
-                activeId: 'battle-log',
-                panels: ['scene-manager', 'entity-creator', 'scene-explorer', 'battle-log']
+                activeId: 'scene-explorer',
+                panels: ['scene-manager', 'entity-creator', 'scene-explorer']
             }
         ],
         right: [

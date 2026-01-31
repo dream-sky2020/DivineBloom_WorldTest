@@ -29,6 +29,5 @@ export const PANEL_REQUIREMENTS = {
     'scene-manager': [Capabilities.ECS_EDITING],
     'entity-creator': [Capabilities.ECS_EDITING],
     'scene-explorer': [Capabilities.ECS_EDITING, Capabilities.SCENE_TREE],
-    'entity-properties': [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION],
-    'battle-log': [Capabilities.BATTLE_LOG]
+    'entity-properties': [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION]
 };

@@ -124,7 +124,7 @@ world2d.getScenarioLoader()
 ## 已迁移文件清单
 
 ### ✅ 控制器层 (1 个文件)
-- `src/game/interface/world/WorldMapController.js`
+- `src/game/interface/WorldMapController.js`
   - 使用 `world2d.getDebugInfo()` 替代直接访问 world
   - 使用 `world2d.startWorldMap()` 替代 gameManager
 

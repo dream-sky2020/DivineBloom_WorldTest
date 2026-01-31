@@ -1,9 +1,11 @@
 <script setup>
 import GameUI from '@/interface/GameUI.vue';
+import DevToolsWindow from '@/interface/DevToolsWindow.vue';
 import { useSettingsStore } from '@/stores/settings';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const settingsStore = useSettingsStore();
+const isDevTools = ref(window.location.search.includes('devtools=true'));
 
 onMounted(() => {
   settingsStore.initSettings();
@@ -11,7 +13,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <GameUI />
+  <DevToolsWindow v-if="isDevTools" />
+  <GameUI v-else />
 </template>
 
 <style>

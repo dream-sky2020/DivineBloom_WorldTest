@@ -105,6 +105,13 @@
         </div>
       </div>
 
+      <!-- NEW: Floating Dev Tools Launcher -->
+      <div class="dev-tools-launcher pointer-events-auto">
+        <button class="launcher-btn" @click="openDevToolsWindow" title="打开开发者工具窗口">
+          🛠️
+        </button>
+      </div>
+
       <!-- Layout Spacer (Maintains flex flow and provides size reference) -->
       <div class="layout-spacer"></div>
 
@@ -163,10 +170,13 @@
       </div>
     </div>
 
-    <!-- Viewport 2: Developer Dashboard -->
+    <!-- Viewport 2: Developer Dashboard (Local) -->
     <div class="dev-panel-section">
       <div class="dev-container">
-        <h2 class="dev-title" v-t="'dev.title'"></h2>
+        <div class="dev-header-inline">
+          <h2 class="dev-title" v-t="'dev.title'"></h2>
+
+        </div>
         
         <div class="dev-grid">
           <div class="dev-card">
@@ -198,11 +208,6 @@
                  >
                    {{ isEditMode ? '📥 导出场景布局' : '📸 捕捉运行快照' }}
                  </button>
-               </template>
-
-               <!-- 战斗专属操作 (预留) -->
-               <template v-if="currentSystem === 'battle'">
-                 <!-- 可以在这里添加：一键胜利、伤害测试等 -->
                </template>
             </div>
           </div>
@@ -255,7 +260,9 @@ import { useGameStore } from '@/stores/game';
 import { world2d, getSystem } from '@world2d'; 
 import { editorManager } from '@/game/editor/core/EditorCore';
 import { createLogger } from '@/utils/logger';
-import { WorldMapController } from '@/game/interface/world/WorldMapController';
+import { WorldMapController } from '@/game/interface/WorldMapController';
+import { CanvasManager } from '@/game/interface/CanvasManager';
+import { DevToolsBridge } from '@/game/DevToolsBridge';
 
 import TabbedPanelGroup from '@/interface/editor/components/TabbedPanelGroup.vue';
 
@@ -265,6 +272,32 @@ const gameStore = useGameStore();
 const settingsStore = gameStore.settings;
 const currentSystem = ref(world2d.state.system);
 const gameCanvas = ref(null);
+
+// Dev Tools Channel
+let devTools = null;
+let stateSyncTimer = null;
+
+const sendStateToDevTools = () => {
+  if (devTools) {
+    devTools.syncState({
+      isEditMode: isEditMode.value,
+      showSidebars: showSidebars.value,
+      isPaused: world2d.state.isPaused,
+      language: settingsStore.language,
+      currentSystem: currentSystem.value,
+      playerPos: { x: Number(debugInfo.value.x), y: Number(debugInfo.value.y) },
+      chasingCount: Number(debugInfo.value.chasingCount)
+    });
+  }
+};
+
+const openDevToolsWindow = () => {
+  const url = `${window.location.origin}${window.location.pathname}?devtools=true`;
+  window.open(url, 'DivineBloomDevTools', 'width=800,height=600');
+};
+
+// Canvas Manager Integration
+const canvasMgr = new CanvasManager('game-canvas');
 
 // World Map Controller Integration
 const worldMapCtrl = new WorldMapController();
@@ -459,18 +492,38 @@ const handleKeyDown = (e) => {
 };
 
 onMounted(async () => {
-  window.addEventListener('resize', resizeCanvas);
-  window.addEventListener('keydown', handleKeyDown);
-  resizeCanvas();
-  setTimeout(resizeCanvas, 0);
+  // 1. Canvas Manager Setup
+  window.addEventListener('resize', () => canvasMgr.resize());
+  canvasMgr.resize();
+  setTimeout(() => canvasMgr.resize(), 0);
 
+  // 2. Event Listeners
+  window.addEventListener('keydown', handleKeyDown);
+
+  // 3. World2D Engine Init
   if (gameCanvas.value) {
     world2d.init(gameCanvas.value);
   }
 
-  // Start World Map Controller
+  // 4. Dev Tools Bridge Setup
+  devTools = new DevToolsBridge({
+    onRequestState: () => sendStateToDevTools(),
+    logState: () => logState(),
+    toggleEditMode: () => toggleEditMode(),
+    toggleSidebars: () => toggleSidebars(),
+    resetLayout: () => editorManager.resetToWorkspace('world-editor'),
+    togglePause: () => togglePause(),
+    exportScene: () => exportScene(),
+    setLanguage: (lang) => setLanguage(lang)
+  });
+
+  // 定期同步状态
+  stateSyncTimer = setInterval(sendStateToDevTools, 500);
+
+  // 5. World Map Controller Start
   await worldMapCtrl.start();
 
+  // 6. Editor Interaction Setup
   const editorInteraction = getSystem('editor-interaction')
   if (editorInteraction) {
     editorInteraction.onEntityRightClick = handleEntityRightClick;
@@ -479,9 +532,11 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', resizeCanvas);
+  window.removeEventListener('resize', () => canvasMgr.resize());
   window.removeEventListener('keydown', handleKeyDown);
   worldMapCtrl.stop();
+  if (stateSyncTimer) clearInterval(stateSyncTimer);
+  if (devTools) devTools.destroy();
 });
 
 const logState = () => {
@@ -728,122 +783,3 @@ const onDrop = (e, targetSide) => {
 <style scoped src="@styles/pages/GameUI.css"></style>
 <style scoped src="@styles/editor/Sidebar.css"></style>
 <style src="@styles/ui/ContextMenu.css"></style>
-
-<style scoped>
-/* World Map System Styles Integrated */
-.ui-overlay {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(4px);
-  padding: 16px;
-  border-radius: 8px;
-  color: #f1f5f9;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  pointer-events: auto;
-  z-index: 50;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.dialogue-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 60px;
-  z-index: 100;
-}
-
-.dialogue-box {
-  background: rgba(255, 255, 255, 0.98);
-  border: 2px solid #94a3b8;
-  border-radius: 8px;
-  padding: 24px;
-  width: 90%;
-  max-width: 800px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-  pointer-events: auto;
-  will-change: transform, opacity;
-}
-
-.dialogue-header {
-  margin-bottom: 12px;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 8px;
-  align-self: flex-start;
-}
-
-.speaker-name {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #0f172a;
-  background: #f1f5f9;
-  padding: 4px 12px;
-  border-radius: 4px;
-}
-
-.dialogue-content {
-  font-size: 1.25rem;
-  color: #334155;
-  line-height: 1.6;
-  min-height: 3rem;
-  margin-bottom: 20px;
-}
-
-.choices-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: stretch;
-}
-
-.choice-btn {
-  padding: 12px 20px;
-  background: white;
-  border: 2px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #475569;
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  text-align: left;
-}
-.choice-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
-  background: #eff6ff;
-  transform: translateX(5px);
-}
-
-.dialogue-hint {
-  align-self: flex-end;
-  font-size: 0.9rem;
-  color: #94a3b8;
-  cursor: pointer;
-  animation: pulse 2s infinite;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-
-.fade-enter-active, .fade-leave-active { 
-  transition: opacity 0.2s ease; 
-  will-change: opacity;
-}
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-</style>

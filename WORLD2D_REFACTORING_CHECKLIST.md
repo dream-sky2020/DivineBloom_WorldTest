@@ -20,7 +20,7 @@
 ## ✅ 代码迁移
 
 ### 控制器层
-- [x] `src/game/interface/world/WorldMapController.js`
+- [x] `src/game/interface/WorldMapController.js`
   - 使用 `world2d.getDebugInfo()`
   - 使用 `world2d.startWorldMap()`
 
