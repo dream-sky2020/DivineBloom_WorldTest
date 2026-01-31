@@ -105,13 +105,6 @@
         </div>
       </div>
 
-      <!-- NEW: Floating Dev Tools Launcher -->
-      <div class="dev-tools-launcher pointer-events-auto">
-        <button class="launcher-btn" @click="openDevToolsWindow" title="打开开发者工具窗口">
-          🛠️
-        </button>
-      </div>
-
       <!-- Layout Spacer (Maintains flex flow and provides size reference) -->
       <div class="layout-spacer"></div>
 
@@ -254,7 +247,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick, provide, toRaw } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '@/stores/game';
 import { world2d, getSystem } from '@world2d'; 
@@ -262,7 +255,7 @@ import { editorManager } from '@/game/editor/core/EditorCore';
 import { createLogger } from '@/utils/logger';
 import { WorldMapController } from '@/game/interface/WorldMapController';
 import { CanvasManager } from '@/game/interface/CanvasManager';
-import { DevToolsBridge } from '@/game/DevToolsBridge';
+import { EditorInteractionController } from '@/game/editor/core/EditorInteractionController';
 
 import TabbedPanelGroup from '@/interface/editor/components/TabbedPanelGroup.vue';
 
@@ -273,29 +266,6 @@ const settingsStore = gameStore.settings;
 const currentSystem = ref(world2d.state.system);
 const gameCanvas = ref(null);
 
-// Dev Tools Channel
-let devTools = null;
-let stateSyncTimer = null;
-
-const sendStateToDevTools = () => {
-  if (devTools) {
-    devTools.syncState({
-      isEditMode: isEditMode.value,
-      showSidebars: showSidebars.value,
-      isPaused: world2d.state.isPaused,
-      language: settingsStore.language,
-      currentSystem: currentSystem.value,
-      playerPos: { x: Number(debugInfo.value.x), y: Number(debugInfo.value.y) },
-      chasingCount: Number(debugInfo.value.chasingCount)
-    });
-  }
-};
-
-const openDevToolsWindow = () => {
-  const url = `${window.location.origin}${window.location.pathname}?devtools=true`;
-  window.open(url, 'DivineBloomDevTools', 'width=800,height=600');
-};
-
 // Canvas Manager Integration
 const canvasMgr = new CanvasManager('game-canvas');
 
@@ -303,6 +273,12 @@ const canvasMgr = new CanvasManager('game-canvas');
 const worldMapCtrl = new WorldMapController();
 const debugInfo = worldMapCtrl.debugInfo;
 const dialogueStore = worldMapCtrl.dialogueStore;
+
+// Editor Interaction Controller Integration
+const editorCtrl = new EditorInteractionController({
+  openContextMenu: (e, items) => openContextMenu(e, items),
+  closeContextMenu: () => closeContextMenu()
+});
 
 // Context Menu State
 const contextMenu = ref({
@@ -467,8 +443,8 @@ const resizeCanvas = () => {
   const availableHeight = rect.height;
   
   if (availableWidth === 0 || availableHeight === 0) {
-      requestAnimationFrame(resizeCanvas);
-      return;
+    requestAnimationFrame(resizeCanvas);
+    return;
   }
 
   const targetWidth = 1920;
@@ -505,29 +481,14 @@ onMounted(async () => {
     world2d.init(gameCanvas.value);
   }
 
-  // 4. Dev Tools Bridge Setup
-  devTools = new DevToolsBridge({
-    onRequestState: () => sendStateToDevTools(),
-    logState: () => logState(),
-    toggleEditMode: () => toggleEditMode(),
-    toggleSidebars: () => toggleSidebars(),
-    resetLayout: () => editorManager.resetToWorkspace('world-editor'),
-    togglePause: () => togglePause(),
-    exportScene: () => exportScene(),
-    setLanguage: (lang) => setLanguage(lang)
-  });
-
-  // 定期同步状态
-  stateSyncTimer = setInterval(sendStateToDevTools, 500);
-
-  // 5. World Map Controller Start
+  // 4. World Map Controller Start
   await worldMapCtrl.start();
 
-  // 6. Editor Interaction Setup
+  // 5. Editor Interaction Setup
   const editorInteraction = getSystem('editor-interaction')
   if (editorInteraction) {
-    editorInteraction.onEntityRightClick = handleEntityRightClick;
-    editorInteraction.onEmptyRightClick = handleEmptyRightClick;
+    editorInteraction.onEntityRightClick = (entity, info) => editorCtrl.handleEntityRightClick(entity, info);
+    editorInteraction.onEmptyRightClick = (info) => editorCtrl.handleEmptyRightClick(info);
   }
 });
 
@@ -535,8 +496,6 @@ onUnmounted(() => {
   window.removeEventListener('resize', () => canvasMgr.resize());
   window.removeEventListener('keydown', handleKeyDown);
   worldMapCtrl.stop();
-  if (stateSyncTimer) clearInterval(stateSyncTimer);
-  if (devTools) devTools.destroy();
 });
 
 const logState = () => {
@@ -582,184 +541,6 @@ const setLanguage = (lang) => {
 const handleContextMenu = (e) => {
   if (isEditMode.value && currentSystem.value === 'world-map') {
     e.preventDefault();
-  }
-};
-
-const handleEmptyRightClick = (mouseInfo) => {
-  const worldX = Math.round(mouseInfo.worldX);
-  const worldY = Math.round(mouseInfo.worldY);
-
-  const entityTemplateRegistry = world2d.getEntityTemplateRegistry();
-  const templates = entityTemplateRegistry.getAll();
-
-  const menuItems = [
-    {
-      icon: '📍',
-      label: `位置: X=${worldX}, Y=${worldY}`,
-      disabled: true,
-      class: 'menu-header'
-    },
-    {
-      icon: '➕',
-      label: '在此位置创建实体',
-      disabled: true,
-      class: 'menu-divider'
-    }
-  ];
-
-  const gameplayTemplates = templates.filter(t => t.category === 'gameplay');
-  const envTemplates = templates.filter(t => t.category === 'environment');
-
-  if (gameplayTemplates.length > 0) {
-    menuItems.push({
-      icon: '🎮',
-      label: '游戏玩法',
-      disabled: true,
-      class: 'menu-category'
-    });
-    gameplayTemplates.forEach(template => {
-      menuItems.push({
-        icon: template.icon || '📦',
-        label: template.name,
-        action: () => createEntityAtPosition(template.id, worldX, worldY)
-      });
-    });
-  }
-
-  if (envTemplates.length > 0) {
-    menuItems.push({
-      icon: '🌲',
-      label: '环境装饰',
-      disabled: true,
-      class: 'menu-category'
-    });
-    envTemplates.forEach(template => {
-      menuItems.push({
-        icon: template.icon || '📦',
-        label: template.name,
-        action: () => createEntityAtPosition(template.id, worldX, worldY)
-      });
-    });
-  }
-
-  const fakeEvent = {
-    preventDefault: () => {},
-    clientX: mouseInfo.screenX,
-    clientY: mouseInfo.screenY
-  };
-  
-  openContextMenu(fakeEvent, menuItems);
-};
-
-const createEntityAtPosition = (templateId, x, y) => {
-  try {
-    const world = world2d.getWorld();
-    const entityTemplateRegistry = world2d.getEntityTemplateRegistry();
-    
-    const globalEntity = world.with('commands').first;
-    if (globalEntity) {
-      globalEntity.commands.queue.push({
-        type: 'CREATE_ENTITY',
-        payload: {
-          templateId: templateId,
-          position: { x, y }
-        }
-      });
-      logger.info(`Entity creation requested at (${x}, ${y})`);
-    } else {
-      const entity = entityTemplateRegistry.createEntity(templateId, null, { x, y });
-      if (entity) {
-        logger.info(`Entity created at (${x}, ${y})`, entity);
-        editorManager.selectedEntity = entity;
-      }
-    }
-  } catch (error) {
-    logger.error('Failed to create entity:', error);
-    alert(`创建实体失败: ${error.message}`);
-  }
-};
-
-const handleEntityRightClick = (entity, mouseInfo) => {
-  if (!entity) return;
-
-  const entityName = entity.name || '未命名实体';
-  const entityType = entity.type || '未知类型';
-  const posX = entity.position ? Math.round(entity.position.x) : 'N/A';
-  const posY = entity.position ? Math.round(entity.position.y) : 'N/A';
-  const canDelete = entity.inspector?.allowDelete !== false;
-
-  const menuItems = [
-    {
-      icon: '📋',
-      label: entityName,
-      disabled: true,
-      class: 'menu-header'
-    },
-    {
-      icon: '🏷️',
-      label: `类型: ${entityType}`,
-      disabled: true,
-      class: 'menu-info'
-    },
-    {
-      icon: '📍',
-      label: `位置: X=${posX}, Y=${posY}`,
-      disabled: true,
-      class: 'menu-info'
-    }
-  ];
-
-  if (canDelete) {
-    menuItems.push({
-      icon: '🗑️',
-      label: '删除实体',
-      class: 'danger',
-      action: () => deleteEntity(entity)
-    });
-  } else {
-    menuItems.push({
-      icon: '🔒',
-      label: '此实体禁止删除',
-      disabled: true,
-      class: 'menu-info'
-    });
-  }
-
-  const fakeEvent = {
-    preventDefault: () => {},
-    clientX: mouseInfo.screenX,
-    clientY: mouseInfo.screenY
-  };
-  
-  openContextMenu(fakeEvent, menuItems);
-};
-
-const deleteEntity = (entity) => {
-  if (!entity) return;
-  
-  if (entity.inspector?.allowDelete === false) {
-    alert('该实体禁止删除');
-    return;
-  }
-  
-  const name = entity.name || entity.type || '未命名实体';
-  if (confirm(`确定要删除实体 "${name}" 吗？`)) {
-    const rawEntity = toRaw(entity);
-    const world = world2d.getWorld();
-    
-    const globalEntity = world.with('commands').first;
-    if (globalEntity) {
-      globalEntity.commands.queue.push({
-        type: 'DELETE_ENTITY',
-        payload: { entity: rawEntity }
-      });
-      logger.info('Entity deletion requested:', name);
-    } else {
-      world.remove(rawEntity);
-      logger.info('Entity deleted directly:', name);
-    }
-    
-    editorManager.selectedEntity = null;
   }
 };
 
