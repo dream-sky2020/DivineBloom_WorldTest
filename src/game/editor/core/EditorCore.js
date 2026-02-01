@@ -17,8 +17,7 @@ const PANEL_COMPONENTS = {
     'scene-explorer': defineAsyncComponent(() => import('@/interface/editor/panels/HierarchyPanel.vue')),
     'entity-properties': defineAsyncComponent(() => import('@/interface/editor/panels/InspectorPanel.vue')),
     'scene-manager': defineAsyncComponent(() => import('@/interface/editor/panels/SceneSwitcherPanel.vue')),
-    'entity-creator': defineAsyncComponent(() => import('@/interface/editor/panels/EntityPalettePanel.vue')),
-    'battle-log': defineAsyncComponent(() => import('@/interface/editor/panels/BattleLogPanel.vue'))
+    'entity-creator': defineAsyncComponent(() => import('@/interface/editor/panels/EntityPalettePanel.vue'))
 };
 
 class EditorCore {

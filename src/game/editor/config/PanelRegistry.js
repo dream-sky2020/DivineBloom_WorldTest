@@ -7,8 +7,7 @@ export const PANEL_TITLES = {
     'scene-explorer': '场景浏览器',
     'entity-properties': '属性编辑',
     'scene-manager': '场景管理',
-    'entity-creator': '创建实体',
-    'battle-log': '战斗日志'
+    'entity-creator': '创建实体'
 };
 
 /**
@@ -18,8 +17,7 @@ export const PANEL_ICONS = {
     'scene-explorer': '🔍',
     'entity-properties': '📝',
     'scene-manager': '🗺️',
-    'entity-creator': '➕',
-    'battle-log': '📜'
+    'entity-creator': '➕'
 };
 
 /**
