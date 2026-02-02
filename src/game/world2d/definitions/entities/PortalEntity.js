@@ -1,10 +1,11 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { 
+import {
   DetectArea, DetectInput, Trigger,
   Actions,
   Inspector, EDITOR_INSPECTOR_FIELDS,
-  ShapeType
+  ShapeType,
+  DETECT_AREA_INSPECTOR_FIELDS // Added import
 } from '@components'
 
 // --- Schema Definition ---
@@ -36,28 +37,27 @@ const INSPECTOR_FIELDS = [
   { path: 'name', label: '传送门名称', type: 'text', group: '基本属性' },
   { path: 'position.x', label: '坐标 X', type: 'number', group: '基本属性' },
   { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
-  { path: 'detectArea.width', label: '触发宽度', type: 'number', group: '触发区域' },
-  { path: 'detectArea.height', label: '触发高度', type: 'number', group: '触发区域' },
-  { 
-    path: 'isForced', 
-    label: '强制传送', 
-    type: 'checkbox', 
-    tip: '勾选则触碰即走，不勾选需按交互键', 
+  ...DETECT_AREA_INSPECTOR_FIELDS,
+  {
+    path: 'isForced',
+    label: '强制传送',
+    type: 'checkbox',
+    tip: '勾选则触碰即走，不勾选需按交互键',
     group: '交互逻辑',
     onUpdate: (entity, newValue) => {
       // 同步 Trigger 规则
-      entity.trigger.rules = newValue 
-        ? [{ type: 'onStay' }] 
+      entity.trigger.rules = newValue
+        ? [{ type: 'onStay' }]
         : [{ type: 'onPress', requireArea: true }];
-      
+
       entity.trigger.defaultCooldown = newValue ? 0 : 0.8;
-      
+
       // 同步探测区域目标和颜色
       entity.detectArea.target = newValue ? 'teleportable' : 'player';
-      entity.detectArea.debugColor = newValue 
-        ? 'rgba(168, 85, 247, 0.8)' 
+      entity.detectArea.debugColor = newValue
+        ? 'rgba(168, 85, 247, 0.8)'
         : 'rgba(249, 115, 22, 0.8)';
-      
+
       // 处理交互输入组件
       if (newValue) {
         if (entity.detectInput) world.removeComponent(entity, 'detectInput');
@@ -129,13 +129,13 @@ export const PortalEntity = {
 
   serialize(entity) {
     const { position, detectArea, actionTeleport, name, isForced } = entity
-    
+
     // 防御性检查：确保 detectArea 存在
     if (!detectArea) {
       console.error('[PortalEntity] Cannot serialize: detectArea is undefined', entity)
       return null
     }
-    
+
     const data = {
       type: 'portal',
       x: position?.x ?? 0,
@@ -145,7 +145,7 @@ export const PortalEntity = {
       height: detectArea.height ?? 0,
       isForced: isForced ?? true
     }
-    
+
     if (actionTeleport?.mapId != null && actionTeleport?.entryId != null) {
       data.targetMapId = actionTeleport.mapId
       data.targetEntryId = actionTeleport.entryId

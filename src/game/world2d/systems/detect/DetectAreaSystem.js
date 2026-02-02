@@ -34,6 +34,8 @@ export const DetectAreaSystem = {
           offsetX: detect.offsetX || 0,
           offsetY: detect.offsetY || 0,
           rotation: detect.rotation || 0,
+          p1: detect.p1 || { x: 0, y: 0 },
+          p2: detect.p2 || { x: 0, y: 0 },
           layer: 1, // 确保能通过 CollisionUtils 的 mask 检查
           mask: 1
         }
@@ -48,7 +50,7 @@ export const DetectAreaSystem = {
         if (target === entity) continue // 不探测自己
 
         const detectable = target.detectable
-        
+
         // 标签匹配检查
         const hasMatch = detectable.labels.some(label => requiredSet.has(label))
 

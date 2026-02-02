@@ -11,7 +11,8 @@ import {
   Health, HEALTH_INSPECTOR_FIELDS,
   Weapon, WEAPON_INSPECTOR_FIELDS,
   WeaponIntent,
-  Inspector, EDITOR_INSPECTOR_FIELDS
+  Inspector, EDITOR_INSPECTOR_FIELDS,
+  DETECT_AREA_INSPECTOR_FIELDS // Added import
 } from '@components'
 
 // --- Schema Definition ---
@@ -46,6 +47,7 @@ const INSPECTOR_FIELDS = [
   ...COLLIDER_INSPECTOR_FIELDS,
   ...BOUNDS_INSPECTOR_FIELDS,
   ...SPRITE_INSPECTOR_FIELDS,
+  ...DETECT_AREA_INSPECTOR_FIELDS, // Added detect area fields support
   ...EDITOR_INSPECTOR_FIELDS
 ];
 

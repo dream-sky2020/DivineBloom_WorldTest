@@ -77,11 +77,43 @@ export const DetectAreaRenderSystem = {
                 ctx.save()
                 ctx.translate(centerX, centerY)
                 if (rotation) ctx.rotate(rotation)
-                
+
                 // 绘制矩形 (中心对齐)
-                ctx.fillRect(-w/2, -h/2, w, h)
-                ctx.strokeRect(-w/2, -h/2, w, h)
-                
+                ctx.fillRect(-w / 2, -h / 2, w, h)
+                ctx.strokeRect(-w / 2, -h / 2, w, h)
+
+                ctx.restore()
+            }
+            else if (detectArea.type === ShapeType.CAPSULE) {
+                const { p1, p2, radius, rotation } = detectArea
+                if (!p1 || !p2) return
+
+                const dx = p2.x - p1.x
+                const dy = p2.y - p1.y
+                const length = Math.sqrt(dx * dx + dy * dy)
+                const angle = Math.atan2(dy, dx)
+
+                ctx.save()
+                ctx.translate(centerX, centerY)
+                if (rotation) ctx.rotate(rotation)
+
+                // 移动到胶囊起点
+                ctx.translate(p1.x, p1.y)
+                ctx.rotate(angle)
+
+                ctx.beginPath()
+                // 左半圆
+                ctx.arc(0, 0, radius, -Math.PI / 2, Math.PI / 2, true)
+                // 上边线
+                ctx.lineTo(length, radius)
+                // 右半圆
+                ctx.arc(length, 0, radius, Math.PI / 2, -Math.PI / 2, true)
+                // 下边线闭合
+                ctx.closePath()
+
+                ctx.fill()
+                ctx.stroke()
+
                 ctx.restore()
             }
         }

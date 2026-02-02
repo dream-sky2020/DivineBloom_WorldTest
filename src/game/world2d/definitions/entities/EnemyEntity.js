@@ -11,7 +11,8 @@ import {
   AI,
   Actions,
   Health, HEALTH_INSPECTOR_FIELDS,
-  Inspector, EDITOR_INSPECTOR_FIELDS
+  Inspector, EDITOR_INSPECTOR_FIELDS,
+  DETECT_AREA_INSPECTOR_FIELDS // Added import
 } from '@components'
 
 // --- Schema Definition ---
@@ -59,6 +60,7 @@ const INSPECTOR_FIELDS = [
   ...HEALTH_INSPECTOR_FIELDS,
   { path: 'sprite.id', label: '精灵 ID', type: 'text', tip: '对应资源库中的敌人图片', group: '精灵 (Sprite)' },
   ...SPRITE_INSPECTOR_FIELDS,
+  ...DETECT_AREA_INSPECTOR_FIELDS,
   { path: 'aiConfig.type', label: 'AI 类型', type: 'text', tip: 'chase(追逐), flee(逃跑), patrol(巡逻), idle(静止)', group: 'AI 配置' },
   { path: 'aiConfig.visionRadius', label: '视野半径', type: 'number', tip: '敌人发现目标的距离', props: { min: 0 }, group: 'AI 配置' },
   { path: 'aiConfig.speed', label: '移动速度', type: 'number', props: { step: 10, min: 0 }, group: 'AI 配置' },

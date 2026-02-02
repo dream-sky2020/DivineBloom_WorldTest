@@ -161,7 +161,7 @@
 }
 
 /* 输入框状态 */
-input.readonly-input, 
+input.readonly-input,
 textarea.readonly-input {
   background: transparent !important;
   border-color: transparent !important;
@@ -239,7 +239,8 @@ label {
   color: var(--editor-text-dim);
 }
 
-input {
+input,
+select {
   background: var(--editor-bg-main);
   border: 1px solid var(--editor-border-light);
   border-radius: var(--editor-radius-sm);
@@ -249,7 +250,8 @@ input {
   width: 100%;
 }
 
-input:focus {
+input:focus,
+select:focus {
   outline: none;
   border-color: var(--editor-color-primary);
 }

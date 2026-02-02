@@ -78,13 +78,18 @@ export const Collider = {
  * Collider 通用属性字段，用于编辑器 Inspector 面板
  */
 export const COLLIDER_INSPECTOR_FIELDS = [
-  { path: 'collider.type', label: '类型', type: 'text', props: { disabled: true }, group: '碰撞体 (Collider)' },
-  { path: 'collider.isStatic', label: '静态物体', type: 'boolean', group: '碰撞体 (Collider)' },
-  { path: 'collider.isTrigger', label: '触发器', type: 'boolean', group: '碰撞体 (Collider)' },
-  { path: 'collider.radius', label: '半径', type: 'number', props: { min: 0, step: 1 }, group: '碰撞体 (Collider)' },
-  { path: 'collider.width', label: '宽度', type: 'number', props: { min: 0, step: 1 }, group: '碰撞体 (Collider)' },
-  { path: 'collider.height', label: '高度', type: 'number', props: { min: 0, step: 1 }, group: '碰撞体 (Collider)' },
-  { path: 'collider.offsetX', label: '偏移 X', type: 'number', props: { step: 1 }, group: '碰撞体 (Collider)' },
-  { path: 'collider.offsetY', label: '偏移 Y', type: 'number', props: { step: 1 }, group: '碰撞体 (Collider)' },
-  { path: 'collider.rotation', label: '旋转', type: 'number', props: { step: 1 }, group: '碰撞体 (Collider)' }
+  { path: 'collider.type', label: '碰撞形状', type: 'enum', options: ShapeType, tip: '决定物理判定的几何形状 (Circle:圆形, AABB:轴对齐矩形, OBB:旋转矩形, Capsule:胶囊体)', group: '碰撞体 (Collider)' },
+  { path: 'collider.isStatic', label: '是否静态', type: 'boolean', tip: '静态物体(如墙壁)质量无穷大，不会被推走；动态物体(如角色)会被碰撞推开', group: '碰撞体 (Collider)' },
+  { path: 'collider.isTrigger', label: '是否触发器', type: 'boolean', tip: '勾选后只产生重叠事件(OnTrigger)，不产生物理阻挡(推挤)效果', group: '碰撞体 (Collider)' },
+  { path: 'collider.radius', label: '半径 (Radius)', type: 'number', props: { min: 0, step: 1 }, tip: '[Circle, Capsule] 专用属性，圆形或胶囊体的半径', group: '碰撞体 (Collider)' },
+  { path: 'collider.width', label: '宽度 (Width)', type: 'number', props: { min: 0, step: 1 }, tip: '[AABB, OBB] 专用属性，矩形的宽度', group: '碰撞体 (Collider)' },
+  { path: 'collider.height', label: '高度 (Height)', type: 'number', props: { min: 0, step: 1 }, tip: '[AABB, OBB] 专用属性，矩形的高度', group: '碰撞体 (Collider)' },
+  { path: 'collider.offsetX', label: '中心偏移 X', type: 'number', props: { step: 1 }, tip: '相对于实体坐标(Position)的水平偏移量', group: '碰撞体 (Collider)' },
+  { path: 'collider.offsetY', label: '中心偏移 Y', type: 'number', props: { step: 1 }, tip: '相对于实体坐标(Position)的垂直偏移量', group: '碰撞体 (Collider)' },
+  { path: 'collider.rotation', label: '旋转角度', type: 'number', props: { step: 0.1 }, tip: '[OBB, Capsule] 有效，旋转弧度 (Circle 无效)', group: '碰撞体 (Collider)' },
+  // 补充胶囊体特有属性
+  { path: 'collider.p1.x', label: '胶囊端点1 X', type: 'number', props: { step: 1 }, tip: '[Capsule] 胶囊体线段起点 X (局部坐标)', group: '碰撞体 (Collider)' },
+  { path: 'collider.p1.y', label: '胶囊端点1 Y', type: 'number', props: { step: 1 }, tip: '[Capsule] 胶囊体线段起点 Y (局部坐标)', group: '碰撞体 (Collider)' },
+  { path: 'collider.p2.x', label: '胶囊端点2 X', type: 'number', props: { step: 1 }, tip: '[Capsule] 胶囊体线段终点 X (局部坐标)', group: '碰撞体 (Collider)' },
+  { path: 'collider.p2.y', label: '胶囊端点2 Y', type: 'number', props: { step: 1 }, tip: '[Capsule] 胶囊体线段终点 Y (局部坐标)', group: '碰撞体 (Collider)' }
 ];

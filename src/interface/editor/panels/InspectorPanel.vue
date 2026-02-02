@@ -47,8 +47,8 @@
             </div>
             
             <div v-show="!collapsedGroups[group.name]" class="group-content">
-              <div v-for="field in group.fields" :key="field.path" class="prop-group" :class="{ 'checkbox-group': field.type === 'checkbox' }">
-                <div v-if="field.type !== 'checkbox'" class="label-row">
+              <div v-for="field in group.fields" :key="field.path" class="prop-group" :class="{ 'checkbox-group': field.type === 'checkbox' || field.type === 'boolean' }">
+                <div v-if="field.type !== 'checkbox' && field.type !== 'boolean'" class="label-row">
                   <label>{{ field.label }}</label>
                   <span v-if="field.tip" class="info-icon" :title="field.tip">?</span>
                 </div>
@@ -79,7 +79,7 @@
                 />
 
                 <!-- 布尔/复选框类型 -->
-                <div v-else-if="field.type === 'checkbox'" class="checkbox-container">
+                <div v-else-if="field.type === 'checkbox' || field.type === 'boolean'" class="checkbox-container">
                   <label class="checkbox-label" :class="{ 'is-disabled': activeEditingGroup !== group.name }">
                     <input 
                       :checked="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
@@ -119,6 +119,19 @@
                   type="color"
                   v-bind="field.props"
                 />
+
+                <!-- 枚举/Select 类型 -->
+                <select 
+                  v-else-if="field.type === 'enum' || field.type === 'select'"
+                  :value="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
+                  @change="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, parseSelectValue($event.target.value, field))"
+                  :disabled="activeEditingGroup !== group.name"
+                  v-bind="field.props"
+                >
+                  <option v-for="(opt, idx) in getOptions(field)" :key="idx" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
 
                 <!-- 其他类型占位 -->
                 <div v-else class="unsupported-type">
@@ -541,6 +554,59 @@ const formatNumber = (value, props = {}) => {
     return Number(value.toFixed(3));
   }
   return value;
+}
+
+/**
+ * 获取枚举选项列表
+ * 支持多种格式：
+ * 1. options: ['A', 'B'], values: [0, 1]
+ * 2. options: [{label: 'A', value: 0}, {label: 'B', value: 1}]
+ * 3. options: ['A', 'B'] (值等于标签)
+ * 4. options: { A: 0, B: 1 } (对象键值对)
+ */
+const getOptions = (field) => {
+  if (!field) return [];
+  
+  // 1. 分离的 label 和 value 数组
+  if (Array.isArray(field.options) && Array.isArray(field.values)) {
+    return field.options.map((label, i) => ({ 
+      label, 
+      value: field.values[i] 
+    }));
+  }
+  
+  // 2/3. 数组格式
+  if (Array.isArray(field.options)) {
+    if (field.options.length === 0) return [];
+    
+    // 对象数组 [{label, value}]
+    if (typeof field.options[0] === 'object') {
+      return field.options;
+    }
+    
+    // 字符串数组
+    return field.options.map(o => ({ label: o, value: o }));
+  }
+  
+  // 4. 对象格式 { KEY: value }
+  if (field.options && typeof field.options === 'object') {
+    return Object.entries(field.options).map(([key, val]) => ({ 
+      label: key, 
+      value: val 
+    }));
+  }
+  
+  return [];
+}
+
+/**
+ * 解析 Select 的值
+ * 因为 select change 事件传回的都是字符串，需要根据选项转换回原始类型 (如数字)
+ */
+const parseSelectValue = (domValue, field) => {
+   const options = getOptions(field);
+   const matched = options.find(o => String(o.value) === domValue);
+   return matched ? matched.value : domValue;
 }
 </script>
 

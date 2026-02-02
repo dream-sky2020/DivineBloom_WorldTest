@@ -1,13 +1,14 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { 
+import {
   DetectArea, DetectInput, Trigger,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Bounds, BOUNDS_INSPECTOR_FIELDS,
   Actions,
-  Inspector, EDITOR_INSPECTOR_FIELDS 
+  Inspector, EDITOR_INSPECTOR_FIELDS,
+  DETECT_AREA_INSPECTOR_FIELDS // Added import
 } from '@components'
 
 // --- Schema Definition ---
@@ -33,7 +34,7 @@ const INSPECTOR_FIELDS = [
   ...COLLIDER_INSPECTOR_FIELDS,
   ...BOUNDS_INSPECTOR_FIELDS,
   { path: 'actionDialogue.dialogueId', label: '对话 ID', type: 'text', tip: '对应 dialogues 文件夹中的配置', group: '交互配置' },
-  { path: 'detectArea.radius', label: '交互半径', type: 'number', tip: '玩家靠近多少距离可以触发对话', props: { min: 10 }, group: '交互配置' },
+  ...DETECT_AREA_INSPECTOR_FIELDS,
   { path: 'sprite.id', label: '立绘 ID', type: 'text', group: '精灵 (Sprite)' },
   ...SPRITE_INSPECTOR_FIELDS,
   ...EDITOR_INSPECTOR_FIELDS
