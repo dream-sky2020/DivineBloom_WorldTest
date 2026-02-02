@@ -50,7 +50,8 @@ export const EntityCreator = {
                 x: data.x,
                 y: data.y,
                 name: data.name,
-                scale: data.scale
+                scale: data.scale,
+                weaponConfig: data.weaponConfig // 传递武器配置
             })
         }
 

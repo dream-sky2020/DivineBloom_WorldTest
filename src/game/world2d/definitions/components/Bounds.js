@@ -29,3 +29,13 @@ export function Bounds(minX = 0, maxX = 9999, minY = 0, maxY = 9999) {
   }
   return result.data;
 }
+
+/**
+ * 边界通用属性字段，用于编辑器 Inspector 面板
+ */
+export const BOUNDS_INSPECTOR_FIELDS = [
+  { path: 'bounds.minX', label: '最小 X', type: 'number', props: { step: 10 }, group: '边界 (Bounds)' },
+  { path: 'bounds.maxX', label: '最大 X', type: 'number', props: { step: 10 }, group: '边界 (Bounds)' },
+  { path: 'bounds.minY', label: '最小 Y', type: 'number', props: { step: 10 }, group: '边界 (Bounds)' },
+  { path: 'bounds.maxY', label: '最大 Y', type: 'number', props: { step: 10 }, group: '边界 (Bounds)' }
+];

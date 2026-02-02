@@ -34,3 +34,11 @@ export function LifeTime(maxTime = 3, autoRemove = true) {
   
   return result.data;
 }
+
+/**
+ * LifeTime 通用属性字段，用于编辑器 Inspector 面板
+ */
+export const LIFETIME_INSPECTOR_FIELDS = [
+  { path: 'lifeTime.maxTime', label: '生命周期', type: 'number', tip: '秒', props: { min: 0, step: 0.1 }, group: '生命周期 (LifeTime)' },
+  { path: 'lifeTime.autoRemove', label: '自动删除', type: 'boolean', group: '生命周期 (LifeTime)' }
+];

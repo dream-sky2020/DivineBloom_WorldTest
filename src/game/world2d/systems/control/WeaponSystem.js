@@ -82,7 +82,8 @@ export const WeaponSystem = {
       velocityY: normalizedDir.y * weapon.bulletSpeed,
       damage: weapon.damage,
       color: weapon.bulletColor,
-      radius: weapon.bulletRadius || 2
+      radius: weapon.bulletRadius || 2,
+      maxLifeTime: weapon.bulletLifeTime || 3
     })
     
     // 记录子弹来源（可选，用于避免击中自己）

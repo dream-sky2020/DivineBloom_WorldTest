@@ -1,14 +1,14 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
 import {
-  Velocity,
-  Collider,
+  Velocity, VELOCITY_INSPECTOR_FIELDS,
+  Collider, COLLIDER_INSPECTOR_FIELDS,
   ShapeType,
   Sprite,
   Inspector,
   Projectile,
   DetectProjectile,
-  LifeTime
+  LifeTime, LIFETIME_INSPECTOR_FIELDS
 } from '@components'
 
 export const BulletEntity = {
@@ -77,9 +77,12 @@ export const BulletEntity = {
         fields: [
           { path: 'position.x', label: 'X', type: 'number' },
           { path: 'position.y', label: 'Y', type: 'number' },
+          ...VELOCITY_INSPECTOR_FIELDS,
+          ...COLLIDER_INSPECTOR_FIELDS,
           { path: 'projectile.damage', label: 'Damage', type: 'number' },
           { path: 'projectile.speed', label: 'Speed', type: 'number' },
           { path: 'projectile.maxLifeTime', label: 'Life Time', type: 'number' },
+          ...LIFETIME_INSPECTOR_FIELDS,
           { path: 'sprite.tint', label: 'Color', type: 'color' }
         ]
       })

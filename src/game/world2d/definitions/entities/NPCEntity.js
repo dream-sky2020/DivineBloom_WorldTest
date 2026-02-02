@@ -4,8 +4,8 @@ import {
   DetectArea, DetectInput, Trigger,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
-  Collider,
-  Bounds,
+  Collider, COLLIDER_INSPECTOR_FIELDS,
+  Bounds, BOUNDS_INSPECTOR_FIELDS,
   Actions,
   Inspector, EDITOR_INSPECTOR_FIELDS 
 } from '@components'
@@ -30,6 +30,8 @@ const INSPECTOR_FIELDS = [
   { path: 'name', label: '显示名称', type: 'text', group: '基本属性' },
   { path: 'position.x', label: '坐标 X', type: 'number', props: { step: 1 }, group: '基本属性' },
   { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 }, group: '基本属性' },
+  ...COLLIDER_INSPECTOR_FIELDS,
+  ...BOUNDS_INSPECTOR_FIELDS,
   { path: 'actionDialogue.dialogueId', label: '对话 ID', type: 'text', tip: '对应 dialogues 文件夹中的配置', group: '交互配置' },
   { path: 'detectArea.radius', label: '交互半径', type: 'number', tip: '玩家靠近多少距离可以触发对话', props: { min: 10 }, group: '交互配置' },
   { path: 'sprite.id', label: '立绘 ID', type: 'text', group: '精灵 (Sprite)' },

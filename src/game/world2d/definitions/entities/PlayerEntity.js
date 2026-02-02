@@ -4,9 +4,9 @@ import { PlayerConfig } from '@schema/assets'
 import {
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
-  Velocity,
-  Collider,
-  Bounds,
+  Velocity, VELOCITY_INSPECTOR_FIELDS,
+  Collider, COLLIDER_INSPECTOR_FIELDS,
+  Bounds, BOUNDS_INSPECTOR_FIELDS,
   Detectable,
   Health, HEALTH_INSPECTOR_FIELDS,
   Weapon, WEAPON_INSPECTOR_FIELDS,
@@ -20,7 +20,16 @@ export const PlayerEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
   name: z.string().optional().default('Player'),
-  scale: z.number().optional().default(0.7)
+  scale: z.number().optional().default(0.7),
+  // 允许传入武器配置
+  weaponConfig: z.object({
+    weaponType: z.string().optional(),
+    damage: z.number().optional(),
+    fireRate: z.number().optional(),
+    bulletSpeed: z.number().optional(),
+    bulletColor: z.string().optional(),
+    bulletLifeTime: z.number().optional()
+  }).optional()
 });
 
 // --- Entity Definition ---
@@ -33,6 +42,9 @@ const INSPECTOR_FIELDS = [
   { path: 'fastSpeed', label: '奔跑速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
   ...HEALTH_INSPECTOR_FIELDS,
   ...WEAPON_INSPECTOR_FIELDS,
+  ...VELOCITY_INSPECTOR_FIELDS,
+  ...COLLIDER_INSPECTOR_FIELDS,
+  ...BOUNDS_INSPECTOR_FIELDS,
   ...SPRITE_INSPECTOR_FIELDS,
   ...EDITOR_INSPECTOR_FIELDS
 ];
@@ -45,7 +57,7 @@ export const PlayerEntity = {
       return null;
     }
 
-    const { x, y, name, scale } = result.data;
+    const { x, y, name, scale, weaponConfig } = result.data;
 
     const entity = {
       type: 'player',
@@ -61,11 +73,12 @@ export const PlayerEntity = {
       bounds: Bounds(),
       health: Health.create({ maxHealth: 100, currentHealth: 100 }),
       weapon: Weapon({
-        weaponType: 'pistol',
-        damage: 10,
-        fireRate: 0.5,
-        bulletSpeed: 500,
-        bulletColor: '#FFFF00'
+        weaponType: weaponConfig?.weaponType || 'pistol',
+        damage: weaponConfig?.damage || 10,
+        fireRate: weaponConfig?.fireRate || 0.5,
+        bulletSpeed: weaponConfig?.bulletSpeed || 500,
+        bulletColor: weaponConfig?.bulletColor || '#FFFF00',
+        bulletLifeTime: weaponConfig?.bulletLifeTime || 5
       }),
       weaponIntent: WeaponIntent(),
       sprite: Sprite.create('hero', { scale }),

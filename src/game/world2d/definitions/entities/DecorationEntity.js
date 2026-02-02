@@ -3,7 +3,7 @@ import { world } from '@world2d/world'
 import { 
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
-  Collider,
+  Collider, COLLIDER_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS 
 } from '@components'
 
@@ -44,6 +44,7 @@ const INSPECTOR_FIELDS = [
     { path: 'zIndex', label: '层级', type: 'number', tip: '控制重叠顺序，背景通常在 -50 以下', props: { step: 1 }, group: '深度排序' },
     { path: 'sprite.id', label: '资源 ID', type: 'text', tip: '对应 assets 中的 ID', group: '精灵 (Sprite)' },
     ...SPRITE_INSPECTOR_FIELDS,
+    ...COLLIDER_INSPECTOR_FIELDS,
     ...EDITOR_INSPECTOR_FIELDS
 ];
 

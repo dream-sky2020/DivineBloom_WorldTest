@@ -73,3 +73,18 @@ export const Collider = {
     return this.create({ type: ShapeType.CAPSULE, p1, p2, radius, isStatic });
   }
 };
+
+/**
+ * Collider 通用属性字段，用于编辑器 Inspector 面板
+ */
+export const COLLIDER_INSPECTOR_FIELDS = [
+  { path: 'collider.type', label: '类型', type: 'text', props: { disabled: true }, group: '碰撞体 (Collider)' },
+  { path: 'collider.isStatic', label: '静态物体', type: 'boolean', group: '碰撞体 (Collider)' },
+  { path: 'collider.isTrigger', label: '触发器', type: 'boolean', group: '碰撞体 (Collider)' },
+  { path: 'collider.radius', label: '半径', type: 'number', props: { min: 0, step: 1 }, group: '碰撞体 (Collider)' },
+  { path: 'collider.width', label: '宽度', type: 'number', props: { min: 0, step: 1 }, group: '碰撞体 (Collider)' },
+  { path: 'collider.height', label: '高度', type: 'number', props: { min: 0, step: 1 }, group: '碰撞体 (Collider)' },
+  { path: 'collider.offsetX', label: '偏移 X', type: 'number', props: { step: 1 }, group: '碰撞体 (Collider)' },
+  { path: 'collider.offsetY', label: '偏移 Y', type: 'number', props: { step: 1 }, group: '碰撞体 (Collider)' },
+  { path: 'collider.rotation', label: '旋转', type: 'number', props: { step: 1 }, group: '碰撞体 (Collider)' }
+];

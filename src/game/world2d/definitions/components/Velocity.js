@@ -25,3 +25,11 @@ export function Velocity(x = 0, y = 0) {
   }
   return result.data;
 }
+
+/**
+ * Velocity 通用属性字段，用于编辑器 Inspector 面板
+ */
+export const VELOCITY_INSPECTOR_FIELDS = [
+  { path: 'velocity.x', label: '速度 X', type: 'number', props: { step: 10 }, group: '速度 (Velocity)' },
+  { path: 'velocity.y', label: '速度 Y', type: 'number', props: { step: 10 }, group: '速度 (Velocity)' }
+];
