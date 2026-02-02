@@ -3,7 +3,7 @@ import { world } from '@world2d/world'
 import { 
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
-  Physics,
+  Collider,
   Inspector, EDITOR_INSPECTOR_FIELDS 
 } from '@components'
 
@@ -75,9 +75,9 @@ export const DecorationEntity = {
         }
 
         if (customCollider) {
-            collider = Physics.Collider({ ...customCollider, isStatic: customCollider.isStatic ?? true });
+            collider = Collider.create({ ...customCollider, isStatic: customCollider.isStatic ?? true });
         } else if (rect && !spriteId) {
-            collider = Physics.Box(rect.width, rect.height, true);
+            collider = Collider.box(rect.width, rect.height, true);
         }
 
         const entity = {

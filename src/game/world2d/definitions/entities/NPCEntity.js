@@ -4,7 +4,8 @@ import {
   DetectArea, DetectInput, Trigger,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
-  Physics,
+  Collider,
+  Bounds,
   Actions,
   Inspector, EDITOR_INSPECTOR_FIELDS 
 } from '@components'
@@ -63,8 +64,8 @@ export const NPCEntity = {
 
       actionDialogue: Actions.Dialogue(dialogueId),
       interaction: { type: 'dialogue', id: dialogueId, range: range },
-      collider: Physics.Circle(15, true),
-      bounds: Physics.Bounds(),
+      collider: Collider.circle(15, true),
+      bounds: Bounds(),
       sprite: Sprite.create(spriteId, { scale }),
       animation: Animation.create('default'),
     };

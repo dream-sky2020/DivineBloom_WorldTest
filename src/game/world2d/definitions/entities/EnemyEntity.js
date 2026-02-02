@@ -5,9 +5,12 @@ import {
   DetectArea, Trigger, DetectInput, Detectable,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
-  Physics,
+  Velocity,
+  Collider,
+  Bounds,
   AI,
   Actions,
+  Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS
 } from '@components'
 
@@ -50,6 +53,7 @@ const INSPECTOR_FIELDS = [
   { path: 'name', label: '名称', type: 'text', tip: '敌人在场景中的标识名', group: '基本属性' },
   { path: 'position.x', label: '坐标 X', type: 'number', props: { step: 1 }, group: '基本属性' },
   { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 }, group: '基本属性' },
+  ...HEALTH_INSPECTOR_FIELDS,
   { path: 'sprite.id', label: '精灵 ID', type: 'text', tip: '对应资源库中的敌人图片', group: '精灵 (Sprite)' },
   ...SPRITE_INSPECTOR_FIELDS,
   { path: 'aiConfig.type', label: 'AI 类型', type: 'text', tip: 'chase(追逐), flee(逃跑), patrol(巡逻), idle(静止)', group: 'AI 配置' },
@@ -77,7 +81,7 @@ export const EnemyEntity = {
       type: 'enemy',
       name: name || `Enemy_${visualId}`,
       position: { x, y },
-      velocity: Physics.Velocity(),
+      velocity: Velocity(),
       detectable: Detectable(['enemy', 'teleportable']),
       enemy: true,
 
@@ -89,8 +93,8 @@ export const EnemyEntity = {
 
       actionBattle: Actions.Battle(battleGroup, uuid),
       interaction: { battleGroup, uuid },
-      collider: Physics.Circle(15),
-      bounds: Physics.Bounds(),
+      collider: Collider.circle(15),
+      bounds: Bounds(),
 
       aiConfig: AI.Config(
         options.aiType,
@@ -111,6 +115,7 @@ export const EnemyEntity = {
       ),
 
       aiState: AI.State(isStunned, options.stunnedTimer),
+      health: Health.create({ maxHealth: 100, currentHealth: 100 }),
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create(isStunned ? 'stunned' : 'idle'),
     };

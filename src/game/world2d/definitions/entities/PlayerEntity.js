@@ -4,8 +4,13 @@ import { PlayerConfig } from '@schema/assets'
 import {
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
-  Physics,
+  Velocity,
+  Collider,
+  Bounds,
   Detectable,
+  Health, HEALTH_INSPECTOR_FIELDS,
+  Weapon, WEAPON_INSPECTOR_FIELDS,
+  WeaponIntent,
   Inspector, EDITOR_INSPECTOR_FIELDS
 } from '@components'
 
@@ -26,6 +31,8 @@ const INSPECTOR_FIELDS = [
   { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
   { path: 'speed', label: '基础速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
   { path: 'fastSpeed', label: '奔跑速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
+  ...HEALTH_INSPECTOR_FIELDS,
+  ...WEAPON_INSPECTOR_FIELDS,
   ...SPRITE_INSPECTOR_FIELDS,
   ...EDITOR_INSPECTOR_FIELDS
 ];
@@ -44,14 +51,23 @@ export const PlayerEntity = {
       type: 'player',
       name: name,
       position: { x, y },
-      velocity: Physics.Velocity(),
+      velocity: Velocity(),
       detectable: Detectable(['player', 'teleportable']),
       input: true,
       player: true,
       speed: PlayerConfig.speed || 200,
       fastSpeed: PlayerConfig.fastSpeed || 320,
-      collider: Physics.Circle(12),
-      bounds: Physics.Bounds(),
+      collider: Collider.circle(12),
+      bounds: Bounds(),
+      health: Health.create({ maxHealth: 100, currentHealth: 100 }),
+      weapon: Weapon({
+        weaponType: 'pistol',
+        damage: 10,
+        fireRate: 0.5,
+        bulletSpeed: 500,
+        bulletColor: '#FFFF00'
+      }),
+      weaponIntent: WeaponIntent(),
       sprite: Sprite.create('hero', { scale }),
       animation: Animation.create('idle'),
     };

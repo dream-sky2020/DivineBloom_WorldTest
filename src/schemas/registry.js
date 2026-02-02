@@ -34,9 +34,9 @@ export {
 } from '@components';
 
 export {
-    PhysicsVelocitySchema,
-    PhysicsBoundsSchema,
-    PhysicsColliderSchema
+    VelocitySchema,
+    BoundsSchema,
+    ColliderSchema
 } from '@components';
 
 export {

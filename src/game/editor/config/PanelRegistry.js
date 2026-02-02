@@ -22,10 +22,9 @@ export const PANEL_ICONS = {
 
 /**
  * 面板准入能力要求
+ * 注意：这个配置已废弃，不再用于限制面板访问
+ * 所有编辑器面板现在都可以无条件访问
  */
 export const PANEL_REQUIREMENTS = {
-    'scene-manager': [Capabilities.ECS_EDITING],
-    'entity-creator': [Capabilities.ECS_EDITING],
-    'scene-explorer': [Capabilities.ECS_EDITING, Capabilities.SCENE_TREE],
-    'entity-properties': [Capabilities.ECS_EDITING, Capabilities.ENTITY_INSPECTION]
+    // 已废弃 - 保留仅为兼容性
 };

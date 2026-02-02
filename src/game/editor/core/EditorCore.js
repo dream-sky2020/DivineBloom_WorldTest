@@ -82,14 +82,11 @@ class EditorCore {
 
     /**
      * 检查特定面板在当前状态下是否可用
+     * 注意：始终返回 true，不再根据能力限制面板访问
      */
     isPanelEnabled(panelId) {
-        const capabilities = this.currentCapabilities;
-        const requirements = PANEL_REQUIREMENTS[panelId];
-
-        if (!requirements) return true;
-
-        return requirements.some(cap => capabilities.includes(cap));
+        // 所有面板始终可用，移除能力限制
+        return true;
     }
 
     /**

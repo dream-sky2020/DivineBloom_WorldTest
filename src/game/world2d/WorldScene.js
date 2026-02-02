@@ -64,11 +64,15 @@ export class WorldScene {
                 ],
                 control: [
                     getSystem('player-control'),
-                    getSystem('enemy-control')
+                    getSystem('enemy-control'),
+                    getSystem('weapon')
                 ],
                 physics: [
                     getSystem('movement'),
                     getSystem('collision')
+                ],
+                lifecycle: [
+                    getSystem('lifetime')
                 ],
                 execution: [
                     getSystem('execute')
@@ -261,6 +265,9 @@ export class WorldScene {
                     }
                 })
             })
+
+            // 生命周期管理阶段
+            this.systems.logic.lifecycle.forEach(system => system.update(dt))
 
             // 物理阶段 (优先从 SceneConfig 组件读取动态数据)
             const sceneConfigEntity = world.with('sceneConfig').first;

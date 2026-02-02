@@ -13,6 +13,7 @@ import { CameraSystem } from '@systems/camera/CameraSystem';
 // Control
 import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
 import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
+import { WeaponSystem } from '@systems/control/WeaponSystem';
 
 // Detect
 import { DetectAreaSystem } from '@systems/detect/DetectAreaSystem';
@@ -33,6 +34,9 @@ import { TeleportExecuteSystem } from '@systems/execute/TeleportExecuteSystem';
 // Intent
 import { EnemyAIIntentSystem } from '@systems/intent/EnemyAIIntentSystem';
 import { PlayerIntentSystem } from '@systems/intent/PlayerIntentSystem';
+
+// Lifecycle
+import { LifeTimeSystem } from '@systems/lifecycle/LifeTimeSystem';
 
 // Physics
 import { CollisionSystem } from '@systems/physics/CollisionSystem';
@@ -85,11 +89,15 @@ export const Registry = {
     'movement': MovementSystem,
     'collision': CollisionSystem,
 
+    // --- Lifecycle Management ---
+    'lifetime': LifeTimeSystem,
+
     // --- Intent & Control ---
     'player-intent': PlayerIntentSystem,
     'enemy-ai-intent': EnemyAIIntentSystem,
     'player-control': PlayerControlSystem,
     'enemy-control': EnemyControlSystem,
+    'weapon': WeaponSystem,
 
     // --- Detection & AI Sense ---
     'ai-sense': AISenseSystem,

@@ -185,10 +185,10 @@ const isEditMode = computed(() => editor.editMode);
 const resizingSidebar = ref(null); // Keep for UI class binding if needed, or remove if unused
 
 // Determine if sidebars should be visible
+// 修复：完全由用户手动控制侧边栏显示/隐藏
 const shouldShowSidebars = computed(() => {
-  if (showSidebars.value) return true;
-  if (isEditMode.value) return true;
-  return false;
+  // 直接返回用户的选择，不再强制跟随编辑模式
+  return showSidebars.value;
 });
 
 const canvasContainerStyle = computed(() => {
@@ -209,10 +209,13 @@ watch(() => world2d.state.system, (newSystem) => {
 });
 
 // 同步编辑模式下的侧边栏显示
+// 修复：进入编辑模式时自动显示侧边栏，但退出时保持用户选择的状态
 watch(() => editor.editMode, (newVal) => {
   if (newVal) {
+    // 进入编辑模式时自动显示侧边栏
     showSidebars.value = true;
   }
+  // 注意：退出编辑模式时不自动隐藏，让用户通过按钮控制
   setTimeout(resizeCanvas, 0);
 });
 

@@ -3,7 +3,8 @@ import { world } from '@world2d/world'
 import { 
   DetectArea, DetectInput, Trigger,
   Actions,
-  Inspector, EDITOR_INSPECTOR_FIELDS 
+  Inspector, EDITOR_INSPECTOR_FIELDS,
+  ShapeType
 } from '@components'
 
 // --- Schema Definition ---
@@ -35,8 +36,8 @@ const INSPECTOR_FIELDS = [
   { path: 'name', label: '传送门名称', type: 'text', group: '基本属性' },
   { path: 'position.x', label: '坐标 X', type: 'number', group: '基本属性' },
   { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
-  { path: 'detectArea.size.w', label: '触发宽度', type: 'number', group: '触发区域' },
-  { path: 'detectArea.size.h', label: '触发高度', type: 'number', group: '触发区域' },
+  { path: 'detectArea.width', label: '触发宽度', type: 'number', group: '触发区域' },
+  { path: 'detectArea.height', label: '触发高度', type: 'number', group: '触发区域' },
   { 
     path: 'isForced', 
     label: '强制传送', 
@@ -91,9 +92,11 @@ export const PortalEntity = {
       position: { x, y },
       isForced: isForced,
       detectArea: DetectArea({
-        shape: 'aabb',
-        offset: { x: width / 2, y: height / 2 },
-        size: { w: width, h: height },
+        type: ShapeType.AABB,
+        offsetX: width / 2,
+        offsetY: height / 2,
+        width: width,
+        height: height,
         target: isForced ? 'teleportable' : 'player',
         debugColor: isForced ? 'rgba(168, 85, 247, 0.8)' : 'rgba(249, 115, 22, 0.8)'
       }),
@@ -126,21 +129,29 @@ export const PortalEntity = {
 
   serialize(entity) {
     const { position, detectArea, actionTeleport, name, isForced } = entity
+    
+    // 防御性检查：确保 detectArea 存在
+    if (!detectArea) {
+      console.error('[PortalEntity] Cannot serialize: detectArea is undefined', entity)
+      return null
+    }
+    
     const data = {
       type: 'portal',
-      x: position.x,
-      y: position.y,
+      x: position?.x ?? 0,
+      y: position?.y ?? 0,
       name: name,
-      width: detectArea.size.w,
-      height: detectArea.size.h,
-      isForced: isForced
+      width: detectArea.width ?? 0,
+      height: detectArea.height ?? 0,
+      isForced: isForced ?? true
     }
-    if (actionTeleport.mapId != null && actionTeleport.entryId != null) {
+    
+    if (actionTeleport?.mapId != null && actionTeleport?.entryId != null) {
       data.targetMapId = actionTeleport.mapId
       data.targetEntryId = actionTeleport.entryId
-    } else if (actionTeleport.destinationId != null) {
+    } else if (actionTeleport?.destinationId != null) {
       data.destinationId = actionTeleport.destinationId
-    } else if (actionTeleport.targetX != null && actionTeleport.targetY != null) {
+    } else if (actionTeleport?.targetX != null && actionTeleport?.targetY != null) {
       data.targetX = actionTeleport.targetX
       data.targetY = actionTeleport.targetY
     }

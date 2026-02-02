@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { Physics, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
+import { Collider, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
 
 export const ObstacleEntitySchema = z.object({
   x: z.number(),
@@ -41,7 +41,7 @@ export const ObstacleEntity = {
       type: 'obstacle',
       name: name,
       position: { x, y },
-      collider: Physics.Collider({
+      collider: Collider.create({
         type: shape,
         width: width || (radius ? radius * 2 : 30),
         height: height || (radius ? radius * 2 : 30),

@@ -1,5 +1,7 @@
 import { world } from '@world2d/world'
 import { createLogger } from '@/utils/logger'
+import { CollisionUtils } from '@world2d/ECSCalculateTool/CollisionUtils'
+import { ShapeType } from '@world2d/definitions/enums/Shape'
 
 const logger = createLogger('DetectAreaSystem')
 
@@ -20,6 +22,23 @@ export const DetectAreaSystem = {
       const detect = entity.detectArea
       detect.results = [] // 重置结果
 
+      // 构造 Detector 的临时 Collider
+      // 现在的 DetectArea 结构已与 PhysicsCollider 统一 (扁平化 + type)
+      const detectorProxy = {
+        position: entity.position,
+        collider: {
+          type: detect.type,
+          radius: detect.radius || 0,
+          width: detect.width || 0,
+          height: detect.height || 0,
+          offsetX: detect.offsetX || 0,
+          offsetY: detect.offsetY || 0,
+          rotation: detect.rotation || 0,
+          layer: 1, // 确保能通过 CollisionUtils 的 mask 检查
+          mask: 1
+        }
+      }
+
       // 获取探测器要求的目标标签
       const requiredLabels = Array.isArray(detect.target) ? detect.target : [detect.target]
       const requiredSet = new Set([...requiredLabels, ...(detect.includeTags || [])])
@@ -39,60 +58,37 @@ export const DetectAreaSystem = {
             continue
           }
 
-          // 进行空间检测 (目前 target 视为点，使用其 position)
-          if (this.checkCollision(entity, target, detect)) {
+          // 构造 Target 的临时 Collider
+          // 处理特殊类型 'point' -> 极小圆
+          let targetType = detectable.type;
+          let targetRadius = detectable.radius || 0;
+
+          if (targetType === 'point') {
+            targetType = ShapeType.CIRCLE;
+            targetRadius = 0.1;
+          }
+
+          const targetProxy = {
+            position: target.position,
+            collider: {
+              type: targetType,
+              radius: targetRadius,
+              width: detectable.width || 0,
+              height: detectable.height || 0,
+              offsetX: detectable.offsetX || 0,
+              offsetY: detectable.offsetY || 0,
+              rotation: 0,
+              layer: 1,
+              mask: 1
+            }
+          }
+
+          // 使用 CollisionUtils 进行碰撞/重叠检测
+          if (CollisionUtils.checkCollision(detectorProxy, targetProxy)) {
             detect.results.push(target)
           }
         }
       }
     }
-  },
-
-  checkCollision(detectorEntity, targetEntity, config) {
-    // Type Guards & Defensive Checks
-    if (!detectorEntity.position) {
-      logger.error(`Detector entity missing position! ID: ${detectorEntity.id}`);
-      return false;
-    }
-    if (!targetEntity.position) {
-      logger.error(`Target entity missing position! ID: ${targetEntity.id}`);
-      return false;
-    }
-    if (!config) {
-      logger.error(`Missing config for checkCollision!`);
-      return false;
-    }
-
-    const dPos = detectorEntity.position
-    const tPos = targetEntity.position
-
-    // 计算检测中心点 (加上偏移)
-    const centerX = dPos.x + (config.offset?.x || 0)
-    const centerY = dPos.y + (config.offset?.y || 0)
-
-    if (config.shape === 'circle') {
-      const dx = tPos.x - centerX
-      const dy = tPos.y - centerY
-      const distSq = dx * dx + dy * dy
-      const radiusSq = (config.radius || 0) * (config.radius || 0)
-
-      return distSq <= radiusSq
-    }
-    else if (config.shape === 'aabb' || config.shape === 'rect') { // Support both aabb and rect
-      // 简单的 AABB 检测
-      const halfW = (config.size?.w || 0) / 2
-      const halfH = (config.size?.h || 0) / 2
-
-      // 修正：如果 offset 是中心，那么：
-      const minX = centerX - halfW
-      const maxX = centerX + halfW
-      const minY = centerY - halfH
-      const maxY = centerY + halfH
-
-      return tPos.x >= minX && tPos.x <= maxX &&
-        tPos.y >= minY && tPos.y <= maxY
-    }
-
-    return false
   }
 }

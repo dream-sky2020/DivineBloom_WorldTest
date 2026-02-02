@@ -128,18 +128,29 @@ export const EditorInteractionSystem = {
     }
     // 2. 备选来源：针对无视觉资源但有探测区域的实体（如保底逻辑）
     else if (entity.detectArea) {
-      if (entity.detectArea.size) {
+      // 新扁平结构：直接使用 width/height/radius
+      if (entity.detectArea.width && entity.detectArea.height) {
+        w = entity.detectArea.width;
+        h = entity.detectArea.height;
+        ax = 0.5; ay = 0.5;
+        ox = entity.detectArea.offsetX ?? 0;
+        oy = entity.detectArea.offsetY ?? 0;
+      }
+      // 兼容旧结构：size 对象
+      else if (entity.detectArea.size) {
         w = entity.detectArea.size.w;
         h = entity.detectArea.size.h;
         ax = 0.5; ay = 0.5;
         ox = entity.detectArea.offset?.x ?? 0;
         oy = entity.detectArea.offset?.y ?? 0;
-      } else if (entity.detectArea.radius) {
+      }
+      // 圆形检测区域
+      else if (entity.detectArea.radius) {
         w = entity.detectArea.radius * 2;
         h = entity.detectArea.radius * 2;
         ax = 0.5; ay = 0.5;
-        ox = entity.detectArea.offset?.x ?? 0;
-        oy = entity.detectArea.offset?.y ?? 0;
+        ox = entity.detectArea.offsetX ?? entity.detectArea.offset?.x ?? 0;
+        oy = entity.detectArea.offsetY ?? entity.detectArea.offset?.y ?? 0;
       }
     }
 

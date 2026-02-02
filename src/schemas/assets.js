@@ -25,6 +25,12 @@ export const AssetManifest = {
   'table_3': '/assets/table/table_3.png',
   'table_4': '/assets/table/table_4.png',
 
+  // Particles
+  'particle_1': '/assets/particle/particle_1.png',
+  'particle_2': '/assets/particle/particle_2.png',
+  'particle_3': '/assets/particle/particle_3.png',
+  'particle_4': '/assets/particle/particle_4.png',
+
   // Maps (如果不需要背景图，可以不配，继续用纯色)
   // 'bg_demo': '/assets/maps/demo_bg.png' 
 }

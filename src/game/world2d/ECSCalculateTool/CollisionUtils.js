@@ -265,6 +265,65 @@ export const CollisionUtils = {
   },
 
   /**
+   * 线段 vs 圆形 (用于高速子弹的连续碰撞检测)
+   * @param {Object} p1 - 起点 {x, y}
+   * @param {Object} p2 - 终点 {x, y}
+   * @param {Object} circle - 圆形 {x, y, radius}
+   * @returns {boolean}
+   */
+  checkSegmentCircle(p1, p2, circle) {
+    // 1. 找到线段上离圆心最近的点
+    const closest = this.getClosestPointOnSegment(circle, p1, p2);
+
+    // 2. 检查最近点到圆心的距离平方是否小于半径平方
+    const dx = closest.x - circle.x;
+    const dy = closest.y - circle.y;
+    const distanceSq = dx * dx + dy * dy;
+    return distanceSq <= circle.radius * circle.radius;
+  },
+
+  /**
+   * 线段 vs AABB (用于高速子弹的连续碰撞检测)
+   * @param {Object} p1 - 起点 {x, y}
+   * @param {Object} p2 - 终点 {x, y}
+   * @param {Object} aabb - 矩形 {minX, maxX, minY, maxY}
+   * @returns {boolean}
+   */
+  checkSegmentAABB(p1, p2, aabb) {
+    let tmin = 0, tmax = 1;
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+
+    // 检查 X 轴上的投影重叠
+    if (Math.abs(dx) < 0.000001) {
+      if (p1.x < aabb.minX || p1.x > aabb.maxX) return false;
+    } else {
+      const invDx = 1.0 / dx;
+      let t1 = (aabb.minX - p1.x) * invDx;
+      let t2 = (aabb.maxX - p1.x) * invDx;
+      if (t1 > t2) [t1, t2] = [t2, t1];
+      tmin = Math.max(tmin, t1);
+      tmax = Math.min(tmax, t2);
+      if (tmin > tmax) return false;
+    }
+
+    // 检查 Y 轴上的投影重叠
+    if (Math.abs(dy) < 0.000001) {
+      if (p1.y < aabb.minY || p1.y > aabb.maxY) return false;
+    } else {
+      const invDy = 1.0 / dy;
+      let t1 = (aabb.minY - p1.y) * invDy;
+      let t2 = (aabb.maxY - p1.y) * invDy;
+      if (t1 > t2) [t1, t2] = [t2, t1];
+      tmin = Math.max(tmin, t1);
+      tmax = Math.min(tmax, t2);
+      if (tmin > tmax) return false;
+    }
+
+    return true;
+  },
+
+  /**
    * 自动调度碰撞检测
    */
   checkCollision(entityA, entityB) {

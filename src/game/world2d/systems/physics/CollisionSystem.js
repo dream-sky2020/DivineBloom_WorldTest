@@ -1,5 +1,6 @@
 import { world } from '@world2d/world'
 import { CollisionUtils } from '@world2d/ECSCalculateTool/CollisionUtils'
+import { ShapeType } from '@world2d/definitions/enums/Shape'
 
 /**
  * 自定义碰撞处理系统
@@ -66,7 +67,7 @@ export const CollisionSystem = {
    * 计算碰撞体的粗略包围盒大小
    */
   _getBroadphaseSize(collider) {
-    if (collider.type === 'capsule') {
+    if (collider.type === ShapeType.CAPSULE) {
       // 对于胶囊体，需要考虑线段长度和旋转
       const dx = collider.p2.x - collider.p1.x
       const dy = collider.p2.y - collider.p1.y
@@ -78,12 +79,12 @@ export const CollisionSystem = {
       return capsuleLength
     }
 
-    if (collider.type === 'circle') {
+    if (collider.type === ShapeType.CIRCLE) {
       return collider.radius * 2
     }
 
     // 对于 AABB/OBB，如果有旋转，使用对角线长度
-    if (collider.type === 'obb' && collider.rotation) {
+    if (collider.type === ShapeType.OBB && collider.rotation) {
       const diagonal = Math.sqrt(collider.width * collider.width + collider.height * collider.height)
       return diagonal
     }

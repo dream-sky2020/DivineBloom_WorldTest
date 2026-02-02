@@ -40,6 +40,14 @@ export const PlayerIntentSystem = {
                     wantsToOpenShop: false
                 })
             }
+            
+            // Ensure weapon intent component exists (if entity has weapon)
+            if (entity.weapon && !entity.weaponIntent) {
+                world.addComponent(entity, 'weaponIntent', {
+                    wantsToFire: false,
+                    aimDirection: { x: 1, y: 0 }
+                })
+            }
 
             const raw = entity.rawInput
             const intent = entity.playerIntent
@@ -76,9 +84,27 @@ export const PlayerIntentSystem = {
             intent.wantsToOpenMenu = !!raw.buttons.menu
             intent.wantsToOpenShop = !!raw.buttons.shop
 
+            // 3. Process Weapon Intent (if entity has weapon)
+            if (entity.weaponIntent) {
+                entity.weaponIntent.wantsToFire = !!raw.buttons.attack
+                
+                // 计算瞄准方向（基于移动方向或鼠标位置）
+                if (raw.buttons.attack) {
+                    // 如果有移动输入，朝移动方向射击
+                    if (dx !== 0 || dy !== 0) {
+                        entity.weaponIntent.aimDirection.x = dx
+                        entity.weaponIntent.aimDirection.y = dy
+                    }
+                    // 否则保持上次的射击方向
+                }
+            }
+
             // Debug Log (Optional)
             if (intent.wantsToInteract) {
-                logger.debug(`Interaction Intent Registered! Entity: ${entity.id}`);
+                logger.debug(`Interaction Intent Registered! Entity: ${entity.name || entity.type || 'N/A'}`);
+            }
+            if (entity.weaponIntent?.wantsToFire) {
+                logger.debug(`Fire Intent Registered! Entity: ${entity.name || entity.type || 'N/A'}, Direction: (${entity.weaponIntent.aimDirection.x.toFixed(2)}, ${entity.weaponIntent.aimDirection.y.toFixed(2)})`);
             }
         }
     }

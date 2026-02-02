@@ -261,16 +261,16 @@
               <div class="field">
                 <label>宽度</label>
                 <input 
-                  :value="localEntityState.detectArea?.size?.w" 
-                  @input="localEntityState.detectArea.size.w = Number($event.target.value)"
+                  :value="localEntityState.detectArea?.width ?? localEntityState.detectArea?.size?.w" 
+                  @input="localEntityState.detectArea.width = Number($event.target.value)"
                   type="number" 
                 />
               </div>
               <div class="field">
                 <label>高度</label>
                 <input 
-                  :value="localEntityState.detectArea?.size?.h" 
-                  @input="localEntityState.detectArea.size.h = Number($event.target.value)"
+                  :value="localEntityState.detectArea?.height ?? localEntityState.detectArea?.size?.h" 
+                  @input="localEntityState.detectArea.height = Number($event.target.value)"
                   type="number" 
                 />
               </div>

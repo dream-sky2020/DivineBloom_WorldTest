@@ -1,4 +1,5 @@
 import { world } from '@world2d/world'
+import { ShapeType } from '@world2d/definitions/enums/Shape'
 
 /**
  * 物理调试渲染系统
@@ -27,10 +28,10 @@ export const PhysicsDebugRenderSystem = {
 
       ctx.beginPath()
 
-      if (collider.type === 'circle') {
+      if (collider.type === ShapeType.CIRCLE) {
         ctx.arc(x, y, collider.radius, 0, Math.PI * 2)
       }
-      else if (collider.type === 'aabb' || collider.type === 'obb') {
+      else if (collider.type === ShapeType.AABB || collider.type === ShapeType.OBB) {
         const { width, height, rotation } = collider
         ctx.save()
         ctx.translate(x, y)
@@ -38,7 +39,7 @@ export const PhysicsDebugRenderSystem = {
         ctx.rect(-width / 2, -height / 2, width, height)
         ctx.restore()
       }
-      else if (collider.type === 'capsule') {
+      else if (collider.type === ShapeType.CAPSULE) {
         const { p1, p2, radius, rotation } = collider
 
         // 计算线段的长度和角度（在局部坐标系中）

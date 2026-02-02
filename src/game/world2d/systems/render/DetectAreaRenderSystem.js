@@ -1,4 +1,5 @@
 import { world } from '@world2d/world'
+import { ShapeType } from '@world2d/definitions/enums/Shape'
 
 // ECS 查询: 所有带有 detectArea 和 position 的实体
 const detectors = world.with('detectArea', 'position')
@@ -33,8 +34,9 @@ export const DetectAreaRenderSystem = {
             const { detectArea, position } = entity
 
             // 计算中心点 (加上偏移) - 并转换为屏幕坐标
-            const centerX = (position.x + (detectArea.offset?.x || 0)) - camera.x
-            const centerY = (position.y + (detectArea.offset?.y || 0)) - camera.y
+            // [UPDATED] 适配新的扁平化结构: offsetX, offsetY
+            const centerX = (position.x + (detectArea.offsetX || 0)) - camera.x
+            const centerY = (position.y + (detectArea.offsetY || 0)) - camera.y
 
             // 设置绘制样式
             // 根据是否有检测结果改变颜色 (如果有 detected result 则变红，否则保持默认)
@@ -45,7 +47,7 @@ export const DetectAreaRenderSystem = {
                 ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)' // red-500
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.2)'
             } else if (detectArea.debugColor) {
-                // [NEW] 优先使用组件定义的调试颜色
+                // 优先使用组件定义的调试颜色
                 ctx.strokeStyle = detectArea.debugColor
                 // 自动处理填充色透明度
                 ctx.fillStyle = detectArea.debugColor.replace(/[\d.]+\)$/g, '0.1)')
@@ -56,7 +58,8 @@ export const DetectAreaRenderSystem = {
 
             ctx.lineWidth = 1
 
-            if (detectArea.shape === 'circle') {
+            // [UPDATED] 适配新的 type 枚举
+            if (detectArea.type === ShapeType.CIRCLE) {
                 const radius = detectArea.radius || 0
 
                 ctx.beginPath()
@@ -64,18 +67,22 @@ export const DetectAreaRenderSystem = {
                 ctx.fill()
                 ctx.stroke()
             }
-            else if (detectArea.shape === 'aabb') {
-                const w = detectArea.size?.w || 0
-                const h = detectArea.size?.h || 0
+            else if (detectArea.type === ShapeType.AABB || detectArea.type === ShapeType.OBB) {
+                // [UPDATED] 适配新的 width/height
+                const w = detectArea.width || 0
+                const h = detectArea.height || 0
+                const rotation = detectArea.rotation || 0
 
-                // AABB 通常定义为中心点扩展，或者根据 offset 定义
-                // 在 DetectAreaSystem 中我们使用了 center +/- half size
-                // 这里保持一致
-                const x = centerX - w / 2
-                const y = centerY - h / 2
-
-                ctx.fillRect(x, y, w, h)
-                ctx.strokeRect(x, y, w, h)
+                // AABB/OBB 绘制
+                ctx.save()
+                ctx.translate(centerX, centerY)
+                if (rotation) ctx.rotate(rotation)
+                
+                // 绘制矩形 (中心对齐)
+                ctx.fillRect(-w/2, -h/2, w, h)
+                ctx.strokeRect(-w/2, -h/2, w, h)
+                
+                ctx.restore()
             }
         }
     }

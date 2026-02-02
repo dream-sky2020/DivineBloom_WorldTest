@@ -9,8 +9,21 @@ import {
     ObstacleEntity 
 } from '@entities'
 
+// 临时实体类型列表（不应该被保存到场景文件中）
+const TEMPORARY_ENTITY_TYPES = [
+    'bullet',      // 子弹
+    'particle',    // 粒子效果
+    'vfx',         // 视觉特效
+    // 可以根据需要添加更多临时实体类型
+]
+
 export const EntitySerializer = {
     serialize(entity) {
+        // 过滤掉临时实体（如子弹、粒子等）
+        if (TEMPORARY_ENTITY_TYPES.includes(entity.type)) {
+            return null
+        }
+        
         let data = null
 
         if (entity.type === 'enemy') {
