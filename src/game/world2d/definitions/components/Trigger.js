@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const TriggerRuleSchema = z.object({
-  type: z.enum(['onEnter', 'onLeave', 'onPress', 'onSight', 'onStay']),
+  type: z.enum(['onEnter', 'onExit', 'onStay', 'onPress', 'onSight']),
   requireArea: z.boolean().default(false),
   requireInput: z.boolean().default(false),
   requireEnterOnly: z.boolean().default(false),

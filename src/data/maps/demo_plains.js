@@ -34,16 +34,19 @@ export const demo_plains = {
         {
             // 同地图传送：从北部遗迹传送到南部湖泊 (跨度很大)
             x: 2700, y: 500, w: 80, h: 80,
+            isForced: true,
             destinationId: 'south_lake'
         },
         {
             // 同地图传送：从南部湖泊传送到中心祭坛
             x: 800, y: 2100, w: 60, h: 60,
+            isForced: true,
             destinationId: 'center_altar'
         },
         {
             // 同地图传送：中心祭坛传回出生点 (形成循环)
             x: 1600, y: 1300, w: 60, h: 60,
+            isForced: true,
             destinationId: 'spawn_point'
         },
         {

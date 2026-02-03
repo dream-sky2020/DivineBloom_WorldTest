@@ -41,6 +41,7 @@ import { LifeTimeSystem } from '@systems/lifecycle/LifeTimeSystem';
 // Physics
 import { CollisionSystem } from '@systems/physics/CollisionSystem';
 import { MovementSystem } from '@systems/physics/MovementSystem';
+import { SyncTransformSystem } from '@systems/physics/SyncTransformSystem';
 
 // Render
 import { AIPatrolDebugRenderSystem } from '@systems/render/AIPatrolDebugRenderSystem';
@@ -86,6 +87,7 @@ export const Registry = {
     'camera': CameraSystem,
 
     // --- Physics & Movement ---
+    'sync-transform': SyncTransformSystem,
     'movement': MovementSystem,
     'collision': CollisionSystem,
 

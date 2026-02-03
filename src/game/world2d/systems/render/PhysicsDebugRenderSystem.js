@@ -6,7 +6,9 @@ import { ShapeType } from '@world2d/definitions/enums/Shape'
  * 绘制实体的自定义碰撞体形状
  */
 
-const collidableEntities = world.with('transform', 'collider')
+// [Updated] 现在主要基于 shape 进行渲染，collider 用于样式
+// 仅渲染具有 collider 的实体，这符合“物理调试”的本意
+const collidableEntities = world.with('transform', 'shape', 'collider')
 
 export const PhysicsDebugRenderSystem = {
   LAYER: 110, // 渲染在最顶层
@@ -18,29 +20,33 @@ export const PhysicsDebugRenderSystem = {
     ctx.save()
 
     for (const entity of collidableEntities) {
-      const { transform, collider } = entity
-      const x = transform.x + (collider.offsetX || 0) - camera.x
-      const y = transform.y + (collider.offsetY || 0) - camera.y
+      const { transform, shape, collider } = entity
+      
+      // 计算世界坐标 (使用 shape.offsetX/Y)
+      const x = transform.x + (shape.offsetX || 0) - camera.x
+      const y = transform.y + (shape.offsetY || 0) - camera.y
 
+      // 样式设置: 红色表示静态，青色表示动态
       ctx.strokeStyle = collider.isStatic ? 'rgba(255, 0, 0, 0.8)' : 'rgba(0, 255, 255, 0.8)'
       ctx.fillStyle = collider.isStatic ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 255, 0.2)'
+      
       ctx.lineWidth = 1
 
       ctx.beginPath()
 
-      if (collider.type === ShapeType.CIRCLE) {
-        ctx.arc(x, y, collider.radius, 0, Math.PI * 2)
+      if (shape.type === ShapeType.CIRCLE) {
+        ctx.arc(x, y, shape.radius, 0, Math.PI * 2)
       }
-      else if (collider.type === ShapeType.AABB || collider.type === ShapeType.OBB) {
-        const { width, height, rotation } = collider
+      else if (shape.type === ShapeType.AABB || shape.type === ShapeType.OBB) {
+        const { width, height, rotation } = shape
         ctx.save()
         ctx.translate(x, y)
         if (rotation) ctx.rotate(rotation)
         ctx.rect(-width / 2, -height / 2, width, height)
         ctx.restore()
       }
-      else if (collider.type === ShapeType.CAPSULE) {
-        const { p1, p2, radius, rotation } = collider
+      else if (shape.type === ShapeType.CAPSULE) {
+        const { p1, p2, radius, rotation } = shape
 
         // 计算线段的长度和角度（在局部坐标系中）
         const dx = p2.x - p1.x
@@ -49,7 +55,7 @@ export const PhysicsDebugRenderSystem = {
         const length = Math.sqrt(dx * dx + dy * dy)
 
         ctx.save()
-        ctx.translate(x, y)                 // 1. 移动到实体中心
+        ctx.translate(x, y)                 // 1. 移动到中心偏移点
         if (rotation) ctx.rotate(rotation)  // 2. 应用整体旋转
         ctx.translate(p1.x, p1.y)           // 3. 移动到胶囊起始点（局部坐标）
         ctx.rotate(angle)                   // 4. 旋转到胶囊方向

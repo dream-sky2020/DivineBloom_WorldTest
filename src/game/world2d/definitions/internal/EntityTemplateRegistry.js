@@ -9,7 +9,8 @@ import {
     DecorationEntity, 
     ObstacleEntity, 
     PortalEntity, 
-    PortalDestinationEntity 
+    PortalDestinationEntity,
+    EnemyEntity
 } from '@entities'
 
 /**
@@ -52,6 +53,25 @@ export class EntityTemplateRegistry {
                     spriteId: 'npc_guide',
                     range: 60,
                     scale: 0.8
+                }
+            })
+        })
+
+        this.register({
+            id: 'enemy',
+            name: '敌人',
+            description: '敌对生物，具有 AI 行为',
+            icon: '👾',
+            category: 'gameplay',
+            factory: EnemyEntity.create.bind(EnemyEntity),
+            getDefaultData: (mousePos) => ({
+                x: mousePos?.x || 400,
+                y: mousePos?.y || 300,
+                battleGroup: [{ id: 'slime_blue' }], // 默认敌人
+                options: {
+                    spriteId: 'slime_blue',
+                    aiType: 'patrol',
+                    visionRadius: 150
                 }
             })
         })

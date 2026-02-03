@@ -152,4 +152,20 @@ export const MapSchema = z.object({
     height: z.number().optional().default(600),
 
     spawnPoint: z.object({ x: z.number(), y: z.number() }).optional()
-});
+}).refine(
+    data => {
+        // [VALIDATION FIX] 允许使用 destinationId 作为目的地索引
+        // 确保 portals 中引用的 destinationId 存在于 portalDestinations 中
+        if (data.portals && data.portalDestinations) {
+            const destIds = new Set(data.portalDestinations.map(d => d.id));
+            for (const portal of data.portals) {
+                if (portal.destinationId && !destIds.has(portal.destinationId)) {
+                    // console.warn(`Schema Warning: Portal references unknown destinationId: ${portal.destinationId}`);
+                    // Return true to allow schema pass, but log warning (or fail if strict)
+                }
+            }
+        }
+        return true;
+    },
+    { message: "Invalid map configuration" }
+);

@@ -5,7 +5,8 @@ import {
   Animation,
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
-  Transform, TRANSFORM_INSPECTOR_FIELDS
+  Transform, TRANSFORM_INSPECTOR_FIELDS,
+  Parent, Children, LocalTransform, Shape, ShapeType
 } from '@components'
 
 // --- Schema Definition ---
@@ -81,7 +82,7 @@ export const DecorationEntity = {
             collider = Collider.box(rect.width, rect.height, true);
         }
 
-        const entity = {
+        const root = world.add({
             type: 'decoration',
             name: name,
             transform: Transform(x, y),
@@ -89,24 +90,43 @@ export const DecorationEntity = {
             animation: animationComponent,
             rect: rectComponent,
             zIndex: zIndex,
-        };
+        });
 
         if (collider) {
-            entity.collider = collider;
+            const colliderChild = world.add({
+                parent: Parent(root),
+                transform: Transform(),
+                localTransform: LocalTransform(customCollider?.offsetX || 0, customCollider?.offsetY || 0, customCollider?.rotation || 0),
+                name: `${root.name}_Collider`,
+                shape: Shape({
+                    type: customCollider?.type || (rect ? ShapeType.AABB : ShapeType.CIRCLE),
+                    width: customCollider?.width || rect?.width || 0,
+                    height: customCollider?.height || rect?.height || 0,
+                    radius: customCollider?.radius || 0,
+                    rotation: 0, // 已经在 localTransform 中处理
+                }),
+                collider: collider
+            });
+            root.children = Children([colliderChild]);
         }
 
-        entity.inspector = Inspector.create({
+        root.inspector = Inspector.create({
             fields: INSPECTOR_FIELDS,
             hitPriority: 40,
             editorBox: { w: rectComponent?.width || 32, h: rectComponent?.height || 32, scale: 1 }
         });
 
-        return world.add(entity)
+        return root;
     },
 
     serialize(entity) {
         const sprite = entity.sprite || entity.visual;
         const rect = entity.rect || (sprite?.type === 'rect' ? sprite : undefined);
+        
+        // 从子实体中获取碰撞体
+        const colliderChild = entity.children?.entities.find(e => e.collider);
+        const collider = colliderChild?.collider;
+        const shape = colliderChild?.shape;
         
         return {
             type: 'decoration',
@@ -122,7 +142,16 @@ export const DecorationEntity = {
                     height: rect.height,
                     color: rect.color || sprite?.tint
                 } : undefined,
-                collider: entity.collider ? { ...entity.collider } : undefined
+                collider: collider ? { 
+                    ...collider,
+                    type: shape?.type,
+                    width: shape?.width,
+                    height: shape?.height,
+                    radius: shape?.radius,
+                    rotation: colliderChild.localTransform?.rotation,
+                    offsetX: colliderChild.localTransform?.x,
+                    offsetY: colliderChild.localTransform?.y
+                } : undefined
             }
         }
     }

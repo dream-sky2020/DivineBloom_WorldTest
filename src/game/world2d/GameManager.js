@@ -184,8 +184,41 @@ class GameManager {
         }
 
         // --- Bootstrap First Scene ---
-        const mapData = await getMapData(mapId)
-        if (!mapData) throw new Error(`Map not found: ${mapId}`)
+        let mapData = await getMapData(mapId)
+        
+        // [FALLBACK] If map not found (e.g. blank start), create a default empty scene
+        if (!mapData) {
+            // Check if we have dynamic state
+            worldStore.loadMap(mapId);
+            const persisted = worldStore.currentMapState;
+            
+            if (persisted && persisted.header && persisted.header.config) {
+                mapData = persisted.header.config;
+            } else {
+                 logger.warn(`Map not found: ${mapId}. Creating default empty scene.`);
+                 mapData = {
+                    id: mapId,
+                    name: 'Empty Scene',
+                    width: 2000,
+                    height: 2000,
+                    background: {
+                        groundColor: '#333333'
+                    },
+                    entities: [] // Empty entities list
+                };
+                
+                // 🎯 [FIX] 自动注册动态生成的地图到 worldStore，确保它出现在场景列表中
+                if (!worldStore.worldStates[mapId]) {
+                    worldStore.worldStates[mapId] = {
+                        header: {
+                            version: '1.1.0',
+                            config: mapData
+                        },
+                        entities: []
+                    };
+                }
+            }
+        }
 
         // 创建场景实例（只初始化，不创建实体）
         const scene = new WorldScene(

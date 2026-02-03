@@ -77,15 +77,18 @@ export const PortalDebugRenderSystem = {
      */
     _drawPortalConnections(ctx, camera) {
         for (const entity of portals) {
-            const { actionTeleport, transform, detectArea } = entity
+            const { actionTeleport, transform, children } = entity
             const { mapId, destinationId, targetX, targetY } = actionTeleport
 
             // 仅渲染同地图传送的连线
             if (mapId != null) continue
 
             // 1. 确定起点（传送门中心）
-            const startX = transform.x + (detectArea?.offset?.x || 0)
-            const startY = transform.y + (detectArea?.offset?.y || 0)
+            // [Updated] 由于现在 detectArea 在子实体上，我们需要找到那个子实体
+            const sensor = children?.entities.find(e => e.detectArea);
+            const startX = sensor ? sensor.transform.x : transform.x;
+            const startY = sensor ? sensor.transform.y : transform.y;
+            const debugColor = sensor?.detectArea?.debugColor || 'rgba(168, 85, 247, 0.6)';
 
             // 2. 确定终点
             let destX, destY
@@ -113,7 +116,7 @@ export const PortalDebugRenderSystem = {
             ctx.lineTo(tX, tY)
             
             // 优先使用实体自带的 debugColor，否则使用默认紫色
-            ctx.strokeStyle = detectArea?.debugColor || 'rgba(168, 85, 247, 0.6)'
+            ctx.strokeStyle = debugColor
             ctx.lineWidth = 2
             ctx.stroke()
 

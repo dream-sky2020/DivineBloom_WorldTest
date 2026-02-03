@@ -2,6 +2,8 @@
  * SteeringTool
  * 提供基于 Context Steering (上下文转向) 的避障和移动逻辑
  */
+import { ShapeType } from '../definitions/enums/Shape';
+
 export const SteeringTool = {
   // 预定义 8 个检测方向 (时钟拨盘式)
   DIRECTIONS: [
@@ -50,16 +52,23 @@ export const SteeringTool = {
 
     // 3. 计算危险值 (Danger Map)
     obstacles.forEach(obs => {
-      const obsPos = obs.transform;
-      const collider = obs.collider;
+      // [Updated] 优先使用主实体位置，如果不可用(如纯子实体)尝试获取世界坐标
+      let obsPos = obs.transform;
+      if (!obsPos && obs.parent && obs.parent.entity) {
+          obsPos = obs.parent.entity.transform;
+      }
+      if (!obsPos) return;
+
+      // [Updated] Shape 已经是单一对象，不再需要查找 Map
+      const shape = obs.shape;
       
       // 简化处理：将障碍物视为圆形或找到最近点
       let closestX = obsPos.x;
       let closestY = obsPos.y;
 
-      if (collider && collider.type === 'aabb') {
-        const halfW = collider.width / 2;
-        const halfH = collider.height / 2;
+      if (shape && (shape.type === ShapeType.AABB || shape.type === ShapeType.OBB)) {
+        const halfW = shape.width / 2;
+        const halfH = shape.height / 2;
         // 找到矩形上距离当前位置最近的点
         closestX = Math.max(obsPos.x - halfW, Math.min(currentPos.x, obsPos.x + halfW));
         closestY = Math.max(obsPos.y - halfH, Math.min(currentPos.y, obsPos.y + halfH));

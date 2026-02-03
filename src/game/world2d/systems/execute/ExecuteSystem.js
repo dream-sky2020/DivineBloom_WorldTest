@@ -170,6 +170,15 @@ export const ExecuteSystem = {
       editorInteraction.selectedEntity = null;
     }
 
+    // [New] 递归删除子实体
+    if (entity.children && Array.isArray(entity.children.entities)) {
+      for (const child of entity.children.entities) {
+        if (world.entities.includes(child)) {
+          world.remove(child);
+        }
+      }
+    }
+
     world.remove(entity);
   },
 

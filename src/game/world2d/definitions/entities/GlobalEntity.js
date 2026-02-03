@@ -21,12 +21,18 @@ export const GlobalEntitySchema = z.object({
     inputState: z.object({
         lastPressed: z.record(z.string(), z.boolean()).default({})
     }).optional().default({ lastPressed: {} }),
+    editor: z.object({
+        isEditMode: z.boolean().default(false),
+        cameraSpeed: z.number().default(10)
+    }).optional().default({ isEditMode: false, cameraSpeed: 10 }),
     timer: TimerSchema.optional().default({ totalTime: 0, running: true })
 });
 
 // --- Entity Definition ---
 
 const INSPECTOR_FIELDS = [
+    { path: 'editor.isEditMode', label: '编辑模式', type: 'checkbox', tip: '开启后可自由移动相机', group: '编辑器' },
+    { path: 'editor.cameraSpeed', label: '相机速度', type: 'number', props: { step: 1, min: 1 }, group: '编辑器' },
     { path: 'timer.totalTime', label: '运行总时长', type: 'number', tip: '场景运行的累计秒数', props: { readonly: true, step: 0.001 }, group: '时间控制' },
     { path: 'timer.running', label: '启用计时器', type: 'checkbox', tip: '控制场景时间的流动', group: '时间控制' },
     { path: 'camera.x', label: '相机位置 X', type: 'number', props: { step: 1 }, group: '相机设置' },
@@ -46,7 +52,7 @@ export const GlobalEntity = {
             return null;
         }
 
-        const { /* pendingBattleResult, */ camera: cameraData, inputState, timer: timerData } = result.data;
+        const { /* pendingBattleResult, */ camera: cameraData, inputState, timer: timerData, editor: editorData } = result.data;
 
         const existing = world.with('globalManager').first;
         if (existing) {
@@ -60,6 +66,7 @@ export const GlobalEntity = {
             persist: true,
             camera: Camera.create(cameraData || {}),
             inputState: inputState,
+            editor: editorData, // 直接使用验证后的数据
             timer: Timer.create(timerData),
             mousePosition: MousePosition.create(),
             commands: Commands.create()
@@ -87,6 +94,7 @@ export const GlobalEntity = {
         // if (entity.battleResult) data.pendingBattleResult = entity.battleResult; // 暂时禁用，等待战斗系统实现
         if (entity.camera) data.camera = { ...entity.camera };
         if (entity.inputState) data.inputState = entity.inputState;
+        if (entity.editor) data.editor = { ...entity.editor };
         if (entity.timer) data.timer = { ...entity.timer };
         return data;
     }

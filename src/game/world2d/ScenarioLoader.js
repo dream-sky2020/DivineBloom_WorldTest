@@ -208,6 +208,15 @@ export class ScenarioLoader {
                     x: portal.x, y: portal.y, name: portal.name,
                     width: portal.w, height: portal.h,
                     isForced: portal.isForced,
+                    // 确保传递所有传送相关参数
+                    actionTeleport: {
+                        mapId: portal.targetMapId,
+                        entryId: portal.targetEntryId,
+                        destinationId: portal.destinationId,
+                        targetX: portal.targetX,
+                        targetY: portal.targetY
+                    },
+                    // 为了兼容旧逻辑，也直接传递这些字段（PortalEntity.create 会优先使用 actionTeleport 或者从 root 属性解构）
                     targetMapId: portal.targetMapId,
                     targetEntryId: portal.targetEntryId,
                     destinationId: portal.destinationId,

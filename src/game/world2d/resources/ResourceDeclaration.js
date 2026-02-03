@@ -72,8 +72,9 @@ export class ResourceDeclaration {
             if (entity.globalManager) continue
 
             // 收集视觉资源
-            if (entity.visual && entity.visual.id) {
-                visualIds.add(entity.visual.id)
+            const visualId = entity.sprite?.id || entity.visual?.id
+            if (visualId) {
+                visualIds.add(visualId)
             }
         }
 

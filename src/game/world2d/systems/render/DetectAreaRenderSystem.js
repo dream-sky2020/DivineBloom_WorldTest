@@ -1,8 +1,8 @@
 import { world } from '@world2d/world'
 import { ShapeType } from '@world2d/definitions/enums/Shape'
 
-// ECS 查询: 所有带有 detectArea 和 position 的实体
-const detectors = world.with('detectArea', 'transform')
+// ECS 查询: 所有带有 detectArea 和 shape 的实体 (可能是主实体或子实体)
+const detectors = world.with('detectArea', 'shape')
 
 export const DetectAreaRenderSystem = {
     // 定义渲染层级 (Z-Index) - Debug 层通常最高
@@ -29,14 +29,13 @@ export const DetectAreaRenderSystem = {
 
         for (const entity of detectors) {
             // Defensive Check
-            if (!entity.detectArea || !entity.transform) continue;
-
-            const { detectArea, transform } = entity
+            const { detectArea, shape, transform } = entity;
+            if (!detectArea || !shape || !transform) continue;
 
             // 计算中心点 (加上偏移) - 并转换为屏幕坐标
-            // [UPDATED] 适配新的扁平化结构: offsetX, offsetY
-            const centerX = (transform.x + (detectArea.offsetX || 0)) - camera.x
-            const centerY = (transform.y + (detectArea.offsetY || 0)) - camera.y
+            // [UPDATED] 从 shape 获取偏移
+            const centerX = (transform.x + (shape.offsetX || 0)) - camera.x
+            const centerY = (transform.y + (shape.offsetY || 0)) - camera.y
 
             // 设置绘制样式
             // 根据是否有检测结果改变颜色 (如果有 detected result 则变红，否则保持默认)
@@ -58,20 +57,19 @@ export const DetectAreaRenderSystem = {
 
             ctx.lineWidth = 1
 
-            // [UPDATED] 适配新的 type 枚举
-            if (detectArea.type === ShapeType.CIRCLE) {
-                const radius = detectArea.radius || 0
+            // [UPDATED] 从 shape 获取几何信息
+            if (shape.type === ShapeType.CIRCLE || shape.type === ShapeType.POINT) {
+                const radius = shape.radius || (shape.type === ShapeType.POINT ? 0.1 : 0)
 
                 ctx.beginPath()
                 ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
                 ctx.fill()
                 ctx.stroke()
             }
-            else if (detectArea.type === ShapeType.AABB || detectArea.type === ShapeType.OBB) {
-                // [UPDATED] 适配新的 width/height
-                const w = detectArea.width || 0
-                const h = detectArea.height || 0
-                const rotation = detectArea.rotation || 0
+            else if (shape.type === ShapeType.AABB || shape.type === ShapeType.OBB) {
+                const w = shape.width || 0
+                const h = shape.height || 0
+                const rotation = shape.rotation || 0
 
                 // AABB/OBB 绘制
                 ctx.save()
@@ -84,8 +82,8 @@ export const DetectAreaRenderSystem = {
 
                 ctx.restore()
             }
-            else if (detectArea.type === ShapeType.CAPSULE) {
-                const { p1, p2, radius, rotation } = detectArea
+            else if (shape.type === ShapeType.CAPSULE) {
+                const { p1, p2, radius, rotation } = shape
                 if (!p1 || !p2) return
 
                 const dx = p2.x - p1.x

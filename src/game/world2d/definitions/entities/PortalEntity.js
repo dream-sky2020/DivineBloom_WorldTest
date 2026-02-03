@@ -7,7 +7,7 @@ import {
   ShapeType,
   DETECT_AREA_INSPECTOR_FIELDS,
   TRANSFORM_INSPECTOR_FIELDS,
-  Transform
+  Transform, Parent, Children, LocalTransform, Shape
 } from '@components'
 
 // --- Schema Definition ---
@@ -54,7 +54,7 @@ const INSPECTOR_FIELDS = [
       entity.trigger.defaultCooldown = newValue ? 0 : 0.8;
 
       // 同步探测区域目标和颜色
-      entity.detectArea.target = newValue ? 'teleportable' : 'player';
+      entity.detectArea.target = 'player'; // Always target player to avoid enemies triggering portals
       entity.detectArea.debugColor = newValue
         ? 'rgba(168, 85, 247, 0.8)'
         : 'rgba(249, 115, 22, 0.8)';
@@ -87,24 +87,15 @@ export const PortalEntity = {
 
     let portalName = name || (isCrossMap ? `To_${targetMapId}_${targetEntryId}` : destinationId ? `To_${destinationId}` : `Teleport_${targetX}_${targetY}`);
 
-    const entity = {
+    const root = world.add({
       type: 'portal',
       name: portalName,
       transform: Transform(x, y),
       isForced: isForced,
-      detectArea: DetectArea({
-        type: ShapeType.AABB,
-        offsetX: width / 2,
-        offsetY: height / 2,
-        width: width,
-        height: height,
-        target: isForced ? 'teleportable' : 'player',
-        debugColor: isForced ? 'rgba(168, 85, 247, 0.8)' : 'rgba(249, 115, 22, 0.8)'
-      }),
       trigger: Trigger({
-        rules: isForced ? [{ type: 'onStay' }] : [{ type: 'onPress', requireArea: true }],
+        rules: isForced ? [{ type: 'onEnter' }] : [{ type: 'onPress', requireArea: true }],
         actions: ['TELEPORT'],
-        defaultCooldown: isForced ? 0 : 0.8
+        defaultCooldown: isForced ? 0.5 : 0.8 // 增加默认冷却防止重复触发
       }),
       actionTeleport: Actions.Teleport(
         isCrossMap ? targetMapId : undefined,
@@ -113,37 +104,55 @@ export const PortalEntity = {
         isLocalTeleport && targetX != null ? targetX : undefined,
         isLocalTeleport && targetY != null ? targetY : undefined
       ),
-    };
+    });
 
     if (!isForced) {
-      entity.detectInput = DetectInput({ keys: ['Interact'] });
+      world.addComponent(root, 'detectInput', DetectInput({ keys: ['Interact'] }));
     }
 
-    entity.inspector = Inspector.create({
+    // Sensor Child (Detection Only)
+    const sensor = world.add({
+        parent: Parent(root),
+        transform: Transform(),
+        localTransform: LocalTransform(width / 2, height / 2),
+        name: `${root.name}_Sensor`,
+        shape: Shape({
+            type: ShapeType.AABB,
+            width: width,
+            height: height,
+        }),
+        detectArea: DetectArea({
+            shapeId: 'sensor',
+            target: 'player', // Always target player
+            debugColor: isForced ? 'rgba(168, 85, 247, 0.8)' : 'rgba(249, 115, 22, 0.8)'
+        })
+    });
+
+    root.children = Children([sensor]);
+
+    root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
       hitPriority: 70,
       editorBox: { w: width, h: height, anchorX: 0, anchorY: 0 }
     });
 
-    return world.add(entity);
+    return root;
   },
 
   serialize(entity) {
-    const { transform, detectArea, actionTeleport, name, isForced } = entity
-
-    // 防御性检查：确保 detectArea 存在
-    if (!detectArea) {
-      console.error('[PortalEntity] Cannot serialize: detectArea is undefined', entity)
-      return null
-    }
+    const { transform, actionTeleport, name, isForced, children } = entity
+    
+    // 从子实体中获取探测区域尺寸
+    const sensor = children?.entities.find(e => e.detectArea);
+    const shape = sensor?.shape;
 
     const data = {
       type: 'portal',
       x: transform?.x ?? 0,
       y: transform?.y ?? 0,
       name: name,
-      width: detectArea.width ?? 0,
-      height: detectArea.height ?? 0,
+      width: shape?.width ?? 0,
+      height: shape?.height ?? 0,
       isForced: isForced ?? true
     }
 

@@ -6,5 +6,6 @@ export const ShapeType = {
   CIRCLE: 'circle',
   AABB: 'aabb',
   OBB: 'obb',         // 旋转矩形
-  CAPSULE: 'capsule'
+  CAPSULE: 'capsule',
+  POINT: 'point'      // 点 (极小圆)
 };

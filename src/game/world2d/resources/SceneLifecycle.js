@@ -141,16 +141,17 @@ export class SceneLifecycle {
             // 跳过全局管理器
             if (entity.globalManager) continue
 
-            if (entity.visual && entity.visual.id) {
-                const visualDef = VisualDefs[entity.visual.id]
+            const visualId = entity.sprite?.id || entity.visual?.id
+            if (visualId) {
+                const visualDef = VisualDefs[visualId]
                 if (!visualDef) {
-                    logger.warn(`❌ Missing visual definition: ${entity.visual.id} (entity: ${entity.name || entity.type})`)
+                    logger.warn(`❌ Missing visual definition: ${visualId} (entity: ${entity.name || entity.type})`)
                     continue
                 }
 
                 const assetId = visualDef.assetId
                 if (!assetId) {
-                    logger.warn(`❌ Visual definition has no assetId: ${entity.visual.id}`)
+                    logger.warn(`❌ Visual definition has no assetId: ${visualId}`)
                     continue
                 }
 
@@ -164,14 +165,14 @@ export class SceneLifecycle {
                         entityId: entity.id,
                         entityType: entity.type,
                         entityName: entity.name,
-                        visualId: entity.visual.id,
+                        visualId: visualId,
                         assetId: assetId
                     })
                 } else if (!texture && isLoading) {
                     // 正在加载中
                     loading.push({
                         entityId: entity.id,
-                        visualId: entity.visual.id,
+                        visualId: visualId,
                         assetId: assetId
                     })
                 } else {

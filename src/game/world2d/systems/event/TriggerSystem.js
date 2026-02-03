@@ -3,222 +3,201 @@ import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('TriggerSystem')
 
-let debugDumped = false
+/**
+ * 规则运行状态追踪 (内部使用，避免污染组件数据)
+ * 结构: Map<entity, Array<ruleState>>
+ */
+const ruleRuntimeStates = new WeakMap();
 
 /**
- * TriggerSystem
- * 决策核心
- * 输入: DetectArea, DetectInput 的运行时数据
- * 输出: 向 ActionQueue 推送执行请求
+ * 插件化规则处理器注册表
+ */
+const RuleHandlers = {
+  /**
+   * 基础区域进入检测
+   */
+  onEnter: (context) => {
+    const { isInside, lastInside } = context.state;
+    return isInside && !lastInside;
+  },
+
+  /**
+   * 基础区域离开检测
+   */
+  onExit: (context) => {
+    const { isInside, lastInside } = context.state;
+    return !isInside && lastInside;
+  },
+
+  /**
+   * 持续在区域内检测
+   */
+  onStay: (context) => {
+    return context.state.isInside;
+  },
+
+  /**
+   * 按键按下检测
+   */
+  onPress: (context) => {
+    const { detectInput, rule } = context;
+    if (!detectInput) return false;
+
+    const inputTriggered = detectInput.justPressed;
+    
+    // 如果规则要求必须在区域内
+    if (rule.requireArea) {
+      return inputTriggered && context.state.isInside;
+    }
+
+    return inputTriggered;
+  }
+};
+
+/**
+ * 升级版 TriggerSystem
  */
 export const TriggerSystem = {
   update(dt) {
-    const triggers = world.with('trigger')
-
-    // Debug System Heartbeat (Low frequency)
-    if (Math.random() < 0.005) {
-      logger.debug(`Heartbeat. Triggers count: ${[...triggers].length}`)
-    }
-
-    // ONCE PER SESSION DEBUG DUMP
-    if (!debugDumped && [...triggers].length > 0) {
-      // logger.debug('[TriggerSystem] INITIAL TRIGGER DUMP');
-      for (const entity of triggers) {
-        // Defensive check inside debug loop
-        if (!entity.trigger) {
-          logger.error(`Entity ${entity.id} has 'trigger' tag but component is missing!`);
-          continue;
-        }
-        const t = entity.trigger;
-        // logger.debug(`Entity [${entity.type}] ID:${entity.id || 'N/A'}`);
-        // Direct access to flat properties
-        // logger.debug(`  State: Active=${t.active}, Cooldown=${t.cooldownTimer}, OneShotExec=${t.oneShotExecuted}`);
-        // logger.debug(`  Rules:`, JSON.stringify(t.rules));
-        // logger.debug(`  Actions:`, JSON.stringify(t.actions));
-      }
-      // console.groupEnd();
-      debugDumped = true;
-    }
+    const triggers = world.with('trigger');
 
     for (const entity of triggers) {
-      const trigger = entity.trigger
+      const trigger = entity.trigger;
 
-      // Defensive Check: Component Existence
-      if (!trigger) {
-        logger.warn(`Missing trigger component on entity ${entity.id || 'N/A'}`);
-        continue;
-      }
-
-      // 1. 状态检查 (Direct Access - Flattened)
-      if (trigger.active === false) continue; // Explicit check, default true
-      if (trigger.oneShotExecuted) continue
+      // 1. 基础状态检查
+      if (!trigger.active || trigger.oneShotExecuted) continue;
       if (trigger.cooldownTimer > 0) {
-        trigger.cooldownTimer -= dt
-        continue
-      }
-
-      // Defensive Check: Rules Array
-      if (!trigger.rules || !Array.isArray(trigger.rules)) {
-        logger.warn(`Invalid 'rules' array for Entity: ${entity.type} (ID: ${entity.id})`);
-        trigger.rules = []; // Patch it to prevent crash
+        trigger.cooldownTimer -= dt;
         continue;
       }
 
-      // 2. 规则匹配
-      let shouldTrigger = false
-      let triggeredRule = null
-
-      // 遍历所有规则，通常满足任意一个规则即可触发 (OR 逻辑)
-      for (const rule of trigger.rules) {
-        if (this.checkRule(entity, rule)) {
-          shouldTrigger = true
-          triggeredRule = rule
-          break
-        }
+      // 2. 获取或初始化运行状态
+      let states = ruleRuntimeStates.get(entity);
+      if (!states) {
+        states = trigger.rules.map(() => ({ lastInside: false, isInside: false }));
+        ruleRuntimeStates.set(entity, states);
       }
 
-      // 3. 执行决策
-      if (shouldTrigger) {
-        logger.info(`Trigger Activated! Type: ${entity.type}, ID: ${entity.id}, Rule: ${triggeredRule?.type}, Actions: ${trigger.actions?.join(', ')}`)
+      // 3. 预取该实体及其族群的相关组件 (缓存加速)
+      const detectArea = this._findInFamily(entity, 'detectArea');
+      const detectProjectile = this._findInFamily(entity, 'detectProjectile');
+      const detectInput = this._findInFamily(entity, 'detectInput');
 
-        // 标记状态 (Direct Access)
-        if (trigger.oneShot) {
-          trigger.oneShotExecuted = true
+      // 只要 detectArea 或 detectProjectile 中有任何结果，即视为“正在接触”
+      const currentResults = [...(detectArea?.results || []), ...(detectProjectile?.results || [])];
+      const isInside = currentResults.length > 0;
+
+      let shouldActivate = false;
+      let triggeredRule = null;
+
+      // 4. 遍历并执行所有规则处理器
+      for (let i = 0; i < trigger.rules.length; i++) {
+        const rule = trigger.rules[i];
+        const state = states[i];
+
+        // 更新当前帧的感知状态
+        state.isInside = isInside;
+
+        // 执行条件检查 (Condition)
+        if (rule.condition && rule.condition !== 'none' && !this._checkCondition(entity, rule.condition)) {
+          state.lastInside = isInside;
+          continue;
         }
 
-        // Defensive Check: Actions Array
-        if (!trigger.actions || !Array.isArray(trigger.actions)) {
-          logger.error(`Invalid 'actions' array for Entity: ${entity.type} (ID: ${entity.id})`);
-          trigger.actions = [];
-        }
-
-        // 收集所有 Actions 并推送到队列
-        if (trigger.actions.length === 0) {
-          logger.warn(`Trigger activated but no actions defined for Entity: ${entity.type} (ID: ${entity.id})!`)
-        }
-
-        for (const actionType of trigger.actions) {
-          logger.info(`Pushing Action: ${actionType} for Entity: ${entity.type} (ID: ${entity.id})`)
-          
-          const globalEntity = world.with('commands').first;
-          const targetQueue = globalEntity ? globalEntity.commands.queue : actionQueue;
-
-          // 如果有多个检测结果（例如玩家和敌人都在区域内），则为每个结果生成一个 Action
-          if (entity.detectArea && entity.detectArea.results && entity.detectArea.results.length > 0) {
-            for (const target of entity.detectArea.results) {
-              targetQueue.push({
-                source: entity,
-                type: actionType,
-                target: target
-              })
-            }
-          } else {
-            // 没有检测结果的情况（可能是 onPress 等其他触发方式）
-            targetQueue.push({
-              source: entity,
-              type: actionType,
-              target: null
-            })
+        // 执行规则处理器
+        const handler = RuleHandlers[rule.type];
+        if (handler) {
+          const context = { entity, rule, state, detectArea, detectProjectile, detectInput };
+          if (handler(context)) {
+            shouldActivate = true;
+            triggeredRule = rule;
           }
         }
 
-        // 使用组件定义的默认冷却时间，如果没有则默认为 0.5
-        trigger.cooldownTimer = trigger.defaultCooldown !== undefined ? trigger.defaultCooldown : 0.5
+        // 状态持久化 (为下一帧做准备)
+        state.lastInside = isInside;
+        
+        if (shouldActivate) break; // 只要有一个规则满足就触发
       }
-    }
-  },
 
-  checkRule(entity, rule) {
-    if (!rule) return false;
-
-    // [NEW] 0. 额外条件检查 (Condition Check)
-    if (rule.condition && rule.condition !== 'none') {
-      if (!this.checkCondition(entity, rule.condition)) {
-        return false;
+      // 5. 触发动作分发
+      if (shouldActivate) {
+        this._dispatchActions(entity, trigger, currentResults, triggeredRule);
+        
+        // 更新冷却和单次触发标记
+        trigger.cooldownTimer = trigger.defaultCooldown;
+        if (trigger.oneShot) trigger.oneShotExecuted = true;
       }
-    }
-
-    const detectArea = entity.detectArea
-    const detectInput = entity.detectInput
-
-    switch (rule.type) {
-      case 'onEnter':
-        // 需要 DetectArea
-        if (!detectArea) {
-          // console.warn(`[TriggerSystem] Rule 'onEnter' requires DetectArea component. Entity: ${entity.type}`)
-          return false
-        }
-        // Defensive: results might be missing if init failed
-        if (!detectArea.results) detectArea.results = [];
-
-        const isInside = detectArea.results.length > 0
-
-        if (isInside && Math.random() < 0.01) {
-          logger.debug(`'onEnter' rule met for Entity: ${entity.type}`)
-        }
-
-        if (rule.requireEnterOnly) {
-          // 真正的 onEnter
-          // Defensive check for wasInside
-          if (entity.trigger.wasInside === undefined) entity.trigger.wasInside = false;
-
-          const wasInside = entity.trigger.wasInside
-          entity.trigger.wasInside = isInside
-          return isInside && !wasInside
-        }
-
-        return isInside
-
-      case 'onStay':
-        if (!detectArea) return false
-        if (!detectArea.results) return false;
-        return detectArea.results.length > 0
-
-      case 'onPress':
-        // 需要 DetectInput
-        if (!detectInput) {
-          logger.warn(`Rule 'onPress' requires DetectInput component. Entity: ${entity.type}`)
-          return false
-        }
-
-        if (detectInput.justPressed) {
-          logger.debug(`Checking 'onPress' rule for Entity: ${entity.type}. JustPressed: ${detectInput.justPressed}`)
-        }
-
-        // 如果需要同时在区域内
-        if (rule.requireArea) {
-          if (!detectArea || !detectArea.results || detectArea.results.length === 0) {
-            if (detectInput.justPressed) {
-              logger.debug(`'onPress' rule failed: Not in Area. Entity: ${entity.type}`)
-            }
-            return false
-          }
-        }
-
-        const triggered = detectInput.justPressed
-        if (triggered) {
-          logger.info(`'onPress' rule met! Entity: ${entity.type}`)
-        }
-        return triggered
-
-      default:
-        logger.warn(`Unknown rule type: ${rule.type}`)
-        return false
     }
   },
 
   /**
-   * 检查自定义条件
-   * @param {object} entity 
-   * @param {string} conditionType 
+   * 内部方法：在实体族群（父、子）中查找组件
    */
-  checkCondition(entity, conditionType) {
+  _findInFamily(entity, componentName) {
+    // 1. 检查自身
+    if (entity[componentName]) return entity[componentName];
+    // 2. 检查子实体 (通常 Sensor/Collider 在子实体)
+    if (entity.children) {
+      const child = entity.children.entities.find(c => c[componentName]);
+      if (child) return child[componentName];
+    }
+    // 3. 检查父实体 (部分逻辑挂在 Root)
+    if (entity.parent?.entity?.[componentName]) {
+      return entity.parent.entity[componentName];
+    }
+    return null;
+  },
+
+  /**
+   * 内部方法：处理动作分发
+   * 明确 Source (发起逻辑的实体) 和 Target (被影响的实体)
+   */
+  _dispatchActions(entity, trigger, results, rule) {
+    const targets = (results && results.length > 0) ? results : [null];
+
+    for (const actionType of trigger.actions) {
+      // 自动定位持有具体 action 组件的实体
+      const actionSource = this._findActionProvider(entity, actionType);
+      
+      const globalEntity = world.with('commands').first;
+      const targetQueue = globalEntity ? globalEntity.commands.queue : actionQueue;
+
+      for (const target of targets) {
+        logger.info(`Pushing Action: ${actionType} | Source: ${actionSource.name || actionSource.type} | Target: ${target?.name || 'none'}`);
+        targetQueue.push({
+          source: actionSource, // 动作发起者 (通常是拥有配置的 Root)
+          type: actionType,     // 动作类型 (如 TELEPORT, DIALOGUE)
+          target: target        // 动作目标 (如 Player)
+        });
+      }
+    }
+  },
+
+  /**
+   * 内部方法：定位真正持有动作配置的实体
+   */
+  _findActionProvider(entity, actionType) {
+    const componentName = `action${actionType.charAt(0).toUpperCase() + actionType.slice(1).toLowerCase()}`;
+    
+    // 向上溯源：如果当前实体没有该组件，尝试查找父实体
+    let current = entity;
+    while (current) {
+      if (current[componentName]) return current;
+      current = current.parent?.entity;
+    }
+    return entity; // Fallback
+  },
+
+  /**
+   * 内部方法：条件检查
+   */
+  _checkCondition(entity, conditionType) {
+    const logicEntity = entity.parent?.entity || entity;
     if (conditionType === 'notStunned') {
-      // 如果实体没有 aiState，则认为满足条件（不是 stunned）
-      if (!entity.aiState) return true;
-      // 只有 state 为 'stunned' 时返回 false
-      return entity.aiState.state !== 'stunned';
+      if (!logicEntity.aiState) return true;
+      return logicEntity.aiState.state !== 'stunned';
     }
     return true;
   }
-}
+};

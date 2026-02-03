@@ -34,11 +34,7 @@ class SchemasManager {
             assets: AssetManifest,
             visuals: Visuals,
             locales: {},
-            maps: {
-                village: () => import('@data/maps/village').then(m => m.village),
-                forest: () => import('@data/maps/forest').then(m => m.forest),
-                demo_plains: () => import('@data/maps/demo_plains').then(m => m.demo_plains)
-            }
+            maps: {} // Maps will be loaded dynamically from project data
         };
 
         // 验证器映射
@@ -48,9 +44,46 @@ class SchemasManager {
             status: createMapValidator(StatusSchema, 'StatusDb'),
             skills: createMapValidator(SkillSchema, 'SkillsDb'),
             characters: createMapValidator(CharacterSchema, 'CharactersDb'),
-            map: createValidator(MapSchema, 'MapData'),
+            map: (data) => {
+                // [COMPATIBILITY] If it looks like a bundle (has header and entities), skip strict MapSchema validation
+                // This allows loading exported JSON data which is already normalized
+                if (data && data.header && data.entities) {
+                    return data;
+                }
+                // Otherwise use the existing validator for legacy source files
+                return createValidator(MapSchema, 'MapData')(data);
+            },
             locales: createValidator(LocaleRootSchema, 'Locales')
         };
+    }
+
+    /**
+     * 加载项目数据 (JSON)
+     * 替换原有的静态地图加载逻辑
+     */
+    async loadProjectData(url) {
+        try {
+            console.log(`🚀 [SchemasManager] Loading project data from ${url}...`);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch project data: ${response.statusText}`);
+            }
+            const data = await response.json();
+            
+            if (data.maps) {
+                // 将 JSON 中的地图数据注册到 maps 数据库
+                // 注意：这里直接存储数据，而不是加载器函数，或者包装成 Promise
+                Object.keys(data.maps).forEach(mapId => {
+                    // 包装成 async 函数以保持接口一致性
+                    this._databases.maps[mapId] = async () => data.maps[mapId];
+                });
+                console.log(`✅ [SchemasManager] Loaded ${Object.keys(data.maps).length} maps from project data`);
+            }
+        } catch (error) {
+            console.error('❌ [SchemasManager] Failed to load project data:', error);
+            // Fallback? Or let it fail?
+            // For now, let's log it. The app might start with empty maps.
+        }
     }
 
     /**

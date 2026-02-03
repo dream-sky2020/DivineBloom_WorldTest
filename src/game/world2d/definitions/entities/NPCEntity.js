@@ -9,7 +9,8 @@ import {
   Actions,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
-  Transform, TRANSFORM_INSPECTOR_FIELDS
+  Transform, TRANSFORM_INSPECTOR_FIELDS,
+  Parent, Children, LocalTransform, Shape, ShapeType
 } from '@components'
 
 // --- Schema Definition ---
@@ -52,34 +53,55 @@ export const NPCEntity = {
     const { x, y, name, config } = result.data;
     const { dialogueId, spriteId, range, scale } = config;
 
-    const entity = {
+    const root = world.add({
       type: 'npc',
       name: name || `NPC_${dialogueId}`,
       transform: Transform(x, y),
       npc: true,
 
-      detectArea: DetectArea({ shape: 'circle', radius: range, target: 'player' }),
+      actionDialogue: Actions.Dialogue(dialogueId),
+      interaction: { type: 'dialogue', id: dialogueId, range: range },
+      bounds: Bounds(),
+      sprite: Sprite.create(spriteId, { scale }),
+      animation: Animation.create('default'),
+      
+      // Trigger 放在根节点，逻辑更清晰
       detectInput: DetectInput({ keys: ['Interact'] }),
       trigger: Trigger({
         rules: [{ type: 'onPress', requireArea: true }],
         actions: ['DIALOGUE']
-      }),
+      })
+    });
 
-      actionDialogue: Actions.Dialogue(dialogueId),
-      interaction: { type: 'dialogue', id: dialogueId, range: range },
-      collider: Collider.circle(15, true),
-      bounds: Bounds(),
-      sprite: Sprite.create(spriteId, { scale }),
-      animation: Animation.create('default'),
-    };
+    // 2. Body Child (Collision)
+    const body = world.add({
+        parent: Parent(root),
+        transform: Transform(),
+        localTransform: LocalTransform(0, 0),
+        name: `${root.name}_Body`,
+        shape: Shape({ type: ShapeType.CIRCLE, radius: 15 }),
+        collider: Collider.create({ shapeId: 'body', isStatic: true })
+    });
 
-    entity.inspector = Inspector.create({
+    // 3. Sensor Child (Detection)
+    const sensor = world.add({
+        parent: Parent(root),
+        transform: Transform(),
+        localTransform: LocalTransform(0, 0),
+        name: `${root.name}_Sensor`,
+        shape: Shape({ type: ShapeType.CIRCLE, radius: range }),
+        detectArea: DetectArea({ shapeId: 'sensor', target: 'player' })
+    });
+
+    root.children = Children([body, sensor]);
+
+    root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
       hitPriority: 80,
       editorBox: { w: 32, h: 48, scale: 1 }
     });
 
-    return world.add(entity);
+    return root;
   },
 
   serialize(entity) {

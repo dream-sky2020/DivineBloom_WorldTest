@@ -1,0 +1,1640 @@
+{
+  "project": {
+    "version": "1.1.0",
+    "exportTime": "2026-02-03T07:15:06.568Z",
+    "mapIds": [
+      "village",
+      "forest",
+      "demo_plains"
+    ]
+  },
+  "maps": {
+    "village": {
+      "header": {
+        "version": "1.0.0",
+        "config": {
+          "id": "village",
+          "width": 800,
+          "height": 600,
+          "background": {
+            "groundColor": "#dcfce7"
+          },
+          "entryPoints": {
+            "default": {
+              "x": 100,
+              "y": 400
+            },
+            "from_demo": {
+              "x": 100,
+              "y": 400
+            },
+            "from_forest": {
+              "x": 700,
+              "y": 400
+            }
+          }
+        }
+      },
+      "entities": [
+        {
+          "type": "decoration",
+          "data": {
+            "x": 100,
+            "y": 240,
+            "name": "Decoration_door_2",
+            "config": {
+              "spriteId": "door_2",
+              "scale": 1
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "x": 300,
+            "y": 300,
+            "name": "Decoration_table_4",
+            "config": {
+              "spriteId": "table_4",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "x": 600,
+            "y": 360,
+            "name": "Decoration_table_0",
+            "config": {
+              "spriteId": "table_0",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "npc",
+          "data": {
+            "x": 400,
+            "y": 300,
+            "config": {
+              "spriteId": "npc_elder",
+              "dialogueId": "elderDialogue",
+              "range": 60
+            }
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "x": 0,
+            "y": 300,
+            "width": 20,
+            "height": 200,
+            "isForced": true,
+            "actionTeleport": {
+              "mapId": "demo_plains",
+              "entryId": "from_village"
+            },
+            "targetMapId": "demo_plains",
+            "targetEntryId": "from_village"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "x": 80,
+            "y": 380,
+            "width": 60,
+            "height": 80,
+            "isForced": false,
+            "actionTeleport": {
+              "mapId": "demo_plains",
+              "entryId": "from_village"
+            },
+            "targetMapId": "demo_plains",
+            "targetEntryId": "from_village"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "x": 780,
+            "y": 300,
+            "width": 20,
+            "height": 200,
+            "isForced": true,
+            "actionTeleport": {
+              "mapId": "forest",
+              "entryId": "from_village"
+            },
+            "targetMapId": "forest",
+            "targetEntryId": "from_village"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "x": 700,
+            "y": 380,
+            "width": 60,
+            "height": 60,
+            "isForced": false,
+            "actionTeleport": {
+              "mapId": "forest",
+              "entryId": "from_village"
+            },
+            "targetMapId": "forest",
+            "targetEntryId": "from_village"
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "x": 594.010393190732,
+            "y": 584.3656974122158,
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              },
+              {
+                "id": "character_wounded_scout"
+              }
+            ],
+            "options": {
+              "aiType": "wander",
+              "visionRadius": 80,
+              "speed": 40,
+              "scale": 0.6,
+              "detectedState": "flee",
+              "spriteId": "enemy_slime",
+              "minYRatio": 0.35
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "x": 578.3086310699323,
+            "y": 507.8802708577879,
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              },
+              {
+                "id": "character_wounded_scout"
+              }
+            ],
+            "options": {
+              "aiType": "wander",
+              "visionRadius": 80,
+              "speed": 40,
+              "scale": 0.6,
+              "detectedState": "flee",
+              "spriteId": "enemy_slime",
+              "minYRatio": 0.35
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "x": 329.70248405009005,
+            "y": 497.4467683760489,
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              },
+              {
+                "id": "character_wounded_scout"
+              }
+            ],
+            "options": {
+              "aiType": "wander",
+              "visionRadius": 80,
+              "speed": 40,
+              "scale": 0.6,
+              "detectedState": "flee",
+              "spriteId": "enemy_slime",
+              "minYRatio": 0.35
+            }
+          }
+        }
+      ]
+    },
+    "forest": {
+      "header": {
+        "version": "1.1.0",
+        "config": {
+          "id": "forest",
+          "name": "Unknown Scene",
+          "width": 800,
+          "height": 600,
+          "background": {
+            "groundColor": "#14532d"
+          }
+        },
+        "exportTime": "2026-02-03T07:13:10.618Z"
+      },
+      "entities": [
+        {
+          "type": "player",
+          "data": {
+            "type": "player",
+            "x": 340.1761277359445,
+            "y": 576.4438722807448,
+            "name": "Player",
+            "scale": 0.7
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 684.3654730208602,
+            "y": 359.616799028626,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_heavy_guard"
+              }
+            ],
+            "options": {
+              "uuid": "yg0qvj3kq",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 250,
+              "visionType": "cone",
+              "visionAngle": 60,
+              "visionProximity": 40,
+              "speed": 80,
+              "minYRatio": 0.35,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 684.3654730208602,
+                "y": 359.616799028626
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 8,
+              "chaseExitMultiplier": 2,
+              "spriteId": "default",
+              "scale": 0.9
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 586.8263256936842,
+            "y": 419.91283675229613,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "7n05bt2d5",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 200,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 100,
+              "minYRatio": 0.35,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 680.0566656969719,
+                "y": 438.7331767472392
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 527.5792754351047,
+            "y": 396.84654034761945,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "qrr3rs05d",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 200,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 100,
+              "minYRatio": 0.35,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 527.5792754351047,
+                "y": 396.84654034761945
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 370,
+            "y": 500,
+            "name": "To_demo_plains_from_forest",
+            "width": 60,
+            "height": 60,
+            "isForced": false,
+            "targetMapId": "demo_plains",
+            "targetEntryId": "from_forest"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 300,
+            "y": 580,
+            "name": "To_demo_plains_from_forest",
+            "width": 200,
+            "height": 20,
+            "isForced": true,
+            "targetMapId": "demo_plains",
+            "targetEntryId": "from_forest"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 80,
+            "y": 380,
+            "name": "To_village_from_forest",
+            "width": 60,
+            "height": 60,
+            "isForced": false,
+            "targetMapId": "village",
+            "targetEntryId": "from_forest"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 0,
+            "y": 300,
+            "name": "To_village_from_forest",
+            "width": 20,
+            "height": 200,
+            "isForced": true,
+            "targetMapId": "village",
+            "targetEntryId": "from_forest"
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 600,
+            "y": 300,
+            "name": "Decoration_table_3",
+            "config": {
+              "spriteId": "table_3",
+              "scale": 0.8,
+              "zIndex": -50
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 200,
+            "y": 360,
+            "name": "Decoration_table_2",
+            "config": {
+              "spriteId": "table_2",
+              "scale": 0.8,
+              "zIndex": -50
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 400,
+            "y": 210,
+            "name": "Decoration_door_1",
+            "config": {
+              "spriteId": "door_1",
+              "scale": 1,
+              "zIndex": -50
+            }
+          }
+        },
+        {
+          "type": "global_manager",
+          "data": {
+            "camera": {
+              "x": -560,
+              "y": -240,
+              "targetX": -560,
+              "targetY": -240,
+              "lerp": 0.1,
+              "useBounds": true,
+              "deadZone": {
+                "width": 100,
+                "height": 100
+              },
+              "targetEntity": null
+            },
+            "inputState": {
+              "lastPressed": {
+                "Interact": false
+              }
+            },
+            "timer": {
+              "totalTime": 1.5917000000476837,
+              "running": true
+            }
+          }
+        }
+      ]
+    },
+    "demo_plains": {
+      "header": {
+        "version": "1.1.0",
+        "config": {
+          "id": "demo_plains",
+          "name": "Unknown Scene",
+          "width": 3200,
+          "height": 2400,
+          "background": {
+            "groundColor": "#bbf7d0"
+          }
+        },
+        "exportTime": "2026-02-03T07:15:02.088Z"
+      },
+      "entities": [
+        {
+          "type": "global_manager",
+          "data": {
+            "camera": {
+              "x": 7.486495621596154e-128,
+              "y": 1319.9999999999998,
+              "targetX": 0,
+              "targetY": 1320,
+              "lerp": 0.1,
+              "useBounds": true,
+              "deadZone": {
+                "width": 100,
+                "height": 100
+              },
+              "targetEntity": null
+            },
+            "inputState": {
+              "lastPressed": {
+                "Interact": false
+              }
+            },
+            "timer": {
+              "totalTime": 50.94530000001191,
+              "running": true
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 1500,
+            "y": 800,
+            "name": "Decoration_table_1",
+            "config": {
+              "spriteId": "table_1",
+              "scale": 0.8,
+              "zIndex": -50,
+              "collider": {
+                "shapeId": "body",
+                "isStatic": true,
+                "isTrigger": false,
+                "layer": 1,
+                "mask": 4294967295,
+                "type": "circle",
+                "width": 0,
+                "height": 0,
+                "radius": 30,
+                "rotation": 0,
+                "offsetX": 0,
+                "offsetY": 10
+              }
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 3000,
+            "y": 1100,
+            "name": "Decoration_door_0",
+            "config": {
+              "spriteId": "door_0",
+              "scale": 1,
+              "zIndex": -50
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 500,
+            "y": 900,
+            "name": "Decoration_Rect",
+            "config": {
+              "scale": 1,
+              "zIndex": -50,
+              "rect": {
+                "width": 40,
+                "height": 40,
+                "color": "blue"
+              },
+              "collider": {
+                "shapeId": "body",
+                "isStatic": true,
+                "isTrigger": false,
+                "layer": 1,
+                "mask": 4294967295,
+                "type": "obb",
+                "width": 40,
+                "height": 40,
+                "radius": 0,
+                "rotation": 0.7853981633974483,
+                "offsetX": 0,
+                "offsetY": 0
+              }
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 2800,
+            "y": 450,
+            "name": "Decoration_table_0",
+            "config": {
+              "spriteId": "table_0",
+              "scale": 1.2,
+              "zIndex": -50
+            }
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 1600,
+            "y": 1200,
+            "name": "Decoration_Rect",
+            "config": {
+              "scale": 1,
+              "zIndex": -50,
+              "rect": {
+                "width": 100,
+                "height": 100,
+                "color": "gold"
+              },
+              "collider": {
+                "shapeId": "body",
+                "isStatic": true,
+                "isTrigger": false,
+                "layer": 1,
+                "mask": 4294967295,
+                "type": "aabb",
+                "width": 100,
+                "height": 100,
+                "radius": 0,
+                "rotation": 0,
+                "offsetX": 0,
+                "offsetY": 0
+              }
+            }
+          }
+        },
+        {
+          "type": "obstacle",
+          "data": {
+            "type": "obstacle",
+            "name": "Obstacle_circle",
+            "x": 300,
+            "y": 200,
+            "width": 80,
+            "height": 80,
+            "radius": 40,
+            "p1": {
+              "x": 0,
+              "y": -10
+            },
+            "p2": {
+              "x": 0,
+              "y": 10
+            },
+            "rotation": 0,
+            "shape": "circle"
+          }
+        },
+        {
+          "type": "obstacle",
+          "data": {
+            "type": "obstacle",
+            "name": "Obstacle_aabb",
+            "x": 100,
+            "y": 100,
+            "width": 60,
+            "height": 20,
+            "radius": 15,
+            "p1": {
+              "x": 0,
+              "y": -10
+            },
+            "p2": {
+              "x": 0,
+              "y": 10
+            },
+            "rotation": 0,
+            "shape": "aabb"
+          }
+        },
+        {
+          "type": "obstacle",
+          "data": {
+            "type": "obstacle",
+            "name": "Obstacle_obb",
+            "x": 1200,
+            "y": 700,
+            "width": 200,
+            "height": 50,
+            "radius": 15,
+            "p1": {
+              "x": 0,
+              "y": -10
+            },
+            "p2": {
+              "x": 0,
+              "y": 10
+            },
+            "rotation": 0.2,
+            "shape": "obb"
+          }
+        },
+        {
+          "type": "obstacle",
+          "data": {
+            "type": "obstacle",
+            "name": "Obstacle_capsule",
+            "x": 800,
+            "y": 1000,
+            "width": 60,
+            "height": 20,
+            "radius": 20,
+            "p1": {
+              "x": 0,
+              "y": -10
+            },
+            "p2": {
+              "x": 0,
+              "y": 10
+            },
+            "rotation": 0,
+            "shape": "capsule"
+          }
+        },
+        {
+          "type": "obstacle",
+          "data": {
+            "type": "obstacle",
+            "name": "Obstacle_obb",
+            "x": 2000,
+            "y": 1500,
+            "width": 400,
+            "height": 100,
+            "radius": 15,
+            "p1": {
+              "x": 0,
+              "y": -10
+            },
+            "p2": {
+              "x": 0,
+              "y": 10
+            },
+            "rotation": -0.5,
+            "shape": "obb"
+          }
+        },
+        {
+          "type": "obstacle",
+          "data": {
+            "type": "obstacle",
+            "name": "Obstacle_circle",
+            "x": 500,
+            "y": 1800,
+            "width": 200,
+            "height": 200,
+            "radius": 100,
+            "p1": {
+              "x": 0,
+              "y": -10
+            },
+            "p2": {
+              "x": 0,
+              "y": 10
+            },
+            "rotation": 0,
+            "shape": "circle"
+          }
+        },
+        {
+          "type": "portal_destination",
+          "data": {
+            "type": "portal_destination",
+            "id": "north_ruins",
+            "x": 2800,
+            "y": 400,
+            "name": "北部遗迹",
+            "visual": {
+              "color": "#8b5cf6",
+              "size": 20
+            }
+          }
+        },
+        {
+          "type": "portal_destination",
+          "data": {
+            "type": "portal_destination",
+            "id": "south_lake",
+            "x": 600,
+            "y": 2000,
+            "name": "南部湖泊",
+            "visual": {
+              "color": "#8b5cf6",
+              "size": 20
+            }
+          }
+        },
+        {
+          "type": "portal_destination",
+          "data": {
+            "type": "portal_destination",
+            "id": "center_altar",
+            "x": 1600,
+            "y": 1200,
+            "name": "中心祭坛",
+            "visual": {
+              "color": "#8b5cf6",
+              "size": 20
+            }
+          }
+        },
+        {
+          "type": "portal_destination",
+          "data": {
+            "type": "portal_destination",
+            "id": "spawn_point",
+            "x": 200,
+            "y": 1200,
+            "name": "出生点",
+            "visual": {
+              "color": "#8b5cf6",
+              "size": 20
+            }
+          }
+        },
+        {
+          "type": "npc",
+          "data": {
+            "type": "npc",
+            "x": 400,
+            "y": 1150,
+            "name": "Guide",
+            "config": {
+              "dialogueId": "welcome",
+              "range": 60,
+              "spriteId": "npc_guide",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "npc",
+          "data": {
+            "type": "npc",
+            "x": 600,
+            "y": 1100,
+            "name": "Elder",
+            "config": {
+              "dialogueId": "elder_greeting",
+              "range": 60,
+              "spriteId": "npc_elder",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "npc",
+          "data": {
+            "type": "npc",
+            "x": 800,
+            "y": 1200,
+            "name": "Don Quixote",
+            "config": {
+              "dialogueId": "welcome",
+              "range": 60,
+              "spriteId": "char_donquixote",
+              "scale": 0.2
+            }
+          }
+        },
+        {
+          "type": "npc",
+          "data": {
+            "type": "npc",
+            "x": 950,
+            "y": 1200,
+            "name": "Flesh Sprite",
+            "config": {
+              "dialogueId": "welcome",
+              "range": 60,
+              "spriteId": "char_fleshsprite",
+              "scale": 0.2
+            }
+          }
+        },
+        {
+          "type": "npc",
+          "data": {
+            "type": "npc",
+            "x": 1100,
+            "y": 1200,
+            "name": "Jia Baoyu",
+            "config": {
+              "dialogueId": "welcome",
+              "range": 60,
+              "spriteId": "char_jiabaoyu",
+              "scale": 0.2
+            }
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 500,
+            "y": 1100,
+            "name": "To_north_ruins",
+            "width": 60,
+            "height": 60,
+            "isForced": false,
+            "destinationId": "north_ruins"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 2700,
+            "y": 500,
+            "name": "To_south_lake",
+            "width": 80,
+            "height": 80,
+            "isForced": true,
+            "destinationId": "south_lake"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 810.8504765814197,
+            "y": 1956.3579743468351,
+            "name": "To_center_altar",
+            "width": 60,
+            "height": 60,
+            "isForced": true,
+            "destinationId": "center_altar"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 1600,
+            "y": 1300,
+            "name": "To_spawn_point",
+            "width": 60,
+            "height": 60,
+            "isForced": true,
+            "destinationId": "spawn_point"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 3180,
+            "y": 1000,
+            "name": "To_village_from_demo",
+            "width": 20,
+            "height": 400,
+            "isForced": true,
+            "targetMapId": "village",
+            "targetEntryId": "from_demo"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 3000,
+            "y": 1050,
+            "name": "To_village_from_demo",
+            "width": 80,
+            "height": 100,
+            "isForced": false,
+            "targetMapId": "village",
+            "targetEntryId": "from_demo"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 1400,
+            "y": 0,
+            "name": "To_forest_from_demo",
+            "width": 400,
+            "height": 20,
+            "isForced": true,
+            "targetMapId": "forest",
+            "targetEntryId": "from_demo"
+          }
+        },
+        {
+          "type": "portal",
+          "data": {
+            "type": "portal",
+            "x": 1570,
+            "y": 50,
+            "name": "To_forest_from_demo",
+            "width": 60,
+            "height": 60,
+            "isForced": false,
+            "targetMapId": "forest",
+            "targetEntryId": "from_demo"
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 1138.3201983275285,
+            "y": 1667.3745578100047,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "092xmez5k",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 300,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 110,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 1291.4178336889572,
+                "y": 1298.0289451839876
+              },
+              "patrolRadius": 400,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 37.49988087142779,
+            "y": 2397.9918805567872,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "lzrot4wo0",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 300,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 110,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 655.9929295902896,
+                "y": 1543.587554824985
+              },
+              "patrolRadius": 400,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": -0.053920389398945695,
+            "y": 2362.5001191285724,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "yv74ttv6b",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 300,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 110,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 810.0765871944936,
+                "y": 1339.6919051610032
+              },
+              "patrolRadius": 400,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 697.8033478659647,
+            "y": 1373.1143797068805,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "dyeccmxmw",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 918.0425938672031,
+                "y": 1565.0254657070545
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 1922.9051820220936,
+            "y": 850.4069999422447,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "bvk77idhj",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 1643.2063259181075,
+                "y": 743.3871119642478
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 100.666902003538,
+            "y": 984.1393407587301,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "0v5vrkjpa",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 165.35808007441602,
+                "y": 764.9985567463955
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 350.3993109907301,
+            "y": 1697.9154578497942,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "goq63o63a",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 483.7486703163139,
+                "y": 1430.57668292772
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 1298.903229974475,
+            "y": 1903.1715307966915,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "t8zqppihi",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 1571.82564401749,
+                "y": 1780.7306047850457
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 2625.8319569707155,
+            "y": 449.4990896967656,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "tdfwlkqyi",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 2680.770885592494,
+                "y": 643.3292935354251
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 1770.0376337314856,
+            "y": 669.7696987242896,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "r25zbcgth",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 1929.566797736568,
+                "y": 696.8072347164942
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 1342.692963128087,
+            "y": 1862.8810576980495,
+            "name": "Enemy_enemy_slime",
+            "battleGroup": [
+              {
+                "id": "character_slime"
+              }
+            ],
+            "options": {
+              "uuid": "ubrekqmyd",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "wander",
+              "visionRadius": 150,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 60,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 1538.556303148798,
+                "y": 1901.4563536775454
+              },
+              "patrolRadius": 300,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "enemy_slime",
+              "scale": 0.8
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 2607.7064365406814,
+            "y": 757.5816686022866,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "y554zlom7",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 400,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 130,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 2691.144482662042,
+                "y": 632.6762093568569
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 1
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 2811.2729275333368,
+            "y": 726.605410350061,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "jk2818q2q",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 400,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 130,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 2773.0837604467292,
+                "y": 675.9651465579576
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 1
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 2603.8420988031776,
+            "y": 493.20231841820646,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "drrw5cskd",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 400,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 130,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 2592.0317174407546,
+                "y": 530.8023299050617
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 1
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 2542.9584459316106,
+            "y": 603.2753960470617,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "8rajfw5xm",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 400,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 130,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 2437.4441949282136,
+                "y": 650.3145866212791
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 1
+            }
+          }
+        },
+        {
+          "type": "enemy",
+          "data": {
+            "type": "enemy",
+            "x": 2553.612300391228,
+            "y": 299.0660278589594,
+            "name": "Enemy_default",
+            "battleGroup": [
+              {
+                "id": "character_wasteland_wolf"
+              }
+            ],
+            "options": {
+              "uuid": "6yrr3877h",
+              "isStunned": false,
+              "stunnedTimer": 0,
+              "aiType": "chase",
+              "visionRadius": 400,
+              "visionType": "circle",
+              "visionAngle": 90,
+              "visionProximity": 40,
+              "speed": 130,
+              "minYRatio": 0,
+              "suspicionTime": 0,
+              "homePosition": {
+                "x": 2607.726750356696,
+                "y": 336.7636619412218
+              },
+              "patrolRadius": 150,
+              "detectedState": "chase",
+              "stunDuration": 2,
+              "chaseExitMultiplier": 1.5,
+              "spriteId": "default",
+              "scale": 1
+            }
+          }
+        },
+        {
+          "type": "player",
+          "data": {
+            "type": "player",
+            "x": -1.728856087495182,
+            "y": 2401.728856087495,
+            "name": "Player",
+            "scale": 0.7
+          }
+        },
+        {
+          "type": "decoration",
+          "data": {
+            "type": "decoration",
+            "x": 200,
+            "y": 1440,
+            "name": "Decoration_table_0",
+            "config": {
+              "spriteId": "table_0",
+              "scale": 0.8,
+              "zIndex": -50
+            }
+          }
+        }
+      ]
+    }
+  }
+}

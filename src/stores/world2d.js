@@ -8,14 +8,57 @@ const logger = createLogger('World2dStore');
 
 export const useWorld2dStore = defineStore('world2d', () => {
     // Current Map State
-    const currentMapId = ref('demo_plains');
+    const currentMapId = ref('scene_light_green');
     const currentMapState = ref(null); // { playerPos, enemies, isInitialized }
 
     // Persistent World State: { mapId: { enemies: [], ... } }
     // Note: We only store "enemies" persistently per map. 
     // Player position is only relevant for the *current* map (or last saved spot).
     // When returning to a map, we spawn at an entry point, not where we were last time (usually).
-    const worldStates = ref({});
+    const worldStates = ref({
+        scene_light_green: {
+            header: {
+                version: '1.1.0',
+                config: {
+                    id: 'scene_light_green',
+                    name: 'Light Green Zone',
+                    width: 1200,
+                    height: 800,
+                    background: { groundColor: '#dcfce7' }, // 浅绿色
+                    entryPoints: { default: { x: 1000, y: 1000 } }
+                }
+            },
+            entities: []
+        },
+        scene_dark_green: {
+            header: {
+                version: '1.1.0',
+                config: {
+                    id: 'scene_dark_green',
+                    name: 'Dark Green Zone',
+                    width: 800,
+                    height: 600,
+                    background: { groundColor: '#166534' }, // 深绿色
+                    entryPoints: { default: { x: 1000, y: 1000 } }
+                }
+            },
+            entities: []
+        },
+        scene_yellow: {
+            header: {
+                version: '1.1.0',
+                config: {
+                    id: 'scene_yellow',
+                    name: 'Yellow Zone',
+                    width: 2000,
+                    height: 2000,
+                    background: { groundColor: '#fef9c3' }, // 浅黄色
+                    entryPoints: { default: { x: 1000, y: 1000 } }
+                }
+            },
+            entities: []
+        }
+    });
 
     const saveState = (sceneInstance) => {
         if (!sceneInstance) return;
@@ -123,9 +166,53 @@ export const useWorld2dStore = defineStore('world2d', () => {
     };
 
     const reset = () => {
-        currentMapId.value = 'demo_plains';
+        currentMapId.value = 'scene_light_green';
         currentMapState.value = null;
-        worldStates.value = {};
+        // 重置时保留预设场景
+        worldStates.value = {
+            scene_light_green: {
+                header: {
+                    version: '1.1.0',
+                    config: {
+                        id: 'scene_light_green',
+                        name: 'Light Green Zone',
+                        width: 2000,
+                        height: 2000,
+                        background: { groundColor: '#dcfce7' },
+                        entryPoints: { default: { x: 1000, y: 1000 } }
+                    }
+                },
+                entities: []
+            },
+            scene_dark_green: {
+                header: {
+                    version: '1.1.0',
+                    config: {
+                        id: 'scene_dark_green',
+                        name: 'Dark Green Zone',
+                        width: 2000,
+                        height: 2000,
+                        background: { groundColor: '#166534' },
+                        entryPoints: { default: { x: 1000, y: 1000 } }
+                    }
+                },
+                entities: []
+            },
+            scene_yellow: {
+                header: {
+                    version: '1.1.0',
+                    config: {
+                        id: 'scene_yellow',
+                        name: 'Yellow Zone',
+                        width: 2000,
+                        height: 2000,
+                        background: { groundColor: '#fef9c3' },
+                        entryPoints: { default: { x: 1000, y: 1000 } }
+                    }
+                },
+                entities: []
+            }
+        };
     };
 
     const serialize = () => {

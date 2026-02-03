@@ -4,6 +4,8 @@ import { EntityManager } from '@definitions'
 import { getMapData } from '@schema/maps'
 import { createLogger } from '@/utils/logger'
 import { SceneLifecycle } from '@world2d/resources/SceneLifecycle'
+import { DetectAreaSystem } from '@systems/detect/DetectAreaSystem'
+import { SyncTransformSystem } from '@systems/physics/SyncTransformSystem'
 
 const logger = createLogger('SceneManager')
 
@@ -103,18 +105,33 @@ export class SceneManager {
 
         // 2. 加载新地图数据
         logger.info(`Loading map data: ${mapId}`)
-        const mapData = await getMapData(mapId)
+        let mapData = await getMapData(mapId)
+        
+        // 5. 尝试加载存档 (先加载，因为动态地图的配置可能就在这里)
+        // [IMPORTANT] 我们只是预览一下 store 中的数据，不要真正的切换 currentMapId
+        // 因为如果这时候切换了，上面的 saveState 就会存错地方（虽然 saveState 已经在上面执行过了）
+        // 更重要的是，如果这里切换了，后续的逻辑可能会混乱
+        // 所以我们手动从 store 中获取数据，而不是调用 loadMap
+        const persistedState = this.worldStore.worldStates[mapId];
+
+        // [FIX] 如果静态数据不存在，尝试从持久化状态中提取配置 (针对动态创建的场景)
+        if (!mapData && persistedState && persistedState.header && persistedState.header.config) {
+            logger.info(`Using dynamic map config from store for: ${mapId}`)
+            mapData = persistedState.header.config
+        }
+
         if (!mapData) throw new Error(`Map data not found: ${mapId}`)
 
         // 3. 清理 ECS 世界
         clearWorld()
+        // 3.1 重置探测区域系统的缓存 (清除旧地图的静态实体)
+        DetectAreaSystem.reset()
 
-        // 4. 更新 Store 指向新地图
+        // 4. 更新 Store 指向新地图 (真正切换 ID)
         this.worldStore.currentMapId = mapId
-
-        // 5. 尝试加载存档
+        
+        // 重新加载一次以确保 currentMapState 正确更新 (虽然我们已经有了 persistedState，但 loadMap 还有其他副作用如校验)
         this.worldStore.loadMap(mapId)
-        const persistedState = this.worldStore.currentMapState
 
         // 6. 更新 Scene 的 mapData
         if (this.currentScene) {
@@ -142,8 +159,11 @@ export class SceneManager {
         // 8. 修正玩家位置到入口点 (如果是传送进入)
         if (entryId && mapData.entryPoints && mapData.entryPoints[entryId] && player) {
             const spawn = mapData.entryPoints[entryId]
-            player.position.x = spawn.x
-            player.position.y = spawn.y
+            // Ensure we are accessing the correct component for position (transform)
+            if (player.transform) {
+                player.transform.x = spawn.x
+                player.transform.y = spawn.y
+            }
             logger.info(`Player spawned at entry point: ${entryId}`)
         }
 
@@ -158,6 +178,9 @@ export class SceneManager {
         if (this.currentScene) {
             this.currentScene.player = player
         }
+
+        // 11. 强制同步一次坐标 (确保子实体位置正确，避免第一帧堆积在 0,0)
+        SyncTransformSystem.update()
 
         logger.info(`✅ Map switch complete: ${mapId}`)
     }

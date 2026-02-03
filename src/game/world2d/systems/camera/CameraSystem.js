@@ -16,7 +16,29 @@ export const CameraSystem = {
     const globalEntity = world.with('camera', 'globalManager').first
     if (!globalEntity) return
 
-    const { camera } = globalEntity
+    const { camera, editor, inputState } = globalEntity
+    
+    // --- 编辑模式逻辑 ---
+    if (editor && editor.isEditMode) {
+        const speed = editor.cameraSpeed || 10;
+        const keys = inputState?.lastPressed || {};
+        
+        let dx = 0;
+        let dy = 0;
+        
+        if (keys['w'] || keys['W'] || keys['ArrowUp']) dy -= 1;
+        if (keys['s'] || keys['S'] || keys['ArrowDown']) dy += 1;
+        if (keys['a'] || keys['A'] || keys['ArrowLeft']) dx -= 1;
+        if (keys['d'] || keys['D'] || keys['ArrowRight']) dx += 1;
+        
+        // 移动相机目标
+        camera.targetX += dx * speed;
+        camera.targetY += dy * speed;
+        
+        // 立即应用（平滑可选）
+        this._applyLerp(camera, dt);
+        return;
+    }
     
     // 1. 检查地图尺寸，如果地图小于视口，则固定在中心或 (0,0)
     const isMapLargerThanViewport = mapBounds && (mapBounds.width > viewportWidth || mapBounds.height > viewportHeight)

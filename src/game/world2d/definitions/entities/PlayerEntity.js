@@ -13,7 +13,8 @@ import {
   WeaponIntent,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
-  Transform, TRANSFORM_INSPECTOR_FIELDS
+  Transform, TRANSFORM_INSPECTOR_FIELDS,
+  Parent, Children, LocalTransform, Shape, ShapeType
 } from '@components'
 
 // --- Schema Definition ---
@@ -61,17 +62,15 @@ export const PlayerEntity = {
 
     const { x, y, name, scale, weaponConfig } = result.data;
 
-    const entity = {
+    const root = world.add({
       type: 'player',
       name: name,
       transform: Transform(x, y),
       velocity: Velocity(),
-      detectable: Detectable(['player', 'teleportable']),
       input: true,
       player: true,
       speed: PlayerConfig.speed || 200,
       fastSpeed: PlayerConfig.fastSpeed || 320,
-      collider: Collider.circle(12),
       bounds: Bounds(),
       health: Health.create({ maxHealth: 100, currentHealth: 100 }),
       weapon: Weapon({
@@ -85,15 +84,28 @@ export const PlayerEntity = {
       weaponIntent: WeaponIntent(),
       sprite: Sprite.create('hero', { scale }),
       animation: Animation.create('idle'),
-    };
+    });
 
-    entity.inspector = Inspector.create({
+    // Body Child (Collision & Detection)
+    const body = world.add({
+        parent: Parent(root),
+        transform: Transform(),
+        localTransform: LocalTransform(0, 0),
+        name: `${root.name}_Body`,
+        shape: Shape({ type: ShapeType.CIRCLE, radius: 12 }),
+        collider: Collider.create({ shapeId: 'body' }),
+        detectable: Detectable(['player', 'teleportable']) // Move detectable here
+    });
+
+    root.children = Children([body]);
+
+    root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
       hitPriority: 100,
       editorBox: { w: 32, h: 48, scale: 1 }
     });
 
-    return world.add(entity);
+    return root;
   },
 
   serialize(entity) {

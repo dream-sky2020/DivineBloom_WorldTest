@@ -69,7 +69,9 @@ export class WorldScene {
                 ],
                 physics: [
                     getSystem('movement'),
-                    getSystem('collision')
+                    getSystem('sync-transform'),
+                    getSystem('collision'),
+                    getSystem('sync-transform')
                 ],
                 lifecycle: [
                     getSystem('lifetime')

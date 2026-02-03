@@ -13,7 +13,8 @@ import {
   Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
-  Transform, TRANSFORM_INSPECTOR_FIELDS
+  Transform, TRANSFORM_INSPECTOR_FIELDS,
+  Parent, Children, LocalTransform, Shape, ShapeType
 } from '@components'
 
 // --- Schema Definition ---
@@ -82,23 +83,15 @@ export const EnemyEntity = {
     const isStunned = options.isStunned;
     const visualId = options.spriteId;
 
-    const entity = {
+    const root = world.add({
       type: 'enemy',
       name: name || `Enemy_${visualId}`,
       transform: Transform(x, y),
       velocity: Velocity(),
-      detectable: Detectable(['enemy', 'teleportable']),
       enemy: true,
-
-      detectArea: DetectArea({ shape: 'circle', radius: 40, target: 'player' }),
-      trigger: Trigger({
-        rules: [{ type: 'onEnter', condition: 'notStunned' }],
-        actions: ['BATTLE']
-      }),
 
       actionBattle: Actions.Battle(battleGroup, uuid),
       interaction: { battleGroup, uuid },
-      collider: Collider.circle(15),
       bounds: Bounds(),
 
       aiConfig: AI.Config(
@@ -123,15 +116,44 @@ export const EnemyEntity = {
       health: Health.create({ maxHealth: 100, currentHealth: 100 }),
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create(isStunned ? 'stunned' : 'idle'),
-    };
 
-    entity.inspector = Inspector.create({
+      // Trigger 放在根节点
+      trigger: Trigger({
+        rules: [{ type: 'onEnter', condition: 'notStunned' }],
+        actions: ['BATTLE']
+      })
+    });
+
+    // 2. Body Child (Collision & Detection)
+    const body = world.add({
+        parent: Parent(root),
+        transform: Transform(),
+        localTransform: LocalTransform(0, 0),
+        name: `${root.name}_Body`,
+        shape: Shape({ type: ShapeType.CIRCLE, radius: 15 }),
+        collider: Collider.create({ shapeId: 'body' }),
+        detectable: Detectable(['enemy', 'teleportable']) // Move detectable here
+    });
+
+    // 3. Sensor Child (Battle Detection Only)
+    const sensor = world.add({
+        parent: Parent(root),
+        transform: Transform(),
+        localTransform: LocalTransform(0, 0),
+        name: `${root.name}_Sensor`,
+        shape: Shape({ type: ShapeType.CIRCLE, radius: 40 }),
+        detectArea: DetectArea({ shapeId: 'sensor', target: 'player' })
+    });
+
+    root.children = Children([body, sensor]);
+
+    root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
       hitPriority: 80,
       editorBox: { w: 40, h: 60, scale: 1 }
     });
 
-    return world.add(entity);
+    return root;
   },
 
   serialize(entity) {
