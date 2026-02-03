@@ -24,7 +24,7 @@ export const SteeringTool = {
    * @returns {object} 归一化的移动向量 {x, y}
    */
   calculateMoveDir(entity, targetPos, obstacles = [], dangerRadius = 80) {
-    const currentPos = entity.position;
+    const currentPos = entity.transform;
     if (!currentPos || !targetPos) return { x: 0, y: 0 };
 
     // 1. 计算目标距离，如果非常接近则停止 (防止抖动)
@@ -50,7 +50,7 @@ export const SteeringTool = {
 
     // 3. 计算危险值 (Danger Map)
     obstacles.forEach(obs => {
-      const obsPos = obs.position;
+      const obsPos = obs.transform;
       const collider = obs.collider;
       
       // 简化处理：将障碍物视为圆形或找到最近点

@@ -8,7 +8,8 @@ import {
   Inspector,
   Projectile,
   DetectProjectile,
-  LifeTime, LIFETIME_INSPECTOR_FIELDS
+  LifeTime, LIFETIME_INSPECTOR_FIELDS,
+  Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components'
 
 export const BulletEntity = {
@@ -40,7 +41,7 @@ export const BulletEntity = {
       tags: ['bullet'],
       
       // 基础位置
-      position: { x: params.x, y: params.y },
+      transform: Transform(params.x, params.y),
 
       // 速度组件（独立于 projectile.speed）
       velocity: Velocity(params.velocityX || 0, params.velocityY || 0),
@@ -75,8 +76,7 @@ export const BulletEntity = {
       // 编辑器支持
       inspector: Inspector.create({
         fields: [
-          { path: 'position.x', label: 'X', type: 'number' },
-          { path: 'position.y', label: 'Y', type: 'number' },
+          ...TRANSFORM_INSPECTOR_FIELDS,
           ...VELOCITY_INSPECTOR_FIELDS,
           ...COLLIDER_INSPECTOR_FIELDS,
           { path: 'projectile.damage', label: 'Damage', type: 'number' },

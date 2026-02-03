@@ -2,7 +2,7 @@ import { world } from '@world2d/world'
 import { ShapeType } from '@world2d/definitions/enums/Shape'
 
 // ECS 查询: 所有带有 detectArea 和 position 的实体
-const detectors = world.with('detectArea', 'position')
+const detectors = world.with('detectArea', 'transform')
 
 export const DetectAreaRenderSystem = {
     // 定义渲染层级 (Z-Index) - Debug 层通常最高
@@ -29,14 +29,14 @@ export const DetectAreaRenderSystem = {
 
         for (const entity of detectors) {
             // Defensive Check
-            if (!entity.detectArea || !entity.position) continue;
+            if (!entity.detectArea || !entity.transform) continue;
 
-            const { detectArea, position } = entity
+            const { detectArea, transform } = entity
 
             // 计算中心点 (加上偏移) - 并转换为屏幕坐标
             // [UPDATED] 适配新的扁平化结构: offsetX, offsetY
-            const centerX = (position.x + (detectArea.offsetX || 0)) - camera.x
-            const centerY = (position.y + (detectArea.offsetY || 0)) - camera.y
+            const centerX = (transform.x + (detectArea.offsetX || 0)) - camera.x
+            const centerY = (transform.y + (detectArea.offsetY || 0)) - camera.y
 
             // 设置绘制样式
             // 根据是否有检测结果改变颜色 (如果有 detected result 则变红，否则保持默认)

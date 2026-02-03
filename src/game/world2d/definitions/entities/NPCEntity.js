@@ -8,7 +8,8 @@ import {
   Bounds, BOUNDS_INSPECTOR_FIELDS,
   Actions,
   Inspector, EDITOR_INSPECTOR_FIELDS,
-  DETECT_AREA_INSPECTOR_FIELDS // Added import
+  DETECT_AREA_INSPECTOR_FIELDS,
+  Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components'
 
 // --- Schema Definition ---
@@ -29,8 +30,7 @@ export const NPCEntitySchema = z.object({
 
 const INSPECTOR_FIELDS = [
   { path: 'name', label: '显示名称', type: 'text', group: '基本属性' },
-  { path: 'position.x', label: '坐标 X', type: 'number', props: { step: 1 }, group: '基本属性' },
-  { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 }, group: '基本属性' },
+  ...TRANSFORM_INSPECTOR_FIELDS,
   ...COLLIDER_INSPECTOR_FIELDS,
   ...BOUNDS_INSPECTOR_FIELDS,
   { path: 'actionDialogue.dialogueId', label: '对话 ID', type: 'text', tip: '对应 dialogues 文件夹中的配置', group: '交互配置' },
@@ -55,7 +55,7 @@ export const NPCEntity = {
     const entity = {
       type: 'npc',
       name: name || `NPC_${dialogueId}`,
-      position: { x, y },
+      transform: Transform(x, y),
       npc: true,
 
       detectArea: DetectArea({ shape: 'circle', radius: range, target: 'player' }),
@@ -85,8 +85,8 @@ export const NPCEntity = {
   serialize(entity) {
     return {
       type: 'npc',
-      x: entity.position.x,
-      y: entity.position.y,
+      x: entity.transform.x,
+      y: entity.transform.y,
       name: entity.name,
       config: {
         dialogueId: entity.interaction.id,

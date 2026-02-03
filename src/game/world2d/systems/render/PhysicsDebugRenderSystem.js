@@ -6,7 +6,7 @@ import { ShapeType } from '@world2d/definitions/enums/Shape'
  * 绘制实体的自定义碰撞体形状
  */
 
-const collidableEntities = world.with('position', 'collider')
+const collidableEntities = world.with('transform', 'collider')
 
 export const PhysicsDebugRenderSystem = {
   LAYER: 110, // 渲染在最顶层
@@ -18,9 +18,9 @@ export const PhysicsDebugRenderSystem = {
     ctx.save()
 
     for (const entity of collidableEntities) {
-      const { position, collider } = entity
-      const x = position.x + (collider.offsetX || 0) - camera.x
-      const y = position.y + (collider.offsetY || 0) - camera.y
+      const { transform, collider } = entity
+      const x = transform.x + (collider.offsetX || 0) - camera.x
+      const y = transform.y + (collider.offsetY || 0) - camera.y
 
       ctx.strokeStyle = collider.isStatic ? 'rgba(255, 0, 0, 0.8)' : 'rgba(0, 255, 255, 0.8)'
       ctx.fillStyle = collider.isStatic ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 255, 0.2)'

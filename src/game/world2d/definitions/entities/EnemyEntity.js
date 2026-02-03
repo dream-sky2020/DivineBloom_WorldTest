@@ -12,7 +12,8 @@ import {
   Actions,
   Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
-  DETECT_AREA_INSPECTOR_FIELDS // Added import
+  DETECT_AREA_INSPECTOR_FIELDS,
+  Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components'
 
 // --- Schema Definition ---
@@ -52,8 +53,7 @@ export const EnemyEntitySchema = z.object({
 
 const INSPECTOR_FIELDS = [
   { path: 'name', label: '名称', type: 'text', tip: '敌人在场景中的标识名', group: '基本属性' },
-  { path: 'position.x', label: '坐标 X', type: 'number', props: { step: 1 }, group: '基本属性' },
-  { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 }, group: '基本属性' },
+  ...TRANSFORM_INSPECTOR_FIELDS,
   ...VELOCITY_INSPECTOR_FIELDS,
   ...COLLIDER_INSPECTOR_FIELDS,
   ...BOUNDS_INSPECTOR_FIELDS,
@@ -85,7 +85,7 @@ export const EnemyEntity = {
     const entity = {
       type: 'enemy',
       name: name || `Enemy_${visualId}`,
-      position: { x, y },
+      transform: Transform(x, y),
       velocity: Velocity(),
       detectable: Detectable(['enemy', 'teleportable']),
       enemy: true,
@@ -135,11 +135,11 @@ export const EnemyEntity = {
   },
 
   serialize(entity) {
-    const { position, aiState, aiConfig, interaction, sprite, visual, name } = entity
+    const { transform, aiState, aiConfig, interaction, sprite, visual, name } = entity
     return {
       type: 'enemy',
-      x: position.x,
-      y: position.y,
+      x: transform.x,
+      y: transform.y,
       name: name,
       battleGroup: interaction.battleGroup,
       options: {

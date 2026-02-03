@@ -28,7 +28,7 @@ export const EditorHighlightRenderSystem = {
       const isDragging = isSelected && EditorInteractionSystem.isDragging;
 
       // 如果没有位置，只在选中时特殊处理
-      if (!rawEntity.position) {
+      if (!rawEntity.transform) {
         if (isSelected && rawEntity.globalManager) {
           // 全局管理实体在选中时，在左上角绘制一个固定标识
           this.drawGlobalIndicator(ctx, isDragging);
@@ -52,7 +52,7 @@ export const EditorHighlightRenderSystem = {
           screenY < -500 || screenY > viewH + 500) continue;
 
       let label = rawEntity.name || rawEntity.type || 'Entity';
-      this.drawBox(ctx, screenX, screenY, bounds.w, bounds.h, isSelected, isDragging, label, rawEntity.position.x, rawEntity.position.y);
+      this.drawBox(ctx, screenX, screenY, bounds.w, bounds.h, isSelected, isDragging, label, rawEntity.transform.x, rawEntity.transform.y);
     }
 
     ctx.restore();

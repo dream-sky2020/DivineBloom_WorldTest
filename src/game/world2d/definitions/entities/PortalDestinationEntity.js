@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
+import { Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS } from '@components'
 
 // --- Schema Definition ---
 
@@ -20,8 +20,7 @@ export const PortalDestinationEntitySchema = z.object({
 const INSPECTOR_FIELDS = [
   { path: 'destinationId', label: '目的地 ID', type: 'text', tip: '传送门引用的唯一 ID', props: { readonly: true }, group: '基本属性' },
   { path: 'name', label: '显示名称', type: 'text', group: '基本属性' },
-  { path: 'position.x', label: '坐标 X', type: 'number', group: '基本属性' },
-  { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
+  ...TRANSFORM_INSPECTOR_FIELDS,
   ...EDITOR_INSPECTOR_FIELDS
 ];
 
@@ -40,7 +39,7 @@ export const PortalDestinationEntity = {
       type: 'portal_destination',
       name: destName,
       destinationId: id,
-      position: { x, y },
+      transform: Transform(x, y),
       visual: {
         type: 'rect',
         color: visual?.color || '#8b5cf6',
@@ -61,12 +60,12 @@ export const PortalDestinationEntity = {
   },
 
   serialize(entity) {
-    const { position, destinationId, name, visual } = entity
+    const { transform, destinationId, name, visual } = entity
     return {
       type: 'portal_destination',
       id: destinationId,
-      x: position.x,
-      y: position.y,
+      x: transform.x,
+      y: transform.y,
       name: name,
       visual: visual ? {
         color: visual.color,

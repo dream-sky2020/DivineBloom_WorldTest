@@ -4,7 +4,8 @@ import {
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
   Collider, COLLIDER_INSPECTOR_FIELDS,
-  Inspector, EDITOR_INSPECTOR_FIELDS 
+  Inspector, EDITOR_INSPECTOR_FIELDS,
+  Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components'
 
 // --- Schema Definition ---
@@ -39,8 +40,7 @@ export const DecorationEntitySchema = z.object({
 
 const INSPECTOR_FIELDS = [
     { path: 'name', label: '名称', type: 'text', tip: '该装饰物的显示名称', group: '基本属性' },
-    { path: 'position.x', label: '坐标 X', type: 'number', props: { step: 1 }, group: '基本属性' },
-    { path: 'position.y', label: '坐标 Y', type: 'number', props: { step: 1 }, group: '基本属性' },
+    ...TRANSFORM_INSPECTOR_FIELDS,
     { path: 'zIndex', label: '层级', type: 'number', tip: '控制重叠顺序，背景通常在 -50 以下', props: { step: 1 }, group: '深度排序' },
     { path: 'sprite.id', label: '资源 ID', type: 'text', tip: '对应 assets 中的 ID', group: '精灵 (Sprite)' },
     ...SPRITE_INSPECTOR_FIELDS,
@@ -84,7 +84,7 @@ export const DecorationEntity = {
         const entity = {
             type: 'decoration',
             name: name,
-            position: { x, y },
+            transform: Transform(x, y),
             sprite: spriteComponent,
             animation: animationComponent,
             rect: rectComponent,
@@ -110,8 +110,8 @@ export const DecorationEntity = {
         
         return {
             type: 'decoration',
-            x: entity.position.x,
-            y: entity.position.y,
+            x: entity.transform.x,
+            y: entity.transform.y,
             name: entity.name,
             config: {
                 spriteId: sprite?.id !== 'rect' ? sprite?.id : undefined,

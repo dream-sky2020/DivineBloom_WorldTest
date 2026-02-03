@@ -7,9 +7,9 @@ import { world } from '@world2d/world'
  */
 
 // 查询所有带有传送行为和位置的实体
-const portals = world.with('actionTeleport', 'position')
+const portals = world.with('actionTeleport', 'transform')
 // 查询所有目的地实体
-const destinations = world.with('destinationId', 'position')
+const destinations = world.with('destinationId', 'transform')
 
 export const PortalDebugRenderSystem = {
     LAYER: 105,
@@ -39,9 +39,9 @@ export const PortalDebugRenderSystem = {
      */
     _drawDestinations(ctx, camera) {
         for (const dest of destinations) {
-            const { position, visual, destinationId, name } = dest
-            const x = position.x - camera.x
-            const y = position.y - camera.y
+            const { transform, visual, destinationId, name } = dest
+            const x = transform.x - camera.x
+            const y = transform.y - camera.y
 
             const color = visual?.color || '#8b5cf6'
             const size = visual?.size || 20
@@ -77,23 +77,23 @@ export const PortalDebugRenderSystem = {
      */
     _drawPortalConnections(ctx, camera) {
         for (const entity of portals) {
-            const { actionTeleport, position, detectArea } = entity
+            const { actionTeleport, transform, detectArea } = entity
             const { mapId, destinationId, targetX, targetY } = actionTeleport
 
             // 仅渲染同地图传送的连线
             if (mapId != null) continue
 
             // 1. 确定起点（传送门中心）
-            const startX = position.x + (detectArea?.offset?.x || 0)
-            const startY = position.y + (detectArea?.offset?.y || 0)
+            const startX = transform.x + (detectArea?.offset?.x || 0)
+            const startY = transform.y + (detectArea?.offset?.y || 0)
 
             // 2. 确定终点
             let destX, destY
             if (destinationId != null) {
                 const destEntity = [...destinations].find(d => d.destinationId === destinationId)
                 if (destEntity) {
-                    destX = destEntity.position.x
-                    destY = destEntity.position.y
+                    destX = destEntity.transform.x
+                    destY = destEntity.transform.y
                 }
             } else if (targetX != null && targetY != null) {
                 destX = targetX

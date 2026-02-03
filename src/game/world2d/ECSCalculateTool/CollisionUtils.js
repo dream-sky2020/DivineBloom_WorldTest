@@ -200,8 +200,8 @@ export const CollisionUtils = {
     }
 
     const posCap = {
-      x: entityCapsule.position.x + (colCap.offsetX || 0),
-      y: entityCapsule.position.y + (colCap.offsetY || 0)
+      x: entityCapsule.transform.x + (colCap.offsetX || 0),
+      y: entityCapsule.transform.y + (colCap.offsetY || 0)
     };
 
     // 🎯 关键修复: 应用整体旋转到胶囊的端点
@@ -224,8 +224,8 @@ export const CollisionUtils = {
     const capsule = { p1, p2, radius: colCap.radius };
 
     const posOther = {
-      x: entityOther.position.x + (colOther.offsetX || 0),
-      y: entityOther.position.y + (colOther.offsetY || 0)
+      x: entityOther.transform.x + (colOther.offsetX || 0),
+      y: entityOther.transform.y + (colOther.offsetY || 0)
     };
 
     // 胶囊 vs 圆形
@@ -251,7 +251,7 @@ export const CollisionUtils = {
 
         // 将采样点视为一个圆，与矩形做碰撞
         const mtv = this.checkCollision(
-          { position: samplePoint, collider: { type: 'circle', radius: capsule.radius, layer: colCap.layer, mask: colCap.mask } },
+          { transform: samplePoint, collider: { type: 'circle', radius: capsule.radius, layer: colCap.layer, mask: colCap.mask } },
           entityOther
         );
 
@@ -335,8 +335,8 @@ export const CollisionUtils = {
     if (!colA || !colB) return null;
     if (!(colA.mask & colB.layer) && !(colB.mask & colA.layer)) return null;
 
-    const posA = { x: entityA.position.x + (colA.offsetX || 0), y: entityA.position.y + (colA.offsetY || 0) };
-    const posB = { x: entityB.position.x + (colB.offsetX || 0), y: entityB.position.y + (colB.offsetY || 0) };
+    const posA = { x: entityA.transform.x + (colA.offsetX || 0), y: entityA.transform.y + (colA.offsetY || 0) };
+    const posB = { x: entityB.transform.x + (colB.offsetX || 0), y: entityB.transform.y + (colB.offsetY || 0) };
 
     // 处理胶囊体
     if (colA.type === 'capsule') return this.checkCapsuleCollision(entityA, entityB);

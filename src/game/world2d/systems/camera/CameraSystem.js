@@ -34,17 +34,17 @@ export const CameraSystem = {
     // 2. 查找跟随目标 (如果有具体引用则使用，否则寻找 player)
     let target = camera.targetEntity
     if (!target) {
-      target = world.with('player', 'position').first
+      target = world.with('player', 'transform').first
     }
 
-    if (target && target.position) {
+    if (target && target.transform) {
       // 3. 计算死区逻辑
       // 相机中心点
       const camCenterX = camera.x + viewportWidth / 2
       const camCenterY = camera.y + viewportHeight / 2
 
-      const dx = target.position.x - camCenterX
-      const dy = target.position.y - camCenterY
+      const dx = target.transform.x - camCenterX
+      const dy = target.transform.y - camCenterY
 
       const dzW = (camera.deadZone?.width || 0) / 2
       const dzH = (camera.deadZone?.height || 0) / 2

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { Collider, COLLIDER_INSPECTOR_FIELDS, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
+import { Collider, COLLIDER_INSPECTOR_FIELDS, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS } from '@components'
 
 export const ObstacleEntitySchema = z.object({
   x: z.number(),
@@ -17,8 +17,7 @@ export const ObstacleEntitySchema = z.object({
 
 const INSPECTOR_FIELDS = [
   { path: 'name', label: '名称', type: 'text', group: '基本属性' },
-  { path: 'position.x', label: '坐标 X', type: 'number', group: '基本属性' },
-  { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
+  ...TRANSFORM_INSPECTOR_FIELDS,
   ...COLLIDER_INSPECTOR_FIELDS,
   ...EDITOR_INSPECTOR_FIELDS
 ];
@@ -36,7 +35,7 @@ export const ObstacleEntity = {
     const entity = {
       type: 'obstacle',
       name: name,
-      position: { x, y },
+      transform: Transform(x, y),
       collider: Collider.create({
         type: shape,
         width: width || (radius ? radius * 2 : 30),
@@ -67,8 +66,8 @@ export const ObstacleEntity = {
     return {
       type: 'obstacle',
       name: entity.name,
-      x: entity.position.x,
-      y: entity.position.y,
+      x: entity.transform.x,
+      y: entity.transform.y,
       width: entity.collider.width,
       height: entity.collider.height,
       radius: entity.collider.radius,

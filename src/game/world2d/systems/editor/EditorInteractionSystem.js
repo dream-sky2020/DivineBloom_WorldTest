@@ -39,8 +39,8 @@ export const EditorInteractionSystem = {
         this.selectedEntity = rawHit;
         editorManager.selectedEntity = rawHit; // Sync with reactive state
         this.isDragging = true;
-        this.dragOffset.x = rawHit.position.x - worldX;
-        this.dragOffset.y = rawHit.position.y - worldY;
+        this.dragOffset.x = rawHit.transform.x - worldX;
+        this.dragOffset.y = rawHit.transform.y - worldY;
         console.log('[Editor] Selected:', rawHit.name || rawHit.id || rawHit.uuid || 'unnamed');
       } else {
         this.selectedEntity = null;
@@ -52,22 +52,22 @@ export const EditorInteractionSystem = {
     // 始终从 editorManager 获取最新目标
     const target = toRaw(editorManager.selectedEntity);
     
-    if (this.isDragging && target && target.position) {
+    if (this.isDragging && target && target.transform) {
       if (mouse.isDown) {
         // 更新位置 (通过响应式代理更新，Vue 就能感知到)
-        target.position.x = worldX + this.dragOffset.x;
-        target.position.y = worldY + this.dragOffset.y;
+        target.transform.x = worldX + this.dragOffset.x;
+        target.transform.y = worldY + this.dragOffset.y;
 
         // 也可以实现对齐网格 (Grid Snapping)
         if (input.keys.has('ControlLeft') || input.keys.has('ControlRight')) {
           const gridSize = 32; // 默认网格大小
-          target.position.x = Math.round(target.position.x / gridSize) * gridSize;
-          target.position.y = Math.round(target.position.y / gridSize) * gridSize;
+          target.transform.x = Math.round(target.transform.x / gridSize) * gridSize;
+          target.transform.y = Math.round(target.transform.y / gridSize) * gridSize;
         }
       } else {
         this.isDragging = false;
       }
-    } else if (this.isDragging && target && !target.position) {
+    } else if (this.isDragging && target && !target.transform) {
       // 对于没有位置的实体（如全局实体），如果鼠标松开了就停止“拖拽”状态
       if (!mouse.isDown) {
         this.isDragging = false;
@@ -108,7 +108,7 @@ export const EditorInteractionSystem = {
    * 严格遵循 Inspector 定义，实现编辑器与渲染组件 (Sprite) 的解耦
    */
   getEntityBounds(entity) {
-    if (!entity.position) return null;
+    if (!entity.transform) return null;
 
     const inspector = entity.inspector;
     
@@ -158,8 +158,8 @@ export const EditorInteractionSystem = {
     const finalW = w * scale;
     const finalH = h * scale;
 
-    const left = entity.position.x + ox - finalW * ax;
-    const top = entity.position.y + oy - finalH * ay;
+    const left = entity.transform.x + ox - finalW * ax;
+    const top = entity.transform.y + oy - finalH * ay;
 
     return { left, top, w: finalW, h: finalH, ax, ay, ox, oy };
   },
@@ -168,7 +168,7 @@ export const EditorInteractionSystem = {
    * 查找坐标下的实体
    */
   findEntityAt(x, y) {
-    const entities = world.with('position');
+    const entities = world.with('transform');
     let bestHit = null;
     let maxPriority = -Infinity;
 

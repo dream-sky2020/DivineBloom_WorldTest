@@ -11,7 +11,7 @@ import { drawSuspicion, drawAlert, drawStunned } from '@world2d/ECSCalculateTool
  * @property {object} aiState
  */
 
-const statusEntities = world.with('position', 'aiState')
+const statusEntities = world.with('transform', 'aiState')
 
 export const StatusRenderSystem = {
   // 定义渲染层级 (Z-Index)
@@ -43,8 +43,8 @@ export const StatusRenderSystem = {
 
     for (const entity of statusEntities) {
       // Defensive checks for components
-      if (!entity.position) {
-        console.warn(`[StatusRenderSystem] Entity ${entity.id || 'N/A'} missing position!`);
+      if (!entity.transform) {
+        console.warn(`[StatusRenderSystem] Entity ${entity.id || 'N/A'} missing transform!`);
         continue;
       }
       if (!entity.aiState) {
@@ -52,14 +52,14 @@ export const StatusRenderSystem = {
         continue;
       }
 
-      if (!isVisible(entity.position)) continue
+      if (!isVisible(entity.transform)) continue
 
       const { state, suspicion } = entity.aiState
 
       // 转换世界坐标到屏幕坐标 (Screen Space)
       const screenPos = {
-        x: entity.position.x - camera.x,
-        y: entity.position.y - camera.y
+        x: entity.transform.x - camera.x,
+        y: entity.transform.y - camera.y
       }
 
       // 1. Suspicion (?)

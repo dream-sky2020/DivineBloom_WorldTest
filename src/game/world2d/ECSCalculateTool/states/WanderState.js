@@ -3,7 +3,7 @@ import { SteeringTool } from '@world2d/ECSCalculateTool/SteeringTool'
 
 export const WanderState = {
     update(entity, dt) {
-        const { aiState, aiConfig, aiSensory, position } = entity
+        const { aiState, aiConfig, aiSensory, transform } = entity
 
         // 1. Enter Logic
         if (aiState.justEntered) {
@@ -31,8 +31,8 @@ export const WanderState = {
         
         let isReturningHome = false
         if (aiConfig.homePosition && aiConfig.patrolRadius) {
-            const dx = position.x - aiConfig.homePosition.x
-            const dy = position.y - aiConfig.homePosition.y
+            const dx = transform.x - aiConfig.homePosition.x
+            const dy = transform.y - aiConfig.homePosition.y
             const distSq = dx * dx + dy * dy
             const radiusSq = aiConfig.patrolRadius * aiConfig.patrolRadius
 
@@ -56,8 +56,8 @@ export const WanderState = {
             
             // Face player
             const playerPos = aiSensory.playerPos
-            const dx = playerPos.x - position.x
-            const dy = playerPos.y - position.y
+            const dx = playerPos.x - transform.x
+            const dy = playerPos.y - transform.y
             const distSq = aiSensory.distSqToPlayer
             
             if (distSq > 0.001) {
@@ -80,8 +80,8 @@ export const WanderState = {
                     const angle = Math.random() * Math.PI * 2
                     // 设定一个临时目标点用于转向系统
                     aiState.targetPos = {
-                        x: position.x + Math.cos(angle) * 100,
-                        y: position.y + Math.sin(angle) * 100
+                        x: transform.x + Math.cos(angle) * 100,
+                        y: transform.y + Math.sin(angle) * 100
                     }
                 }
             }

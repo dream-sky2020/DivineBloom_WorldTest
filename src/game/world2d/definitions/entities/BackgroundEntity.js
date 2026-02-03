@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { world } from '@world2d/world'
-import { Sprite, SPRITE_INSPECTOR_FIELDS, Inspector, EDITOR_INSPECTOR_FIELDS } from '@components'
+import { Sprite, SPRITE_INSPECTOR_FIELDS, Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS } from '@components'
 import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('BackgroundEntity')
@@ -15,6 +15,7 @@ export const BackgroundGroundSchema = z.object({
 
 const INSPECTOR_FIELDS = [
     { path: 'name', label: '名称', type: 'text', group: '基本属性' },
+    ...TRANSFORM_INSPECTOR_FIELDS,
     { path: 'rect.width', label: '宽度', type: 'number', group: '几何尺寸' },
     { path: 'rect.height', label: '高度', type: 'number', group: '几何尺寸' },
     ...SPRITE_INSPECTOR_FIELDS,
@@ -40,7 +41,7 @@ export const BackgroundEntity = {
         const entity = {
             type: 'background_ground',
             name: 'Ground',
-            position: { x: 0, y: 0 },
+            transform: Transform(0, 0),
             sprite: Sprite.create('rect', { tint: d.color }),
             rect: { width: d.width, height: d.height },
             zIndex: -100,

@@ -17,7 +17,7 @@ const logger = createLogger('EnemyAIIntentSystem')
  * @property {object} aiSensory (From AISenseSystem & ExternalSenseSystem)
  */
 
-const enemyEntities = world.with('enemy', 'position', 'velocity', 'aiState', 'aiConfig')
+const enemyEntities = world.with('enemy', 'transform', 'velocity', 'aiState', 'aiConfig')
 
 // State Map
 const STATES = {

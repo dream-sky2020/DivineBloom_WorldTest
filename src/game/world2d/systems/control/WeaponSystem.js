@@ -16,7 +16,7 @@ const logger = createLogger('WeaponSystem')
  * @property {object} weaponIntent - 武器意图（用于接收射击指令）
  */
 
-const weaponEntities = world.with('weapon', 'position')
+const weaponEntities = world.with('weapon', 'transform')
 
 export const WeaponSystem = {
   update(dt) {
@@ -24,8 +24,8 @@ export const WeaponSystem = {
       const weapon = entity.weapon
       
       // 防御性检查
-      if (!entity.position) {
-        logger.error(`Entity "${entity.name || entity.type || 'N/A'}" has weapon but no position!`)
+      if (!entity.transform) {
+        logger.error(`Entity "${entity.name || entity.type || 'N/A'}" has weapon but no transform!`)
         continue
       }
       
@@ -60,7 +60,7 @@ export const WeaponSystem = {
    * @param {Object} shooter - 射击者实体
    */
   fireBullet(shooter) {
-    const { position, weapon } = shooter
+    const { transform, weapon } = shooter
     const dir = weapon.fireDirection
     
     // 归一化方向（防止异常）
@@ -71,8 +71,8 @@ export const WeaponSystem = {
     
     // 计算子弹初始位置（稍微偏移，避免与射击者碰撞）
     const offset = 15 // 偏移距离
-    const bulletX = position.x + normalizedDir.x * offset
-    const bulletY = position.y + normalizedDir.y * offset
+    const bulletX = transform.x + normalizedDir.x * offset
+    const bulletY = transform.y + normalizedDir.y * offset
     
     // 生成子弹实体
     const bullet = BulletEntity.create({

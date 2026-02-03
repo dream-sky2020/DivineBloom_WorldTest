@@ -10,7 +10,7 @@ import { world } from '@world2d/world'
  * @property {object} aiConfig
  */
 
-const aiEntities = world.with('aiConfig', 'position')
+const aiEntities = world.with('aiConfig', 'transform')
 
 export const AIPatrolDebugRenderSystem = {
     // 调试层级，位于视野 (15) 之下，背景 (10) 之上
@@ -29,7 +29,7 @@ export const AIPatrolDebugRenderSystem = {
         const cullMargin = 300
 
         for (const entity of aiEntities) {
-            const { aiConfig, position } = entity
+            const { aiConfig, transform } = entity
             
             // 如果没有家位置或巡逻半径，不渲染
             if (!aiConfig.homePosition || !aiConfig.patrolRadius) continue
@@ -66,8 +66,8 @@ export const AIPatrolDebugRenderSystem = {
             ctx.fill()
             
             // 3. 绘制从 AI 到家的连接线，直观显示距离
-            const screenAiX = position.x - camera.x
-            const screenAiY = position.y - camera.y
+            const screenAiX = transform.x - camera.x
+            const screenAiY = transform.y - camera.y
             
             ctx.beginPath()
             ctx.moveTo(screenHomeX, screenHomeY)

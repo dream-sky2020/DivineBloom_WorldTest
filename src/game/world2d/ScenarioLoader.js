@@ -97,8 +97,8 @@ export class ScenarioLoader {
             result.entities.push(result.player)
         } else if (spawnPoint) {
             // 如果已有玩家实体但有指定的入口点，则覆盖坐标
-            result.player.position.x = spawnPoint.x
-            result.player.position.y = spawnPoint.y
+            result.player.transform.x = spawnPoint.x
+            result.player.transform.y = spawnPoint.y
         }
 
         // 5. 初始化相机
@@ -397,7 +397,7 @@ export class ScenarioLoader {
             let targetY = 0
 
             if (isMapLargerX) {
-                targetX = player.position.x - viewportWidth / 2
+                targetX = player.transform.x - viewportWidth / 2
                 if (cam.useBounds) {
                     const maxX = mapWidth - viewportWidth
                     targetX = Math.max(0, Math.min(targetX, maxX))
@@ -407,7 +407,7 @@ export class ScenarioLoader {
             }
 
             if (isMapLargerY) {
-                targetY = player.position.y - viewportHeight / 2
+                targetY = player.transform.y - viewportHeight / 2
                 if (cam.useBounds) {
                     const maxY = mapHeight - viewportHeight
                     targetY = Math.max(0, Math.min(targetY, maxY))

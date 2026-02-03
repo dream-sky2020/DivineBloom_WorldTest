@@ -8,7 +8,7 @@ import { world } from '@world2d/world'
  * 目前仅负责地面纯色填充。
  */
 
-const renderEntities = world.with('position')
+const renderEntities = world.with('transform')
 
 export const BackgroundRenderSystem = {
     LAYER: 10,
@@ -40,10 +40,10 @@ export const BackgroundRenderSystem = {
     drawVisual(renderer, entity) {
         const sprite = entity.sprite || entity.visual
         const rect = entity.rect || (sprite?.type === 'rect' ? sprite : null)
-        const { position } = entity
+        const { transform } = entity
         const camera = renderer.camera
 
-        if (!position || !camera) return
+        if (!transform || !camera) return
 
         // 仅处理矩形填充 (地面或其他背景块)
         if (rect) {
@@ -52,8 +52,8 @@ export const BackgroundRenderSystem = {
             renderer.ctx.globalAlpha = sprite?.opacity ?? 1.0
 
             renderer.ctx.fillRect(
-                position.x - camera.x + (sprite?.offsetX || 0),
-                position.y - camera.y + (sprite?.offsetY || 0),
+                transform.x - camera.x + (sprite?.offsetX || 0),
+                transform.y - camera.y + (sprite?.offsetY || 0),
                 rect.width || 2000,
                 rect.height || 2000
             )

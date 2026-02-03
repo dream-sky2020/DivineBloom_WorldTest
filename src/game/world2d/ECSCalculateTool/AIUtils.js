@@ -17,7 +17,7 @@ export function changeState(entity, newState) {
  * @returns {boolean}
  */
 export function canSeePlayer(entity, distSq, playerPos) {
-    const { position, aiConfig, aiState } = entity
+    const { transform, aiConfig, aiState } = entity
     const { visionRadius, visionType, visionProximity, visionAngle } = aiConfig
   
     // Optimization: Pre-check squared distance
@@ -35,8 +35,8 @@ export function canSeePlayer(entity, distSq, playerPos) {
       // Only calculate sqrt if we passed distance checks and need angle
       const dist = Math.sqrt(distSq)
       
-      const dx = playerPos.x - position.x
-      const dy = playerPos.y - position.y
+      const dx = playerPos.x - transform.x
+      const dy = playerPos.y - transform.y
       const nx = dx / (dist || 1)
       const ny = dy / (dist || 1)
       const dot = nx * aiState.facing.x + ny * aiState.facing.y

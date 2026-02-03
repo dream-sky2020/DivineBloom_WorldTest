@@ -5,7 +5,9 @@ import {
   Actions,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   ShapeType,
-  DETECT_AREA_INSPECTOR_FIELDS // Added import
+  DETECT_AREA_INSPECTOR_FIELDS,
+  TRANSFORM_INSPECTOR_FIELDS,
+  Transform
 } from '@components'
 
 // --- Schema Definition ---
@@ -35,8 +37,7 @@ export const PortalEntitySchema = z.object({
 
 const INSPECTOR_FIELDS = [
   { path: 'name', label: '传送门名称', type: 'text', group: '基本属性' },
-  { path: 'position.x', label: '坐标 X', type: 'number', group: '基本属性' },
-  { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
+  ...TRANSFORM_INSPECTOR_FIELDS,
   ...DETECT_AREA_INSPECTOR_FIELDS,
   {
     path: 'isForced',
@@ -89,7 +90,7 @@ export const PortalEntity = {
     const entity = {
       type: 'portal',
       name: portalName,
-      position: { x, y },
+      transform: Transform(x, y),
       isForced: isForced,
       detectArea: DetectArea({
         type: ShapeType.AABB,
@@ -128,7 +129,7 @@ export const PortalEntity = {
   },
 
   serialize(entity) {
-    const { position, detectArea, actionTeleport, name, isForced } = entity
+    const { transform, detectArea, actionTeleport, name, isForced } = entity
 
     // 防御性检查：确保 detectArea 存在
     if (!detectArea) {
@@ -138,8 +139,8 @@ export const PortalEntity = {
 
     const data = {
       type: 'portal',
-      x: position?.x ?? 0,
-      y: position?.y ?? 0,
+      x: transform?.x ?? 0,
+      y: transform?.y ?? 0,
       name: name,
       width: detectArea.width ?? 0,
       height: detectArea.height ?? 0,

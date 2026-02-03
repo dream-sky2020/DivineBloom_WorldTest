@@ -9,12 +9,12 @@ const logger = createLogger('AISenseSystem')
  * 优化版：引入了 UUID 缓存查找和感知分摊机制
  */
 
-const aiEntities = world.with('aiConfig', 'aiState', 'position')
-const obstacleEntities = world.with('type', 'position', 'collider') // 修正：明确包含 collider
+const aiEntities = world.with('aiConfig', 'aiState', 'transform')
+const obstacleEntities = world.with('type', 'transform', 'collider') // 修正：明确包含 collider
 
 // Helper to get player
 const getPlayer = () => {
-    return world.with('player', 'position').first
+    return world.with('player', 'transform').first
 }
 
 /**
@@ -108,7 +108,7 @@ export const AISenseSystem = {
 
     senseEnvironment(dt) {
         const player = getPlayer()
-        const playerPos = player ? player.position : null
+        const playerPos = player ? player.transform : null
 
         // 预提取位置信息以减少循环内访问开销
         const px = playerPos ? playerPos.x : 0
@@ -121,9 +121,9 @@ export const AISenseSystem = {
             }
 
             const sensory = entity.aiSensory
-            const { aiConfig, position } = entity
+            const { aiConfig, transform } = entity
 
-            if (!aiConfig || !position) continue;
+            if (!aiConfig || !transform) continue;
 
             // 1. 节流检测 (每秒约 10 次)
             sensory.senseTimer -= dt
@@ -154,8 +154,8 @@ export const AISenseSystem = {
                 entity.aiState.lastSeenPos = { x: px, y: py };
             }
 
-            const dx = px - position.x
-            const dy = py - position.y
+            const dx = px - transform.x
+            const dy = py - transform.y
             const distSq = dx * dx + dy * dy
             sensory.distSqToPlayer = distSq
 
@@ -188,7 +188,7 @@ export const AISenseSystem = {
      * 感知周围的障碍物
      */
     _senseObstacles(entity, sensory) {
-        const entityPos = entity.position;
+        const entityPos = entity.transform;
         const radius = 150; // 感知半径比转向用的危险半径稍大一点
         const radiusSq = radius * radius;
 
@@ -197,8 +197,8 @@ export const AISenseSystem = {
         for (const obs of obstacleEntities) {
             if (obs.type !== 'obstacle') continue;
             
-            const dx = obs.position.x - entityPos.x;
-            const dy = obs.position.y - entityPos.y;
+            const dx = obs.transform.x - entityPos.x;
+            const dy = obs.transform.y - entityPos.y;
             const distSq = dx * dx + dy * dy;
 
             if (distSq < radiusSq) {
@@ -216,9 +216,9 @@ export const AISenseSystem = {
             return;
         }
 
-        const portals = world.with('actionTeleport', 'position');
-        const destinations = world.with('destinationId', 'position');
-        const entityPos = entity.position;
+        const portals = world.with('actionTeleport', 'transform');
+        const destinations = world.with('destinationId', 'transform');
+        const entityPos = entity.transform;
         const lastSeenPos = entity.aiState?.lastSeenPos;
 
         let bestPortal = null;
@@ -233,7 +233,7 @@ export const AISenseSystem = {
             }
 
             for (const p of portals) {
-                const { actionTeleport, position: pPos, detectArea } = p;
+                const { actionTeleport, transform: pPos, detectArea } = p;
                 
                 // 计算传送门位置（中心点）
                 let portalX = pPos.x;
@@ -263,7 +263,7 @@ export const AISenseSystem = {
         const directDist = Math.sqrt(sensory.distSqToPlayer);
 
         for (const p of portals) {
-            const { actionTeleport, position: pPos, detectArea } = p;
+            const { actionTeleport, transform: pPos, detectArea } = p;
             const { mapId, entryId, destinationId, targetX, targetY } = actionTeleport;
 
             // 判断传送类型（使用 != null 来同时排除 null 和 undefined）
@@ -289,7 +289,7 @@ export const AISenseSystem = {
                 if (!destEntity) {
                     continue; // 找不到目的地实体，跳过
                 }
-                dest = { x: destEntity.position.x, y: destEntity.position.y }
+                dest = { x: destEntity.transform.x, y: destEntity.transform.y }
             } else if (targetX != null && targetY != null) {
                 // 使用直接坐标
                 dest = { x: targetX, y: targetY }

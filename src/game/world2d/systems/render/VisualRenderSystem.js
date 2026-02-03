@@ -10,11 +10,11 @@ const logger = createLogger('VisualRenderSystem')
  * 层级：中间层 (Layer 20)，需要 Y 轴排序
  * 
  * Required Components:
- * @property {object} position
+ * @property {object} transform
  * @property {object} visual
  */
 
-const renderEntities = world.with('position')
+const renderEntities = world.with('transform')
 
 export const VisualRenderSystem = {
   // 定义渲染层级 (Z-Index)
@@ -83,7 +83,7 @@ export const VisualRenderSystem = {
     // 1. 收集实体
     const entities = []
     for (const entity of renderEntities) {
-      if (!entity.position) continue;
+      if (!entity.transform) continue;
       if (!entity.sprite && !entity.visual) continue;
 
       // 仅排除 background_ground 类型
@@ -97,7 +97,7 @@ export const VisualRenderSystem = {
       const zA = a.zIndex || 0
       const zB = b.zIndex || 0
       if (zA !== zB) return zA - zB
-      if (zA === 0) return a.position.y - b.position.y
+      if (zA === 0) return a.transform.y - b.transform.y
       return 0
     })
 
@@ -117,7 +117,7 @@ export const VisualRenderSystem = {
     }
 
     for (const entity of entities) {
-      if (!isVisible(entity.position)) continue
+      if (!isVisible(entity.transform)) continue
       this.drawVisual(renderer, entity)
     }
   },
@@ -125,7 +125,7 @@ export const VisualRenderSystem = {
   drawVisual(renderer, entity) {
     // 优先使用新的 sprite 组件，兼容旧的 visual 组件
     const sprite = entity.sprite || entity.visual;
-    const { position, animation } = entity;
+    const { transform, animation } = entity;
 
     if (!sprite || sprite.visible === false) return;
 
@@ -137,8 +137,8 @@ export const VisualRenderSystem = {
       renderer.ctx.globalAlpha = sprite.opacity !== undefined ? sprite.opacity : 1.0;
 
       renderer.ctx.fillRect(
-        position.x + (sprite.offsetX || 0) - (camera?.x || 0),
-        position.y + (sprite.offsetY || 0) - (camera?.y || 0),
+        transform.x + (sprite.offsetX || 0) - (camera?.x || 0),
+        transform.y + (sprite.offsetY || 0) - (camera?.y || 0),
         rect.width || 10,
         rect.height || 10
       )
@@ -151,7 +151,7 @@ export const VisualRenderSystem = {
 
     const def = Visuals[sprite.id]
     if (!def) {
-      renderer.drawCircle(position.x, position.y, 10, 'red')
+      renderer.drawCircle(transform.x, transform.y, 10, 'red')
       return
     }
 
@@ -200,14 +200,25 @@ export const VisualRenderSystem = {
 
     // 应用颜色和偏移
     const drawPos = {
-      x: position.x + (sprite.offsetX || 0),
-      y: position.y + (sprite.offsetY || 0)
+      x: transform.x + (sprite.offsetX || 0),
+      y: transform.y + (sprite.offsetY || 0)
     };
 
     const scale = sprite.scale !== undefined ? sprite.scale : 1.0
 
-    // 如果有 tint/opacity，可能需要更复杂的绘制逻辑，目前 drawSprite 可能不支持
-    // 这里先简单处理 scale
+    // [UPDATED] Pass rotation/scale if renderer supports it, or handle it here
+    // Assumption: renderer.drawSprite supports basic pos and scale, but maybe not full transform
+    // If renderer.drawSprite is simple, we might need to change how we call it or update renderer.
+    // For now, let's assume we just pass the position and let the renderer handle basic drawing.
+    // However, since we have rotation in transform, we should probably use ctx.rotate if drawSprite doesn't handle it.
+    // But drawSprite usually just draws an image.
+    // Let's modify the draw call to use the transform context.
+    
+    // NOTE: Since I cannot see renderer.drawSprite implementation, I will assume it draws at drawPos.
+    // To support rotation, I might need to save/restore context and rotate.
+    // But VisualRenderSystem.drawVisual in the provided code seems to rely on renderer.drawSprite.
+    // I will stick to the previous logic but update position source.
+    
     renderer.drawSprite(texture, spriteDef, drawPos, scale)
   }
 }

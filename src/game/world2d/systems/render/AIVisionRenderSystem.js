@@ -13,7 +13,7 @@ import { drawVision } from '@world2d/ECSCalculateTool/ECSSceneGizmosRendererCalc
  */
 
 // 直接查询 AI 相关的组件，不再依赖 Visual 组件
-const visionEntities = world.with('position', 'aiConfig', 'aiState')
+const visionEntities = world.with('transform', 'aiConfig', 'aiState')
 
 export const AIVisionRenderSystem = {
     // 定义渲染层级 (Z-Index)
@@ -44,10 +44,10 @@ export const AIVisionRenderSystem = {
         // 但由于 drawVision 内部使用了 cached canvas 并处理了样式，这里直接循环调用即可
 
         for (const entity of visionEntities) {
-            if (!entity.position) continue
+            if (!entity.transform) continue
 
             // 剔除屏幕外的
-            if (!isVisible(entity.position)) continue
+            if (!isVisible(entity.transform)) continue
 
             // 如果处于晕眩状态，通常不绘制视野，或者视野失效
             // 这里由设计决定，暂时保持原逻辑：晕眩时不画视野
@@ -55,8 +55,8 @@ export const AIVisionRenderSystem = {
 
             // 转换世界坐标到屏幕坐标 (Screen Space)
             const screenPos = {
-                x: entity.position.x - camera.x,
-                y: entity.position.y - camera.y
+                x: entity.transform.x - camera.x,
+                y: entity.transform.y - camera.y
             }
 
             // 直接绘制，不依赖 Gizmos 工具类 (为了调试和确保可见性)

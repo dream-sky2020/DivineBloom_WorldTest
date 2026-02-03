@@ -13,10 +13,10 @@ const logger = createLogger('DetectAreaSystem')
 export const DetectAreaSystem = {
   update(dt) {
     // 1. 获取所有具有 DetectArea 的实体
-    const detectors = world.with('detectArea', 'position')
+    const detectors = world.with('detectArea', 'transform')
 
     // 2. 获取所有具备被探测资格的实体
-    const targets = world.with('detectable', 'position')
+    const targets = world.with('detectable', 'transform')
 
     for (const entity of detectors) {
       const detect = entity.detectArea
@@ -25,7 +25,7 @@ export const DetectAreaSystem = {
       // 构造 Detector 的临时 Collider
       // 现在的 DetectArea 结构已与 PhysicsCollider 统一 (扁平化 + type)
       const detectorProxy = {
-        position: entity.position,
+        transform: entity.transform,
         collider: {
           type: detect.type,
           radius: detect.radius || 0,
@@ -33,7 +33,7 @@ export const DetectAreaSystem = {
           height: detect.height || 0,
           offsetX: detect.offsetX || 0,
           offsetY: detect.offsetY || 0,
-          rotation: detect.rotation || 0,
+          rotation: (detect.rotation || 0),
           p1: detect.p1 || { x: 0, y: 0 },
           p2: detect.p2 || { x: 0, y: 0 },
           layer: 1, // 确保能通过 CollisionUtils 的 mask 检查
@@ -71,7 +71,7 @@ export const DetectAreaSystem = {
           }
 
           const targetProxy = {
-            position: target.position,
+            transform: target.transform,
             collider: {
               type: targetType,
               radius: targetRadius,

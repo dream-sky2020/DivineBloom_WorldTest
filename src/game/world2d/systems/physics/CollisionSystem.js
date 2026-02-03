@@ -7,7 +7,7 @@ import { ShapeType } from '@world2d/definitions/enums/Shape'
  * 负责检测实体间重叠并进行位置修正（Resolution）
  */
 
-const collidableEntities = world.with('position', 'collider')
+const collidableEntities = world.with('transform', 'collider')
 
 export const CollisionSystem = {
   // 迭代次数，防止物体在角落抖动
@@ -42,7 +42,8 @@ export const CollisionSystem = {
         // 2. 处理地图边界碰撞 (仅对非静态物体)
         const entity = entities[i]
         if (mapBounds && entity.collider && !entity.collider.isStatic) {
-          CollisionUtils.resolveMapBounds(entity.position, entity.collider, mapBounds)
+          // Use transform as position object (duck typing with {x, y})
+          CollisionUtils.resolveMapBounds(entity.transform, entity.collider, mapBounds)
         }
       }
     }
@@ -59,8 +60,8 @@ export const CollisionSystem = {
     const sizeA = this._getBroadphaseSize(colA) + margin
     const sizeB = this._getBroadphaseSize(colB) + margin
 
-    return Math.abs(a.position.x - b.position.x) < (sizeA + sizeB) / 2 &&
-      Math.abs(a.position.y - b.position.y) < (sizeA + sizeB) / 2
+    return Math.abs(a.transform.x - b.transform.x) < (sizeA + sizeB) / 2 &&
+      Math.abs(a.transform.y - b.transform.y) < (sizeA + sizeB) / 2
   },
 
   /**
@@ -110,19 +111,19 @@ export const CollisionSystem = {
 
     if (colA.isStatic) {
       // A 是静态物体，只推开 B（沿 MTV 方向，远离 A）
-      entityB.position.x += mtv.x
-      entityB.position.y += mtv.y
+      entityB.transform.x += mtv.x
+      entityB.transform.y += mtv.y
     } else if (colB.isStatic) {
       // B 是静态物体，只推开 A（沿 MTV 反方向，远离 B）
       // 注意：MTV 是从 A 指向 B 的，所以 A -= MTV 会让 A 远离 B
-      entityA.position.x -= mtv.x
-      entityA.position.y -= mtv.y
+      entityA.transform.x -= mtv.x
+      entityA.transform.y -= mtv.y
     } else {
       // 两个都是动态物体，各推开一半
-      entityA.position.x -= mtv.x * 0.5
-      entityA.position.y -= mtv.y * 0.5
-      entityB.position.x += mtv.x * 0.5
-      entityB.position.y += mtv.y * 0.5
+      entityA.transform.x -= mtv.x * 0.5
+      entityA.transform.y -= mtv.y * 0.5
+      entityB.transform.x += mtv.x * 0.5
+      entityB.transform.y += mtv.y * 0.5
     }
   }
 }

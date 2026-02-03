@@ -12,7 +12,8 @@ import {
   Weapon, WEAPON_INSPECTOR_FIELDS,
   WeaponIntent,
   Inspector, EDITOR_INSPECTOR_FIELDS,
-  DETECT_AREA_INSPECTOR_FIELDS // Added import
+  DETECT_AREA_INSPECTOR_FIELDS,
+  Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components'
 
 // --- Schema Definition ---
@@ -37,8 +38,7 @@ export const PlayerEntitySchema = z.object({
 
 const INSPECTOR_FIELDS = [
   { path: 'name', label: '名称', type: 'text', group: '基本属性' },
-  { path: 'position.x', label: '坐标 X', type: 'number', group: '基本属性' },
-  { path: 'position.y', label: '坐标 Y', type: 'number', group: '基本属性' },
+  ...TRANSFORM_INSPECTOR_FIELDS,
   { path: 'speed', label: '基础速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
   { path: 'fastSpeed', label: '奔跑速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
   ...HEALTH_INSPECTOR_FIELDS,
@@ -64,7 +64,7 @@ export const PlayerEntity = {
     const entity = {
       type: 'player',
       name: name,
-      position: { x, y },
+      transform: Transform(x, y),
       velocity: Velocity(),
       detectable: Detectable(['player', 'teleportable']),
       input: true,
@@ -99,8 +99,8 @@ export const PlayerEntity = {
   serialize(entity) {
     return {
       type: 'player',
-      x: entity.position.x,
-      y: entity.position.y,
+      x: entity.transform.x,
+      y: entity.transform.y,
       name: entity.name,
       scale: entity.sprite?.scale || 0.7
     }

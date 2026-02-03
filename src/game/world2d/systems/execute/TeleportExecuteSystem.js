@@ -34,8 +34,8 @@ export const TeleportExecuteSystem = {
 
     // === 同地图传送：使用目的地实体或直接坐标 ===
     if (isLocalTeleport) {
-      if (!targetEntity || !targetEntity.position) {
-        logger.warn('Local teleport failed: No target entity or target has no position')
+      if (!targetEntity || !targetEntity.transform) {
+        logger.warn('Local teleport failed: No target entity or target has no transform')
         return
       }
 
@@ -43,12 +43,12 @@ export const TeleportExecuteSystem = {
 
       // 优先使用目的地实体ID查找实际坐标
       if (destinationId != null) {
-        const destinations = world.with('destinationId', 'position')
+        const destinations = world.with('destinationId', 'transform')
         const destination = [...destinations].find(d => d.destinationId === destinationId)
         
         if (destination) {
-          finalX = destination.position.x
-          finalY = destination.position.y
+          finalX = destination.transform.x
+          finalY = destination.transform.y
           logger.info(`Local teleport: Moving ${targetEntity.type} to destination '${destinationId}' at (${finalX}, ${finalY})`)
         } else {
           logger.error(`Destination entity '${destinationId}' not found! Teleport aborted.`)
@@ -64,8 +64,8 @@ export const TeleportExecuteSystem = {
         return
       }
 
-      targetEntity.position.x = finalX
-      targetEntity.position.y = finalY
+      targetEntity.transform.x = finalX
+      targetEntity.transform.y = finalY
 
       // 移除临时 Action (如果不是 Portal)
       if (entity.type !== 'portal') {
