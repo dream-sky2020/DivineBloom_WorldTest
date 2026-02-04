@@ -1,7 +1,6 @@
 // src/stores/game.js
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { usePartyStore } from './party';
 import { useQuestStore } from './quest';
 import { useWorld2dStore } from './world2d';
 import { useDialogueStore } from './dialogue';
@@ -13,7 +12,6 @@ const logger = createLogger('GameStore');
 
 export const useGameStore = defineStore('game', () => {
     // 引用所有子 Store
-    const party = usePartyStore();
     const quest = useQuestStore();
     const world2d = useWorld2dStore();
     const dialogue = useDialogueStore();
@@ -37,16 +35,10 @@ export const useGameStore = defineStore('game', () => {
     const newGame = () => {
         resetAllStores();
 
-        // 初始化必要的起始数据
-        party.initParty();
-
         // 标记游戏开始
         isGameRunning.value = true;
         playTime.value = 0;
         startGameTimer();
-
-        // 可以在这里设置初始地图或触发开场剧情
-        // world.loadMap('start_village');
     };
 
     /**
@@ -62,11 +54,8 @@ export const useGameStore = defineStore('game', () => {
                 slotId
             },
             data: {
-                inventory: party.inventoryState,
-                party: party.serialize(),
                 quest: quest.serialize(),
                 world: world2d.serialize(),
-                // Battle 和 Dialogue 状态通常不保存，除非需要中断恢复
             }
         };
 
@@ -102,8 +91,6 @@ export const useGameStore = defineStore('game', () => {
             saveSlotId.value = slotId;
 
             // 3. 恢复各模块数据
-            if (saveData.data.party) party.loadState(saveData.data.party);
-            if (saveData.data.inventory) party.loadState({ inventory: saveData.data.inventory });
             if (saveData.data.quest) quest.loadState(saveData.data.quest);
             if (saveData.data.world) world2d.loadState(saveData.data.world);
 
@@ -124,7 +111,6 @@ export const useGameStore = defineStore('game', () => {
         stopGameTimer();
         isGameRunning.value = false;
 
-        party.reset();
         quest.reset();
         world2d.reset();
         dialogue.reset();
@@ -156,7 +142,6 @@ export const useGameStore = defineStore('game', () => {
         saveSlotId,
 
         // Child Stores (如果希望通过 gameStore 访问)
-        party,
         quest,
         world2d,
         dialogue,

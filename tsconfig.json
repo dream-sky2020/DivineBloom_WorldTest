@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
+    "noEmit": true,
+
+    /* 允许 JS 和 TS 共存的关键配置 */
+    "allowJs": true,
+    "checkJs": false,
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@styles/*": ["src/styles/*"],
+      "@schema/*": ["src/schemas/*"],
+      "@data/*": ["src/data/*"],
+      "@world2d/*": ["src/game/world2d/*"],
+      "@world2d": ["src/game/world2d/index.ts"],
+      "@components/*": ["src/game/world2d/definitions/components/*"],
+      "@components": ["src/game/world2d/definitions/components/index.ts"],
+      "@entities/*": ["src/game/world2d/definitions/entities/*"],
+      "@entities": ["src/game/world2d/definitions/entities/index.ts"],
+      "@definitions/*": ["src/game/world2d/definitions/*"],
+      "@systems/*": ["src/game/world2d/systems/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/**/*.js",
+    "src/**/*.json"
+  ],
+  "exclude": ["node_modules"]
+}

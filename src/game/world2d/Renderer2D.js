@@ -1,6 +1,5 @@
 /**
  * 精灵定义（支持裁切 + 锚点）
- * @deprecated 推荐使用 Visuals 系统
  */
 export function makeSprite({
     imageId,

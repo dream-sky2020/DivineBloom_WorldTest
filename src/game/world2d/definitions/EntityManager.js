@@ -15,6 +15,8 @@ export const EntityManager = {
     createPortalDestination: EntityCreator.createPortalDestination.bind(EntityCreator),
     createDecoration: EntityCreator.createDecoration.bind(EntityCreator),
     createObstacle: EntityCreator.createObstacle.bind(EntityCreator),
+    createBackground: EntityCreator.createBackground.bind(EntityCreator),
+    createSceneConfig: EntityCreator.createSceneConfig.bind(EntityCreator),
 
     // --- Serialization ---
     serialize: EntitySerializer.serialize.bind(EntitySerializer)

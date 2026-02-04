@@ -4,7 +4,31 @@
     :icon="editorManager.getPanelIcon('entity-properties')" 
     :is-enabled="editorManager.isPanelEnabled('entity-properties')"
   >
+    <template #header-actions>
+      <div class="panel-mode-toggle" title="显示模式">
+        <button class="mode-btn" :class="{ active: panelMode !== 'explorer' }" @click="toggleRealtime" title="实时数据">🐞</button>
+        <button class="mode-btn" :class="{ active: panelMode !== 'realtime' }" @click="toggleExplorer" title="属性面板">📝</button>
+      </div>
+    </template>
     <template v-if="localEntityState">
+      <div class="realtime-panel" v-show="panelMode !== 'explorer'">
+        <div class="realtime-header">
+          <button class="collapse-toggle" @click="showRealtimePanel = !showRealtimePanel">
+            {{ showRealtimePanel ? '▼' : '▶' }}
+          </button>
+          <span class="realtime-title">实时数据预览</span>
+          <div class="realtime-actions">
+            <button class="mini-btn" @click="refreshEntityPreview" title="刷新实体实时数据">🔄</button>
+            <button class="mini-btn export-btn" @click="exportEntitySnapshot" title="导出当前实体实时数据">
+              💾
+            </button>
+          </div>
+        </div>
+        <div v-show="showRealtimePanel" class="realtime-content">
+          <div class="realtime-hint">当前选中实体的实时快照</div>
+          <pre class="realtime-preview">{{ entityRealtimePreview }}</pre>
+        </div>
+      </div>
       <div class="inspector-header">
         <div class="header-left">
           <span 
@@ -26,7 +50,7 @@
           </button>
         </div>
       </div>
-      <div class="inspector-body">
+      <div class="inspector-body" v-show="panelMode !== 'realtime'">
         <!-- 🎯 方案：局部声明式 Inspector 映射 -->
         <template v-if="localEntityState.inspector">
           <div v-for="group in groupedFields" :key="group.name" class="inspector-group-section" :class="{ 'is-editing': activeEditingGroup === group.name }">
@@ -332,6 +356,32 @@ const getWorld = () => world2d.getWorld()
 // 属性编辑同步
 const localEntityState = ref(null)
 const lastUpdate = ref(Date.now())
+const showRealtimePanel = ref(true)
+const panelMode = ref('all')
+
+const toggleRealtime = () => {
+  if (panelMode.value === 'all') panelMode.value = 'explorer';
+  else if (panelMode.value === 'realtime') panelMode.value = 'explorer';
+  else panelMode.value = 'all';
+}
+
+const toggleExplorer = () => {
+  if (panelMode.value === 'all') panelMode.value = 'realtime';
+  else if (panelMode.value === 'explorer') panelMode.value = 'realtime';
+  else panelMode.value = 'all';
+}
+
+const refreshEntityPreview = () => {
+  lastUpdate.value = Date.now()
+}
+
+const entityRealtimePreview = computed(() => {
+  if (!localEntityState.value) return ''
+  // 依赖 lastUpdate 以保持实时刷新
+  lastUpdate.value
+  const snapshot = buildEntitySnapshot(localEntityState.value)
+  return safeStringify(snapshot, 2, 7000)
+})
 
 // 局部编辑状态管理
 const activeEditingGroup = ref(null)
@@ -445,6 +495,25 @@ const confirmDelete = () => {
     }
     editorManager.selectedEntity = null;
   }
+}
+
+const buildEntitySnapshot = (entity) => {
+  if (!entity) return null
+  return toRaw(entity)
+}
+
+const exportEntitySnapshot = () => {
+  if (!localEntityState.value) return
+  const snapshot = buildEntitySnapshot(localEntityState.value)
+  const json = safeStringify(snapshot, 2, 200000)
+  const name = localEntityState.value.name || localEntityState.value.type || 'entity'
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${name}_realtime_${Date.now()}.json`
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 // 刷新频率控制
@@ -608,6 +677,30 @@ const parseSelectValue = (domValue, field) => {
    const matched = options.find(o => String(o.value) === domValue);
    return matched ? matched.value : domValue;
 }
+
+const safeStringify = (value, space = 2, maxLength = 6000) => {
+  if (value === undefined) return ''
+  const seen = new WeakSet()
+  let json = ''
+  try {
+    json = JSON.stringify(value, (key, val) => {
+      if (typeof val === 'object' && val !== null) {
+        if (seen.has(val)) return '[Circular]'
+        seen.add(val)
+      }
+      if (typeof val === 'function') return `[Function ${val.name || 'anonymous'}]`
+      return val
+    }, space)
+  } catch (e) {
+    json = String(value)
+  }
+  if (json.length > maxLength) {
+    return `${json.slice(0, maxLength)}\n...省略...`
+  }
+  return json
+}
 </script>
 
 <style scoped src="@styles/editor/EntityProperties.css"></style>
+<style scoped src="@styles/editor/EditorPanelCommon.css"></style>
+

@@ -7,6 +7,11 @@
   --editor-bg-hover: #334155;
   --editor-bg-active: #1e3a8a;
   
+  /* Colors - Realtime Panel */
+  --editor-realtime-bg: #1e293b; /* Slightly lighter than main bg */
+  --editor-realtime-border: #334155;
+  --editor-realtime-code-bg: #0f172a;
+  
   /* Colors - Border */
   --editor-border-light: #334155;
   --editor-border-medium: #475569;

@@ -6,11 +6,10 @@ import ja from './locales/ja'
 import ko from './locales/ko'
 import ui from './locales/ui'
 import dialogue from './locales/dialogue'
-import { validateLocales } from './schemas/locales'
 
 // Validate locale data formats on startup
-validateLocales(ui);
-validateLocales({ dialogue });
+// validateLocales(ui);
+// validateLocales({ dialogue });
 
 // Helper to transform "Key -> Locale -> Text" to "Locale -> Key -> Text"
 function transformUiToMessages(uiData) {

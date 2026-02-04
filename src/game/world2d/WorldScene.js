@@ -82,7 +82,7 @@ export class WorldScene {
             },
             // 渲染管线 (Render Pipeline)
             render: [
-                getSystem('background-render'),      // Layer 10
+                // getSystem('background-render'),      // Layer 10 (Merged into VisualRenderSystem)
                 getSystem('ai-patrol-debug-render'), // Layer 12
                 getSystem('ai-vision-render'),       // Layer 15
                 getSystem('visual-render'),          // Layer 20
@@ -237,7 +237,7 @@ export class WorldScene {
 
         // 3. 编辑器命令处理 (始终执行，不受暂停影响)
         // 这样可以确保编辑器的删除、保存等操作能够立即响应
-        getSystem('execute').update({
+        getSystem('execute').update(dt, {
             onEncounter: this.onEncounter,
             onSwitchMap: null,
             onInteract: this.onInteract,

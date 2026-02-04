@@ -27,9 +27,7 @@ import { EditorInteractionSystem } from '@systems/editor/EditorInteractionSystem
 import { TriggerSystem } from '@systems/event/TriggerSystem';
 
 // Execute
-import { DialogueExecuteSystem } from '@systems/execute/DialogueExecuteSystem';
 import { ExecuteSystem } from '@systems/execute/ExecuteSystem';
-import { TeleportExecuteSystem } from '@systems/execute/TeleportExecuteSystem';
 
 // Intent
 import { EnemyAIIntentSystem } from '@systems/intent/EnemyAIIntentSystem';
@@ -46,7 +44,7 @@ import { SyncTransformSystem } from '@systems/physics/SyncTransformSystem';
 // Render
 import { AIPatrolDebugRenderSystem } from '@systems/render/AIPatrolDebugRenderSystem';
 import { AIVisionRenderSystem } from '@systems/render/AIVisionRenderSystem';
-import { BackgroundRenderSystem } from '@systems/render/BackgroundRenderSystem';
+// import { BackgroundRenderSystem } from '@systems/render/BackgroundRenderSystem'; // Merged into VisualRenderSystem
 import { DetectAreaRenderSystem } from '@systems/render/DetectAreaRenderSystem';
 import { EditorGridRenderSystem } from '@systems/render/EditorGridRenderSystem';
 import { PhysicsDebugRenderSystem } from '@systems/render/PhysicsDebugRenderSystem';
@@ -83,7 +81,7 @@ export const Registry = {
     'input-sense': InputSenseSystem,
     'mouse-position-sense': MousePositionSenseSystem,
     'visual-render': VisualRenderSystem,
-    'background-render': BackgroundRenderSystem,
+    // 'background-render': BackgroundRenderSystem, // Merged
     'camera': CameraSystem,
 
     // --- Physics & Movement ---
@@ -108,8 +106,6 @@ export const Registry = {
 
     // --- Execution & Events ---
     'execute': ExecuteSystem,
-    'dialogue-execute': DialogueExecuteSystem,
-    'teleport-execute': TeleportExecuteSystem,
     'trigger': TriggerSystem,
 
     // --- Editor Systems ---

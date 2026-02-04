@@ -6,6 +6,10 @@
   >
     <template #header-actions>
       <div class="header-actions">
+        <div class="panel-mode-toggle" title="显示模式">
+          <button class="mode-btn" :class="{ active: panelMode !== 'explorer' }" @click="toggleRealtime" title="实时数据">🐞</button>
+          <button class="mode-btn" :class="{ active: panelMode !== 'realtime' }" @click="toggleExplorer" title="列表模式">📝</button>
+        </div>
         <button class="icon-btn" @click="showCreateModal = true" title="新建场景">
           ➕
         </button>
@@ -19,7 +23,24 @@
       </div>
     </template>
 
-    <div class="panel-section">
+    <div class="realtime-panel" v-show="panelMode !== 'explorer'">
+      <div class="realtime-header">
+        <button class="collapse-toggle" @click="showRealtimePanel = !showRealtimePanel">
+          {{ showRealtimePanel ? '▼' : '▶' }}
+        </button>
+        <span class="realtime-title">项目实时数据</span>
+        <div class="realtime-actions">
+          <button class="mini-btn" @click="refreshProjectPreview" title="刷新项目实时数据">🔄</button>
+          <button class="mini-btn" @click="handleExportProject" title="导出全项目 (JSON)">💾</button>
+        </div>
+      </div>
+      <div v-show="showRealtimePanel" class="realtime-content">
+        <div class="realtime-hint">项目级场景列表与状态快照</div>
+        <pre class="realtime-preview">{{ projectRealtimePreview }}</pre>
+      </div>
+    </div>
+
+    <div class="panel-section" v-show="panelMode !== 'realtime'">
       <div class="section-header">
         <span>场景列表</span>
       </div>
@@ -89,8 +110,8 @@
 </template>
 
 <script setup>
-import { computed, ref, inject } from 'vue'
-import { schemasManager } from '@/schemas/SchemasManager'
+import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
+// import { schemasManager } from '@/schemas/SchemasManager'
 import { useGameStore } from '@/stores/game'
 import { world2d } from '@world2d' // ✅ 使用统一接口
 import { editorManager } from '@/game/editor/core/EditorCore'
@@ -105,7 +126,7 @@ const gameStore = useGameStore()
 const worldStore = gameStore.world2d
 // 合并 schemas 中的地图和 worldStore 中的动态地图
 const allMapIds = computed(() => {
-  const staticMaps = schemasManager.mapIds;
+  const staticMaps = []; // schemasManager.mapIds;
   const dynamicMaps = Object.keys(worldStore.worldStates);
   // 🎯 [FIX] 确保当前地图 ID 即使未保存也出现在列表中
   const current = currentMapId.value ? [currentMapId.value] : [];
@@ -115,6 +136,10 @@ const currentMapId = computed(() => worldStore.currentMapId)
 const isLoading = ref(false)
 const loadingMapId = ref('')
 const showCreateModal = ref(false)
+const projectRealtimePreview = ref('')
+const showRealtimePanel = ref(true)
+const panelMode = ref('all')
+let previewTimer = 0
 const newSceneForm = ref({
   id: '',
   name: '',
@@ -122,6 +147,18 @@ const newSceneForm = ref({
   height: 2000,
   groundColor: '#88aa88'
 })
+
+const toggleRealtime = () => {
+  if (panelMode.value === 'all') panelMode.value = 'explorer';
+  else if (panelMode.value === 'realtime') panelMode.value = 'explorer';
+  else panelMode.value = 'all';
+}
+
+const toggleExplorer = () => {
+  if (panelMode.value === 'all') panelMode.value = 'realtime';
+  else if (panelMode.value === 'explorer') panelMode.value = 'realtime';
+  else panelMode.value = 'all';
+}
 
 const handleRightClick = (e, mapId) => {
   const hasState = !!worldStore.worldStates[mapId];
@@ -238,7 +275,7 @@ const switchMap = async (mapId) => {
 const handleExportProject = async () => {
   // ✅ 使用兼容接口获取 ScenarioLoader（高级功能）
   const ScenarioLoader = world2d.getScenarioLoader()
-  const bundle = await ScenarioLoader.exportProject(world2d.engine, worldStore.worldStates, schemasManager.mapLoaders)
+  const bundle = await ScenarioLoader.exportProject(world2d.engine, worldStore.worldStates, {} /* schemasManager.mapLoaders */)
   const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -246,6 +283,18 @@ const handleExportProject = async () => {
   link.download = `scene_full_export_${new Date().getTime()}.json`
   link.click()
   URL.revokeObjectURL(url)
+}
+
+const buildProjectSnapshot = () => {
+  return {
+    currentMapId: currentMapId.value,
+    mapIds: allMapIds.value,
+    worldStates: worldStore.worldStates
+  }
+}
+
+const refreshProjectPreview = () => {
+  projectRealtimePreview.value = safeStringify(buildProjectSnapshot(), 2, 9000)
 }
 
 const handleImportProject = (event) => {
@@ -268,76 +317,47 @@ const handleImportProject = (event) => {
   }
   reader.readAsText(file)
 }
+
+onMounted(() => {
+  refreshProjectPreview()
+  previewTimer = setInterval(refreshProjectPreview, 1500)
+})
+
+onUnmounted(() => {
+  clearInterval(previewTimer)
+})
+
+const safeStringify = (value, space = 2, maxLength = 6000) => {
+  if (value === undefined) return ''
+  const seen = new WeakSet()
+  let json = ''
+  try {
+    json = JSON.stringify(value, (key, val) => {
+      if (typeof val === 'object' && val !== null) {
+        if (seen.has(val)) return '[Circular]'
+        seen.add(val)
+      }
+      if (typeof val === 'function') return `[Function ${val.name || 'anonymous'}]`
+      return val
+    }, space)
+  } catch (e) {
+    json = String(value)
+  }
+  if (json.length > maxLength) {
+    return `${json.slice(0, maxLength)}\n...省略...`
+  }
+  return json
+}
 </script>
 
 <style scoped src="@styles/editor/SceneManager.css"></style>
+<style scoped src="@styles/editor/EditorPanelCommon.css"></style>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+/* Specific styles for SceneSwitcher that are not in common */
+.import-label {
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #2a2a2a;
-  padding: 20px;
-  border-radius: 8px;
-  width: 300px;
-  color: #fff;
-  border: 1px solid #444;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-row {
-  display: flex;
-  gap: 10px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 0.9em;
-  color: #ccc;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 6px;
-  background: #1a1a1a;
-  border: 1px solid #444;
-  color: #fff;
-  border-radius: 4px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.modal-actions button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #444;
-  background: #333;
-  color: #fff;
-  cursor: pointer;
-}
-
-.modal-actions button.primary {
-  background: #4a9eff;
-  border-color: #4a9eff;
+  justify-content: center;
 }
 </style>

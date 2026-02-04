@@ -10,7 +10,8 @@ import {
     ObstacleEntity, 
     PortalEntity, 
     PortalDestinationEntity,
-    EnemyEntity
+    EnemyEntity,
+    BackgroundEntity
 } from '@entities'
 
 /**
@@ -36,6 +37,21 @@ export class EntityTemplateRegistry {
      * 初始化所有实体模板
      */
     _initializeTemplates() {
+        this.register({
+            id: 'background_ground',
+            name: '地面',
+            description: '背景地面层',
+            icon: '⬛',
+            category: 'environment',
+            factory: BackgroundEntity.create.bind(BackgroundEntity),
+            getDefaultData: (mousePos) => ({
+                width: 200,
+                height: 200,
+                color: '#cccccc',
+                tileScale: 1.0
+            })
+        })
+
         // 🎮 游戏玩法实体
         this.register({
             id: 'npc',
@@ -67,7 +83,6 @@ export class EntityTemplateRegistry {
             getDefaultData: (mousePos) => ({
                 x: mousePos?.x || 400,
                 y: mousePos?.y || 300,
-                battleGroup: [{ id: 'slime_blue' }], // 默认敌人
                 options: {
                     spriteId: 'slime_blue',
                     aiType: 'patrol',

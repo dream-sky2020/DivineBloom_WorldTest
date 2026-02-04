@@ -5,10 +5,10 @@
     :is-enabled="editorManager.isPanelEnabled('scene-explorer')"
   >
     <template #header-actions>
-      <div class="explorer-stats">
-        <div class="stats-left">
-          <span>实体: {{ entities.length }}</span>
-          <span v-if="mapId" class="map-tag">{{ mapId }}</span>
+      <div class="header-actions">
+        <div class="panel-mode-toggle" title="显示模式">
+          <button class="mode-btn" :class="{ active: panelMode !== 'explorer' }" @click="toggleRealtime" title="实时数据">🐞</button>
+          <button class="mode-btn" :class="{ active: panelMode !== 'realtime' }" @click="toggleExplorer" title="实体列表">📝</button>
         </div>
         <button class="export-btn" @click="handleExport" title="导出场景数据 (JSON)">
           📥
@@ -16,7 +16,31 @@
       </div>
     </template>
 
-    <div class="explorer-body">
+    <div class="explorer-stats">
+      <div class="stats-left">
+        <span>实体: {{ entities.length }}</span>
+        <span v-if="mapId" class="map-tag">{{ mapId }}</span>
+      </div>
+    </div>
+
+    <div class="realtime-panel" v-show="panelMode !== 'explorer'">
+      <div class="realtime-header">
+        <button class="collapse-toggle" @click="showRealtimePanel = !showRealtimePanel">
+          {{ showRealtimePanel ? '▼' : '▶' }}
+        </button>
+        <span class="realtime-title">场景实时数据</span>
+        <div class="realtime-actions">
+          <button class="mini-btn" @click="refreshScenePreview" title="刷新场景实时数据">🔄</button>
+          <button class="mini-btn" @click="handleExport" title="导出场景实时数据">💾</button>
+        </div>
+      </div>
+      <div v-show="showRealtimePanel" class="realtime-content">
+        <div class="realtime-hint">当前场景的实体与配置快照</div>
+        <pre class="realtime-preview">{{ sceneRealtimePreview }}</pre>
+      </div>
+    </div>
+
+    <div class="explorer-body" v-show="panelMode !== 'realtime'">
       <div 
         v-for="e in sortedEntities" 
         :key="e.uuid || e.id" 
@@ -72,6 +96,22 @@ const { openContextMenu } = inject('editorContextMenu');
 const entities = ref([])
 const mapId = computed(() => world2d.currentScene.value?.mapData?.id || '')
 const selectedEntity = computed(() => editorManager.selectedEntity)
+const sceneRealtimePreview = ref('')
+const showRealtimePanel = ref(true)
+const panelMode = ref('all')
+let previewTimer = 0
+
+const toggleRealtime = () => {
+  if (panelMode.value === 'all') panelMode.value = 'explorer';
+  else if (panelMode.value === 'realtime') panelMode.value = 'explorer';
+  else panelMode.value = 'all';
+}
+
+const toggleExplorer = () => {
+  if (panelMode.value === 'all') panelMode.value = 'realtime';
+  else if (panelMode.value === 'explorer') panelMode.value = 'realtime';
+  else panelMode.value = 'all';
+}
 
 const sortedEntities = computed(() => {
   return [...entities.value].sort((a, b) => {
@@ -155,6 +195,15 @@ const handleExport = () => {
   URL.revokeObjectURL(url);
 };
 
+const refreshScenePreview = () => {
+  const bundle = world2d.exportCurrentScene()
+  if (!bundle) {
+    sceneRealtimePreview.value = '暂无场景数据'
+    return
+  }
+  sceneRealtimePreview.value = safeStringify(bundle, 2, 8000)
+}
+
 let rafId = 0
 const syncData = () => {
   const allEntities = []
@@ -167,11 +216,38 @@ const syncData = () => {
 
 onMounted(() => {
   syncData()
+  refreshScenePreview()
+  previewTimer = setInterval(refreshScenePreview, 1200)
 })
 
 onUnmounted(() => {
   cancelAnimationFrame(rafId)
+  clearInterval(previewTimer)
 })
+
+const safeStringify = (value, space = 2, maxLength = 6000) => {
+  if (value === undefined) return ''
+  const seen = new WeakSet()
+  let json = ''
+  try {
+    json = JSON.stringify(value, (key, val) => {
+      if (typeof val === 'object' && val !== null) {
+        if (seen.has(val)) return '[Circular]'
+        seen.add(val)
+      }
+      if (typeof val === 'function') return `[Function ${val.name || 'anonymous'}]`
+      return val
+    }, space)
+  } catch (e) {
+    json = String(value)
+  }
+  if (json.length > maxLength) {
+    return `${json.slice(0, maxLength)}\n...省略...`
+  }
+  return json
+}
 </script>
 
 <style scoped src="@styles/editor/SceneExplorer.css"></style>
+<style scoped src="@styles/editor/EditorPanelCommon.css"></style>
+

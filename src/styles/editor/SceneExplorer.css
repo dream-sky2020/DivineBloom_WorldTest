@@ -1,18 +1,21 @@
 .explorer-stats {
-  padding: var(--editor-spacing-sm) var(--editor-spacing-md);
+  padding: 4px 10px;
   background: var(--editor-bg-header);
   border-bottom: 1px solid var(--editor-border-light);
   font-size: var(--editor-font-size-xs);
   color: var(--editor-text-dim);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .stats-left {
   display: flex;
-  gap: var(--editor-spacing-sm);
+  gap: 8px;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 .map-tag {
@@ -26,9 +29,10 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--editor-text-muted);
-  padding: 2px 4px;
+  color: var(--editor-text-secondary);
+  padding: 4px;
   border-radius: var(--editor-radius-sm);
+  font-size: 14px;
   transition: all 0.2s;
   display: flex;
   align-items: center;

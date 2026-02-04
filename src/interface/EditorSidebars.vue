@@ -110,6 +110,8 @@ const leftSidebarWidth = ref(DEFAULT_SIDEBAR_WIDTH);
 const rightSidebarWidth = ref(DEFAULT_SIDEBAR_WIDTH);
 const isLeftHidden = ref(false);
 const isRightHidden = ref(false);
+const isLeftCollapsed = computed(() => isLeftHidden.value);
+const isRightCollapsed = computed(() => isRightHidden.value);
 const resizingSidebar = ref(null);
 
 // Computed Styles

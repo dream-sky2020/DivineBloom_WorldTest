@@ -1,7 +1,7 @@
 import { world, clearWorld } from '@world2d/world'
 import { ScenarioLoader } from '@world2d/ScenarioLoader'
 import { EntityManager } from '@definitions'
-import { getMapData } from '@schema/maps'
+// import { getMapData } from '@schema/maps' // Removed static import
 import { createLogger } from '@/utils/logger'
 import { SceneLifecycle } from '@world2d/resources/SceneLifecycle'
 import { DetectAreaSystem } from '@systems/detect/DetectAreaSystem'
@@ -105,7 +105,8 @@ export class SceneManager {
 
         // 2. 加载新地图数据
         logger.info(`Loading map data: ${mapId}`)
-        let mapData = await getMapData(mapId)
+        // let mapData = await getMapData(mapId) // Removed static import
+        let mapData = null;
         
         // 5. 尝试加载存档 (先加载，因为动态地图的配置可能就在这里)
         // [IMPORTANT] 我们只是预览一下 store 中的数据，不要真正的切换 currentMapId

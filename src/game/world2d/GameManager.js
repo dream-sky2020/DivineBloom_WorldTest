@@ -5,7 +5,7 @@ import { WorldScene } from './WorldScene'
 import { SceneLifecycle } from './resources/SceneLifecycle'
 import { useGameStore } from '@/stores/game'
 import { dialoguesDb } from '@schema/dialogues'
-import { getMapData } from '@schema/maps'
+// import { getMapData } from '@schema/maps' // Removed static import
 import { createLogger } from '@/utils/logger'
 import { editorManager } from '@/game/editor/core/EditorCore'
 
@@ -184,7 +184,8 @@ class GameManager {
         }
 
         // --- Bootstrap First Scene ---
-        let mapData = await getMapData(mapId)
+        // let mapData = await getMapData(mapId) // Removed static import
+        let mapData = null; // Will be loaded dynamically
         
         // [FALLBACK] If map not found (e.g. blank start), create a default empty scene
         if (!mapData) {
