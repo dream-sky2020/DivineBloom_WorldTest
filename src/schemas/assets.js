@@ -10,6 +10,10 @@ export const AssetManifest = {
     'slime_blue': '/assets/characters/slime.png',
     'npc_guide': '/assets/characters/guide.png',
     'npc_elder': '/assets/characters/elder.png',
+    'hero_sheet': '/assets/characters/player.png',
+
+    // 地形
+    'tex_tile_01': '/assets/TinyTexture/Tile/Tile_01-128x128.png',
 
     // 装饰物
     'tree': '/assets/TinyTexture/Trees/Tree_1.png',

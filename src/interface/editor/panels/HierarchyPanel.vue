@@ -82,24 +82,24 @@
   </EditorPanel>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, toRaw } from 'vue'
 import { world2d } from '@world2d' // ✅ 使用统一接口
-import { editorManager } from '@/game/editor/core/EditorCore'
+import { editorManager } from '@/game/editor'
 import EditorPanel from '../components/EditorPanel.vue'
 
 // ✅ 延迟获取函数（避免循环依赖）
 const getWorld = () => world2d.getWorld()
 
-const { openContextMenu } = inject('editorContextMenu');
+const { openContextMenu } = inject('editorContextMenu') as any;
 
-const entities = ref([])
+const entities = ref<any[]>([])
 const mapId = computed(() => world2d.currentScene.value?.mapData?.id || '')
 const selectedEntity = computed(() => editorManager.selectedEntity)
 const sceneRealtimePreview = ref('')
 const showRealtimePanel = ref(true)
-const panelMode = ref('all')
-let previewTimer = 0
+const panelMode = ref<'all' | 'explorer' | 'realtime'>('all')
+let previewTimer: any = 0
 
 const toggleRealtime = () => {
   if (panelMode.value === 'all') panelMode.value = 'explorer';
@@ -130,11 +130,11 @@ const sortedEntities = computed(() => {
   })
 })
 
-const selectEntity = (entity) => {
+const selectEntity = (entity: any) => {
   editorManager.selectedEntity = entity
 }
 
-const handleRightClick = (e, entity) => {
+const handleRightClick = (e: MouseEvent, entity: any) => {
   selectEntity(entity);
   const items = [
     { 
@@ -148,7 +148,7 @@ const handleRightClick = (e, entity) => {
   openContextMenu(e, items);
 }
 
-const confirmDelete = (entity) => {
+const confirmDelete = (entity: any) => {
   if (entity.inspector?.allowDelete === false) {
     alert('该实体禁止删除');
     return;
@@ -225,7 +225,7 @@ onUnmounted(() => {
   clearInterval(previewTimer)
 })
 
-const safeStringify = (value, space = 2, maxLength = 6000) => {
+const safeStringify = (value: any, space = 2, maxLength = 6000) => {
   if (value === undefined) return ''
   const seen = new WeakSet()
   let json = ''

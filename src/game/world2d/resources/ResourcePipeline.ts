@@ -1,13 +1,22 @@
 import { createLogger } from '@/utils/logger'
+import { AssetManager } from './AssetManager';
 
 const logger = createLogger('ResourcePipeline')
+
+export interface PipelineProgress {
+    loaded: number;
+    total: number;
+    progress: number;
+}
 
 /**
  * 资源加载管线 (Simplified)
  * 仅保留批量加载和进度控制功能，移除复杂的业务逻辑
  */
 export class ResourcePipeline {
-    constructor(assetManager) {
+    assetManager: AssetManager;
+
+    constructor(assetManager: AssetManager) {
         this.assetManager = assetManager
     }
 
@@ -16,7 +25,7 @@ export class ResourcePipeline {
      * @param {string[]} assetIds 
      * @param {Function} onProgress 
      */
-    async loadAssets(assetIds, onProgress = null) {
+    async loadAssets(assetIds: string[], onProgress: ((progress: PipelineProgress) => void) | null = null) {
         const uniqueIds = [...new Set(assetIds)];
         const total = uniqueIds.length;
         let loaded = 0;

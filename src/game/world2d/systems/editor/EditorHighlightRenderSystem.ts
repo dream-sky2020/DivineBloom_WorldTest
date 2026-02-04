@@ -1,6 +1,6 @@
 import { EditorInteractionSystem } from './EditorInteractionSystem';
 import { world } from '@world2d/world';
-import { editorManager } from '@/game/editor/core/EditorCore';
+import { editorManager } from '../../../editor/core/EditorCore';
 import { toRaw } from 'vue';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';

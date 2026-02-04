@@ -72,34 +72,36 @@
     </div>
   </template>
   
-  <script setup>
-  import { world2d } from '@world2d'; 
-  import { editor } from '@/game/editor';
-  import { useGameStore } from '@/stores/game';
-  import { createLogger } from '@/utils/logger';
-  
-  const logger = createLogger('DevDashboard');
-  const gameStore = useGameStore();
-  const settingsStore = gameStore.settings;
-  
-  defineProps({
-    showSidebars: Boolean
-  });
-  
-  defineEmits(['toggle-sidebars']);
-  
-  const languages = [
-    { id: 'zh', label: '简体中文' },
-    { id: 'zh-TW', label: '繁體中文' },
-    { id: 'en', label: 'English' },
-    { id: 'ja', label: '日本語' },
-    { id: 'ko', label: '한국어' }
-  ];
-  
-  const logState = () => logger.info('Current System:', world2d.state.system);
-  const toggleEditMode = () => editor.toggleEditMode();
-  const togglePause = () => world2d.state.isPaused ? world2d.resume() : world2d.pause();
-  </script>
+  <script setup lang="ts">
+import { world2d } from '@world2d'; 
+import { editor } from '@/game/editor';
+import { useGameStore } from '@/stores/game';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('DevDashboard');
+const gameStore = useGameStore();
+const settingsStore = gameStore.settings;
+
+defineProps<{
+  showSidebars: boolean
+}>();
+
+defineEmits<{
+  (e: 'toggle-sidebars'): void
+}>();
+
+const languages = [
+  { id: 'zh', label: '简体中文' },
+  { id: 'zh-TW', label: '繁體中文' },
+  { id: 'en', label: 'English' },
+  { id: 'ja', label: '日本語' },
+  { id: 'ko', label: '한국어' }
+];
+
+const logState = () => logger.info('Current System:', world2d.state.system);
+const toggleEditMode = () => editor.toggleEditMode();
+const togglePause = () => world2d.state.isPaused ? world2d.resume() : world2d.pause();
+</script>
   
   <style scoped>
   @import "@/styles/pages/GameUI.css"; 

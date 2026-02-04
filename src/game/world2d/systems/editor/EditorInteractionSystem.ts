@@ -1,5 +1,5 @@
 import { world } from '@world2d/world';
-import { editorManager } from '@/game/editor/core/EditorCore';
+import { editorManager } from '../../../editor/core/EditorCore';
 import { toRaw } from 'vue';
 import { ShapeType } from '@world2d/definitions/enums/Shape';
 import { ISystem } from '@definitions/interface/ISystem';

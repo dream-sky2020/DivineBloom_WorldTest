@@ -1,24 +1,37 @@
 import { world, clearWorld } from '@world2d/world'
-import { ScenarioLoader } from '@world2d/ScenarioLoader'
-import { EntityManager } from '@definitions'
 // import { getMapData } from '@schema/maps' // Removed static import
 import { createLogger } from '@/utils/logger'
 import { SceneLifecycle } from '@world2d/resources/SceneLifecycle'
 import { DetectAreaSystem } from '@systems/detect/DetectAreaSystem'
 import { SyncTransformSystem } from '@systems/physics/SyncTransformSystem'
+import { GameEngine } from './GameEngine'
+import { WorldScene } from './WorldScene'
 
 const logger = createLogger('SceneManager')
+
+export interface SceneTransitionRequest {
+    type: string;
+    mapId: string;
+    entryId: string;
+}
 
 /**
  * 场景管理器 (中间层)
  * 负责协调 ECS、Store 和资源加载，处理地图切换的核心流程。
  */
 export class SceneManager {
+    engine: GameEngine;
+    worldStore: any; // useWorld2dStore
+    currentScene: WorldScene | null;
+    isTransitioning: boolean;
+    pendingRequest: SceneTransitionRequest | null;
+    _resolveTransition: (() => void) | null;
+
     /**
-     * @param {import('@world2d/GameEngine').GameEngine} engine 
+     * @param {GameEngine} engine 
      * @param {import('@/stores/world2d').useWorld2dStore} worldStore 
      */
-    constructor(engine, worldStore) {
+    constructor(engine: GameEngine, worldStore: any) {
         this.engine = engine
         this.worldStore = worldStore
         this.currentScene = null
@@ -31,9 +44,9 @@ export class SceneManager {
 
     /**
      * 设置当前场景实例（用于序列化）
-     * @param {import('@world2d/WorldScene').WorldScene} scene 
+     * @param {WorldScene} scene 
      */
-    setScene(scene) {
+    setScene(scene: WorldScene) {
         this.currentScene = scene
     }
 
@@ -59,7 +72,7 @@ export class SceneManager {
      * @param {string} entryId 
      * @returns {Promise}
      */
-    requestSwitchMap(mapId, entryId) {
+    requestSwitchMap(mapId: string, entryId: string): Promise<void> {
         if (this.isTransitioning) return Promise.resolve()
 
         // 如果已经有请求在排队，先取消旧的（或者等待，这里选择覆盖）
@@ -72,7 +85,7 @@ export class SceneManager {
     /**
      * 执行切换逻辑 (原子操作)
      */
-    async executeTransition(request) {
+    async executeTransition(request: SceneTransitionRequest) {
         this.isTransitioning = true
         // Sync transition state to current scene to pause ECS updates
         if (this.currentScene) {
@@ -96,7 +109,7 @@ export class SceneManager {
         }
     }
 
-    async _handleMapSwitch({ mapId, entryId }) {
+    async _handleMapSwitch({ mapId, entryId }: { mapId: string, entryId: string }) {
         // 1. 保存当前状态 (CRITICAL: 必须在 clearWorld 之前)
         if (this.currentScene) {
             logger.info(`Saving state for ${this.worldStore.currentMapId}`)
@@ -147,7 +160,7 @@ export class SceneManager {
             this.engine,
             entryId,
             persistedState,
-            (progress) => {
+            (progress: any) => {
                 // 进度回调（可以用于 UI 显示）
                 if (progress.phase === 'loading') {
                     logger.info(`Loading assets: ${(progress.progress * 100).toFixed(0)}%`)
@@ -155,7 +168,7 @@ export class SceneManager {
             }
         )
 
-        const player = result.player
+        const player = result.find((e: any) => e.type === 'player');
 
         // 8. 修正玩家位置到入口点 (如果是传送进入)
         if (entryId && mapData.entryPoints && mapData.entryPoints[entryId] && player) {

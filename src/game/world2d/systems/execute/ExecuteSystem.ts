@@ -1,7 +1,7 @@
 import { actionQueue, eventQueue, world } from '@world2d/world';
 import { getSystem } from '@world2d/SystemRegistry';
 import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry';
-import { editorManager } from '@/game/editor/core/EditorCore';
+import { editorManager } from '../../../editor/core/EditorCore';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { ExecuteUtils } from '../../ECSCalculateTool/ExecuteUtils';

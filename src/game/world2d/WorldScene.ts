@@ -2,17 +2,38 @@ import { EntityManager } from '@definitions'
 import { getSystem } from '@world2d/SystemRegistry'
 import { clearWorld, world } from '@world2d/world'
 import { GlobalEntity } from '@entities'
-import { editorManager } from '@/game/editor/core/EditorCore'
+import { editorManager } from '../editor/core/EditorCore'
 import { createLogger } from '@/utils/logger'
+import { GameEngine } from './GameEngine'
+import { Renderer2D } from './Renderer2D'
+import { SceneManager } from './SceneManager'
+import { GameManager } from './GameManager'
 
 const logger = createLogger('WorldScene')
 
-/**
- * @typedef {import('@world2d/GameEngine').GameEngine} GameEngine
- * @typedef {import('@world2d/GameEngine').Renderer2D} Renderer2D
- */
+export interface StateProvider {
+    gameManager?: GameManager;
+    sceneManager?: SceneManager;
+    worldStore?: any;
+    [key: string]: any;
+}
 
 export class WorldScene {
+    engine: GameEngine;
+    onEncounter: ((enemyGroup: any, enemyUuid: any) => void) | null;
+    onSwitchMap: ((targetMapId: string) => void) | null;
+    onInteract: ((interaction: any) => void) | null;
+    onOpenMenu: (() => void) | null;
+    onOpenShop: (() => void) | null;
+    stateProvider: StateProvider;
+    mapData: any;
+    entryId: string;
+    systems: any; // Complex system structure
+    lastDt: number;
+    player: any;
+    editMode: boolean;
+    isTransitioning: boolean = false;
+
     /**
      * @param {GameEngine} engine 
      * @param {Function} [onEncounter]
@@ -25,7 +46,18 @@ export class WorldScene {
      * @param {Function} [onOpenShop]
      * @param {Object} [stateProvider]
      */
-    constructor(engine, onEncounter, initialState = null, mapData = null, entryId = 'default', onSwitchMap = null, onInteract = null, onOpenMenu = null, onOpenShop = null, stateProvider = null) {
+    constructor(
+        engine: GameEngine, 
+        onEncounter: ((enemyGroup: any, enemyUuid: any) => void) | null = null, 
+        initialState: any = null, 
+        mapData: any = null, 
+        entryId: string = 'default', 
+        onSwitchMap: ((targetMapId: string) => void) | null = null, 
+        onInteract: ((interaction: any) => void) | null = null, 
+        onOpenMenu: (() => void) | null = null, 
+        onOpenShop: (() => void) | null = null, 
+        stateProvider: StateProvider | null = null
+    ) {
         // Clear ECS world on scene init to prevent stale entities
         clearWorld()
 
@@ -41,9 +73,14 @@ export class WorldScene {
         this.entryId = entryId
 
         // 初始化 Environment System
-        getSystem('detect-area-render').init(this.mapData)
-        getSystem('portal-debug-render').init(this.mapData)
-        getSystem('ai-sense').init?.(this.mapData)
+        const detectAreaRender = getSystem('detect-area-render');
+        if (detectAreaRender && detectAreaRender.init) detectAreaRender.init(this.mapData)
+
+        const portalDebugRender = getSystem('portal-debug-render');
+        if (portalDebugRender && portalDebugRender.init) portalDebugRender.init(this.mapData)
+
+        const aiSense = getSystem('ai-sense');
+        if (aiSense && aiSense.init) aiSense.init(this.mapData)
 
         // 🎯 系统注册表化 (System Registry)
         this.systems = {
@@ -126,7 +163,7 @@ export class WorldScene {
      * 对渲染管线按 LAYER 排序
      */
     _sortRenderPipeline() {
-        this.systems.render.sort((a, b) => (a.LAYER || 0) - (b.LAYER || 0))
+        this.systems.render.sort((a: any, b: any) => (a?.LAYER || 0) - (b?.LAYER || 0))
     }
 
     _initGlobalEntities() {
@@ -139,10 +176,16 @@ export class WorldScene {
     /**
      * Map Loaded Callback
      */
-    onMapLoaded(mapData) {
-        getSystem('detect-area-render').init(mapData)
-        getSystem('portal-debug-render').init(mapData)
-        getSystem('ai-sense').init?.(mapData)
+    onMapLoaded(mapData: any) {
+        const detectAreaRender = getSystem('detect-area-render');
+        if (detectAreaRender && detectAreaRender.init) detectAreaRender.init(mapData);
+
+        const portalDebugRender = getSystem('portal-debug-render');
+        if (portalDebugRender && portalDebugRender.init) portalDebugRender.init(mapData);
+
+        const aiSense = getSystem('ai-sense');
+        if (aiSense && aiSense.init) aiSense.init(mapData);
+        
         logger.info('Map systems reinitialized')
     }
 
@@ -152,7 +195,7 @@ export class WorldScene {
     enterEditMode() {
         this.editMode = true
         // 将编辑器渲染系统加入主管线
-        this.systems.editor.render.forEach(sys => {
+        this.systems.editor.render.forEach((sys: any) => {
             if (!this.systems.render.includes(sys)) {
                 this.systems.render.push(sys)
             }
@@ -166,7 +209,7 @@ export class WorldScene {
     exitEditMode() {
         this.editMode = false
         // 从主管线移除编辑器渲染系统
-        this.systems.render = this.systems.render.filter(s => !this.systems.editor.render.includes(s))
+        this.systems.render = this.systems.render.filter((s: any) => !this.systems.editor.render.includes(s))
 
         // 重置交互状态
         const editorInteraction = getSystem('editor-interaction')
@@ -203,7 +246,9 @@ export class WorldScene {
 
         // 1. 清理引用
         this.player = null
+        // @ts-ignore
         this.engine = null
+        // @ts-ignore
         this.stateProvider = null
         this.mapData = null
 
@@ -220,7 +265,7 @@ export class WorldScene {
     /**
      * @param {number} dt 
      */
-    update(dt) {
+    update(dt: number) {
         this.lastDt = dt
 
         // 1. 始终运行的系统 (动画、时间等)
@@ -230,9 +275,9 @@ export class WorldScene {
         // 2. 编辑器模式逻辑
         if (this.editMode) {
             // 编辑器感官 (Input + Mouse)
-            this.systems.editor.sense.forEach(s => s.update(dt, this.engine.input || this.engine))
+            this.systems.editor.sense.forEach((s: any) => s.update(dt, this.engine.input || this.engine))
             // 编辑器交互 (Drag/Select)
-            this.systems.editor.interaction.forEach(s => s.update(dt, this.engine, this.stateProvider.gameManager))
+            this.systems.editor.interaction.forEach((s: any) => s.update(dt, this.engine, this.stateProvider.gameManager))
         }
 
         // 3. 编辑器命令处理 (始终执行，不受暂停影响)
@@ -258,7 +303,7 @@ export class WorldScene {
             // 核心逻辑阶段驱动
             const phases = ['sense', 'intent', 'decision', 'control']
             phases.forEach(phase => {
-                this.systems.logic[phase].forEach(system => {
+                this.systems.logic[phase].forEach((system: any) => {
                     // MousePositionSenseSystem 需要 engine 对象而不仅仅是 input
                     if (system === getSystem('mouse-position-sense')) {
                         system.update(dt, this.engine)
@@ -269,7 +314,7 @@ export class WorldScene {
             })
 
             // 生命周期管理阶段
-            this.systems.logic.lifecycle.forEach(system => system.update(dt))
+            this.systems.logic.lifecycle.forEach((system: any) => system.update(dt))
 
             // 物理阶段 (优先从 SceneConfig 组件读取动态数据)
             const sceneConfigEntity = world.with('sceneConfig').first;
@@ -279,7 +324,7 @@ export class WorldScene {
             const physicsOptions = {
                 mapBounds: { width: mapWidth, height: mapHeight }
             }
-            this.systems.logic.physics.forEach(system => system.update(dt, physicsOptions))
+            this.systems.logic.physics.forEach((system: any) => system.update(dt, physicsOptions))
 
             // 5. 更新相机 (在物理和逻辑之后)
             getSystem('camera').update(dt, {
@@ -311,7 +356,7 @@ export class WorldScene {
     /**
      * @param {Renderer2D} renderer 
      */
-    draw(renderer) {
+    draw(renderer: Renderer2D) {
         // 同步相机状态到渲染器
         const globalEntity = world.with('camera', 'globalManager').first
         if (globalEntity && globalEntity.camera) {

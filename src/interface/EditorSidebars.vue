@@ -85,23 +85,21 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
-import { editor } from '@/game/editor';
+<script setup lang="ts">
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue';
+import { editor, type EditorInteractionController } from '@/game/editor';
 import TabbedPanelGroup from '@/interface/editor/components/TabbedPanelGroup.vue';
 
-const props = defineProps({
-  show: {
-    type: Boolean,
-    default: false
-  },
-  editorCtrl: {
-    type: Object,
-    required: true
-  }
-});
+const props = defineProps<{
+  show: boolean;
+  editorCtrl: EditorInteractionController;
+}>();
 
-const emit = defineEmits(['update:layout', 'resize-canvas', 'update:resizing']);
+const emit = defineEmits<{
+  (e: 'update:layout', layout: { left: number, right: number }): void;
+  (e: 'resize-canvas'): void;
+  (e: 'update:resizing', side: string | null): void;
+}>();
 
 // Sidebar Resize & Collapse State
 const DEFAULT_SIDEBAR_WIDTH = 320;
@@ -112,7 +110,7 @@ const isLeftHidden = ref(false);
 const isRightHidden = ref(false);
 const isLeftCollapsed = computed(() => isLeftHidden.value);
 const isRightCollapsed = computed(() => isRightHidden.value);
-const resizingSidebar = ref(null);
+const resizingSidebar = ref<string | null>(null);
 
 // Computed Styles
 const sidebarStyles = computed(() => {
@@ -133,7 +131,7 @@ const sidebarStyles = computed(() => {
       backgroundColor: isOverlay ? 'rgba(30, 41, 59, 0.8)' : '#1e293b',
       backdropFilter: isOverlay ? 'blur(8px)' : 'none'
     }
-  };
+  } as Record<string, any>;
 });
 
 // Calculate current layout offsets to send back to GameUI
@@ -148,7 +146,7 @@ const layoutOffsets = computed(() => {
 
 // Notify parent whenever layout changes
 watch([layoutOffsets, () => editor.sidebarMode], ([newOffsets]) => {
-  emit('update:layout', newOffsets);
+  emit('update:layout', newOffsets as { left: number, right: number });
   nextTick(() => emit('resize-canvas'));
 }, { immediate: true });
 
@@ -161,7 +159,7 @@ watch(() => editor.editMode, (newVal) => {
 });
 
 // Resize Handlers
-const startResizing = (side) => {
+const startResizing = (side: 'left' | 'right') => {
   resizingSidebar.value = side;
   emit('update:resizing', side);
   document.addEventListener('mousemove', handleMouseMove);
@@ -169,7 +167,7 @@ const startResizing = (side) => {
   document.body.style.cursor = 'col-resize';
 };
 
-const handleMouseMove = (e) => {
+const handleMouseMove = (e: MouseEvent) => {
   if (!resizingSidebar.value) return;
 
   const HIDE_THRESHOLD = 30; // 拖动到小于 30px 时隐藏
@@ -202,7 +200,7 @@ const stopResizing = () => {
   emit('resize-canvas');
 };
 
-const restoreSidebar = (side) => {
+const restoreSidebar = (side: 'left' | 'right') => {
   if (side === 'left') {
     isLeftHidden.value = false;
     if (leftSidebarWidth.value < 100) leftSidebarWidth.value = DEFAULT_SIDEBAR_WIDTH;
@@ -213,7 +211,7 @@ const restoreSidebar = (side) => {
   emit('resize-canvas');
 };
 
-const resetSidebar = (side) => {
+const resetSidebar = (side: 'left' | 'right') => {
   if (side === 'left') {
     leftSidebarWidth.value = DEFAULT_SIDEBAR_WIDTH;
     isLeftHidden.value = false;
@@ -224,7 +222,7 @@ const resetSidebar = (side) => {
   emit('resize-canvas');
 };
 
-const onDrop = (e, side) => props.editorCtrl.handlePanelDrop(e, side);
+const onDrop = (e: DragEvent, side: 'left' | 'right') => props.editorCtrl.handlePanelDrop(e, side);
 
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleMouseMove);

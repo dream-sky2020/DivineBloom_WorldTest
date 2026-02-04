@@ -109,16 +109,16 @@
   </EditorPanel>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
 // import { schemasManager } from '@/schemas/SchemasManager'
 import { useGameStore } from '@/stores/game'
 import { world2d } from '@world2d' // ✅ 使用统一接口
-import { editorManager } from '@/game/editor/core/EditorCore'
+import { editorManager } from '@/game/editor'
 import { createLogger } from '@/utils/logger'
 import EditorPanel from '../components/EditorPanel.vue'
 
-const { openContextMenu } = inject('editorContextMenu');
+const { openContextMenu } = inject('editorContextMenu') as any;
 
 const logger = createLogger('SceneSwitcherPanel')
 
@@ -126,7 +126,7 @@ const gameStore = useGameStore()
 const worldStore = gameStore.world2d
 // 合并 schemas 中的地图和 worldStore 中的动态地图
 const allMapIds = computed(() => {
-  const staticMaps = []; // schemasManager.mapIds;
+  const staticMaps: string[] = []; // schemasManager.mapIds;
   const dynamicMaps = Object.keys(worldStore.worldStates);
   // 🎯 [FIX] 确保当前地图 ID 即使未保存也出现在列表中
   const current = currentMapId.value ? [currentMapId.value] : [];
@@ -138,8 +138,8 @@ const loadingMapId = ref('')
 const showCreateModal = ref(false)
 const projectRealtimePreview = ref('')
 const showRealtimePanel = ref(true)
-const panelMode = ref('all')
-let previewTimer = 0
+const panelMode = ref<'all' | 'explorer' | 'realtime'>('all')
+let previewTimer: any = 0
 const newSceneForm = ref({
   id: '',
   name: '',
@@ -160,7 +160,7 @@ const toggleExplorer = () => {
   else panelMode.value = 'all';
 }
 
-const handleRightClick = (e, mapId) => {
+const handleRightClick = (e: MouseEvent, mapId: string) => {
   const hasState = !!worldStore.worldStates[mapId];
   const items = [
     { 
@@ -180,7 +180,7 @@ const handleRightClick = (e, mapId) => {
   openContextMenu(e, items);
 }
 
-const confirmDeleteMap = async (mapId) => {
+const confirmDeleteMap = async (mapId: string) => {
   if (confirm(`确定要彻底删除场景 "${mapId}" 吗？此操作不可撤销。`)) {
     // 1. 删除持久化状态
     delete worldStore.worldStates[mapId];
@@ -238,7 +238,7 @@ const confirmCreateScene = async () => {
   await switchMap(id);
 }
 
-const confirmResetMap = (mapId) => {
+const confirmResetMap = (mapId: string) => {
   if (confirm(`确定要重置场景 "${mapId}" 的所有修改吗？此操作不可撤销。`)) {
     delete worldStore.worldStates[mapId];
     if (currentMapId.value === mapId) {
@@ -249,7 +249,7 @@ const confirmResetMap = (mapId) => {
   }
 }
 
-const switchMap = async (mapId) => {
+const switchMap = async (mapId: string) => {
   if (currentMapId.value === mapId || isLoading.value) return
   
   try {
@@ -263,7 +263,7 @@ const switchMap = async (mapId) => {
     
     // 2. ✅ 使用统一 API 切换场景
     await world2d.loadMap(mapId)
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to switch map:', error)
     alert(`切换地图失败: ${error.message}`)
   } finally {
@@ -297,12 +297,13 @@ const refreshProjectPreview = () => {
   projectRealtimePreview.value = safeStringify(buildProjectSnapshot(), 2, 9000)
 }
 
-const handleImportProject = (event) => {
-  const file = event.target.files[0]
+const handleImportProject = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0]
   if (!file) return
 
   const reader = new FileReader()
-  reader.onload = (e) => {
+  reader.onload = (e: any) => {
     try {
       const bundle = JSON.parse(e.target.result)
       // ✅ 使用兼容接口获取 ScenarioLoader
@@ -327,7 +328,7 @@ onUnmounted(() => {
   clearInterval(previewTimer)
 })
 
-const safeStringify = (value, space = 2, maxLength = 6000) => {
+const safeStringify = (value: any, space = 2, maxLength = 6000) => {
   if (value === undefined) return ''
   const seen = new WeakSet()
   let json = ''

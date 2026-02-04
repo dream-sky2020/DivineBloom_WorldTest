@@ -1,17 +1,17 @@
 import { World } from 'miniplex'
 
 // Create the global ECS world
-export const world = new World()
+export const world = new World<any>()
 
 // Simple Event Queue for ECS
 export const eventQueue = {
-  _events: [],
+  _events: [] as { type: string, payload: any }[],
   /**
    * Push an event to the queue
    * @param {string} type 
    * @param {any} payload 
    */
-  emit(type, payload) {
+  emit(type: string, payload: any) {
     this._events.push({ type, payload })
   },
   /**
@@ -24,6 +24,8 @@ export const eventQueue = {
     return events
   }
 }
+
+export const actionQueue: any[] = []
 
 // Export a helper to clear the world (useful for scene transitions/hot reload)
 export function clearWorld() {
@@ -38,7 +40,3 @@ export function clearWorld() {
   eventQueue._events = []
   actionQueue.length = 0
 }
-
-// Inter-System Communication Queue (High Frequency)
-// Used by TriggerSystem -> ActionSystem
-export const actionQueue = []

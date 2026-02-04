@@ -38,23 +38,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 
-const props = defineProps({
-  title: String,
-  icon: {
-    type: String,
-    default: '📦'
-  },
-  isEnabled: {
-    type: Boolean,
-    default: true
-  },
-  lockReason: {
-    type: String,
-    default: '当前系统不支持此功能'
-  }
+interface Props {
+  title?: string;
+  icon?: string;
+  isEnabled?: boolean;
+  lockReason?: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  icon: '📦',
+  isEnabled: true,
+  lockReason: '当前系统不支持此功能'
 });
 </script>
 

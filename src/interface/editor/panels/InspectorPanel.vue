@@ -84,7 +84,7 @@
                 <input 
                   v-if="field.type === 'number'"
                   :value="formatNumber(getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate), field.props)"
-                  @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, Number($event.target.value))"
+                  @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, Number(getEventValue($event)))"
                   :readonly="activeEditingGroup !== group.name"
                   :class="{ 'readonly-input': activeEditingGroup !== group.name }"
                   type="number"
@@ -95,7 +95,7 @@
                 <input 
                   v-else-if="field.type === 'text'"
                   :value="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
-                  @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, $event.target.value)"
+                  @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, getEventValue($event))"
                   :readonly="activeEditingGroup !== group.name"
                   :class="{ 'readonly-input': activeEditingGroup !== group.name }"
                   type="text"
@@ -107,7 +107,7 @@
                   <label class="checkbox-label" :class="{ 'is-disabled': activeEditingGroup !== group.name }">
                     <input 
                       :checked="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
-                      @change="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, $event.target.checked)"
+                      @change="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, getEventChecked($event))"
                       :disabled="activeEditingGroup !== group.name"
                       type="checkbox"
                       v-bind="field.props"
@@ -123,7 +123,7 @@
                   class="json-textarea"
                   :class="{ 'readonly-input': activeEditingGroup !== group.name }"
                   :value="formatJson(getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate))"
-                  @change="activeEditingGroup === group.name && updateJsonValue(groupDraftData, field.path, $event.target.value)"
+                  @change="activeEditingGroup === group.name && updateJsonValue(groupDraftData, field.path, getEventValue($event))"
                   :readonly="activeEditingGroup !== group.name"
                   v-bind="field.props"
                   rows="5"
@@ -138,7 +138,7 @@
                 <input 
                   v-else-if="field.type === 'color'"
                   :value="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
-                  @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, $event.target.value)"
+                  @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, getEventValue($event))"
                   :disabled="activeEditingGroup !== group.name"
                   type="color"
                   v-bind="field.props"
@@ -148,7 +148,7 @@
                 <select 
                   v-else-if="field.type === 'enum' || field.type === 'select'"
                   :value="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
-                  @change="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, parseSelectValue($event.target.value, field))"
+                  @change="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, parseSelectValue(getEventValue($event), field))"
                   :disabled="activeEditingGroup !== group.name"
                   v-bind="field.props"
                 >
@@ -175,7 +175,7 @@
               <label>名称</label>
               <input 
                 :value="localEntityState.name" 
-                @input="localEntityState.name = $event.target.value"
+                @input="localEntityState.name = getEventValue($event)"
                 type="text" 
                 :placeholder="localEntityState.globalManager ? 'Global Manager' : ''" 
               />
@@ -185,7 +185,7 @@
                 <label>X (实时)</label>
                 <input 
                   :value="localEntityState.position.x" 
-                  @input="localEntityState.position.x = Number($event.target.value)"
+                  @input="localEntityState.position.x = Number(getEventValue($event))"
                   type="number" 
                 />
               </div>
@@ -193,7 +193,7 @@
                 <label>Y</label>
                 <input 
                   :value="localEntityState.position.y" 
-                  @input="localEntityState.position.y = Number($event.target.value)"
+                  @input="localEntityState.position.y = Number(getEventValue($event))"
                   type="number" 
                 />
               </div>
@@ -214,7 +214,7 @@
               <label class="checkbox-label">
                 <input 
                   :checked="localEntityState.timer.running" 
-                  @change="localEntityState.timer.running = $event.target.checked"
+                  @change="localEntityState.timer.running = getEventChecked($event)"
                   type="checkbox" 
                 />
                 正在运行
@@ -230,7 +230,7 @@
                 <label>当前 X</label>
                 <input 
                   :value="localEntityState.camera.x" 
-                  @input="localEntityState.camera.x = Number($event.target.value)"
+                  @input="localEntityState.camera.x = Number(getEventValue($event))"
                   type="number" 
                 />
               </div>
@@ -238,7 +238,7 @@
                 <label>当前 Y</label>
                 <input 
                   :value="localEntityState.camera.y" 
-                  @input="localEntityState.camera.y = Number($event.target.value)"
+                  @input="localEntityState.camera.y = Number(getEventValue($event))"
                   type="number" 
                 />
               </div>
@@ -247,7 +247,7 @@
               <label>平滑系数 (Lerp)</label>
               <input 
                 :value="localEntityState.camera.lerp" 
-                @input="localEntityState.camera.lerp = Number($event.target.value)"
+                @input="localEntityState.camera.lerp = Number(getEventValue($event))"
                 type="number" 
                 step="0.01" 
               />
@@ -261,7 +261,7 @@
               <label>对话 ID</label>
               <input 
                 :value="localEntityState.actionDialogue?.dialogueId" 
-                @input="localEntityState.actionDialogue.dialogueId = $event.target.value; syncLegacyInteraction()"
+                @input="localEntityState.actionDialogue.dialogueId = getEventValue($event); syncLegacyInteraction()"
                 type="text" 
               />
             </div>
@@ -269,7 +269,7 @@
               <label>对话范围</label>
               <input 
                 :value="localEntityState.detectArea?.radius" 
-                @input="localEntityState.detectArea.radius = Number($event.target.value); syncLegacyInteraction()"
+                @input="localEntityState.detectArea.radius = Number(getEventValue($event)); syncLegacyInteraction()"
                 type="number" 
               />
             </div>
@@ -282,7 +282,7 @@
               <label>目标地图</label>
               <input 
                 :value="localEntityState.actionTeleport?.mapId" 
-                @input="localEntityState.actionTeleport.mapId = $event.target.value"
+                @input="localEntityState.actionTeleport.mapId = getEventValue($event)"
                 type="text" 
               />
             </div>
@@ -290,7 +290,7 @@
               <label>目标入口</label>
               <input 
                 :value="localEntityState.actionTeleport?.entryId" 
-                @input="localEntityState.actionTeleport.entryId = $event.target.value"
+                @input="localEntityState.actionTeleport.entryId = getEventValue($event)"
                 type="text" 
               />
             </div>
@@ -299,7 +299,7 @@
                 <label>宽度</label>
                 <input 
                   :value="localEntityState.detectArea?.width ?? localEntityState.detectArea?.size?.w" 
-                  @input="localEntityState.detectArea.width = Number($event.target.value)"
+                  @input="localEntityState.detectArea.width = Number(getEventValue($event))"
                   type="number" 
                 />
               </div>
@@ -307,7 +307,7 @@
                 <label>高度</label>
                 <input 
                   :value="localEntityState.detectArea?.height ?? localEntityState.detectArea?.size?.h" 
-                  @input="localEntityState.detectArea.height = Number($event.target.value)"
+                  @input="localEntityState.detectArea.height = Number(getEventValue($event))"
                   type="number" 
                 />
               </div>
@@ -321,7 +321,7 @@
               <label>资源 ID</label>
               <input 
                 :value="localEntityState.visual.id" 
-                @input="localEntityState.visual.id = $event.target.value"
+                @input="localEntityState.visual.id = getEventValue($event)"
                 type="text" 
               />
             </div>
@@ -329,7 +329,7 @@
               <label>缩放</label>
               <input 
                 :value="localEntityState.visual.scale" 
-                @input="localEntityState.visual.scale = Number($event.target.value)"
+                @input="localEntityState.visual.scale = Number(getEventValue($event))"
                 type="number" 
                 step="0.1" 
               />
@@ -344,20 +344,20 @@
   </EditorPanel>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted, toRaw, computed, watch } from 'vue'
 import { world2d } from '@world2d' // ✅ 使用统一接口
-import { editorManager } from '@/game/editor/core/EditorCore'
+import { editorManager } from '@/game/editor'
 import EditorPanel from '../components/EditorPanel.vue'
 
 // ✅ 延迟获取函数（避免循环依赖）
 const getWorld = () => world2d.getWorld()
 
 // 属性编辑同步
-const localEntityState = ref(null)
+const localEntityState = ref<any>(null)
 const lastUpdate = ref(Date.now())
 const showRealtimePanel = ref(true)
-const panelMode = ref('all')
+const panelMode = ref<'all' | 'explorer' | 'realtime'>('all')
 
 const toggleRealtime = () => {
   if (panelMode.value === 'all') panelMode.value = 'explorer';
@@ -384,22 +384,22 @@ const entityRealtimePreview = computed(() => {
 })
 
 // 局部编辑状态管理
-const activeEditingGroup = ref(null)
-const groupDraftData = ref({})
+const activeEditingGroup = ref<string | null>(null)
+const groupDraftData = ref<any>({})
 
 // 分组展开收起状态
-const collapsedGroups = ref({})
+const collapsedGroups = ref<Record<string, boolean>>({})
 
-const toggleGroup = (groupName) => {
+const toggleGroup = (groupName: string) => {
   collapsedGroups.value[groupName] = !collapsedGroups.value[groupName];
 }
 
 const groupedFields = computed(() => {
   if (!localEntityState.value?.inspector?.fields) return [];
   
-  const fields = localEntityState.value.inspector.fields;
-  const groups = [];
-  const groupMap = {};
+  const fields = localEntityState.value.inspector.fields as any[];
+  const groups: any[] = [];
+  const groupMap: Record<string, any> = {};
 
   fields.forEach(field => {
     const groupName = field.group || '基本属性'; // 默认分组
@@ -416,10 +416,10 @@ const groupedFields = computed(() => {
 /**
  * 进入分组编辑模式
  */
-const enterGroupEdit = (groupName, fields) => {
+const enterGroupEdit = (groupName: string, fields: any[]) => {
   // 如果当前已经在编辑别的组，先提示或自动保存（这里选择先切换）
   activeEditingGroup.value = groupName;
-  const draft = {};
+  const draft: any = {};
   fields.forEach(field => {
     const val = getNestedValue(localEntityState.value, field.path);
     // 简单的深拷贝实现 (处理对象和基本类型)
@@ -431,12 +431,12 @@ const enterGroupEdit = (groupName, fields) => {
 /**
  * 保存分组修改
  */
-const saveGroupEdit = (fields) => {
+const saveGroupEdit = (fields: any[]) => {
   if (!localEntityState.value) return;
   
   fields.forEach(field => {
-    const draftVal = getNestedValue(groupDraftData.value, field.path, null, field);
-    const oldVal = getNestedValue(localEntityState.value, field.path, null, field);
+    const draftVal = getNestedValue(groupDraftData.value, field.path, undefined, field);
+    const oldVal = getNestedValue(localEntityState.value, field.path, undefined, field);
     
     if (draftVal !== oldVal || !field.path) {
       if (field.path) {
@@ -497,7 +497,7 @@ const confirmDelete = () => {
   }
 }
 
-const buildEntitySnapshot = (entity) => {
+const buildEntitySnapshot = (entity: any) => {
   if (!entity) return null
   return toRaw(entity)
 }
@@ -533,7 +533,6 @@ onUnmounted(() => {
   cancelAnimationFrame(rafId)
 })
 
-// 同步旧系统的辅助函数
 const syncLegacyInteraction = () => {
   if (localEntityState.value && localEntityState.value.interaction) {
     if (localEntityState.value.actionDialogue) {
@@ -545,14 +544,7 @@ const syncLegacyInteraction = () => {
   }
 }
 
-/**
- * 获取嵌套对象属性
- * @param {Object} obj 目标对象
- * @param {string} path 属性路径
- * @param {number} [_trigger] 额外的响应式触发器 (如 lastUpdate)
- * @param {Object} [field] 字段定义对象，支持自定义 getValue
- */
-const getNestedValue = (obj, path, _trigger, field) => {
+const getNestedValue = (obj: any, path: string, _trigger?: number, field?: any) => {
   if (!obj) return undefined;
   const targetObj = obj.value || obj;
 
@@ -562,14 +554,7 @@ const getNestedValue = (obj, path, _trigger, field) => {
   return path.split('.').reduce((prev, curr) => prev ? prev[curr] : undefined, targetObj);
 }
 
-/**
- * 设置嵌套对象属性
- * @param {Object} obj 目标对象
- * @param {string} path 属性路径
- * @param {any} value 值
- * @param {Object} [field] 字段定义对象，支持自定义 setValue
- */
-const setNestedValue = (obj, path, value, field) => {
+const setNestedValue = (obj: any, path: string, value: any, field?: any) => {
   if (!obj) return;
   const targetRoot = obj.value || obj;
 
@@ -580,7 +565,7 @@ const setNestedValue = (obj, path, value, field) => {
 
   if (!path) return;
   const parts = path.split('.');
-  const last = parts.pop();
+  const last = parts.pop()!;
   const target = parts.reduce((prev, curr) => {
     if (!prev[curr]) prev[curr] = {};
     return prev[curr];
@@ -588,10 +573,7 @@ const setNestedValue = (obj, path, value, field) => {
   target[last] = value;
 }
 
-/**
- * 格式化 JSON 数据
- */
-const formatJson = (value) => {
+const formatJson = (value: any) => {
   if (value === undefined || value === null) return '';
   try {
     return JSON.stringify(value, null, 2);
@@ -600,10 +582,7 @@ const formatJson = (value) => {
   }
 }
 
-/**
- * 更新 JSON 数据
- */
-const updateJsonValue = (obj, path, value) => {
+const updateJsonValue = (obj: any, path: string, value: string) => {
   try {
     const parsed = JSON.parse(value);
     setNestedValue(obj, path, parsed);
@@ -612,52 +591,35 @@ const updateJsonValue = (obj, path, value) => {
   }
 }
 
-/**
- * 格式化数字，防止出现超长浮点数
- */
-const formatNumber = (value, props = {}) => {
+const formatNumber = (value: any, props: any = {}) => {
   if (typeof value !== 'number') return value;
   
-  // 如果是只读的或者是计时器这种高频变动的，限制小数位数
   if (props.readonly || value.toString().length > 10) {
     return Number(value.toFixed(3));
   }
   return value;
 }
 
-/**
- * 获取枚举选项列表
- * 支持多种格式：
- * 1. options: ['A', 'B'], values: [0, 1]
- * 2. options: [{label: 'A', value: 0}, {label: 'B', value: 1}]
- * 3. options: ['A', 'B'] (值等于标签)
- * 4. options: { A: 0, B: 1 } (对象键值对)
- */
-const getOptions = (field) => {
+const getOptions = (field: any) => {
   if (!field) return [];
   
-  // 1. 分离的 label 和 value 数组
   if (Array.isArray(field.options) && Array.isArray(field.values)) {
-    return field.options.map((label, i) => ({ 
+    return field.options.map((label: any, i: number) => ({ 
       label, 
       value: field.values[i] 
     }));
   }
   
-  // 2/3. 数组格式
   if (Array.isArray(field.options)) {
     if (field.options.length === 0) return [];
     
-    // 对象数组 [{label, value}]
     if (typeof field.options[0] === 'object') {
       return field.options;
     }
     
-    // 字符串数组
-    return field.options.map(o => ({ label: o, value: o }));
+    return field.options.map((o: any) => ({ label: o, value: o }));
   }
   
-  // 4. 对象格式 { KEY: value }
   if (field.options && typeof field.options === 'object') {
     return Object.entries(field.options).map(([key, val]) => ({ 
       label: key, 
@@ -668,17 +630,13 @@ const getOptions = (field) => {
   return [];
 }
 
-/**
- * 解析 Select 的值
- * 因为 select change 事件传回的都是字符串，需要根据选项转换回原始类型 (如数字)
- */
-const parseSelectValue = (domValue, field) => {
+const parseSelectValue = (domValue: string, field: any) => {
    const options = getOptions(field);
-   const matched = options.find(o => String(o.value) === domValue);
+   const matched = options.find((o: any) => String(o.value) === domValue);
    return matched ? matched.value : domValue;
 }
 
-const safeStringify = (value, space = 2, maxLength = 6000) => {
+const safeStringify = (value: any, space = 2, maxLength = 6000) => {
   if (value === undefined) return ''
   const seen = new WeakSet()
   let json = ''
@@ -699,6 +657,9 @@ const safeStringify = (value, space = 2, maxLength = 6000) => {
   }
   return json
 }
+
+const getEventValue = (e: Event) => (e.target as HTMLInputElement).value
+const getEventChecked = (e: Event) => (e.target as HTMLInputElement).checked
 </script>
 
 <style scoped src="@styles/editor/EntityProperties.css"></style>

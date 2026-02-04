@@ -55,10 +55,9 @@
   </EditorPanel>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
-import { entitySpawner } from '@/game/editor/services/EntitySpawner'
-import { editorManager } from '@/game/editor/core/EditorCore'
+import { entitySpawner, editorManager } from '@/game/editor'
 import EditorPanel from '../components/EditorPanel.vue'
 
 const categories = entitySpawner.categories
@@ -68,10 +67,10 @@ const filteredTemplates = entitySpawner.filteredTemplates
 /**
  * 创建实体
  */
-const createEntity = (template) => {
+const createEntity = (template: any) => {
   try {
     entitySpawner.createEntity(template)
-  } catch (error) {
+  } catch (error: any) {
     alert(`创建实体失败: ${error.message}`)
   }
 }

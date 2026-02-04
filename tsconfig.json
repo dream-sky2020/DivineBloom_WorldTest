@@ -30,6 +30,7 @@
       "@entities/*": ["src/game/world2d/definitions/entities/*"],
       "@entities": ["src/game/world2d/definitions/entities/index.ts"],
       "@definitions/*": ["src/game/world2d/definitions/*"],
+      "@definitions": ["src/game/world2d/definitions/index.js"],
       "@systems/*": ["src/game/world2d/systems/*"]
     }
   },

@@ -18,20 +18,33 @@ import { createLogger } from '@/utils/logger'
 
 const logger = createLogger('World2DFacade')
 
+export interface Callbacks {
+    onEncounter?: (enemyGroup: any, enemyUuid: any) => void;
+    onInteract?: (interaction: any) => void;
+    onSwitchMap?: (targetMapId: string) => void;
+    onOpenMenu?: () => void;
+    onOpenShop?: () => void;
+    onStateChange?: () => void;
+    [key: string]: any;
+}
+
 /**
  * World2D 统一外部接口类
  */
 class World2DFacade {
+    _gameManager: typeof gameManager;
+    _callbacks: Callbacks;
+
     constructor() {
         // 内部管理器引用（不暴露给外部）
         this._gameManager = gameManager
         this._callbacks = {
-            onEncounter: null,
-            onInteract: null,
-            onSwitchMap: null,
-            onOpenMenu: null,
-            onOpenShop: null,
-            onStateChange: null
+            onEncounter: undefined,
+            onInteract: undefined,
+            onSwitchMap: undefined,
+            onOpenMenu: undefined,
+            onOpenShop: undefined,
+            onStateChange: undefined
         }
     }
 
@@ -42,7 +55,7 @@ class World2DFacade {
      * @param {HTMLCanvasElement} canvas - 渲染画布
      * @returns {void}
      */
-    init(canvas) {
+    init(canvas: HTMLCanvasElement) {
         logger.info('Initializing World2D system')
         this._gameManager.init(canvas)
     }
@@ -98,7 +111,7 @@ class World2DFacade {
      * @param {string} [entryId='default'] - 入口点 ID
      * @returns {Promise<void>}
      */
-    async loadMap(mapId, entryId = 'default') {
+    async loadMap(mapId: string, entryId: string = 'default') {
         logger.info(`Loading map: ${mapId}, entry: ${entryId}`)
         await this._gameManager.loadMap(mapId, entryId)
     }
@@ -164,13 +177,13 @@ class World2DFacade {
      */
     getPlayerPosition() {
         const scene = this._gameManager.currentScene.value
-        if (!scene || !scene.player || !scene.player.position) {
+        if (!scene || !scene.player || !scene.player.transform) {
             return null
         }
 
         return {
-            x: scene.player.position.x,
-            y: scene.player.position.y
+            x: scene.player.transform.x,
+            y: scene.player.transform.y
         }
     }
 
@@ -185,6 +198,7 @@ class World2DFacade {
 
         // 获取全局实体的鼠标位置
         const globalEntity = world.with('globalManager', 'mousePosition').first
+        // @ts-ignore
         const mousePos = globalEntity?.mousePosition || { worldX: 0, worldY: 0 }
 
         // 统计追击中的敌人
@@ -205,6 +219,7 @@ class World2DFacade {
             lastInput: engine?.input?.lastInput || '',
             chasingCount,
             entityCount: world ? [...world].length : 0,
+            // @ts-ignore
             fps: engine?.lastDt ? Math.round(1 / engine.lastDt) : 0
         }
     }
@@ -221,6 +236,7 @@ class World2DFacade {
             entities.push({
                 id: entity.__id,
                 type: entity.sprite?.texture || entity.physics?.shape || 'unknown',
+                // @ts-ignore
                 position: entity.position ? { ...entity.position } : null,
                 inspector: entity.inspector ? { ...entity.inspector } : null,
                 // 不暴露完整的 entity 对象，只暴露必要信息
@@ -237,7 +253,7 @@ class World2DFacade {
      * @param {Object} options - 生成选项
      * @returns {boolean} 是否成功
      */
-    spawnEntity(templateId, options) {
+    spawnEntity(templateId: string, options: any) {
         try {
             const template = entityTemplateRegistry.get(templateId)
             if (!template) {
@@ -259,7 +275,7 @@ class World2DFacade {
      * @param {number} entityId - 实体 ID
      * @returns {boolean} 是否成功
      */
-    removeEntity(entityId) {
+    removeEntity(entityId: number) {
         try {
             for (const entity of world) {
                 if (entity.__id === entityId) {
@@ -289,14 +305,8 @@ class World2DFacade {
     /**
      * 注册外部回调函数
      * @param {Object} callbacks - 回调函数集合
-     * @param {Function} [callbacks.onEncounter] - 遭遇战触发回调
-     * @param {Function} [callbacks.onInteract] - 交互触发回调
-     * @param {Function} [callbacks.onSwitchMap] - 地图切换回调
-     * @param {Function} [callbacks.onOpenMenu] - 打开菜单回调
-     * @param {Function} [callbacks.onOpenShop] - 打开商店回调
-     * @param {Function} [callbacks.onStateChange] - 状态变化回调
      */
-    registerCallbacks(callbacks) {
+    registerCallbacks(callbacks: Callbacks) {
         logger.info('Registering external callbacks')
         Object.assign(this._callbacks, callbacks)
 
@@ -314,7 +324,7 @@ class World2DFacade {
      * 触发回调（内部系统使用）
      * @private
      */
-    _triggerCallback(type, ...args) {
+    _triggerCallback(type: string, ...args: any[]) {
         const callback = this._callbacks[type]
         if (callback && typeof callback === 'function') {
             callback(...args)
@@ -391,10 +401,6 @@ class World2DFacade {
 
 // 创建单例实例
 export const world2d = new World2DFacade()
-
-// ==================== 兼容性导出（渐进式迁移） ====================
-// 这些导出用于支持旧代码的平滑迁移，最终会被移除
-// 注意：这些导出在 index.js 中统一管理
 
 // ==================== 默认导出 ====================
 export default world2d

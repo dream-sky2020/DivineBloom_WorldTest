@@ -38,17 +38,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
-import { editorManager } from '@/game/editor/core/EditorCore'
+import { editorManager } from '../../../game/editor/core/EditorCore'
+import { type PanelGroup } from '@/game/editor/config/WorkspacePresets'
 import PanelErrorBoundary from './PanelErrorBoundary.vue'
 
-const props = defineProps({
-  group: Object,
-  side: String
-})
+const props = defineProps<{
+  group: PanelGroup,
+  side: 'left' | 'right'
+}>()
 
-const dropPos = ref(null) // 'top', 'tabs', 'bottom'
+const dropPos = ref<'top' | 'tabs' | 'bottom' | null>(null)
 
 const moveGroupSide = () => {
   const layout = editorManager.layout
@@ -59,18 +60,21 @@ const moveGroupSide = () => {
   layout[targetSide].push(props.group)
 }
 
-const onDragStartTab = (e, panelId) => {
-  e.dataTransfer.setData('panelId', panelId)
-  e.dataTransfer.setData('sourceGroupId', props.group.id)
-  e.dataTransfer.setData('sourceSide', props.side)
-  e.dataTransfer.effectAllowed = 'move'
+const onDragStartTab = (e: DragEvent, panelId: string) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('panelId', panelId)
+    e.dataTransfer.setData('sourceGroupId', props.group.id)
+    e.dataTransfer.setData('sourceSide', props.side)
+    e.dataTransfer.effectAllowed = 'move'
+  }
 }
 
-const onDragOver = (e) => {
+const onDragOver = (e: DragEvent) => {
   e.preventDefault()
   e.stopPropagation()
   
-  const rect = e.currentTarget.getBoundingClientRect()
+  const currentTarget = e.currentTarget as HTMLElement
+  const rect = currentTarget.getBoundingClientRect()
   const y = e.clientY - rect.top
   
   // 划分区域
@@ -87,27 +91,29 @@ const onDragLeave = () => {
   dropPos.value = null
 }
 
-const onDrop = (e) => {
+const onDrop = (e: DragEvent) => {
   e.preventDefault()
   e.stopPropagation()
   
-  const panelId = e.dataTransfer.getData('panelId')
-  const sourceGroupId = e.dataTransfer.getData('sourceGroupId')
-  const sourceSide = e.dataTransfer.getData('sourceSide')
-  const pos = dropPos.value
-  
-  dropPos.value = null
-  if (!panelId) return
-  
-  // 使用中心化的移动逻辑
-  editorManager.movePanel({
-    panelId,
-    sourceSide,
-    sourceGroupId,
-    targetSide: props.side,
-    targetGroupId: props.group.id,
-    position: pos
-  });
+  if (e.dataTransfer) {
+    const panelId = e.dataTransfer.getData('panelId')
+    const sourceGroupId = e.dataTransfer.getData('sourceGroupId')
+    const sourceSide = e.dataTransfer.getData('sourceSide') as 'left' | 'right'
+    const pos = dropPos.value
+    
+    dropPos.value = null
+    if (!panelId) return
+    
+    // 使用中心化的移动逻辑
+    editorManager.movePanel({
+      panelId,
+      sourceSide,
+      sourceGroupId,
+      targetSide: props.side,
+      targetGroupId: props.group.id,
+      position: pos as any
+    });
+  }
 }
 </script>
 

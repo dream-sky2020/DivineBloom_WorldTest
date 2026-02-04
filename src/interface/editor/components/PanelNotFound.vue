@@ -12,15 +12,12 @@
   </EditorPanel>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import EditorPanel from './EditorPanel.vue';
 
-defineProps({
-  panelId: {
-    type: String,
-    required: true
-  }
-});
+defineProps<{
+  panelId: string
+}>();
 </script>
 
 <style scoped>

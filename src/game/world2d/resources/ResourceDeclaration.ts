@@ -13,7 +13,7 @@ export class ResourceDeclaration {
      * @param {object} obj 任意数据对象
      * @param {Set} collected set容器
      */
-    static _scanObjectForAssets(obj, collected) {
+    static _scanObjectForAssets(obj: any, collected: Set<string>) {
         if (!obj || typeof obj !== 'object') return;
 
         // 策略 1: 显式的 assetId 字段
@@ -49,8 +49,8 @@ export class ResourceDeclaration {
      * @param {object} mapData 标准 SceneBundle 数据
      * @returns {Set<string>} 资源文件 ID 集合
      */
-    static getMapAssetIds(mapData) {
-        const assetIds = new Set();
+    static getMapAssetIds(mapData: any): Set<string> {
+        const assetIds = new Set<string>();
         
         if (!mapData) return assetIds;
 
@@ -66,7 +66,7 @@ export class ResourceDeclaration {
         return assetIds;
     }
 
-    static getCoreAssets() {
+    static getCoreAssets(): string[] {
         // 默认预加载的核心资源
         return ['enemy_slime', 'hero_sheet']; 
     }
@@ -74,7 +74,7 @@ export class ResourceDeclaration {
     /**
      * 保持接口兼容
      */
-    static getWorldAssetIds(world) {
+    static getWorldAssetIds(world: any): Set<string> {
         return new Set();
     }
 }

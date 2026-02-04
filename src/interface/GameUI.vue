@@ -97,7 +97,7 @@
         :key="index"
         class="context-menu-item"
         :class="[item.class, { disabled: item.disabled }]"
-        @click="!item.disabled && (item.action(), closeContextMenu())"
+        @click="!item.disabled && item.action && (item.action(), closeContextMenu())"
       >
         <span v-if="item.icon" class="item-icon">{{ item.icon }}</span>
         <span class="item-label">{{ item.label }}</span>
@@ -112,37 +112,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, provide } from 'vue';
 import { world2d, getSystem } from '@world2d'; 
-import { editor } from '@/game/editor';
+import { editor, EditorInteractionController, type MenuItem, type MouseInfo } from '@/game/editor';
 import { createLogger } from '@/utils/logger';
 import { WorldMapController } from '@/game/interface/WorldMapController';
 import { CanvasManager } from '@/game/interface/CanvasManager';
-import { EditorInteractionController } from '@/game/editor/core/EditorInteractionController';
 import DevDashboard from './DevDashboard.vue';
 import EditorSidebars from './EditorSidebars.vue';
 
 const logger = createLogger('GameUI');
 const currentSystem = ref(world2d.state.system);
-const gameCanvas = ref(null);
+const gameCanvas = ref<HTMLCanvasElement | null>(null);
 
 // Canvas Manager Integration
 const canvasMgr = new CanvasManager('game-canvas');
 
 // World Map Controller Integration
-const worldMapCtrl = new WorldMapController();
-const debugInfo = worldMapCtrl.debugInfo;
-const dialogueStore = worldMapCtrl.dialogueStore;
+const worldMapCtrl = new WorldMapController() as any;
+const debugInfo = worldMapCtrl.debugInfo as any;
+const dialogueStore = worldMapCtrl.dialogueStore as any;
 
 // Editor Interaction Controller Integration
 const editorCtrl = new EditorInteractionController({
-  openContextMenu: (e, items) => openContextMenu(e, items),
+  openContextMenu: (e: any, items: MenuItem[]) => openContextMenu(e, items),
   closeContextMenu: () => closeContextMenu()
 });
 
 // Context Menu State
-const contextMenu = ref({
+const contextMenu = ref<{
+  show: boolean;
+  x: number;
+  y: number;
+  items: MenuItem[];
+}>({
   show: false,
   x: 0,
   y: 0,
@@ -153,7 +157,7 @@ const closeContextMenu = () => {
   contextMenu.value.show = false;
 };
 
-const openContextMenu = (e, items) => {
+const openContextMenu = (e: { clientX: number, clientY: number, preventDefault: () => void }, items: MenuItem[]) => {
   e.preventDefault();
   contextMenu.value = {
     show: true,
@@ -176,13 +180,13 @@ provide('editorContextMenu', { openContextMenu, closeContextMenu });
 const sidebarLayout = ref({ left: 0, right: 0 });
 const showSidebars = ref(false);
 
-const onLayoutUpdate = (layout) => {
+const onLayoutUpdate = (layout: { left: number, right: number }) => {
   sidebarLayout.value = layout;
 };
 
 // Reactive Edit Mode State
 const isEditMode = computed(() => editor.editMode);
-const resizingSidebar = ref(null); // Keep for UI class binding if needed, or remove if unused
+const resizingSidebar = ref<string | null>(null); // Keep for UI class binding if needed, or remove if unused
 
 // Determine if sidebars should be visible
 // 修复：完全由用户手动控制侧边栏显示/隐藏
@@ -233,7 +237,7 @@ const showGrid = computed(() => {
 const canvasStyle = computed(() => {
   return { 
     opacity: 1,
-    visibility: 'visible'
+    visibility: 'visible' as const
   };
 });
 
@@ -264,7 +268,7 @@ const resizeCanvas = () => {
   canvas.style.transform = `scale(${scale})`;
 }
 
-const handleKeyDown = (e) => {
+const handleKeyDown = (e: KeyboardEvent) => {
   if (e.ctrlKey && e.key.toLowerCase() === 'e') {
     e.preventDefault();
     toggleEditMode();
@@ -292,8 +296,8 @@ onMounted(async () => {
   // 5. Editor Interaction Setup
   const editorInteraction = getSystem('editor-interaction')
   if (editorInteraction) {
-    editorInteraction.onEntityRightClick = (entity, info) => editorCtrl.handleEntityRightClick(entity, info);
-    editorInteraction.onEmptyRightClick = (info) => editorCtrl.handleEmptyRightClick(info);
+    editorInteraction.onEntityRightClick = (entity: any, info: MouseInfo) => editorCtrl.handleEntityRightClick(entity, info);
+    editorInteraction.onEmptyRightClick = (info: MouseInfo) => editorCtrl.handleEmptyRightClick(info);
   }
 });
 
@@ -312,7 +316,7 @@ const toggleSidebars = () => {
   nextTick(resizeCanvas);
 };
 
-const handleContextMenu = (e) => {
+const handleContextMenu = (e: MouseEvent) => {
   if (isEditMode.value && currentSystem.value === 'world-map') {
     e.preventDefault();
   }

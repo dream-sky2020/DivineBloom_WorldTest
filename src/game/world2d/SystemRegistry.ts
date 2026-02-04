@@ -75,7 +75,7 @@ export const SystemType = {
  * 系统注册表配置
  * 映射系统 ID 到具体的系统实现
  */
-export const Registry = {
+export const Registry: Record<string, any> = {
     // --- Core Systems ---
     'time': TimeSystem,
     'input-sense': InputSenseSystem,
@@ -128,7 +128,7 @@ export const Registry = {
  * @param {...any} args 传递给构造函数的参数 (如果是类的话)
  * @returns {object} 系统对象
  */
-export function getSystem(id, ...args) {
+export function getSystem(id: string, ...args: any[]): any {
     const system = Registry[id];
     if (!system) {
         console.warn(`System with ID "${id}" not found in Registry.`);
@@ -149,6 +149,6 @@ export function getSystem(id, ...args) {
  * @param {string[]} ids 系统 ID 数组
  * @returns {object[]} 系统对象数组
  */
-export function getSystems(ids) {
+export function getSystems(ids: string[]): any[] {
     return ids.map(id => getSystem(id)).filter(s => s !== null);
 }

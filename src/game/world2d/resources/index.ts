@@ -6,3 +6,4 @@
 export { ResourceDeclaration } from './ResourceDeclaration'
 export { ResourcePipeline } from './ResourcePipeline'
 export { SceneLifecycle } from './SceneLifecycle'
+export { AssetManager } from './AssetManager'

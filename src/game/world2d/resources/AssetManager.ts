@@ -9,6 +9,9 @@ const logger = createLogger('AssetManager')
  * 职责单一化：只负责根据 ID 加载资源，不关心业务逻辑
  */
 export class AssetManager {
+    textures: Map<string, HTMLCanvasElement | HTMLImageElement>;
+    loading: Map<string, Promise<HTMLCanvasElement | HTMLImageElement>>;
+
     constructor() {
         /** @type {Map<string, HTMLCanvasElement|HTMLImageElement>} */
         this.textures = new Map()
@@ -21,26 +24,26 @@ export class AssetManager {
      * 加载单个资源
      * @param {string} assetId 对应 assets.js 中的 key
      */
-    loadTexture(assetId) {
+    loadTexture(assetId: string): Promise<HTMLCanvasElement | HTMLImageElement | null> {
         // 1. 缓存命中
         if (this.textures.has(assetId)) {
-            return Promise.resolve(this.textures.get(assetId))
+            return Promise.resolve(this.textures.get(assetId)!)
         }
 
         // 2. 请求去重
         if (this.loading.has(assetId)) {
-            return this.loading.get(assetId)
+            return this.loading.get(assetId)!
         }
 
         // 3. 查找路径
-        const url = AssetManifest[assetId]
+        const url = (AssetManifest as Record<string, string>)[assetId]
         if (!url) {
             logger.warn(`Asset ID not found in manifest: ${assetId}`)
             return Promise.resolve(null)
         }
 
         // 4. 执行加载
-        const p = new Promise((resolve, reject) => {
+        const p = new Promise<HTMLCanvasElement | HTMLImageElement>((resolve, reject) => {
             const img = new Image()
             
             img.onload = () => {
@@ -52,7 +55,9 @@ export class AssetManager {
                 offCanvas.height = h
                 
                 const ctx = offCanvas.getContext('2d')
-                ctx.drawImage(img, 0, 0)
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0)
+                }
 
                 this.textures.set(assetId, offCanvas)
                 this.loading.delete(assetId)
@@ -75,7 +80,7 @@ export class AssetManager {
         return p
     }
 
-    getTexture(assetId) {
+    getTexture(assetId: string): HTMLCanvasElement | HTMLImageElement | undefined {
         return this.textures.get(assetId)
     }
 
@@ -84,13 +89,15 @@ export class AssetManager {
         this.loading.clear()
     }
 
-    _createFallback(w, h, color) {
+    _createFallback(w: number, h: number, color: string): HTMLCanvasElement {
         const cv = document.createElement('canvas')
         cv.width = w
         cv.height = h
         const ctx = cv.getContext('2d')
-        ctx.fillStyle = color
-        ctx.fillRect(0, 0, w, h)
+        if (ctx) {
+            ctx.fillStyle = color
+            ctx.fillRect(0, 0, w, h)
+        }
         return cv
     }
 }

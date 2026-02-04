@@ -2,6 +2,15 @@ import { reactive } from 'vue';
 import { editorManager } from './core/EditorCore';
 import { world2d } from '@world2d';
 
+// 导出所有子模块，方便外部统一引用并解决 HMR 缓存问题
+export * from './core/EditorCore';
+export * from './core/EditorInteractionController';
+export * from './core/EditorCapabilities';
+export * from './core/PanelLayoutService';
+export * from './services/EntitySpawner';
+export * from './config/PanelRegistry';
+export * from './config/WorkspacePresets';
+
 /**
  * 编辑器模块对外统一接口
  */
@@ -18,7 +27,7 @@ export const editor = reactive({
         editorManager.toggleEditMode();
     },
 
-    resetLayout(workspaceId = 'world-editor') {
+    resetLayout(workspaceId: string = 'world-editor') {
         editorManager.resetToWorkspace(workspaceId);
     },
 
@@ -27,6 +36,7 @@ export const editor = reactive({
      */
     exportCurrentScene() {
         const bundle = world2d.exportCurrentScene();
+        // @ts-ignore
         const mapId = world2d.state.mapId || 'unknown';
         const fileName = `${mapId}_scene_export_${Date.now()}.json`;
         

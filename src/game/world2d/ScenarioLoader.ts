@@ -3,6 +3,7 @@ import { SceneMigration } from '@definitions/internal/SceneMigration'
 import { createLogger } from '@/utils/logger'
 import { world } from '@world2d/world'
 import { EntitySerializer } from '@definitions/internal/EntitySerializer'
+import { GameEngine } from './GameEngine'
 
 const logger = createLogger('ScenarioLoader')
 
@@ -10,12 +11,12 @@ export class ScenarioLoader {
     /**
      * [纯净模式] 加载场景
      * 直接消费标准的 SceneBundle 数据，不再进行格式转换
-     * @param {object} engine 
+     * @param {GameEngine} engine 
      * @param {object} bundle 标准的场景数据包
      * @param {string} entryId 
      * @returns {object} { player, entities }
      */
-    static load(engine, bundle, entryId = 'default') {
+    static load(engine: GameEngine, bundle: any, entryId: string = 'default') {
         if (!bundle || !bundle.entities) {
             logger.error('Invalid SceneBundle: missing entities')
             return { player: null, entities: [] }
@@ -25,7 +26,7 @@ export class ScenarioLoader {
         const migratedBundle = SceneMigration.migrate(bundle)
         const config = migratedBundle.header?.config || {}
         
-        const result = {
+        const result: { player: any; entities: any[] } = {
             player: null,
             entities: []
         }
@@ -37,7 +38,7 @@ export class ScenarioLoader {
         }
 
         // 3. 实体充气 (Hydration)
-        migratedBundle.entities.forEach(entityData => {
+        migratedBundle.entities.forEach((entityData: any) => {
             // 直接透传数据给 EntityManager
             // 假设 entityData 结构为 { type: '...', components: { ... } }
             const entity = EntityManager.create(engine, entityData.type, entityData, {
@@ -78,7 +79,7 @@ export class ScenarioLoader {
     /**
      * [导出] 将当前世界状态序列化为 Bundle
      */
-    static exportScene(engine, mapId) {
+    static exportScene(engine: GameEngine, mapId: string) {
         // 1. 序列化所有实体
         const entities = Array.from(world)
             .map(ent => EntitySerializer.serialize(ent))
@@ -87,7 +88,7 @@ export class ScenarioLoader {
         // 2. 获取配置
         const sceneConfigEntity = world.with('sceneConfig').first;
         let sceneName = 'Unknown Scene';
-        let config = { id: mapId };
+        let config: any = { id: mapId };
 
         if (sceneConfigEntity && sceneConfigEntity.sceneConfig) {
             sceneName = sceneConfigEntity.sceneConfig.name || sceneName;
@@ -105,7 +106,7 @@ export class ScenarioLoader {
     }
 
     // 相机逻辑保持不变，这属于运行时逻辑
-    static _initCamera(engine, player, config = null) {
+    static _initCamera(engine: GameEngine, player: any, config: any = null) {
         if (!player) return
         const globalEntity = world.with('camera', 'globalManager').first
         if (globalEntity && globalEntity.camera) {

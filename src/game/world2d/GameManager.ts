@@ -1,17 +1,25 @@
-import { reactive, shallowRef, watch } from 'vue'
+import { reactive, shallowRef, watch, ShallowRef } from 'vue'
 import { GameEngine } from './GameEngine'
 import { SceneManager } from './SceneManager'
 import { WorldScene } from './WorldScene'
 import { SceneLifecycle } from './resources/SceneLifecycle'
 import { useGameStore } from '@/stores/game'
 import { dialoguesDb } from '@schema/dialogues'
-// import { getMapData } from '@schema/maps' // Removed static import
 import { createLogger } from '@/utils/logger'
-import { editorManager } from '@/game/editor/core/EditorCore'
+import { editorManager } from '../editor/core/EditorCore'
+import { Renderer2D } from './Renderer2D'
 
 const logger = createLogger('GameManager')
 
-class GameManager {
+export class GameManager {
+    engine: GameEngine | null;
+    sceneManager: SceneManager | null;
+    currentScene: ShallowRef<WorldScene | null>;
+    state: { system: string; isPaused: boolean };
+    editor: any;
+    _watchers: Array<() => void>;
+    _isInitialized: boolean;
+
     constructor() {
         this.engine = null
         this.sceneManager = null
@@ -39,7 +47,7 @@ class GameManager {
      * Must be called once on App mount or when canvas changes
      * @param {HTMLCanvasElement} canvas 
      */
-    init(canvas) {
+    init(canvas: HTMLCanvasElement) {
         if (this.engine) {
             // If engine exists, just update the canvas reference
             this.engine.setCanvas(canvas)
@@ -152,7 +160,7 @@ class GameManager {
         this.resume()
 
         // Init SceneManager if needed
-        if (!this.sceneManager) {
+        if (!this.sceneManager && this.engine) {
             this.sceneManager = new SceneManager(this.engine, worldStore)
         }
 
@@ -167,25 +175,25 @@ class GameManager {
      * @param {string} mapId 
      * @param {string} entryId 
      */
-    async loadMap(mapId, entryId = 'default') {
+    async loadMap(mapId: string, entryId: string = 'default') {
         const gameStore = useGameStore()
         const worldStore = gameStore.world2d
 
         // If we have a SceneManager, let it handle the transition
         // This handles ECS clearing, data loading, etc.
-        if (!this.sceneManager) {
+        if (!this.sceneManager && this.engine) {
             this.sceneManager = new SceneManager(this.engine, worldStore)
         }
 
         // If scene exists, use SceneManager to switch (reusing the instance)
-        if (this.currentScene.value) {
+        if (this.currentScene.value && this.sceneManager) {
             await this.sceneManager.requestSwitchMap(mapId, entryId)
             return
         }
 
         // --- Bootstrap First Scene ---
         // let mapData = await getMapData(mapId) // Removed static import
-        let mapData = null; // Will be loaded dynamically
+        let mapData: any = null; // Will be loaded dynamically
         
         // [FALLBACK] If map not found (e.g. blank start), create a default empty scene
         if (!mapData) {
@@ -221,6 +229,8 @@ class GameManager {
             }
         }
 
+        if (!this.engine) return;
+
         // 创建场景实例（只初始化，不创建实体）
         const scene = new WorldScene(
             this.engine,
@@ -236,7 +246,9 @@ class GameManager {
         )
 
         this.currentScene.value = scene
-        this.sceneManager.setScene(scene)
+        if (this.sceneManager) {
+            this.sceneManager.setScene(scene)
+        }
 
         // 🎯 使用 SceneLifecycle 统一加载资源和创建实体
         logger.info('Loading scene resources via SceneLifecycle...')
@@ -245,15 +257,17 @@ class GameManager {
             this.engine,
             entryId,
             worldStore.currentMapState,
-            (progress) => {
+            (progress: any) => {
                 if (progress.phase === 'loading') {
                     logger.info(`Loading assets: ${(progress.progress * 100).toFixed(0)}%`)
                 }
             }
         )
 
+        const player = result.find((e: any) => e.type === 'player');
+
         // 更新场景的 player 引用
-        scene.player = result.player
+        scene.player = player
         logger.info('Scene loaded successfully')
     }
 
@@ -277,7 +291,7 @@ class GameManager {
 
     // --- Callbacks ---
 
-    _onEncounter(enemyGroup, enemyUuid) {
+    _onEncounter(enemyGroup: any, enemyUuid: any) {
         logger.info('Encounter:', enemyGroup)
         const gameStore = useGameStore()
         // const battleStore = gameStore.battle // 暂时禁用，等待战斗系统实现
@@ -295,16 +309,19 @@ class GameManager {
         logger.warn('战斗系统暂未实现，遭遇敌人:', enemyGroup)
     }
 
-    _onInteract(interaction) {
+    _onInteract(interaction: any) {
         const gameStore = useGameStore()
         const dialogueStore = gameStore.dialogue
         if (dialogueStore.isActive) return
 
         let scriptId = interaction.id
+        // @ts-ignore
         let scriptFn = dialoguesDb[scriptId]
 
         // Fallback Logic
+        // @ts-ignore
         if (!scriptFn && scriptId === 'elder_test' && dialoguesDb['elderDialogue']) {
+            // @ts-ignore
             scriptFn = dialoguesDb['elderDialogue']
         }
 
@@ -318,7 +335,7 @@ class GameManager {
 
     // --- Loop ---
 
-    update(dt) {
+    update(dt: number) {
         // 全局暂停只影响非场景逻辑（如果有的话）
         // 场景内部现在会根据 this.state.isPaused 自行处理逻辑更新与编辑器更新的隔离
 
@@ -331,7 +348,7 @@ class GameManager {
         }
     }
 
-    draw(renderer) {
+    draw(renderer: Renderer2D) {
         // Always draw world scene as background
         if (this.currentScene.value) {
             this.currentScene.value.draw(renderer)

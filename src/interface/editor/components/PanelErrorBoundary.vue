@@ -12,12 +12,12 @@
   <slot v-else></slot>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue'
 
-const error = ref(null)
+const error = ref<Error | null>(null)
 
-onErrorCaptured((e) => {
+onErrorCaptured((e: Error) => {
   console.error('Panel crashed:', e)
   error.value = e
   return false // 阻止错误继续向上传播

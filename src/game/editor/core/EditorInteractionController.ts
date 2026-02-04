@@ -1,25 +1,47 @@
 import { toRaw } from 'vue';
-import { world2d, getSystem } from '@world2d';
-import { editorManager } from '@/game/editor/core/EditorCore';
+import { world2d } from '@world2d';
+import { editorManager } from './EditorCore';
 import { createLogger } from '@/utils/logger';
 
-const logger = createLogger('EditorInteraction');
+// const logger = createLogger('EditorInteraction');
+
+export interface MouseInfo {
+    worldX: number;
+    worldY: number;
+    screenX: number;
+    screenY: number;
+}
+
+export interface MenuItem {
+    icon?: string;
+    label: string;
+    action?: () => void;
+    disabled?: boolean;
+    class?: string;
+}
+
+export interface UiCallbacks {
+    openContextMenu: (position: { clientX: number, clientY: number, preventDefault: () => void }, items: MenuItem[]) => void;
+    closeContextMenu?: () => void;
+}
 
 export class EditorInteractionController {
-    constructor(uiCallbacks) {
+    uiCallbacks: UiCallbacks;
+
+    constructor(uiCallbacks: UiCallbacks) {
         this.uiCallbacks = uiCallbacks; // 包含 openContextMenu 和 closeContextMenu
     }
 
     /**
      * 处理空白处右键
      */
-    handleEmptyRightClick(mouseInfo) {
+    handleEmptyRightClick(mouseInfo: MouseInfo) {
         const worldX = Math.round(mouseInfo.worldX);
         const worldY = Math.round(mouseInfo.worldY);
         const entityTemplateRegistry = world2d.getEntityTemplateRegistry();
         const templates = entityTemplateRegistry.getAll();
 
-        const menuItems = [
+        const menuItems: MenuItem[] = [
             { icon: '📍', label: `位置: X=${worldX}, Y=${worldY}`, disabled: true, class: 'menu-header' },
             { icon: '➕', label: '在此位置创建实体', disabled: true, class: 'menu-divider' }
         ];
@@ -50,11 +72,11 @@ export class EditorInteractionController {
     /**
      * 处理实体右键
      */
-    handleEntityRightClick(entity, mouseInfo) {
+    handleEntityRightClick(entity: any, mouseInfo: MouseInfo) {
         if (!entity) return;
 
         const canDelete = entity.inspector?.allowDelete !== false;
-        const menuItems = [
+        const menuItems: MenuItem[] = [
             { icon: '📋', label: entity.name || '未命名实体', disabled: true, class: 'menu-header' },
             { icon: '🏷️', label: `类型: ${entity.type || '未知'}`, disabled: true, class: 'menu-info' },
             { icon: '📍', label: `位置: X=${Math.round(entity.position?.x || 0)}, Y=${Math.round(entity.position?.y || 0)}`, disabled: true, class: 'menu-info' }
@@ -75,7 +97,7 @@ export class EditorInteractionController {
     /**
      * 创建实体核心逻辑
      */
-    createEntityAtPosition(templateId, x, y) {
+    createEntityAtPosition(templateId: string, x: number, y: number) {
         const world = world2d.getWorld();
         const globalEntity = world.with('commands').first;
         
@@ -93,7 +115,7 @@ export class EditorInteractionController {
     /**
      * 删除实体核心逻辑
      */
-    deleteEntity(entity) {
+    deleteEntity(entity: any) {
         const name = entity.name || entity.type || '未命名实体';
         if (confirm(`确定要删除实体 "${name}" 吗？`)) {
             const rawEntity = toRaw(entity);
@@ -109,18 +131,19 @@ export class EditorInteractionController {
         }
     }
 
-    showMenu(mouseInfo, items) {
+    showMenu(mouseInfo: MouseInfo, items: MenuItem[]) {
         this.uiCallbacks.openContextMenu({
             clientX: mouseInfo.screenX,
             clientY: mouseInfo.screenY,
             preventDefault: () => {}
         }, items);
     }
+
     // 在 EditorInteractionController 类中增加此方法
-    handlePanelDrop(event, targetSide) {
-        const panelId = event.dataTransfer.getData('panelId');
-        const sourceGroupId = event.dataTransfer.getData('sourceGroupId');
-        const sourceSide = event.dataTransfer.getData('sourceSide');
+    handlePanelDrop(event: DragEvent, targetSide: 'left' | 'right') {
+        const panelId = event.dataTransfer?.getData('panelId');
+        const sourceGroupId = event.dataTransfer?.getData('sourceGroupId');
+        const sourceSide = event.dataTransfer?.getData('sourceSide') as 'left' | 'right' | undefined;
         
         if (!panelId) return;
 
