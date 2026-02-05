@@ -1,6 +1,10 @@
-// src/game/interface/CanvasManager.js
+// src/game/interface/CanvasManager.ts
 export class CanvasManager {
-    constructor(canvasId) {
+    private canvasId: string;
+    private targetWidth: number;
+    private targetHeight: number;
+
+    constructor(canvasId: string) {
         this.canvasId = canvasId;
         this.targetWidth = 1920;
         this.targetHeight = 1080;
@@ -9,7 +13,7 @@ export class CanvasManager {
     /**
      * 计算并应用缩放变换
      */
-    resize() {
+    resize(): number | undefined {
         const canvas = document.getElementById(this.canvasId);
         const container = canvas?.parentElement;
         if (!canvas || !container) return;

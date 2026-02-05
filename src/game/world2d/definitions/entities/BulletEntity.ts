@@ -11,7 +11,7 @@ import {
   DetectProjectile,
   LifeTime, LIFETIME_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Parent, Children, LocalTransform, Trigger
+  Trigger
 } from '@components';
 
 const BulletEntitySchema = z.object({
@@ -69,6 +69,16 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
         target: ['enemy', 'obstacle', 'player'], // 默认目标
         prevPosition: { x: params.x, y: params.y } // 初始上一帧位置等于当前位置
       }),
+
+      shape: Shape.create({
+        type: ShapeType.CIRCLE,
+        radius: params.radius
+      }),
+      collider: Collider.create({
+        shapeId: 'body',
+        isTrigger: true, // 子弹是触发器
+        isStatic: false
+      }),
       
       // 生命周期管理
       lifeTime: LifeTime.create(params.maxLifeTime, true),
@@ -80,26 +90,6 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
       })
     });
 
-    // 2. 创建子实体 (Body Part) 负责物理探测
-    const body = world.add({
-      parent: Parent.create(root),
-      transform: Transform.create(),
-      localTransform: LocalTransform.create(0, 0),
-      name: `Bullet_Body`,
-      // 物理碰撞体 (作为触发器，不阻挡物体)
-      shape: Shape.create({
-        type: ShapeType.CIRCLE,
-        radius: params.radius
-      }),
-      collider: Collider.create({
-        shapeId: 'body',
-        isTrigger: true, // 子弹是触发器
-        isStatic: false
-      })
-    });
-
-    root.children = Children.create([body]);
-    
     // 编辑器支持
     root.inspector = Inspector.create({
       fields: [

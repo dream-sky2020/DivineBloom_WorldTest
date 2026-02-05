@@ -15,6 +15,7 @@ export const MovementSystem: ISystem = {
 
         for (const entity of movingEntities) {
             const e = entity as IEntity;
+            if (e.parent?.entity) continue;
             const { transform, velocity, bounds } = e;
 
             if (!transform || !velocity) continue;

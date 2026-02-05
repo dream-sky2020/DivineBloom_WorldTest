@@ -1,23 +1,23 @@
 import { defineStore } from 'pinia';
-import { ref, markRaw } from 'vue';
-import { OP_CODES } from '@/game/dialogue/utils';
+import { ref } from 'vue';
+import { OP_CODES, type DialogueNode } from '@/game/dialogue/utils';
 
 export const useDialogueStore = defineStore('dialogue', () => {
     // 状态
     const isActive = ref(false);
     const speaker = ref('');
     const currentText = ref('');
-    const currentOptions = ref([]); // [{label, value}]
+    const currentOptions = ref<Array<{label: string, value: any}>>([]); // [{label, value}]
     const isWaitingForInput = ref(false);
 
     // Iterator 实例 (不需要响应式)
-    let iterator = null;
+    let iterator: Generator<DialogueNode, void, any> | null = null;
 
     /**
      * 启动对话
-     * @param {GeneratorFunction} scriptFactory - 对话脚本生成器函数
+     * @param scriptFactory - 对话脚本生成器函数
      */
-    const startDialogue = (scriptFactory) => {
+    const startDialogue = (scriptFactory: () => Generator<DialogueNode, void, any>) => {
         if (!scriptFactory) return;
 
         // 初始化生成器
@@ -30,9 +30,9 @@ export const useDialogueStore = defineStore('dialogue', () => {
 
     /**
      * 执行下一步
-     * @param {any} inputVal - 上一步 yield 的返回值（通常是选项的值）
+     * @param inputVal - 上一步 yield 的返回值（通常是选项的值）
      */
-    const next = (inputVal) => {
+    const next = (inputVal?: any) => {
         if (!iterator) return;
 
         const { value, done } = iterator.next(inputVal);
@@ -42,13 +42,13 @@ export const useDialogueStore = defineStore('dialogue', () => {
             return;
         }
 
-        handleOp(value);
+        handleOp(value as DialogueNode);
     };
 
     /**
      * 处理指令
      */
-    const handleOp = (op) => {
+    const handleOp = (op: DialogueNode | undefined) => {
         if (!op) {
             // 如果 yield 了 undefined，继续下一步
             next();
@@ -57,8 +57,8 @@ export const useDialogueStore = defineStore('dialogue', () => {
 
         switch (op.type) {
             case OP_CODES.SAY:
-                speaker.value = op.speaker;
-                currentText.value = op.textKey;
+                speaker.value = op.speaker || '';
+                currentText.value = op.textKey || '';
                 currentOptions.value = [];
                 isWaitingForInput.value = true; // 等待点击继续
                 break;
@@ -68,7 +68,7 @@ export const useDialogueStore = defineStore('dialogue', () => {
                 if (op.titleKey) {
                     currentText.value = op.titleKey;
                 }
-                currentOptions.value = op.choices;
+                currentOptions.value = op.choices || [];
                 isWaitingForInput.value = true; // 等待选择
                 break;
 
@@ -115,7 +115,7 @@ export const useDialogueStore = defineStore('dialogue', () => {
     /**
      * 玩家选择选项
      */
-    const selectOption = (val) => {
+    const selectOption = (val: any) => {
         // 如果不在等待输入，忽略
         if (!isWaitingForInput.value) return;
         
@@ -123,7 +123,6 @@ export const useDialogueStore = defineStore('dialogue', () => {
         isWaitingForInput.value = false;
 
         // 传递选项值给 next，这个值会成为脚本里 yield 表达式的返回值
-        // const choice = yield choose(...) -> choice 就会变成 val
         next(val);
     };
 
@@ -153,4 +152,3 @@ export const useDialogueStore = defineStore('dialogue', () => {
         reset
     };
 });
-

@@ -1,4 +1,4 @@
-// src/stores/audio.js
+// src/stores/audio.ts
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import { audioManager } from '@/utils/AudioManager';
@@ -29,7 +29,7 @@ export const useAudioStore = defineStore('audio', () => {
   });
 
   // Actions
-  function playBgm(key) {
+  function playBgm(key: string) {
     audioManager.playBgm(key);
   }
 
@@ -37,7 +37,7 @@ export const useAudioStore = defineStore('audio', () => {
     audioManager.stopBgm();
   }
 
-  function playSfx(key) {
+  function playSfx(key: string) {
     audioManager.playSfx(key);
   }
 
@@ -62,4 +62,3 @@ export const useAudioStore = defineStore('audio', () => {
     playHover
   };
 });
-

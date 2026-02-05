@@ -1,4 +1,4 @@
-// src/stores/game.js
+// src/stores/game.ts
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useQuestStore } from './quest';
@@ -24,7 +24,7 @@ export const useGameStore = defineStore('game', () => {
     const saveSlotId = ref(1);
 
     // 计时器引用
-    let timerInterval = null;
+    let timerInterval: any = null;
 
     // --- 核心生命周期 ---
 
@@ -54,8 +54,8 @@ export const useGameStore = defineStore('game', () => {
                 slotId
             },
             data: {
-                quest: quest.serialize(),
-                world: world2d.serialize(),
+                quest: (quest as any).serialize(),
+                world: (world2d as any).serialize(),
             }
         };
 
@@ -69,7 +69,7 @@ export const useGameStore = defineStore('game', () => {
 
     /**
      * 读取游戏
-     * @param {number} slotId 存档槽位
+     * @param slotId 存档槽位
      */
     const loadGame = (slotId = 1) => {
         const key = `save_slot_${slotId}`;
@@ -91,8 +91,8 @@ export const useGameStore = defineStore('game', () => {
             saveSlotId.value = slotId;
 
             // 3. 恢复各模块数据
-            if (saveData.data.quest) quest.loadState(saveData.data.quest);
-            if (saveData.data.world) world2d.loadState(saveData.data.world);
+            if (saveData.data.quest) (quest as any).loadState(saveData.data.quest);
+            if (saveData.data.world) (world2d as any).loadState(saveData.data.world);
 
             isGameRunning.value = true;
             startGameTimer();
@@ -111,9 +111,9 @@ export const useGameStore = defineStore('game', () => {
         stopGameTimer();
         isGameRunning.value = false;
 
-        quest.reset();
-        world2d.reset();
-        dialogue.reset();
+        (quest as any).reset();
+        (world2d as any).reset();
+        (dialogue as any).reset();
         // settings 不重置，属于系统层级
     };
 

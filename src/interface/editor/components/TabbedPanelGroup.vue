@@ -28,7 +28,7 @@
 
     <!-- 面板内容 -->
     <div class="panel-content" :class="{ 'drop-target': dropPos === 'bottom' }">
-      <PanelErrorBoundary :key="group.activeId">
+      <PanelErrorBoundary v-if="group.activeId" :key="group.activeId">
         <component :is="editorManager.getPanelComponent(group.activeId)" />
       </PanelErrorBoundary>
     </div>

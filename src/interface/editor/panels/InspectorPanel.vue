@@ -51,6 +51,9 @@
         </div>
       </div>
       <div class="inspector-body" v-show="panelMode !== 'realtime'">
+        <div v-if="isChildEntity" class="inspector-warning">
+          子节点禁止配置 Velocity/Collider/Bounds，请在父节点设置。
+        </div>
         <!-- 🎯 方案：局部声明式 Inspector 映射 -->
         <template v-if="localEntityState.inspector">
           <div v-for="group in groupedFields" :key="group.name" class="inspector-group-section" :class="{ 'is-editing': activeEditingGroup === group.name }">
@@ -137,7 +140,7 @@
                 <!-- 颜色类型 -->
                 <input 
                   v-else-if="field.type === 'color'"
-                  :value="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
+                  :value="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate) || '#ffffff'"
                   @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, getEventValue($event))"
                   :disabled="activeEditingGroup !== group.name"
                   type="color"
@@ -402,6 +405,7 @@ const groupedFields = computed(() => {
   const groupMap: Record<string, any> = {};
 
   fields.forEach(field => {
+    if (isChildEntity.value && isPhysicalField(field.path)) return;
     const groupName = field.group || '基本属性'; // 默认分组
     if (!groupMap[groupName]) {
       groupMap[groupName] = { name: groupName, fields: [] };
@@ -410,7 +414,7 @@ const groupedFields = computed(() => {
     groupMap[groupName].fields.push(field);
   });
 
-  return groups;
+  return groups.filter(group => group.fields.length > 0);
 });
 
 /**
@@ -435,6 +439,7 @@ const saveGroupEdit = (fields: any[]) => {
   if (!localEntityState.value) return;
   
   fields.forEach(field => {
+    if (isChildEntity.value && isPhysicalField(field.path)) return;
     const draftVal = getNestedValue(groupDraftData.value, field.path, undefined, field);
     const oldVal = getNestedValue(localEntityState.value, field.path, undefined, field);
     
@@ -635,6 +640,12 @@ const parseSelectValue = (domValue: string, field: any) => {
    const matched = options.find((o: any) => String(o.value) === domValue);
    return matched ? matched.value : domValue;
 }
+
+const isChildEntity = computed(() => !!localEntityState.value?.parent?.entity);
+const isPhysicalField = (path?: string) => {
+  if (!path) return false;
+  return path.startsWith('velocity.') || path.startsWith('collider.') || path.startsWith('bounds.');
+};
 
 const safeStringify = (value: any, space = 2, maxLength = 6000) => {
   if (value === undefined) return ''

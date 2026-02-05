@@ -16,8 +16,14 @@ export const GlobalEntitySchema = z.object({
     camera: z.object({
         x: z.number().optional(),
         y: z.number().optional(),
+        targetX: z.number().optional(),
+        targetY: z.number().optional(),
         lerp: z.number().optional(),
-        useBounds: z.boolean().optional()
+        useBounds: z.boolean().optional(),
+        deadZone: z.object({
+            width: z.number().optional(),
+            height: z.number().optional()
+        }).optional()
     }).optional(),
     inputState: z.object({
         lastPressed: z.record(z.string(), z.boolean()).default({})

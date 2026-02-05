@@ -194,7 +194,7 @@ export class SceneManager {
         }
 
         // 11. 强制同步一次坐标 (确保子实体位置正确，避免第一帧堆积在 0,0)
-        SyncTransformSystem.update()
+        SyncTransformSystem.update?.()
 
         logger.info(`✅ Map switch complete: ${mapId}`)
     }

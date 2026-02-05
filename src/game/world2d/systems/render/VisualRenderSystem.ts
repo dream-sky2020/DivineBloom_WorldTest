@@ -56,15 +56,46 @@ export const VisualRenderSystem: ISystem & {
         if (!camera) return;
 
         const cullMargin = 100;
-        const isVisible = (pos: any) => {
-            return !(pos.x < camera.x - cullMargin ||
-                pos.x > camera.x + viewW + cullMargin ||
-                pos.y < camera.y - cullMargin ||
-                pos.y > camera.y + viewH + cullMargin);
+        const isVisible = (entity: IEntity) => {
+            const pos = entity.transform;
+            if (!pos) return false;
+            const sprite = entity.sprite || entity.visual;
+            const baseX = pos.x + (sprite?.offsetX || 0);
+            const baseY = pos.y + (sprite?.offsetY || 0);
+
+            if (sprite) {
+                if (sprite.mode === SpriteMode.CIRCLE && sprite.radius) {
+                    const r = sprite.radius;
+                    return !(
+                        baseX + r < camera.x - cullMargin ||
+                        baseX - r > camera.x + viewW + cullMargin ||
+                        baseY + r < camera.y - cullMargin ||
+                        baseY - r > camera.y + viewH + cullMargin
+                    );
+                }
+
+                if (sprite.width && sprite.height) {
+                    const left = baseX;
+                    const right = baseX + sprite.width;
+                    const top = baseY;
+                    const bottom = baseY + sprite.height;
+                    return !(
+                        right < camera.x - cullMargin ||
+                        left > camera.x + viewW + cullMargin ||
+                        bottom < camera.y - cullMargin ||
+                        top > camera.y + viewH + cullMargin
+                    );
+                }
+            }
+
+            return !(baseX < camera.x - cullMargin ||
+                baseX > camera.x + viewW + cullMargin ||
+                baseY < camera.y - cullMargin ||
+                baseY > camera.y + viewH + cullMargin);
         };
 
         for (const entity of entities) {
-            if (!isVisible(entity.transform)) continue;
+            if (!isVisible(entity)) continue;
             this.drawVisual(renderer, entity);
         }
     },
@@ -112,13 +143,12 @@ export const VisualRenderSystem: ISystem & {
     },
 
     _drawRect(ctx: any, sprite: any, entity: IEntity, x: number, y: number) {
-        const rect = (entity as any).rect || sprite;
-        ctx.fillStyle = sprite.tint || rect.color || 'magenta';
-        ctx.fillRect(x, y, rect.width || 10, rect.height || 10);
+        ctx.fillStyle = sprite.tint || 'magenta';
+        ctx.fillRect(x, y, sprite.width || 100, sprite.height || 100);
     },
 
     _drawCircle(ctx: any, sprite: any, x: number, y: number) {
-        const radius = sprite.radius || 10;
+        const radius = sprite.radius || sprite.width / 2 || 10;
         ctx.fillStyle = sprite.tint || 'magenta';
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -134,21 +164,34 @@ export const VisualRenderSystem: ISystem & {
     },
 
     _drawRepeat(renderer: any, sprite: any, entity: IEntity, x: number, y: number) {
-        if (!sprite.id) return;
+        const ctx = renderer.ctx;
+        const width = sprite.width || 100;
+        const height = sprite.height || 100;
+
+        // 1. 绘制底色 (如果有)
+        if (sprite.tint) {
+            ctx.fillStyle = sprite.tint;
+            ctx.fillRect(x, y, width, height);
+        }
+
+        if (!sprite.id || sprite.id === 'rect') return;
 
         const texture = renderer.assetManager.getTexture(sprite.id);
-        if (!texture || !texture.complete) return;
+        if (!texture || texture.width === 0) return;
+        const isImage = typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement;
+        if (isImage && !texture.complete) return;
 
-        const ctx = renderer.ctx;
-        const rect = (entity as any).rect || sprite;
-        const width = rect.width || 100;
-        const height = rect.height || 100;
-
+        // 2. 绘制平铺纹理
         const pattern = ctx.createPattern(texture, 'repeat');
         if (pattern) {
             ctx.save();
             const matrix = new DOMMatrix();
             const ts = sprite.tileScale || 1.0;
+            
+            // 模式矩阵设置：
+            // 我们希望纹理在世界坐标系中固定。
+            // 由于 ctx 已经相对于摄像头偏移了 (x, y)，
+            // 我们需要将 pattern 偏移回来，并应用缩放。
             matrix.translateSelf(x, y).scaleSelf(ts, ts);
             pattern.setTransform(matrix);
 

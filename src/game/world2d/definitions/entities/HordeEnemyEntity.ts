@@ -7,11 +7,12 @@ import {
   Velocity, VELOCITY_INSPECTOR_FIELDS,
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Bounds, BOUNDS_INSPECTOR_FIELDS,
+  Detectable,
   HordeAI,
   Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Parent, Children, LocalTransform, Shape, ShapeType
+  Shape, ShapeType
 } from '@components';
 
 // --- Schema Definition ---
@@ -99,21 +100,10 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       health: Health.create({ maxHealth: options.maxHealth, currentHealth: options.maxHealth }),
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create('idle'),
-    });
-
-    // Body Child for Collision
-    const body = world.add({
-      parent: Parent.create(root),
-      transform: Transform.create(),
-      localTransform: LocalTransform.create(0, 0),
-      name: `${root.name}_Body`,
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
       collider: Collider.create({ shapeId: 'body' }),
-      // 允许被玩家武器检测
-      detectable: { types: ['enemy'] } 
+      detectable: Detectable.create(['enemy'])
     });
-
-    root.children = Children.create([body]);
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,

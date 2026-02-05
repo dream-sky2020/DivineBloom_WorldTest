@@ -15,7 +15,7 @@ import {
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Parent, Children, LocalTransform, Shape, ShapeType
+  Shape, ShapeType
 } from '@components';
 
 // --- Schema Definition ---
@@ -24,6 +24,7 @@ export const PlayerEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
   name: z.string().optional().default('Player'),
+  assetId: z.string().optional().default('hero'),
   scale: z.number().optional().default(0.7),
   // 允许传入武器配置
   weaponConfig: z.object({
@@ -68,12 +69,15 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       return null;
     }
 
-    const { x, y, name, scale, weaponConfig } = result.data;
+    const { x, y, name, assetId, scale, weaponConfig } = result.data;
 
     const root = world.add({
       type: 'player',
       name: name,
       transform: Transform.create(x, y),
+      shape: Shape.create({ type: ShapeType.CIRCLE, radius: 12 }),
+      collider: Collider.create({ shapeId: 'body' }),
+      detectable: Detectable.create(['player', 'teleportable']),
       velocity: Velocity.create(),
       input: true,
       player: true,
@@ -90,22 +94,9 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
         bulletLifeTime: weaponConfig?.bulletLifeTime || 5
       }),
       weaponIntent: WeaponIntent.create(),
-      sprite: Sprite.create('hero', { scale }),
+      sprite: Sprite.create(assetId, { scale }),
       animation: Animation.create('idle'),
     });
-
-    // Body Child (Collision & Detection)
-    const body = world.add({
-      parent: Parent.create(root),
-      transform: Transform.create(),
-      localTransform: LocalTransform.create(0, 0),
-      name: `${root.name}_Body`,
-      shape: Shape.create({ type: ShapeType.CIRCLE, radius: 12 }),
-      collider: Collider.create({ shapeId: 'body' }),
-      detectable: Detectable.create(['player', 'teleportable']) // Move detectable here
-    });
-
-    root.children = Children.create([body]);
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
@@ -122,6 +113,7 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       x: entity.transform.x,
       y: entity.transform.y,
       name: entity.name,
+      assetId: entity.sprite?.id || 'hero',
       scale: entity.sprite?.scale || 0.7
     }
   },

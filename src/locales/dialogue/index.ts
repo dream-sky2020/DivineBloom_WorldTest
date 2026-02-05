@@ -1,4 +1,4 @@
-export default {
+const dialogue: Record<string, any> = {
     welcome: {
         zh: '欢迎来到新手村！这里非常安全。',
         'zh-TW': '歡迎來到新手村！這裡非常安全。',
@@ -78,7 +78,7 @@ export default {
     },
     elder_reward_given: {
         zh: '这是给你的奖励，收下吧。',
-        'zh-TW': '這是給你的獎勵，收下吧。',
+        'zh-TW': '這是给你的奖励，收下吧。',
         en: 'Here is your reward. Take it.',
         ja: 'これは報酬だ。受け取ってくれ。',
         ko: '이건 보상일세. 받아두게.'
@@ -91,3 +91,5 @@ export default {
         ko: '다시 한번 고맙네. 마을이 훨씬 안전해졌어.'
     }
 }
+
+export default dialogue;

@@ -24,7 +24,7 @@ export const CollisionSystem: ISystem & {
 
         for (let n = 0; n < this.ITERATIONS; n++) {
             // Need to convert to array to iterate by index for collision pairs
-            const entities = [...collidableEntities] as IEntity[];
+            const entities = [...collidableEntities].filter(e => !e.parent?.entity) as IEntity[];
 
             // 1. 处理实体间的碰撞
             for (let i = 0; i < entities.length; i++) {

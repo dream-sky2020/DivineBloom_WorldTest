@@ -4,8 +4,7 @@ import { IEntityDefinition } from '../interface/IEntity';
 import { 
     Sprite, SPRITE_INSPECTOR_FIELDS, 
     Inspector, EDITOR_INSPECTOR_FIELDS, 
-    Transform, TRANSFORM_INSPECTOR_FIELDS,
-    Shape, SHAPE_INSPECTOR_FIELDS, ShapeType
+    Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components';
 import { SpriteMode } from '../enums/SpriteMode';
 import { createLogger } from '@/utils/logger';
@@ -27,9 +26,6 @@ export type BackgroundGroundData = z.infer<typeof BackgroundGroundSchema>;
 const INSPECTOR_FIELDS = [
     { path: 'name', label: '名称', type: 'text', group: '基本属性' },
     ...(TRANSFORM_INSPECTOR_FIELDS || []),
-    // Use Shape fields for dimensions
-    { path: 'shape.width', label: '宽度', type: 'number', group: '几何尺寸' },
-    { path: 'shape.height', label: '高度', type: 'number', group: '几何尺寸' },
     // Include Sprite fields
     ...(SPRITE_INSPECTOR_FIELDS || []),
     ...(EDITOR_INSPECTOR_FIELDS || [])
@@ -70,12 +66,6 @@ export const BackgroundEntity: IEntityDefinition<typeof BackgroundGroundSchema> 
                 width: d.width,
                 height: d.height
             }),
-            shape: Shape.create({
-                type: ShapeType.AABB,
-                width: d.width,
-                height: d.height,
-                debugColor: '#ffffff'
-            }),
             zIndex: -100,
             inspector: null as any
         };
@@ -96,8 +86,8 @@ export const BackgroundEntity: IEntityDefinition<typeof BackgroundGroundSchema> 
     serialize(entity: any) {
         return {
             type: 'background_ground',
-            width: entity.shape?.width || entity.sprite?.width,
-            height: entity.shape?.height || entity.sprite?.height,
+            width: entity.sprite?.width,
+            height: entity.sprite?.height,
             color: entity.sprite?.tint,
             assetId: entity.sprite?.mode === SpriteMode.REPEAT ? entity.sprite.id : undefined,
             tileScale: entity.sprite?.tileScale

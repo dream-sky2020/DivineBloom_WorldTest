@@ -1,9 +1,9 @@
-// src/utils/iconMap.js
+// src/utils/iconMap.ts
 
 // 图标映射表
 // 键名使用 snake_case 格式：icon_xxx
 // 目前映射到 emoji，未来可以映射到图片路径 (e.g., '/images/icons/potion.png')
-export const iconMap = {
+export const iconMap: Record<string, string> = {
   // Consumables
   icon_potion: "🧪",
   icon_herb: "🌱",
@@ -134,19 +134,19 @@ export const iconMap = {
 
 /**
  * 获取图标内容
- * @param {string} key - 图标的键名 (e.g., 'icon_potion')
- * @returns {string} - 对应的 emoji 或 原始 key (如果未找到)
+ * @param key - 图标的键名 (e.g., 'icon_potion')
+ * @returns - 对应的 emoji 或 原始 key (如果未找到)
  */
-export const getIcon = (key) => {
+export const getIcon = (key: string): string => {
   return iconMap[key] || key;
 };
 
 /**
  * 检查是否为图片路径 (未来使用)
- * @param {string} key 
- * @returns {boolean}
+ * @param key 
+ * @returns
  */
-export const isImageIcon = (key) => {
+export const isImageIcon = (key: string): boolean => {
   // 简单的检查逻辑，未来根据实际图片路径规则调整
   return typeof key === 'string' && (key.startsWith('/') || key.startsWith('http') || key.endsWith('.png') || key.endsWith('.gif'));
 };

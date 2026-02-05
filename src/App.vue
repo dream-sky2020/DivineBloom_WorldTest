@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import GameUI from '@/interface/GameUI.vue';
 import { useSettingsStore } from '@/stores/settings';
 import { onMounted } from 'vue';

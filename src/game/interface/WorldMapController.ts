@@ -1,15 +1,36 @@
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import { world2d } from '@world2d'; // ✅ 使用统一接口
 import { useGameStore } from '@/stores/game';
 
+export interface DebugInfo {
+    x: number;
+    y: number;
+    mouseX: number;
+    mouseY: number;
+    lastInput: string;
+    chasingCount: number;
+}
+
 export class WorldMapController {
+    public gameStore: any;
+    public worldStore: any;
+    public dialogueStore: any;
+    public debugInfo: Ref<DebugInfo>;
+    private uiRafId: number = 0;
+
     constructor() {
         this.gameStore = useGameStore();
         this.worldStore = this.gameStore.world2d;
         this.dialogueStore = this.gameStore.dialogue;
 
-        this.debugInfo = ref({ x: 0, y: 0, lastInput: '' });
-        this.uiRafId = 0;
+        this.debugInfo = ref<DebugInfo>({
+            x: 0,
+            y: 0,
+            mouseX: 0,
+            mouseY: 0,
+            lastInput: '',
+            chasingCount: 0
+        });
     }
 
     /**

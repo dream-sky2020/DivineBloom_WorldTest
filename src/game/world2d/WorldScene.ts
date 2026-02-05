@@ -169,7 +169,10 @@ export class WorldScene {
     _initGlobalEntities() {
         const existing = world.with('globalManager').first
         if (!existing) {
-            GlobalEntity.create()
+            GlobalEntity.create({
+                inputState: { lastPressed: {} },
+                timer: { totalTime: 0, running: true }
+            })
         }
     }
 
@@ -358,7 +361,7 @@ export class WorldScene {
      */
     draw(renderer: Renderer2D) {
         // 同步相机状态到渲染器
-        const globalEntity = world.with('camera', 'globalManager').first
+        const globalEntity = world.with('globalManager').first
         if (globalEntity && globalEntity.camera) {
             renderer.setCamera(globalEntity.camera.x, globalEntity.camera.y)
         }

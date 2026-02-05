@@ -7,7 +7,7 @@ import {
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Parent, Children, LocalTransform, Shape, ShapeType
+  Shape, ShapeType
 } from '@components';
 
 // --- Schema Definition ---
@@ -90,6 +90,20 @@ export const DecorationEntity: IEntityDefinition<typeof DecorationEntitySchema> 
             collider = Collider.box(rect.width, rect.height, true);
         }
 
+        const colliderType = customCollider?.type || (rect ? ShapeType.AABB : ShapeType.CIRCLE);
+        const colliderShape = collider
+            ? Shape.create({
+                // @ts-ignore
+                type: colliderType,
+                width: customCollider?.width || rect?.width || 0,
+                height: customCollider?.height || rect?.height || 0,
+                radius: customCollider?.radius || 0,
+                rotation: customCollider?.rotation || 0,
+                offsetX: customCollider?.offsetX || 0,
+                offsetY: customCollider?.offsetY || 0
+            })
+            : undefined;
+
         const root = world.add({
             type: 'decoration',
             name: name,
@@ -98,29 +112,9 @@ export const DecorationEntity: IEntityDefinition<typeof DecorationEntitySchema> 
             animation: animationComponent,
             rect: rectComponent,
             zIndex: zIndex,
+            shape: colliderShape,
+            collider: collider || undefined
         });
-
-        if (collider) {
-            // @ts-ignore
-            const colliderType = customCollider?.type || (rect ? ShapeType.AABB : ShapeType.CIRCLE);
-
-            const colliderChild = world.add({
-                parent: Parent.create(root),
-                transform: Transform.create(),
-                localTransform: LocalTransform.create(customCollider?.offsetX || 0, customCollider?.offsetY || 0, customCollider?.rotation || 0),
-                name: `${root.name}_Collider`,
-                shape: Shape.create({
-                    // @ts-ignore
-                    type: colliderType,
-                    width: customCollider?.width || rect?.width || 0,
-                    height: customCollider?.height || rect?.height || 0,
-                    radius: customCollider?.radius || 0,
-                    rotation: 0, // 已经在 localTransform 中处理
-                }),
-                collider: collider
-            });
-            root.children = Children.create([colliderChild]);
-        }
 
         root.inspector = Inspector.create({
             fields: INSPECTOR_FIELDS,
@@ -135,11 +129,8 @@ export const DecorationEntity: IEntityDefinition<typeof DecorationEntitySchema> 
         const sprite = entity.sprite || entity.visual;
         const rect = entity.rect || (sprite?.type === 'rect' ? sprite : undefined);
         
-        // 从子实体中获取碰撞体
-        // @ts-ignore
-        const colliderChild = entity.children?.entities.find(e => e.collider);
-        const collider = colliderChild?.collider;
-        const shape = colliderChild?.shape;
+        const collider = entity.collider;
+        const shape = entity.shape;
         
         return {
             type: 'decoration',
@@ -161,9 +152,9 @@ export const DecorationEntity: IEntityDefinition<typeof DecorationEntitySchema> 
                     width: shape?.width,
                     height: shape?.height,
                     radius: shape?.radius,
-                    rotation: colliderChild.localTransform?.rotation,
-                    offsetX: colliderChild.localTransform?.x,
-                    offsetY: colliderChild.localTransform?.y
+                    rotation: shape?.rotation,
+                    offsetX: shape?.offsetX,
+                    offsetY: shape?.offsetY
                 } : undefined
             }
         }

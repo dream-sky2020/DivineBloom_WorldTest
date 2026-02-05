@@ -12,7 +12,7 @@ const shapeSchema = z.object({
   rotation: z.number().default(0),
   p1: z.object({ x: z.number(), y: z.number() }).default({ x: 0, y: -10 }),
   p2: z.object({ x: z.number(), y: z.number() }).default({ x: 0, y: 10 }),
-  debugColor: z.string().optional()
+  debugColor: z.string().default('#facc15')
 });
 
 export type ShapeData = z.infer<typeof shapeSchema>;

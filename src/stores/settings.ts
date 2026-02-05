@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import { useAudioStore } from './audio';
-import i18n from '@/i18n'; // Assuming alias @ points to src
+import i18n from '@/i18n'; 
 
 const STORAGE_KEY = 'game_settings_v1';
 
@@ -34,8 +34,6 @@ export const useSettingsStore = defineStore('settings', () => {
                     audioStore.masterVolume = data.audio.master ?? 80;
                     audioStore.bgmVolume = data.audio.bgm ?? 60;
                     audioStore.sfxVolume = data.audio.sfx ?? 100;
-                    // Trigger audio update manually or rely on store watchers if they are active
-                    // AudioStore's watcher handles sync to AudioManager
                 }
             } catch (e) {
                 console.error('Failed to load settings:', e);
@@ -64,17 +62,16 @@ export const useSettingsStore = defineStore('settings', () => {
 
     const applyLanguage = () => {
         if (i18n && i18n.global) {
-             i18n.global.locale.value = language.value;
+             (i18n.global as any).locale.value = language.value;
         }
     };
 
-    const setLanguage = (lang) => {
+    const setLanguage = (lang: string) => {
         language.value = lang;
         applyLanguage();
     };
 
     // --- Watchers ---
-    // Watch for changes in settings state to auto-save
     watch(
         [language, battleSpeed, textSpeed, autoSave],
         () => {
@@ -83,9 +80,6 @@ export const useSettingsStore = defineStore('settings', () => {
         { deep: true }
     );
 
-    // Watch Audio Store changes to auto-save
-    // Note: This creates a dependency where Settings monitors Audio. 
-    // Alternatively, Audio could save itself, but we want a single file.
     watch(
         () => [audioStore.masterVolume, audioStore.bgmVolume, audioStore.sfxVolume],
         () => {
@@ -105,4 +99,3 @@ export const useSettingsStore = defineStore('settings', () => {
         setLanguage
     };
 });
-

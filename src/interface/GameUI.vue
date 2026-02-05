@@ -8,7 +8,7 @@
         :editor-ctrl="editorCtrl"
         @update:layout="onLayoutUpdate"
         @update:resizing="resizingSidebar = $event"
-        @resize-canvas="resizeCanvas"
+        @resize-canvas="canvasMgr.resize()"
       />
 
       <!-- Main Canvas Area (Isolated Absolute Layer) -->
@@ -130,9 +130,9 @@ const gameCanvas = ref<HTMLCanvasElement | null>(null);
 const canvasMgr = new CanvasManager('game-canvas');
 
 // World Map Controller Integration
-const worldMapCtrl = new WorldMapController() as any;
-const debugInfo = worldMapCtrl.debugInfo as any;
-const dialogueStore = worldMapCtrl.dialogueStore as any;
+const worldMapCtrl = new WorldMapController();
+const debugInfo = worldMapCtrl.debugInfo;
+const dialogueStore = worldMapCtrl.dialogueStore;
 
 // Editor Interaction Controller Integration
 const editorCtrl = new EditorInteractionController({
@@ -208,7 +208,7 @@ const canvasContainerStyle = computed(() => {
 watch(() => world2d.state.system, (newSystem) => {
   if (newSystem && currentSystem.value !== newSystem) {
     currentSystem.value = newSystem;
-    nextTick(resizeCanvas);
+    nextTick(() => canvasMgr.resize());
   }
 });
 
@@ -220,12 +220,12 @@ watch(() => editor.editMode, (newVal) => {
     showSidebars.value = true;
   }
   // 注意：退出编辑模式时不自动隐藏，让用户通过按钮控制
-  setTimeout(resizeCanvas, 0);
+  setTimeout(() => canvasMgr.resize(), 0);
 });
 
 // 监听侧边栏布局模式变化
 watch(() => editor.sidebarMode, () => {
-  nextTick(resizeCanvas);
+  nextTick(() => canvasMgr.resize());
 });
 
 // Determine if we should show the background grid
@@ -241,33 +241,6 @@ const canvasStyle = computed(() => {
   };
 });
 
-// Canvas Resizing Logic
-const resizeCanvas = () => {
-  const canvas = document.getElementById('game-canvas');
-  const container = canvas?.parentElement;
-  if (!canvas || !container) return;
-
-  const rect = container.getBoundingClientRect();
-  const availableWidth = rect.width;
-  const availableHeight = rect.height;
-  
-  if (availableWidth === 0 || availableHeight === 0) {
-    requestAnimationFrame(resizeCanvas);
-    return;
-  }
-
-  const targetWidth = 1920;
-  const targetHeight = 1080;
-  
-  const scaleX = availableWidth / targetWidth;
-  const scaleY = availableHeight / targetHeight;
-  
-  let scale = Math.min(scaleX, scaleY);
-  scale = scale * 0.98;
-
-  canvas.style.transform = `scale(${scale})`;
-}
-
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.ctrlKey && e.key.toLowerCase() === 'e') {
     e.preventDefault();
@@ -276,9 +249,13 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 };
 
+const onResize = () => {
+  canvasMgr.resize();
+};
+
 onMounted(async () => {
   // 1. Canvas Manager Setup
-  window.addEventListener('resize', () => canvasMgr.resize());
+  window.addEventListener('resize', onResize);
   canvasMgr.resize();
   setTimeout(() => canvasMgr.resize(), 0);
 
@@ -302,7 +279,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', () => canvasMgr.resize());
+  window.removeEventListener('resize', onResize);
   window.removeEventListener('keydown', handleKeyDown);
   worldMapCtrl.stop();
 });
@@ -313,7 +290,7 @@ const toggleEditMode = () => {
 
 const toggleSidebars = () => {
   showSidebars.value = !showSidebars.value;
-  nextTick(resizeCanvas);
+  nextTick(() => canvasMgr.resize());
 };
 
 const handleContextMenu = (e: MouseEvent) => {

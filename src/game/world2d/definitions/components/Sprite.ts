@@ -11,7 +11,7 @@ const spriteSchema = z.object({
   height: z.number().optional(),
   radius: z.number().optional(),
   tileScale: z.number().default(1),
-  tint: z.string().optional(),
+  tint: z.string().default('#ffffff'),
   opacity: z.number().min(0).max(1).default(1),
   brightness: z.number().default(1),
   contrast: z.number().default(1),

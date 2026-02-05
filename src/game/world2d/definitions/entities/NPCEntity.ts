@@ -20,6 +20,7 @@ export const NPCEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
   name: z.string().optional(),
+  assetId: z.string().optional(), // 顶层 assetId 优先
   config: z.object({
     dialogueId: z.string().optional().default('welcome'),
     spriteId: z.string().optional().default('npc_guide'),
@@ -58,8 +59,9 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
       return null;
     }
 
-    const { x, y, name, config } = result.data;
+    const { x, y, name, assetId, config } = result.data;
     const { dialogueId, spriteId, range, scale } = config;
+    const visualId = assetId || spriteId;
 
     const root = world.add({
       type: 'npc',
@@ -70,8 +72,10 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
       actionDialogue: Actions.Dialogue(dialogueId),
       interaction: { type: 'dialogue', id: dialogueId, range: range },
       bounds: Bounds.create(),
-      sprite: Sprite.create(spriteId, { scale }),
+      sprite: Sprite.create(visualId, { scale }),
       animation: Animation.create('default'),
+      shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
+      collider: Collider.create({ shapeId: 'body', isStatic: true }),
       
       // Trigger 放在根节点，逻辑更清晰
       detectInput: DetectInput.create({ keys: ['Interact'] }),
@@ -81,17 +85,7 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
       })
     });
 
-    // 2. Body Child (Collision)
-    const body = world.add({
-      parent: Parent.create(root),
-      transform: Transform.create(),
-      localTransform: LocalTransform.create(0, 0),
-      name: `${root.name}_Body`,
-      shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
-      collider: Collider.create({ shapeId: 'body', isStatic: true })
-    });
-
-    // 3. Sensor Child (Detection)
+    // 2. Sensor Child (Detection)
     const sensor = world.add({
       parent: Parent.create(root),
       transform: Transform.create(),
@@ -101,7 +95,7 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
       detectArea: DetectArea.create({ shapeId: 'sensor', target: 'player' })
     });
 
-    root.children = Children.create([body, sensor]);
+    root.children = Children.create([sensor]);
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
@@ -113,15 +107,17 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
   },
 
   serialize(entity: any) {
+    const visualId = entity.sprite?.id || entity.visual?.id;
     return {
       type: 'npc',
       x: entity.transform.x,
       y: entity.transform.y,
       name: entity.name,
+      assetId: visualId,
       config: {
         dialogueId: entity.interaction.id,
         range: entity.interaction.range,
-        spriteId: entity.sprite?.id || entity.visual?.id,
+        spriteId: visualId,
         scale: entity.sprite?.scale || entity.visual?.scale
       }
     }

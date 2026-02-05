@@ -1,38 +1,39 @@
-// src/utils/AudioManager.js
+// src/utils/AudioManager.ts
+
+interface AudioResources {
+  bgm: Record<string, string>;
+  sfx: Record<string, string>;
+}
 
 class AudioManager {
+  private bgmAudio: HTMLAudioElement;
+  private currentBgmKey: string | null = null;
+  private sfxCache: Map<string, HTMLAudioElement> = new Map();
+  private masterVolume: number = 1.0;
+  private bgmVolume: number = 0.5;
+  private sfxVolume: number = 1.0;
+  private basePath: string = '/audio/';
+  private resources: AudioResources = {
+    bgm: {
+      main_menu: 'bgm_menu.mp3',
+      exploration: 'bgm_explore.mp3',
+      battle: 'bgm_battle.mp3'
+    },
+    sfx: {
+      click: 'ui_click.mp3',
+      hover: 'ui_hover.mp3',
+      equip: 'equip.mp3',
+      error: 'error.mp3'
+    }
+  };
+
   constructor() {
     this.bgmAudio = new Audio();
     this.bgmAudio.loop = true;
-    this.currentBgmKey = null;
-
-    // 缓存音效对象，避免重复加载
-    this.sfxCache = new Map();
-
-    // 默认音量
-    this.masterVolume = 1.0;
-    this.bgmVolume = 0.5;
-    this.sfxVolume = 1.0;
-
-    // 资源路径映射 (你可以根据实际文件位置修改)
-    this.basePath = '/audio/';
-    this.resources = {
-      bgm: {
-        main_menu: 'bgm_menu.mp3',
-        exploration: 'bgm_explore.mp3',
-        battle: 'bgm_battle.mp3'
-      },
-      sfx: {
-        click: 'ui_click.mp3',
-        hover: 'ui_hover.mp3',
-        equip: 'equip.mp3',
-        error: 'error.mp3'
-      }
-    };
   }
 
   // 初始化设置
-  setVolumes(master, bgm, sfx) {
+  setVolumes(master: number, bgm: number, sfx: number) {
     this.masterVolume = master;
     this.bgmVolume = bgm;
     this.sfxVolume = sfx;
@@ -46,7 +47,7 @@ class AudioManager {
   }
 
   // 播放背景音乐
-  playBgm(key) {
+  playBgm(key: string) {
     if (this.currentBgmKey === key) return; // 已经在播放同一首
 
     const fileName = this.resources.bgm[key];
@@ -82,12 +83,11 @@ class AudioManager {
   }
 
   // 播放音效 (Fire and forget)
-  playSfx(key) {
+  playSfx(key: string) {
     const fileName = this.resources.sfx[key];
     if (!fileName) return;
 
     // 每次创建新的 Audio 对象以支持重叠播放 (Polyphony)
-    // 对于高频短音效这是可接受的，如果性能敏感可以改用对象池
     const audio = new Audio(this.basePath + fileName);
     audio.volume = this.sfxVolume * this.masterVolume;
 
@@ -99,4 +99,3 @@ class AudioManager {
 
 // 导出单例
 export const audioManager = new AudioManager();
-

@@ -7,16 +7,12 @@ import ko from './locales/ko'
 import ui from './locales/ui'
 import dialogue from './locales/dialogue'
 
-// Validate locale data formats on startup
-// validateLocales(ui);
-// validateLocales({ dialogue });
-
 // Helper to transform "Key -> Locale -> Text" to "Locale -> Key -> Text"
-function transformUiToMessages(uiData) {
-  const messages = {};
+function transformUiToMessages(uiData: any) {
+  const messages: Record<string, any> = {};
   const supportedLocales = ['en', 'zh', 'zh-TW', 'ja', 'ko'];
 
-  function traverse(currentObj, path = []) {
+  function traverse(currentObj: any, path: string[] = []) {
     for (const key in currentObj) {
       const value = currentObj[key];
       // Check if this value is a translation leaf (contains locale keys)
@@ -46,7 +42,7 @@ function transformUiToMessages(uiData) {
 }
 
 // Simple deep merge helper
-function deepMerge(target, source) {
+function deepMerge(target: any, source: any) {
   if (!source) return target;
   for (const key in source) {
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
@@ -60,14 +56,9 @@ function deepMerge(target, source) {
 }
 
 const uiMessages = transformUiToMessages(ui);
-// Transform dialogue messages separately but with 'dialogue' prefix context if needed, 
-// or just merge them. Assuming dialogue structure is similar to ui (Key -> Locale -> Text).
-// But wait, the file we moved was exporting `dialogue: { ...keys }` ?
-// Let's check the file content structure.
 const dialogueMessages = transformUiToMessages({ dialogue: dialogue });
 
 // Merge existing locale files with the new ui messages
-// We start with the existing files as base, and overwrite/extend with ui.js content
 const messages = {
   en: deepMerge(deepMerge(en, uiMessages.en), dialogueMessages.en),
   zh: deepMerge(deepMerge(zh, uiMessages.zh), dialogueMessages.zh),

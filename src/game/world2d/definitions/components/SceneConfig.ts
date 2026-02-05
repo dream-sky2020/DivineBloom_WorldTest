@@ -8,6 +8,9 @@ const sceneConfigSchema = z.object({
         x: z.number().default(0),
         y: z.number().default(0)
     }).optional().default({ x: 0, y: 0 }),
+    width: z.number().default(2000),
+    height: z.number().default(2000),
+    groundColor: z.string().default('#1e293b') // slate-800
 });
 
 export type SceneConfigData = z.infer<typeof sceneConfigSchema>;

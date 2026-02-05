@@ -1,4 +1,4 @@
-export default {
+const dev: Record<string, any> = {
   title: {
     zh: '开发者操作面板',
     'zh-TW': '開發者操作面板',
@@ -18,8 +18,10 @@ export default {
       zh: '打印状态',
       'zh-TW': '列印狀態',
       en: 'Log State',
-      ja: '状態ログ出力',
+      ja: '状态ログ出力',
       ko: '상태 로그'
     }
   }
-}
+};
+
+export default dev;

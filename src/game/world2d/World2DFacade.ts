@@ -255,13 +255,12 @@ class World2DFacade {
      */
     spawnEntity(templateId: string, options: any) {
         try {
-            const template = entityTemplateRegistry.get(templateId)
-            if (!template) {
-                logger.warn(`Entity template not found: ${templateId}`)
+            const entity = entityTemplateRegistry.createEntity(templateId, options)
+            if (!entity) {
+                logger.warn(`Entity template not found or failed: ${templateId}`)
                 return false
             }
 
-            template.create(options)
             logger.info(`Spawned entity: ${templateId}`, options)
             return true
         } catch (error) {

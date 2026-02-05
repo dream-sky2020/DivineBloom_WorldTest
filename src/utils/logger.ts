@@ -14,7 +14,7 @@ const logger = createConsola({
  * Creates a scoped logger for a specific module/system
  * @param {string} tag - The tag to display (e.g., 'BATTLE', 'ECS')
  */
-export const createLogger = (tag) => {
+export const createLogger = (tag: string) => {
   return logger.withTag(tag);
 }
 

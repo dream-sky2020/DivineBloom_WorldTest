@@ -22,6 +22,7 @@ export const EnemyEntitySchema = z.object({
   x: z.number(),
   y: z.number(),
   name: z.string().optional(),
+  assetId: z.string().optional(), // 顶层 assetId 优先
   options: z.object({
     uuid: z.string().optional(),
     isStunned: z.boolean().default(false),
@@ -83,10 +84,10 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       return null;
     }
 
-    const { x, y, name, options } = result.data;
+    const { x, y, name, assetId, options } = result.data;
     const uuid = options.uuid || Math.random().toString(36).substr(2, 9);
     const isStunned = options.isStunned;
-    const visualId = options.spriteId;
+    const visualId = assetId || options.spriteId;
 
     const root = world.add({
       type: 'enemy',
@@ -120,6 +121,9 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       health: Health.create({ maxHealth: 100, currentHealth: 100 }),
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create(isStunned ? 'stunned' : 'idle'),
+      shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
+      collider: Collider.create({ shapeId: 'body' }),
+      detectable: Detectable.create(['enemy', 'teleportable']),
 
       // Trigger 放在根节点
       trigger: Trigger.create({
@@ -128,18 +132,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       })
     });
 
-    // 2. Body Child (Collision & Detection)
-    const body = world.add({
-      parent: Parent.create(root),
-      transform: Transform.create(),
-      localTransform: LocalTransform.create(0, 0),
-      name: `${root.name}_Body`,
-      shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
-      collider: Collider.create({ shapeId: 'body' }),
-      detectable: Detectable.create(['enemy', 'teleportable']) // Move detectable here
-    });
-
-    // 3. Sensor Child (Battle Detection Only)
+    // 2. Sensor Child (Battle Detection Only)
     const sensor = world.add({
       parent: Parent.create(root),
       transform: Transform.create(),
@@ -149,7 +142,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       detectArea: DetectArea.create({ shapeId: 'sensor', target: 'player' })
     });
 
-    root.children = Children.create([body, sensor]);
+    root.children = Children.create([sensor]);
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
@@ -162,11 +155,13 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
 
   serialize(entity: any) {
     const { transform, aiState, aiConfig, interaction, sprite, visual, name } = entity
+    const visualId = sprite?.id || visual?.id;
     return {
       type: 'enemy',
       x: transform.x,
       y: transform.y,
       name: name,
+      assetId: visualId,
       options: {
         uuid: interaction.uuid,
         isStunned: aiState.state === 'stunned',
@@ -184,7 +179,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
         detectedState: aiConfig.detectedState,
         stunDuration: aiConfig.stunDuration,
         chaseExitMultiplier: aiConfig.chaseExitMultiplier,
-        spriteId: sprite?.id || visual?.id,
+        spriteId: visualId,
         scale: sprite?.scale || visual?.scale
       }
     }

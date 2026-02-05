@@ -3,9 +3,11 @@ import dev from './dev';
 import system from './system';
 import worldMap from './worldMap';
 
-export default {
+const ui: Record<string, any> = {
   common,
   dev,
   system,
   worldMap
 };
+
+export default ui;
