@@ -64,16 +64,16 @@ export const AIVisionRenderSystem: ISystem & { LAYER: number } = {
             ctx.rotate(currentAngle);
 
             // 设置样式
-            // 必须显式设置 fillStyle，防止之前的设置残留或未设置
+            // 提高 alpha 值以确保在不同背景下都清晰可见
             if (isAlert) {
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.2)'; // Red (Chase)
-                ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.25)'; // Red (Chase)
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
             } else if (isFleeing) {
-                ctx.fillStyle = 'rgba(25, 25, 112, 0.2)'; // Midnight Blue (Flee)
-                ctx.strokeStyle = 'rgba(25, 25, 112, 0.6)';
+                ctx.fillStyle = 'rgba(25, 25, 112, 0.25)'; // Midnight Blue (Flee)
+                ctx.strokeStyle = 'rgba(25, 25, 112, 0.7)';
             } else {
-                ctx.fillStyle = 'rgba(234, 179, 8, 0.1)'; // Yellow (Default)
-                ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+                ctx.fillStyle = 'rgba(234, 179, 8, 0.15)'; // Yellow (Default)
+                ctx.strokeStyle = 'rgba(234, 179, 8, 0.4)';
             }
             ctx.lineWidth = 1;
 

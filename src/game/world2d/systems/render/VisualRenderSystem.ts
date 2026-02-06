@@ -22,7 +22,9 @@ export const VisualRenderSystem: ISystem & {
 } = {
     name: 'visual-render',
     // 定义渲染层级 (Z-Index)
-    LAYER: 20,
+    // 渲染底层 (Layer 10)，包含背景和实体，需要 Y 轴排序
+    // 之前是 20，现在改为 10 以便让调试层 (12, 15) 能显示在其上方
+    LAYER: 10,
 
     update(dt: number) {
         // 目前暂无实时更新逻辑 (如动画更新已移除)
