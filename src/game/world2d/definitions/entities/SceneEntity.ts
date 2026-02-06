@@ -48,6 +48,7 @@ export const SceneEntity: IEntityDefinition<z.ZodRecord<z.ZodString, z.ZodAny>> 
 
     serialize(entity: any) {
         return {
+            type: 'scene_config',
             ...entity.sceneConfig
         };
     },

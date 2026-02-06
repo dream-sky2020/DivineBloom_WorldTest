@@ -109,7 +109,8 @@ export const InitialWorldState: InitialWorldStateData = {
                 options: {
                     aiType: 'patrol',
                     patrolRadius: 100,
-                    speed: 50
+                    speed: 50,
+                    sensorRadius: 40
                 }
             }
         ]

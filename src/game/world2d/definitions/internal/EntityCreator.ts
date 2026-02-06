@@ -41,7 +41,16 @@ export const EntityCreator = {
             return this.createFromData({ ...data, type });
         }
 
-        logger.warn(`[EntityCreator] Unknown entity type '${type}' and no component data provided.`);
+        const summary = {
+            type,
+            dataType: data?.type,
+            id: data?.id,
+            name: data?.name,
+            dataKeys: data ? Object.keys(data) : [],
+            componentKeys: data?.components ? Object.keys(data.components) : [],
+            contextKeys: context ? Object.keys(context) : []
+        };
+        logger.warn(`[EntityCreator] Unknown entity type and no component data provided.`, summary);
         return null;
     },
 

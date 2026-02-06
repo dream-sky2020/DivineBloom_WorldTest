@@ -38,10 +38,24 @@ export class ScenarioLoader {
         }
 
         // 3. 实体充气 (Hydration)
+        const normalizeEntityData = (data: any) => {
+            if (!data || data.type) return data;
+            // Legacy save data: scene config stored without explicit type
+            if (data.id && (data.width !== undefined || data.height !== undefined || data.groundColor !== undefined || data.gravity !== undefined)) {
+                return { ...data, type: 'scene_config' };
+            }
+            // Legacy save data: global manager stored without explicit type
+            if (data.camera || data.inputState || data.timer) {
+                return { ...data, type: 'global_manager' };
+            }
+            return data;
+        };
+
         migratedBundle.entities.forEach((entityData: any) => {
+            const normalized = normalizeEntityData(entityData);
             // 直接透传数据给 EntityManager
             // 假设 entityData 结构为 { type: '...', components: { ... } }
-            const entity = EntityManager.create(engine, entityData.type, entityData, {
+            const entity = EntityManager.create(engine, normalized?.type, normalized, {
                 player: null // 上下文
             })
 

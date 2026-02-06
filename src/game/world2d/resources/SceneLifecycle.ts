@@ -3,18 +3,9 @@ import { ScenarioLoader } from '@world2d/ScenarioLoader'
 import { ResourceDeclaration } from './ResourceDeclaration'
 // import { world } from '@world2d/world' // 看起来没用到 world
 import { createLogger } from '@/utils/logger'
-import { ResourcePipeline } from './ResourcePipeline'
-import { AssetManager } from './AssetManager'
+import { GameEngine } from '../GameEngine'
 
 const logger = createLogger('SceneLifecycle')
-
-interface EngineLike {
-    resources?: {
-        pipeline?: ResourcePipeline
-    };
-    assets: AssetManager;
-    [key: string]: any;
-}
 
 /**
  * 场景生命周期管理 (Simplified)
@@ -27,7 +18,7 @@ export class SceneLifecycle {
      * @param {object} engine 
      * @param {string} entryId 
      */
-    static async prepareScene(mapData: any, engine: EngineLike, entryId: string = 'default', savedState: any = null, onProgress: any = null) {
+    static async prepareScene(mapData: any, engine: GameEngine, entryId: string = 'default', savedState: any = null, onProgress: any = null) {
         logger.info(`Starting scene preparation for [${mapData?.header?.config?.id || 'unknown'}]`)
 
         // 1. 决定使用的数据源 (存档优先于默认配置)
@@ -56,7 +47,7 @@ export class SceneLifecycle {
         return result.entities;
     }
 
-    static destroyScene(scene: any, engine: EngineLike) {
+    static destroyScene(scene: any, engine: GameEngine) {
         if (scene && scene.destroy) scene.destroy();
         // 可以在这里做一些资源卸载策略，但通常建议由 AssetManager 统一管理
     }

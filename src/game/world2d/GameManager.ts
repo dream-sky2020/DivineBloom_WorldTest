@@ -242,7 +242,7 @@ export class GameManager {
             this._onInteract.bind(this),
             () => { this.state.system = 'list-menu' }, // onOpenMenu
             () => { this.state.system = 'shop' }, // onOpenShop
-            { worldStore, sceneManager: this.sceneManager, gameManager: this }
+            { worldStore, sceneManager: this.sceneManager ?? undefined, gameManager: this }
         )
 
         this.currentScene.value = scene
@@ -299,7 +299,7 @@ export class GameManager {
 
         // Save Map State before battle (optional, for safety)
         if (this.currentScene.value) {
-            worldStore.saveState(this.currentScene.value)
+            worldStore.saveState()
         }
 
         // 暂时禁用，等待战斗系统实现

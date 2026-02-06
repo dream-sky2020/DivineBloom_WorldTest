@@ -8,6 +8,11 @@ const TEMPORARY_ENTITY_TYPES = [
     'vfx'
 ];
 
+// Components that should never be persisted (editor/runtime only)
+const NON_PERSISTENT_COMPONENTS = new Set([
+    'Inspector'
+]);
+
 export const EntitySerializer = {
     /**
      * Serialize an entity to a data object
@@ -16,6 +21,11 @@ export const EntitySerializer = {
      */
     serialize(entity: any) {
         if (!entity) return null;
+
+        // 0. Skip child entities (they are recreated by parent definition)
+        if (entity.parent?.entity) {
+            return null;
+        }
 
         // 1. Skip temporary entities
         if (entity.type && TEMPORARY_ENTITY_TYPES.includes(entity.type)) {
@@ -57,6 +67,7 @@ export const EntitySerializer = {
         const componentNames = componentRegistry.getAllNames();
         
         for (const name of componentNames) {
+            if (NON_PERSISTENT_COMPONENTS.has(name)) continue;
             const def = componentRegistry.get(name);
             if (!def) continue;
 

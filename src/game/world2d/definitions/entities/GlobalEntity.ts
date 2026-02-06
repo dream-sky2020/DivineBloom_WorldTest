@@ -98,7 +98,7 @@ export const GlobalEntity: IEntityDefinition<typeof GlobalEntitySchema> = {
     },
 
     serialize(entity: any) {
-        const data: any = {};
+        const data: any = { type: 'global_manager' };
         // if (entity.battleResult) data.pendingBattleResult = entity.battleResult; // 暂时禁用，等待战斗系统实现
         if (entity.camera) data.camera = { ...entity.camera };
         if (entity.inputState) data.inputState = entity.inputState;

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { MapSaveStateSchema } from '@schema/save';
 import { world2d } from '@world2d'; 
 import { createLogger } from '@/utils/logger';
 import { InitialWorldState } from '@/data/initialWorldState';

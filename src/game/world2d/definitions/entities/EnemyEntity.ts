@@ -45,7 +45,8 @@ export const EnemyEntitySchema = z.object({
     patrolRadius: z.number().optional(),
     detectedState: z.string().optional(),
     stunDuration: z.number().optional(),
-    chaseExitMultiplier: z.number().optional()
+    chaseExitMultiplier: z.number().optional(),
+    sensorRadius: z.number().optional()
   }).default({} as any)
 });
 
@@ -88,6 +89,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
     const uuid = options.uuid || Math.random().toString(36).substr(2, 9);
     const isStunned = options.isStunned;
     const visualId = assetId || options.spriteId;
+    const sensorRadius = options.sensorRadius ?? 40;
 
     const root = world.add({
       type: 'enemy',
@@ -138,7 +140,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       transform: Transform.create(),
       localTransform: LocalTransform.create(0, 0),
       name: `${root.name}_Sensor`,
-      shape: Shape.create({ type: ShapeType.CIRCLE, radius: 40 }),
+      shape: Shape.create({ type: ShapeType.CIRCLE, radius: sensorRadius }),
       detectArea: DetectArea.create({ shapeId: 'sensor', target: 'player' })
     });
 
@@ -180,7 +182,8 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
         stunDuration: aiConfig.stunDuration,
         chaseExitMultiplier: aiConfig.chaseExitMultiplier,
         spriteId: visualId,
-        scale: sprite?.scale || visual?.scale
+        scale: sprite?.scale || visual?.scale,
+        sensorRadius: entity.children?.entities?.find((c: any) => c.detectArea)?.shape?.radius ?? 40
       }
     }
   },
