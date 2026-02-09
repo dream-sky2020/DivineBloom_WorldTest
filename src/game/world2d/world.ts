@@ -26,6 +26,7 @@ export const eventQueue = {
 }
 
 export const actionQueue: any[] = []
+export const triggerQueue: any[] = []
 
 // Export a helper to clear the world (useful for scene transitions/hot reload)
 export function clearWorld() {
@@ -39,4 +40,5 @@ export function clearWorld() {
 
   eventQueue._events = []
   actionQueue.length = 0
+  triggerQueue.length = 0
 }

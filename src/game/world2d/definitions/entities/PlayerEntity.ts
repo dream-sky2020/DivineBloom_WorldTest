@@ -9,10 +9,13 @@ import {
   Velocity, VELOCITY_INSPECTOR_FIELDS,
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Bounds, BOUNDS_INSPECTOR_FIELDS,
+  DetectInput,
   Detectable,
   Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
+  Trigger,
+  Actions,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
   Shape, ShapeType, SHAPE_INSPECTOR_FIELDS
 } from '@components';
@@ -120,6 +123,15 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       health: Health.create({ maxHealth: 100, currentHealth: 100 }),
       sprite: Sprite.create(assetId, { scale }),
       animation: Animation.create('idle'),
+      detectInput: DetectInput.create({ keys: ['Attack'] }),
+      trigger: Trigger.create({
+        rules: [{ type: 'onPress' }],
+        actions: ['EMIT_SIGNAL'],
+        defaultCooldown: 0
+      }),
+      actionEmitSignal: Actions.EmitSignal({
+        signal: 'weapon_fire'
+      })
     });
 
     root.inspector = Inspector.create({

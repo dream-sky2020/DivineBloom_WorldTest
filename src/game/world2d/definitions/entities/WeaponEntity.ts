@@ -6,6 +6,8 @@ import {
     Transform, TRANSFORM_INSPECTOR_FIELDS,
     Weapon, WEAPON_INSPECTOR_FIELDS,
     WeaponIntent,
+    Trigger,
+    Actions,
     Sprite, SPRITE_INSPECTOR_FIELDS,
     Inspector, EDITOR_INSPECTOR_FIELDS
 } from '@components';
@@ -133,6 +135,14 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
             sprite: Sprite.create(params.spriteId, {
                 scale: params.spriteScale,
                 tint: params.spriteTint
+            }),
+            trigger: Trigger.create({
+                rules: [{ type: 'onSignal', signal: 'weapon_fire' }],
+                actions: ['CREATE_ENTITY'],
+                defaultCooldown: weaponConfig.fireRate ?? 0
+            }),
+            actionCreateEntity: Actions.CreateEntity({
+                entityType: 'bullet'
             })
         });
 

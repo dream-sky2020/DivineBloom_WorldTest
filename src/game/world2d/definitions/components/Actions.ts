@@ -48,17 +48,17 @@ export const ActionTeleport: IComponentDefinition<typeof actionsTeleportSchema, 
   create(mapId?: string, entryId?: string, destinationId?: string, targetX?: number, targetY?: number) {
     // 支持直接传入对象
     if (typeof mapId === 'object' && mapId !== null) {
-         return actionsTeleportSchema.parse(mapId);
+      return actionsTeleportSchema.parse(mapId);
     }
     return actionsTeleportSchema.parse({ mapId, entryId, destinationId, targetX, targetY });
   },
   serialize(component) {
     return {
-        mapId: component.mapId,
-        entryId: component.entryId,
-        destinationId: component.destinationId,
-        targetX: component.targetX,
-        targetY: component.targetY
+      mapId: component.mapId,
+      entryId: component.entryId,
+      destinationId: component.destinationId,
+      targetX: component.targetX,
+      targetY: component.targetY
     };
   },
   deserialize(data) {
@@ -66,13 +66,89 @@ export const ActionTeleport: IComponentDefinition<typeof actionsTeleportSchema, 
   }
 };
 
+// --- Create Entity Action ---
+const actionsCreateEntitySchema = z.object({
+  templateId: z.string().optional(),
+  entityType: z.string().optional(),
+  customData: z.any().optional(),
+  position: z.object({ x: z.number(), y: z.number() }).optional()
+}).refine(
+  data => data.templateId != null || data.entityType != null,
+  { message: "CreateEntity must have either templateId or entityType" }
+);
+
+export type ActionsCreateEntityData = z.infer<typeof actionsCreateEntitySchema>;
+
+export const ActionCreateEntity: IComponentDefinition<typeof actionsCreateEntitySchema, ActionsCreateEntityData> = {
+  name: 'ActionCreateEntity',
+  schema: actionsCreateEntitySchema,
+  create(templateIdOrConfig?: string | ActionsCreateEntityData, entityType?: string, customData?: any, position?: { x: number; y: number }) {
+    if (typeof templateIdOrConfig === 'object' && templateIdOrConfig !== null) {
+      return actionsCreateEntitySchema.parse(templateIdOrConfig);
+    }
+    return actionsCreateEntitySchema.parse({
+      templateId: typeof templateIdOrConfig === 'string' ? templateIdOrConfig : undefined,
+      entityType,
+      customData,
+      position
+    });
+  },
+  serialize(component) {
+    return {
+      templateId: component.templateId,
+      entityType: component.entityType,
+      customData: component.customData,
+      position: component.position
+    };
+  },
+  deserialize(data) {
+    return actionsCreateEntitySchema.parse(data);
+  }
+};
+
+// --- Emit Signal Action ---
+const actionsEmitSignalSchema = z.object({
+  signal: z.string(),
+  payload: z.any().optional(),
+  target: z.any().optional()
+});
+
+export type ActionsEmitSignalData = z.infer<typeof actionsEmitSignalSchema>;
+
+export const ActionEmitSignal: IComponentDefinition<typeof actionsEmitSignalSchema, ActionsEmitSignalData> = {
+  name: 'ActionEmitSignal',
+  schema: actionsEmitSignalSchema,
+  create(signalOrConfig?: string | ActionsEmitSignalData, payload?: any, target?: any) {
+    if (typeof signalOrConfig === 'object' && signalOrConfig !== null) {
+      return actionsEmitSignalSchema.parse(signalOrConfig);
+    }
+    return actionsEmitSignalSchema.parse({ signal: signalOrConfig, payload, target });
+  },
+  serialize(component) {
+    return {
+      signal: component.signal,
+      payload: component.payload,
+      target: component.target
+    };
+  },
+  deserialize(data) {
+    return actionsEmitSignalSchema.parse(data);
+  }
+};
+
 // Compatibility Export
 export const Actions = {
-    Dialogue: ActionDialogue.create.bind(ActionDialogue),
-    Teleport: ActionTeleport.create.bind(ActionTeleport),
-    DialogueSchema: actionsDialogueSchema,
-    TeleportSchema: actionsTeleportSchema
+  Dialogue: ActionDialogue.create.bind(ActionDialogue),
+  Teleport: ActionTeleport.create.bind(ActionTeleport),
+  CreateEntity: ActionCreateEntity.create.bind(ActionCreateEntity),
+  EmitSignal: ActionEmitSignal.create.bind(ActionEmitSignal),
+  DialogueSchema: actionsDialogueSchema,
+  TeleportSchema: actionsTeleportSchema,
+  CreateEntitySchema: actionsCreateEntitySchema,
+  EmitSignalSchema: actionsEmitSignalSchema
 };
 
 export const ActionsDialogueSchema = actionsDialogueSchema;
 export const ActionsTeleportSchema = actionsTeleportSchema;
+export const ActionsCreateEntitySchema = actionsCreateEntitySchema;
+export const ActionsEmitSignalSchema = actionsEmitSignalSchema;

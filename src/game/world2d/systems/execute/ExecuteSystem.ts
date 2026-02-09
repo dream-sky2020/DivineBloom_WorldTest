@@ -1,6 +1,7 @@
-import { actionQueue, eventQueue, world } from '@world2d/world';
+import { actionQueue, eventQueue, triggerQueue, world } from '@world2d/world';
 import { getSystem } from '@world2d/SystemRegistry';
 import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry';
+import { EntityCreator } from '@definitions/internal/EntityCreator';
 import { editorManager } from '../../../editor/core/EditorCore';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
@@ -29,7 +30,8 @@ const EventHandlers: Record<string, (payload: any, callbacks: any) => void> = {
 interface IExecuteSystem extends ISystem {
     dispatch(item: any, callbacks: any, mapData: any): void;
     handleDelete(entity: IEntity, callbacks: any): void;
-    handleCreateEntity(payload: any, callbacks: any): void;
+    handleCreateEntity(payload: any, callbacks: any, source?: IEntity, target?: IEntity): void;
+    handleEmitSignal(payload: any, source?: IEntity, target?: IEntity): void;
 }
 
 export const ExecuteSystem: IExecuteSystem = {
@@ -116,7 +118,11 @@ export const ExecuteSystem: IExecuteSystem = {
                 break;
 
             case 'CREATE_ENTITY':
-                this.handleCreateEntity(payload, callbacks);
+                this.handleCreateEntity(payload, callbacks, source, target);
+                break;
+
+            case 'EMIT_SIGNAL':
+                this.handleEmitSignal(payload, source, target);
                 break;
 
             case 'SAVE_SCENE':
@@ -172,30 +178,105 @@ export const ExecuteSystem: IExecuteSystem = {
     /**
      * 处理实体创建
      */
-    handleCreateEntity(payload: any, callbacks: any) {
-        const { templateId, position, customData = {} } = payload;
+    handleCreateEntity(payload: any, callbacks: any, source?: IEntity, target?: IEntity) {
+        const actionData = (source as any)?.actionCreateEntity || {};
+        const resolved = payload && Object.keys(payload).length > 0 ? payload : actionData;
+        const { templateId, entityType, position, customData = {} } = resolved;
 
-        if (!templateId) {
-            logger.error('CREATE_ENTITY: templateId is required');
+        if (!templateId && !entityType) {
+            logger.error('CREATE_ENTITY: templateId or entityType is required');
             return;
         }
 
-        logger.info(`Creating entity from template: ${templateId}`, payload);
+        const resolvedPosition = position
+            || (target?.transform ? { x: target.transform.x, y: target.transform.y } : undefined)
+            || (source?.transform ? { x: source.transform.x, y: source.transform.y } : undefined);
 
-        try {
-            // 使用模板注册表创建实体
-            const entity = entityTemplateRegistry.createEntity(templateId, customData, position) as IEntity;
+        const finalData = { ...(customData || {}) };
 
-            if (entity) {
-                logger.info(`Entity created successfully:`, (entity as any).type, (entity as any).name);
-
-                // 自动选中新创建的实体（方便用户立即编辑）
-                (editorManager as any).selectedEntity = entity;
-            } else {
-                logger.error(`Failed to create entity from template: ${templateId}`);
+        if (entityType === 'bullet' && source?.weapon && source.transform) {
+            const dir = source.weapon.fireDirection || source.weaponIntent?.aimDirection;
+            const len = dir ? Math.hypot(dir.x, dir.y) : 0;
+            if (!dir || !len) {
+                logger.warn('CREATE_ENTITY: bullet missing fire direction');
+                return;
             }
-        } catch (error) {
-            logger.error(`Error creating entity:`, error);
+            const normalized = { x: dir.x / len, y: dir.y / len };
+            const offset = 15;
+            finalData.x = (resolvedPosition?.x ?? source.transform.x) + normalized.x * offset;
+            finalData.y = (resolvedPosition?.y ?? source.transform.y) + normalized.y * offset;
+            finalData.velocityX = normalized.x * source.weapon.bulletSpeed;
+            finalData.velocityY = normalized.y * source.weapon.bulletSpeed;
+            finalData.damage = source.weapon.damage;
+            finalData.color = source.weapon.bulletColor;
+            finalData.radius = source.weapon.bulletRadius || 2;
+            finalData.maxLifeTime = source.weapon.bulletLifeTime || 3;
+            finalData.spriteId = source.weapon.bulletSpriteId;
+            finalData.spriteScale = source.weapon.bulletSpriteScale;
+            finalData.detectCcdEnabled = source.weapon.bulletDetectCcdEnabled;
+            finalData.detectCcdMinDistance = source.weapon.bulletDetectCcdMinDistance;
+            finalData.detectCcdBuffer = source.weapon.bulletDetectCcdBuffer;
+            finalData.bulletShape = source.weapon.bulletShape;
+
+            if (source.weapon.blockIfOutOfRange && source.weapon.isFiring === false) {
+                logger.debug('CREATE_ENTITY: weapon blocked by range');
+                return;
+            }
+            if (source.weapon.cooldown > 0) {
+                return;
+            }
+            source.weapon.cooldown = source.weapon.fireRate;
         }
+
+        if (templateId) {
+            logger.info(`Creating entity from template: ${templateId}`, resolved);
+            try {
+                const entity = entityTemplateRegistry.createEntity(templateId, finalData, resolvedPosition) as IEntity;
+                if (entity) {
+                    logger.info(`Entity created successfully:`, (entity as any).type, (entity as any).name);
+                    (editorManager as any).selectedEntity = entity;
+                } else {
+                    logger.error(`Failed to create entity from template: ${templateId}`);
+                }
+            } catch (error) {
+                logger.error(`Error creating entity:`, error);
+            }
+            return;
+        }
+
+        if (entityType) {
+            logger.info(`Creating entity by type: ${entityType}`, resolved);
+            try {
+                const entity = EntityCreator.create(null, entityType, finalData) as IEntity;
+                if (entity) {
+                    logger.info(`Entity created successfully:`, (entity as any).type, (entity as any).name);
+                    (editorManager as any).selectedEntity = entity;
+                } else {
+                    logger.error(`Failed to create entity of type: ${entityType}`);
+                }
+            } catch (error) {
+                logger.error(`Error creating entity:`, error);
+            }
+        }
+    },
+
+    /**
+     * 处理信号发射
+     */
+    handleEmitSignal(payload: any, source?: IEntity, target?: IEntity) {
+        const actionData = (source as any)?.actionEmitSignal || {};
+        const resolved = payload && Object.keys(payload).length > 0 ? payload : actionData;
+
+        if (!resolved?.signal) {
+            logger.warn('EMIT_SIGNAL: signal is required');
+            return;
+        }
+
+        triggerQueue.push({
+            signal: resolved.signal,
+            payload: resolved.payload,
+            source,
+            target: resolved.target || target
+        });
     }
 };

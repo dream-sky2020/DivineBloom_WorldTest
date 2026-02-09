@@ -2,11 +2,12 @@ import { z } from 'zod';
 import { IComponentDefinition } from '../interface/IComponent';
 
 export const triggerRuleSchema = z.object({
-  type: z.enum(['onEnter', 'onExit', 'onStay', 'onPress', 'onSight']),
+  type: z.enum(['onEnter', 'onExit', 'onStay', 'onPress', 'onSight', 'onSignal']),
   requireArea: z.boolean().default(false),
   requireInput: z.boolean().default(false),
   requireEnterOnly: z.boolean().default(false),
-  condition: z.enum(['none', 'notStunned']).default('none')
+  condition: z.enum(['none', 'notStunned']).default('none'),
+  signal: z.string().optional()
 });
 
 const triggerSchema = z.object({

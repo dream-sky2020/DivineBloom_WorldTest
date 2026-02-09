@@ -33,8 +33,10 @@ export const DetectInputSystem: ISystem = {
             const e = entity as IEntity;
             const input = e.detectInput;
 
+            if (!input || !input.keys) continue;
+
             // 检查 'Interact' 键
-            if (input && input.keys && input.keys.includes('Interact')) {
+            if (input.keys.includes('Interact')) {
                 const wantsToInteract = player.playerIntent.wantsToInteract;
                 const wasPressed = !!globalEntity.inputState.lastPressed['Interact'];
 
@@ -42,9 +44,18 @@ export const DetectInputSystem: ISystem = {
                 input.justPressed = wantsToInteract && !wasPressed;
                 input.isPressed = wantsToInteract;
             }
+
+            // 检查 'Attack' 键
+            if (input.keys.includes('Attack')) {
+                const wantsToFire = !!player.weaponIntent?.wantsToFire;
+                const wasPressed = !!globalEntity.inputState.lastPressed['Attack'];
+                input.justPressed = wantsToFire && !wasPressed;
+                input.isPressed = wantsToFire;
+            }
         }
 
         // 循环结束后同步一次全局输入状态
         globalEntity.inputState.lastPressed['Interact'] = player.playerIntent.wantsToInteract;
+        globalEntity.inputState.lastPressed['Attack'] = !!player.weaponIntent?.wantsToFire;
     }
 };

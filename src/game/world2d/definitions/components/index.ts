@@ -1,6 +1,6 @@
 import { componentRegistry } from '../../registries/ComponentRegistry';
 
-import { ActionDialogue, ActionTeleport } from './Actions';
+import { ActionDialogue, ActionTeleport, ActionCreateEntity, ActionEmitSignal } from './Actions';
 import { AIConfig, AIState } from './AI';
 import { Animation } from './Animation';
 import { Bounds } from './Bounds';
@@ -11,7 +11,8 @@ import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
 import { Detectable } from './Detectable';
 import { DetectInput } from './DetectInput';
-import { MonsterSpawnManager } from './MonsterSpawnManager';
+import { TriggerSignal } from './TriggerSignal';
+import { MonsterSpawn } from './MonsterSpawn';
 import { Experience } from './Experience';
 import { Follow } from './Follow';
 import { Health } from './Health';
@@ -38,7 +39,7 @@ import { WorldTransform } from './WorldTransform';
 
 // Register Core Components
 const components = [
-    ActionDialogue, ActionTeleport,
+    ActionDialogue, ActionTeleport, ActionCreateEntity, ActionEmitSignal,
     AIConfig, AIState,
     Animation,
     Bounds,
@@ -49,7 +50,8 @@ const components = [
     DetectArea,
     Detectable,
     DetectInput,
-    MonsterSpawnManager,
+    TriggerSignal,
+    MonsterSpawn,
     Experience,
     Follow,
     Health,
@@ -92,7 +94,8 @@ export * from './Commands';
 export * from './DetectArea';
 export * from './Detectable';
 export * from './DetectInput';
-export * from './MonsterSpawnManager';
+export * from './TriggerSignal';
+export * from './MonsterSpawn';
 export * from './Experience';
 export * from './Follow';
 export * from './Health';

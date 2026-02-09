@@ -7,12 +7,14 @@ import {
     Timer, TimerSchema,
     Inspector, EDITOR_INSPECTOR_FIELDS,
     Commands,
-    MousePosition
+    MousePosition,
+    CombatProgress, CombatProgressSchema, COMBAT_PROGRESS_INSPECTOR_FIELDS
 } from '@components';
 
 // --- Schema Definition ---
 export const GlobalEntitySchema = z.object({
     // pendingBattleResult: BattleResultSchema.optional(), // 暂时禁用，等待战斗系统实现
+    combatProgress: CombatProgressSchema.optional(),
     camera: z.object({
         x: z.number().optional(),
         y: z.number().optional(),
@@ -41,6 +43,7 @@ const INSPECTOR_FIELDS = [
     { path: 'camera.x', label: '相机位置 X', type: 'number', props: { step: 1 }, group: '相机设置' },
     { path: 'camera.y', label: '相机位置 Y', type: 'number', props: { step: 1 }, group: '相机设置' },
     { path: 'camera.lerp', label: '相机平滑系数', type: 'number', tip: '0-1 之间，1 为即时跟随', props: { step: 0.01, min: 0, max: 1 }, group: '相机设置' },
+    ...(COMBAT_PROGRESS_INSPECTOR_FIELDS || []),
     { path: 'mousePosition.worldX', label: '鼠标 X (世界)', type: 'number', tip: '鼠标在游戏世界中的 X 坐标', props: { readonly: true }, group: '调试信息' },
     { path: 'mousePosition.worldY', label: '鼠标 Y (世界)', type: 'number', tip: '鼠标在游戏世界中的 Y 坐标', props: { readonly: true }, group: '调试信息' },
     // ...BATTLE_RESULT_INSPECTOR_FIELDS, // 暂时禁用，等待战斗系统实现
@@ -60,7 +63,7 @@ export const GlobalEntity: IEntityDefinition<typeof GlobalEntitySchema> = {
             return null;
         }
 
-        const { /* pendingBattleResult, */ camera: cameraData, inputState, timer: timerData } = result.data;
+        const { /* pendingBattleResult, */ camera: cameraData, inputState, timer: timerData, combatProgress: combatProgressData } = result.data;
 
         const existing = world.with('globalManager').first;
         if (existing) {
@@ -73,6 +76,7 @@ export const GlobalEntity: IEntityDefinition<typeof GlobalEntitySchema> = {
             globalManager: true,
             persist: true,
             camera: Camera.create(cameraData || {}),
+            combatProgress: CombatProgress.create(combatProgressData || {}),
             inputState: inputState,
             timer: Timer.create(timerData),
             mousePosition: MousePosition.create(),
@@ -100,6 +104,7 @@ export const GlobalEntity: IEntityDefinition<typeof GlobalEntitySchema> = {
     serialize(entity: any) {
         const data: any = { type: 'global_manager' };
         // if (entity.battleResult) data.pendingBattleResult = entity.battleResult; // 暂时禁用，等待战斗系统实现
+        if (entity.combatProgress) data.combatProgress = CombatProgress.serialize(entity.combatProgress);
         if (entity.camera) data.camera = { ...entity.camera };
         if (entity.inputState) data.inputState = entity.inputState;
         if (entity.timer) data.timer = { ...entity.timer };

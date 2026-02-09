@@ -1,5 +1,4 @@
 import { world } from '@world2d/world';
-import { BulletEntity } from '@entities';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
@@ -73,9 +72,9 @@ function resolveAttackDirection(
 
 /**
  * Weapon System
- * 负责处理武器射击逻辑：冷却倒计时、生成子弹
+ * 负责处理武器射击逻辑：冷却倒计时、解析射击方向
  */
-export const WeaponSystem: ISystem & { fireBullet(shooter: IEntity): void } = {
+export const WeaponSystem: ISystem = {
     name: 'weapon',
 
     update(dt: number) {
@@ -106,58 +105,6 @@ export const WeaponSystem: ISystem & { fireBullet(shooter: IEntity): void } = {
                 }
             }
 
-            // 3. 检查是否应该射击
-            if (weapon.isFiring && weapon.cooldown <= 0) {
-                this.fireBullet(e);
-                weapon.cooldown = weapon.fireRate;
-
-                // 调试日志
-                logger.debug(`Entity "${e.name || e.type || 'N/A'}" fired! Next shot in ${weapon.fireRate}s`);
-            }
         }
     },
-
-    /**
-     * 发射子弹
-     */
-    fireBullet(shooter: IEntity) {
-        const { transform, weapon } = shooter;
-        const dir = weapon.fireDirection;
-
-        // 归一化方向（防止异常）
-        const length = Math.sqrt(dir.x * dir.x + dir.y * dir.y);
-        const normalizedDir = length > 0
-            ? { x: dir.x / length, y: dir.y / length }
-            : { x: 1, y: 0 };
-
-        // 计算子弹初始位置（稍微偏移，避免与射击者碰撞）
-        const offset = 15; // 偏移距离
-        const bulletX = transform.x + normalizedDir.x * offset;
-        const bulletY = transform.y + normalizedDir.y * offset;
-
-        // 生成子弹实体
-        const bullet = BulletEntity.create({
-            x: bulletX,
-            y: bulletY,
-            velocityX: normalizedDir.x * weapon.bulletSpeed,
-            velocityY: normalizedDir.y * weapon.bulletSpeed,
-            damage: weapon.damage,
-            color: weapon.bulletColor,
-            radius: weapon.bulletRadius || 2,
-            maxLifeTime: weapon.bulletLifeTime || 3,
-            spriteId: weapon.bulletSpriteId,
-            spriteScale: weapon.bulletSpriteScale,
-            detectCcdEnabled: weapon.bulletDetectCcdEnabled,
-            detectCcdMinDistance: weapon.bulletDetectCcdMinDistance,
-            detectCcdBuffer: weapon.bulletDetectCcdBuffer,
-            bulletShape: weapon.bulletShape
-        }) as IEntity;
-
-        // 记录子弹来源（可选，用于避免击中自己）
-        if (bullet) {
-            (bullet as any).ownerId = shooter.id || null;
-        }
-
-        logger.debug(`Bullet created at (${bulletX.toFixed(1)}, ${bulletY.toFixed(1)}) with velocity (${(normalizedDir.x * weapon.bulletSpeed).toFixed(1)}, ${(normalizedDir.y * weapon.bulletSpeed).toFixed(1)})`);
-    }
 };

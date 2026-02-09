@@ -1,4 +1,4 @@
-import { world, actionQueue } from '@world2d/world'
+import { world, actionQueue, triggerQueue } from '@world2d/world'
 import { createLogger } from '@/utils/logger'
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
@@ -11,6 +11,7 @@ interface RuleContext {
     state: any;
     detectArea?: any;
     detectInput?: any;
+    signals?: any[];
 }
 
 /**
@@ -61,6 +62,13 @@ const RuleHandlers: Record<string, (context: RuleContext) => boolean> = {
         }
 
         return inputTriggered;
+    },
+
+    /**
+     * 外部信号触发
+     */
+    onSignal: (context) => {
+        return !!(context.signals && context.signals.length > 0);
     }
 };
 
@@ -69,13 +77,30 @@ const RuleHandlers: Record<string, (context: RuleContext) => boolean> = {
  */
 export const TriggerSystem: ISystem & {
     _findInFamily(entity: IEntity, componentName: string): any;
-    _dispatchActions(entity: IEntity, trigger: any, results: any[], rule: any): void;
+    _dispatchActions(entity: IEntity, trigger: any, results: any[], rule: any, payload?: any): void;
     _findActionProvider(entity: IEntity, actionType: string): IEntity;
     _checkCondition(entity: IEntity, conditionType: string): boolean;
 } = {
     name: 'trigger',
 
     update(dt: number) {
+        const incomingSignals = triggerQueue.splice(0, triggerQueue.length);
+        const directSignals = new WeakMap<IEntity, any[]>();
+        const broadcastSignals = new Map<string, any[]>();
+
+        for (const signal of incomingSignals) {
+            if (signal?.target) {
+                const list = directSignals.get(signal.target) || [];
+                list.push(signal);
+                directSignals.set(signal.target, list);
+            }
+            if (signal?.signal) {
+                const list = broadcastSignals.get(signal.signal) || [];
+                list.push(signal);
+                broadcastSignals.set(signal.signal, list);
+            }
+        }
+
         const triggers = world.with('trigger');
 
         for (const entity of triggers) {
@@ -99,6 +124,9 @@ export const TriggerSystem: ISystem & {
             // 3. 预取该实体及其族群的相关组件 (缓存加速)
             const detectArea = this._findInFamily(e, 'detectArea');
             const detectInput = this._findInFamily(e, 'detectInput');
+            const triggerSignal = this._findInFamily(e, 'triggerSignal');
+            const localSignals = triggerSignal?.queue ? [...triggerSignal.queue] : [];
+            if (triggerSignal?.queue) triggerSignal.queue.length = 0;
 
             // 只要 detectArea 中有任何结果，即视为“正在接触”
             const currentResults = [...(detectArea?.results || [])];
@@ -106,6 +134,8 @@ export const TriggerSystem: ISystem & {
 
             let shouldActivate = false;
             let triggeredRule = null;
+            let triggerPayload: any = undefined;
+            let triggerTargets: any[] = currentResults;
 
             // 4. 遍历并执行所有规则处理器
             for (let i = 0; i < trigger.rules.length; i++) {
@@ -124,10 +154,23 @@ export const TriggerSystem: ISystem & {
                 // 执行规则处理器
                 const handler = RuleHandlers[rule.type];
                 if (handler) {
-                    const context = { entity: e, rule, state, detectArea, detectInput };
+                    const directList = directSignals.get(e) || [];
+                    const broadcastList = rule.signal ? (broadcastSignals.get(rule.signal) || []) : [];
+                    const signals = rule.signal
+                        ? [...directList, ...localSignals, ...broadcastList]
+                        : [...directList, ...localSignals];
+
+                    const context = { entity: e, rule, state, detectArea, detectInput, signals };
                     if (handler(context)) {
                         shouldActivate = true;
                         triggeredRule = rule;
+                        if (rule.type === 'onSignal' && signals.length > 0) {
+                            const matched = rule.signal
+                                ? signals.find(s => s.signal === rule.signal) || signals[0]
+                                : signals[0];
+                            triggerPayload = matched?.payload;
+                            triggerTargets = signals.map(s => s.target || s.source || null);
+                        }
                     }
                 }
 
@@ -139,7 +182,7 @@ export const TriggerSystem: ISystem & {
 
             // 5. 触发动作分发
             if (shouldActivate) {
-                this._dispatchActions(e, trigger, currentResults, triggeredRule);
+                this._dispatchActions(e, trigger, triggerTargets, triggeredRule, triggerPayload);
 
                 // 更新冷却和单次触发标记
                 trigger.cooldownTimer = trigger.defaultCooldown;
@@ -170,7 +213,7 @@ export const TriggerSystem: ISystem & {
      * 内部方法：处理动作分发
      * 明确 Source (发起逻辑的实体) 和 Target (被影响的实体)
      */
-    _dispatchActions(entity: IEntity, trigger: any, results: any[], rule: any) {
+    _dispatchActions(entity: IEntity, trigger: any, results: any[], rule: any, payload?: any) {
         const targets = (results && results.length > 0) ? results : [null];
 
         for (const actionType of trigger.actions) {
@@ -185,7 +228,8 @@ export const TriggerSystem: ISystem & {
                 targetQueue.push({
                     source: actionSource, // 动作发起者 (通常是拥有配置的 Root)
                     type: actionType,     // 动作类型 (如 TELEPORT, DIALOGUE)
-                    target: target        // 动作目标 (如 Player)
+                    target: target,       // 动作目标 (如 Player)
+                    payload: payload      // 可选信号载荷
                 });
             }
         }
@@ -195,7 +239,12 @@ export const TriggerSystem: ISystem & {
      * 内部方法：定位真正持有动作配置的实体
      */
     _findActionProvider(entity: IEntity, actionType: string) {
-        const componentName = `action${actionType.charAt(0).toUpperCase() + actionType.slice(1).toLowerCase()}`;
+        const normalized = actionType
+            .toLowerCase()
+            .split('_')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join('');
+        const componentName = `action${normalized}`;
 
         // 向上溯源：如果当前实体没有该组件，尝试查找父实体
         let current: IEntity | undefined = entity;

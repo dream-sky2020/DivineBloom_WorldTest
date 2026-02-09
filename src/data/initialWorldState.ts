@@ -85,21 +85,25 @@ export const InitialWorldState: InitialWorldStateData = {
                 y: 1000,
                 name: 'Hero',
                 assetId: 'hero',
-                scale: 0.7,
-                weaponConfigs: [
-                    {
-                        weaponType: 'pistol',
-                        orbitRadius: 40,
-                        orbitSpeed: 2,
-                        spriteId: 'particle_3',
-                        spriteScale: 0.2,
-                        bulletSpriteScale: 0.5,
-                        bulletDetectCcdEnabled: true,
-                        bulletDetectCcdMinDistance: 0,
-                        bulletDetectCcdBuffer: 2,
-                        bulletShape: { type: 'circle', radius: 48 }
-                    }
-                ]
+                scale: 0.7
+            },
+            // 3.1 武器实体 (对应 WeaponEntity.ts)
+            {
+                type: 'weapon',
+                name: 'HeroWeapon',
+                ownerTarget: 'player',
+                orbitRadius: 40,
+                orbitSpeed: 2,
+                spriteId: 'particle_3',
+                spriteScale: 0.2,
+                weaponConfig: {
+                    weaponType: 'pistol',
+                    bulletSpriteScale: 0.5,
+                    bulletDetectCcdEnabled: true,
+                    bulletDetectCcdMinDistance: 0,
+                    bulletDetectCcdBuffer: 2,
+                    bulletShape: { type: 'circle', radius: 48 }
+                }
             },
             // 4. NPC 示例
             {
@@ -172,21 +176,24 @@ export const InitialWorldState: InitialWorldStateData = {
                 y: 1000,
                 name: 'Hero',
                 assetId: 'hero',
-                scale: 0.7,
-                weaponConfigs: [
-                    {
-                        weaponType: 'pistol',
-                        orbitRadius: 40,
-                        orbitSpeed: 2,
-                        spriteId: 'particle_3',
-                        spriteScale: 0.3,
-                        bulletSpriteScale: 0.5,
-                        bulletDetectCcdEnabled: true,
-                        bulletDetectCcdMinDistance: 0,
-                        bulletDetectCcdBuffer: 2,
-                        bulletShape: { type: 'circle', radius: 6 }
-                    }
-                ]
+                scale: 0.7
+            },
+            {
+                type: 'weapon',
+                name: 'HeroWeapon',
+                ownerTarget: 'player',
+                orbitRadius: 40,
+                orbitSpeed: 2,
+                spriteId: 'particle_3',
+                spriteScale: 0.3,
+                weaponConfig: {
+                    weaponType: 'pistol',
+                    bulletSpriteScale: 0.5,
+                    bulletDetectCcdEnabled: true,
+                    bulletDetectCcdMinDistance: 0,
+                    bulletDetectCcdBuffer: 2,
+                    bulletShape: { type: 'circle', radius: 6 }
+                }
             }
         ]
     },
@@ -233,21 +240,24 @@ export const InitialWorldState: InitialWorldStateData = {
                 y: 1000,
                 name: 'Hero',
                 assetId: 'hero',
-                scale: 0.7,
-                weaponConfigs: [
-                    {
-                        weaponType: 'pistol',
-                        orbitRadius: 40,
-                        orbitSpeed: 2,
-                        spriteId: 'particle_3',
-                        spriteScale: 0.3,
-                        bulletSpriteScale: 0.5,
-                        bulletDetectCcdEnabled: true,
-                        bulletDetectCcdMinDistance: 0,
-                        bulletDetectCcdBuffer: 2,
-                        bulletShape: { type: 'circle', radius: 6 }
-                    }
-                ]
+                scale: 0.7
+            },
+            {
+                type: 'weapon',
+                name: 'HeroWeapon',
+                ownerTarget: 'player',
+                orbitRadius: 40,
+                orbitSpeed: 2,
+                spriteId: 'particle_3',
+                spriteScale: 0.3,
+                weaponConfig: {
+                    weaponType: 'pistol',
+                    bulletSpriteScale: 0.5,
+                    bulletDetectCcdEnabled: true,
+                    bulletDetectCcdMinDistance: 0,
+                    bulletDetectCcdBuffer: 2,
+                    bulletShape: { type: 'circle', radius: 6 }
+                }
             }
         ]
     }
