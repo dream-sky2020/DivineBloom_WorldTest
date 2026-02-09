@@ -30,7 +30,19 @@ const weaponSchema = z.object({
   fireDirection: z.object({
     x: z.number(),
     y: z.number()
-  }).default({ x: 1, y: 0 })
+  }).default({ x: 1, y: 0 }),
+  // 攻击方向基准
+  attackMode: z.enum([
+    'free',
+    'ownerFacing',
+    'worldUp'
+  ]).default('free'),
+  // 允许偏移角度（总角度）
+  attackArcDeg: z.number().min(0).default(180),
+  // 攻击方向偏移（度）
+  attackAngleOffsetDeg: z.number().default(0),
+  // 超出限制时是否禁止射击（否则夹到边界）
+  blockIfOutOfRange: z.boolean().default(false)
 });
 
 export type WeaponData = z.infer<typeof weaponSchema>;
@@ -59,7 +71,11 @@ export const Weapon: IComponentDefinition<typeof weaponSchema, WeaponData> = {
     { path: 'weapon.bulletDetectCcdEnabled', label: '子弹高速检测', type: 'checkbox', group: '武器 (Weapon)' },
     { path: 'weapon.bulletDetectCcdMinDistance', label: '子弹 CCD 距离阈值', type: 'number', props: { min: 0, step: 1 }, group: '武器 (Weapon)' },
     { path: 'weapon.bulletDetectCcdBuffer', label: '子弹 CCD 缓冲', type: 'number', props: { step: 0.5 }, group: '武器 (Weapon)' },
-    { path: 'weapon.bulletShape', label: '子弹形状', type: 'json', tip: '用于 Shape 组件', group: '武器 (Weapon)' }
+    { path: 'weapon.bulletShape', label: '子弹形状', type: 'json', tip: '用于 Shape 组件', group: '武器 (Weapon)' },
+    { path: 'weapon.attackMode', label: '攻击基准', type: 'text', group: '武器 (Weapon)' },
+    { path: 'weapon.attackArcDeg', label: '允许偏移角', type: 'number', props: { min: 0, step: 5 }, group: '武器 (Weapon)' },
+    { path: 'weapon.attackAngleOffsetDeg', label: '方向偏移', type: 'number', props: { step: 5 }, group: '武器 (Weapon)' },
+    { path: 'weapon.blockIfOutOfRange', label: '超出禁止射击', type: 'checkbox', group: '武器 (Weapon)' }
   ]
 };
 

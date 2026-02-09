@@ -43,6 +43,10 @@ const weaponConfigSchema = z.object({
     p1: z.object({ x: z.number(), y: z.number() }).optional(),
     p2: z.object({ x: z.number(), y: z.number() }).optional()
   }).optional(),
+  attackMode: z.string().optional(),
+  attackArcDeg: z.number().optional(),
+  attackAngleOffsetDeg: z.number().optional(),
+  blockIfOutOfRange: z.boolean().optional(),
   orbitRadius: z.number().optional(),
   orbitAngle: z.number().optional(),
   orbitSpeed: z.number().optional(),
@@ -155,7 +159,11 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
           bulletDetectCcdEnabled: cfg.bulletDetectCcdEnabled,
           bulletDetectCcdMinDistance: cfg.bulletDetectCcdMinDistance,
           bulletDetectCcdBuffer: cfg.bulletDetectCcdBuffer,
-          bulletShape: cfg.bulletShape
+          bulletShape: cfg.bulletShape,
+          attackMode: cfg.attackMode,
+          attackArcDeg: cfg.attackArcDeg,
+          attackAngleOffsetDeg: cfg.attackAngleOffsetDeg,
+          blockIfOutOfRange: cfg.blockIfOutOfRange
         }
       };
 

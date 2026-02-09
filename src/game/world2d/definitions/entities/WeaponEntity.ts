@@ -33,7 +33,11 @@ const weaponConfigSchema = z.object({
         offsetY: z.number().optional(),
         p1: z.object({ x: z.number(), y: z.number() }).optional(),
         p2: z.object({ x: z.number(), y: z.number() }).optional()
-    }).optional()
+    }).optional(),
+    attackMode: z.string().optional(),
+    attackArcDeg: z.number().optional(),
+    attackAngleOffsetDeg: z.number().optional(),
+    blockIfOutOfRange: z.boolean().optional()
 });
 
 const WeaponEntitySchema = z.object({
@@ -119,7 +123,11 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
                 bulletDetectCcdEnabled: weaponConfig.bulletDetectCcdEnabled,
                 bulletDetectCcdMinDistance: weaponConfig.bulletDetectCcdMinDistance,
                 bulletDetectCcdBuffer: weaponConfig.bulletDetectCcdBuffer,
-                bulletShape: weaponConfig.bulletShape
+                bulletShape: weaponConfig.bulletShape,
+                attackMode: weaponConfig.attackMode,
+                attackArcDeg: weaponConfig.attackArcDeg,
+                attackAngleOffsetDeg: weaponConfig.attackAngleOffsetDeg,
+                blockIfOutOfRange: weaponConfig.blockIfOutOfRange
             }),
             weaponIntent: WeaponIntent.create(),
             sprite: Sprite.create(params.spriteId, {
@@ -169,7 +177,11 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
                 bulletDetectCcdEnabled: entity.weapon.bulletDetectCcdEnabled,
                 bulletDetectCcdMinDistance: entity.weapon.bulletDetectCcdMinDistance,
                 bulletDetectCcdBuffer: entity.weapon.bulletDetectCcdBuffer,
-                bulletShape: entity.weapon.bulletShape
+                bulletShape: entity.weapon.bulletShape,
+                attackMode: entity.weapon.attackMode,
+                attackArcDeg: entity.weapon.attackArcDeg,
+                attackAngleOffsetDeg: entity.weapon.attackAngleOffsetDeg,
+                blockIfOutOfRange: entity.weapon.blockIfOutOfRange
             } : undefined
         };
     },

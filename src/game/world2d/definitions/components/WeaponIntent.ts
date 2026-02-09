@@ -7,6 +7,11 @@ const weaponIntentSchema = z.object({
     x: z.number(),
     y: z.number()
   }).default({ x: 1, y: 0 }),
+  // 玩家朝向（用于前后左右判定）
+  facingDirection: z.object({
+    x: z.number(),
+    y: z.number()
+  }).default({ x: 1, y: 0 }),
   aimAngle: z.number().optional()
 });
 
@@ -23,6 +28,7 @@ export const WeaponIntent: IComponentDefinition<typeof weaponIntentSchema, Weapo
     return {
         wantsToFire: false,
         aimDirection: component.aimDirection, // 也许保留瞄准方向是合理的
+        facingDirection: component.facingDirection,
         aimAngle: component.aimAngle
     };
   },

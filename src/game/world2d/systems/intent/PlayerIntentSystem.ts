@@ -37,7 +37,8 @@ export const PlayerIntentSystem: ISystem = {
             if (!e.weaponIntent) {
                 world.addComponent(e, 'weaponIntent', {
                     wantsToFire: false,
-                    aimDirection: { x: 1, y: 0 }
+                    aimDirection: { x: 1, y: 0 },
+                    facingDirection: { x: 1, y: 0 }
                 });
             }
 
@@ -86,8 +87,15 @@ export const PlayerIntentSystem: ISystem = {
                     if (dx !== 0 || dy !== 0) {
                         e.weaponIntent.aimDirection.x = dx;
                         e.weaponIntent.aimDirection.y = dy;
+                        e.weaponIntent.facingDirection.x = dx;
+                        e.weaponIntent.facingDirection.y = dy;
                     }
                     // 否则保持上次的射击方向
+                }
+                // 没有攻击输入但有移动时，更新朝向
+                if (!raw.buttons.attack && (dx !== 0 || dy !== 0)) {
+                    e.weaponIntent.facingDirection.x = dx;
+                    e.weaponIntent.facingDirection.y = dy;
                 }
             }
 
@@ -109,7 +117,8 @@ export const PlayerIntentSystem: ISystem = {
                     if (!w.weaponIntent) {
                         world.addComponent(w, 'weaponIntent', {
                             wantsToFire: false,
-                            aimDirection: { x: 1, y: 0 }
+                            aimDirection: { x: 1, y: 0 },
+                            facingDirection: { x: 1, y: 0 }
                         });
                     }
 
@@ -117,6 +126,8 @@ export const PlayerIntentSystem: ISystem = {
                         w.weaponIntent.wantsToFire = e.weaponIntent.wantsToFire;
                         w.weaponIntent.aimDirection.x = e.weaponIntent.aimDirection.x;
                         w.weaponIntent.aimDirection.y = e.weaponIntent.aimDirection.y;
+                        w.weaponIntent.facingDirection.x = e.weaponIntent.facingDirection.x;
+                        w.weaponIntent.facingDirection.y = e.weaponIntent.facingDirection.y;
                     }
                 }
             }

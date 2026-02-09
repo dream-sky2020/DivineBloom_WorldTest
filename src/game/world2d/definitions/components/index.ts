@@ -11,6 +11,8 @@ import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
 import { Detectable } from './Detectable';
 import { DetectInput } from './DetectInput';
+import { MonsterSpawnManager } from './MonsterSpawnManager';
+import { Experience } from './Experience';
 import { Follow } from './Follow';
 import { Health } from './Health';
 import { HordeAI } from './HordeAI';
@@ -25,6 +27,7 @@ import { SceneTransition } from './Requests';
 import { SceneConfig } from './SceneConfig';
 import { Shape } from './Shape';
 import { Sprite } from './Sprite';
+import { CombatProgress } from './CombatProgress';
 import { Timer } from './Timer';
 import { Transform } from './Transform';
 import { Trigger } from './Trigger';
@@ -46,6 +49,8 @@ const components = [
     DetectArea,
     Detectable,
     DetectInput,
+    MonsterSpawnManager,
+    Experience,
     Follow,
     Health,
     HordeAI,
@@ -60,6 +65,7 @@ const components = [
     SceneConfig,
     Shape,
     Sprite,
+    CombatProgress,
     Timer,
     Transform,
     Trigger,
@@ -86,6 +92,8 @@ export * from './Commands';
 export * from './DetectArea';
 export * from './Detectable';
 export * from './DetectInput';
+export * from './MonsterSpawnManager';
+export * from './Experience';
 export * from './Follow';
 export * from './Health';
 export * from './Inspector';
@@ -95,6 +103,7 @@ export * from './Projectile';
 export * from './Requests';
 export * from './SceneConfig';
 export * from './Sprite';
+export * from './CombatProgress';
 export * from './Timer';
 export * from './Trigger';
 export * from './Velocity';
@@ -110,3 +119,4 @@ export * from './LocalTransform';
 export * from './WorldTransform';
 export * from './Children';
 export * from '../enums/SpriteMode';
+export * from '../enums/InGameState';
