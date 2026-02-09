@@ -102,6 +102,7 @@ export class WorldScene {
                 control: [
                     getSystem('player-control'),
                     getSystem('enemy-control'),
+                    getSystem('follow'),
                     getSystem('weapon')
                 ],
                 physics: [
@@ -126,7 +127,8 @@ export class WorldScene {
                 getSystem('status-render'),          // Layer 30
                 getSystem('physics-debug-render'),   // Layer 110
                 getSystem('detect-area-render'),     // Layer 100 (Debug)
-                getSystem('portal-debug-render')     // Layer 105 (Portal Debug)
+                getSystem('portal-debug-render'),    // Layer 105 (Portal Debug)
+                getSystem('weapon-debug-render')     // Layer 115 (Weapon Debug)
             ],
             // 编辑器阶段 (Editor Phases)
             editor: {

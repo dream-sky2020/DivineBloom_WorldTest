@@ -13,7 +13,14 @@ const hordeAIConfigSchema = z.object({
     minMultiplier: z.number().default(0.5),
     maxMultiplier: z.number().default(2.0),
     acceleration: z.number().default(100),
-  }).default({}),
+  }).default(() => ({
+    enabled: true,
+    minDistance: 60,
+    maxDistance: 500,
+    minMultiplier: 0.5,
+    maxMultiplier: 2.0,
+    acceleration: 100
+  })),
   separationWeight: z.number().default(1.5),
 });
 

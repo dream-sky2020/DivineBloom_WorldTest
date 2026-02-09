@@ -58,6 +58,7 @@ export const Sprite: IComponentDefinition<typeof spriteSchema, SpriteData> = {
     return this.create(data.id, data);
   },
   inspectorFields: [
+    { path: 'sprite.id', label: '资源ID', type: 'text', group: '精灵 (Sprite)' },
     { path: 'sprite.mode', label: '渲染模式', type: 'select', options: Object.values(SpriteMode), group: '精灵 (Sprite)' },
     { path: 'sprite.visible', label: '显示精灵', type: 'checkbox', group: '精灵 (Sprite)' },
     { path: 'sprite.scale', label: '精灵缩放', type: 'number', props: { step: 0.1, min: 0 }, group: '精灵 (Sprite)' },

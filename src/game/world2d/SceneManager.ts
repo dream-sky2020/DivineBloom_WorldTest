@@ -175,6 +175,8 @@ export class SceneManager {
             const spawn = mapData.entryPoints[entryId]
             // Ensure we are accessing the correct component for position (transform)
             if (player.transform) {
+                player.transform.prevX = spawn.x
+                player.transform.prevY = spawn.y
                 player.transform.x = spawn.x
                 player.transform.y = spawn.y
             }

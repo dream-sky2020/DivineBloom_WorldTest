@@ -2,11 +2,13 @@ import { z } from 'zod';
 import { IComponentDefinition } from '../interface/IComponent';
 
 const colliderSchema = z.object({
-  shapeId: z.string().default('body'),
   isStatic: z.boolean().default(false),
   isTrigger: z.boolean().default(false),
   layer: z.number().default(1),
-  mask: z.number().default(0xFFFFFFFF)
+  mask: z.number().default(0xFFFFFFFF),
+  ccdEnabled: z.boolean().default(false),
+  ccdMinDistance: z.number().default(0),
+  ccdBuffer: z.number().default(0)
 });
 
 export type ColliderData = z.infer<typeof colliderSchema>;
@@ -53,11 +55,13 @@ export const Collider: IComponentDefinition<typeof colliderSchema, ColliderData>
   },
 
   inspectorFields: [
-    { path: 'collider.shapeId', label: '引用形状ID', type: 'string', tip: '引用 Shape 组件中定义的形状 Key (默认: body)', group: '碰撞体 (Collider)' },
     { path: 'collider.isStatic', label: '是否静态', type: 'boolean', tip: '静态物体(如墙壁)质量无穷大，不会被推走；动态物体(如角色)会被碰撞推开', group: '碰撞体 (Collider)' },
     { path: 'collider.isTrigger', label: '是否触发器', type: 'boolean', tip: '勾选后只产生重叠事件(OnTrigger)，不产生物理阻挡(推挤)效果', group: '碰撞体 (Collider)' },
     { path: 'collider.layer', label: '碰撞层级', type: 'number', props: { step: 1 }, tip: '位掩码: 所在的层', group: '碰撞体 (Collider)' },
-    { path: 'collider.mask', label: '碰撞掩码', type: 'number', props: { step: 1 }, tip: '位掩码: 与哪些层碰撞', group: '碰撞体 (Collider)' }
+    { path: 'collider.mask', label: '碰撞掩码', type: 'number', props: { step: 1 }, tip: '位掩码: 与哪些层碰撞', group: '碰撞体 (Collider)' },
+    { path: 'collider.ccdEnabled', label: '高速碰撞检测', type: 'checkbox', tip: '启用连续碰撞检测 (CCD)', group: '碰撞体 (Collider)' },
+    { path: 'collider.ccdMinDistance', label: 'CCD 最小距离', type: 'number', props: { min: 0, step: 1 }, tip: '本帧位移小于该值时使用普通检测', group: '碰撞体 (Collider)' },
+    { path: 'collider.ccdBuffer', label: 'CCD 缓冲', type: 'number', props: { step: 0.5 }, tip: '扩大检测范围，避免高速穿透', group: '碰撞体 (Collider)' }
   ]
 };
 

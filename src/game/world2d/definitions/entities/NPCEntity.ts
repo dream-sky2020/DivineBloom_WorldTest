@@ -11,7 +11,8 @@ import {
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Parent, Children, LocalTransform, Shape, ShapeType
+  Parent, Children, LocalTransform, Shape, ShapeType,
+  SHAPE_INSPECTOR_FIELDS, LOCAL_TRANSFORM_INSPECTOR_FIELDS
 } from '@components';
 
 // --- Schema Definition ---
@@ -36,6 +37,7 @@ export type NPCEntityData = z.infer<typeof NPCEntitySchema>;
 const INSPECTOR_FIELDS = [
   { path: 'name', label: '显示名称', type: 'text', group: '基本属性' },
   ...(TRANSFORM_INSPECTOR_FIELDS || []),
+  ...(SHAPE_INSPECTOR_FIELDS || []),
   ...(COLLIDER_INSPECTOR_FIELDS || []),
   ...(BOUNDS_INSPECTOR_FIELDS || []),
   { path: 'actionDialogue.dialogueId', label: '对话 ID', type: 'text', tip: '对应 dialogues 文件夹中的配置', group: '交互配置' },
@@ -75,7 +77,7 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
       sprite: Sprite.create(visualId, { scale }),
       animation: Animation.create('default'),
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
-      collider: Collider.create({ shapeId: 'body', isStatic: true }),
+      collider: Collider.create({ isStatic: true }),
       
       // Trigger 放在根节点，逻辑更清晰
       detectInput: DetectInput.create({ keys: ['Interact'] }),
@@ -92,10 +94,19 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
       localTransform: LocalTransform.create(0, 0),
       name: `${root.name}_Sensor`,
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: range }),
-      detectArea: DetectArea.create({ shapeId: 'sensor', target: 'player' })
+      detectArea: DetectArea.create({ target: 'player' })
     });
 
     root.children = Children.create([sensor]);
+    sensor.inspector = Inspector.create({
+      fields: [
+        ...(LOCAL_TRANSFORM_INSPECTOR_FIELDS || []),
+        ...(SHAPE_INSPECTOR_FIELDS || []),
+        ...(DETECT_AREA_INSPECTOR_FIELDS || [])
+      ],
+      hitPriority: 60,
+      editorBox: { w: 30, h: 30, scale: 1 }
+    });
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,

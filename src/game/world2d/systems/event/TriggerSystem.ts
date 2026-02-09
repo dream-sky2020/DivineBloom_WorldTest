@@ -10,7 +10,6 @@ interface RuleContext {
     rule: any;
     state: any;
     detectArea?: any;
-    detectProjectile?: any;
     detectInput?: any;
 }
 
@@ -91,19 +90,18 @@ export const TriggerSystem: ISystem & {
             }
 
             // 2. 获取或初始化运行状态
-            let states = ruleRuntimeStates.get(e);
-            if (!states) {
-                states = trigger.rules.map(() => ({ lastInside: false, isInside: false }));
+            const existingStates = ruleRuntimeStates.get(e);
+            const states = existingStates || trigger.rules.map(() => ({ lastInside: false, isInside: false }));
+            if (!existingStates) {
                 ruleRuntimeStates.set(e, states);
             }
 
             // 3. 预取该实体及其族群的相关组件 (缓存加速)
             const detectArea = this._findInFamily(e, 'detectArea');
-            const detectProjectile = this._findInFamily(e, 'detectProjectile');
             const detectInput = this._findInFamily(e, 'detectInput');
 
-            // 只要 detectArea 或 detectProjectile 中有任何结果，即视为“正在接触”
-            const currentResults = [...(detectArea?.results || []), ...(detectProjectile?.results || [])];
+            // 只要 detectArea 中有任何结果，即视为“正在接触”
+            const currentResults = [...(detectArea?.results || [])];
             const isInside = currentResults.length > 0;
 
             let shouldActivate = false;
@@ -126,7 +124,7 @@ export const TriggerSystem: ISystem & {
                 // 执行规则处理器
                 const handler = RuleHandlers[rule.type];
                 if (handler) {
-                    const context = { entity: e, rule, state, detectArea, detectProjectile, detectInput };
+                    const context = { entity: e, rule, state, detectArea, detectInput };
                     if (handler(context)) {
                         shouldActivate = true;
                         triggeredRule = rule;

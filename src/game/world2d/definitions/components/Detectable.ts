@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { IComponentDefinition } from '../interface/IComponent';
 
 const detectableSchema = z.object({
-  shapeId: z.string().default('body'),
-  labels: z.array(z.string()).default([])
+  labels: z.array(z.string()).default([]),
+  ccdEnabled: z.boolean().default(false)
 });
 
 export type DetectableData = z.infer<typeof detectableSchema>;
@@ -29,8 +29,8 @@ export const Detectable: IComponentDefinition<typeof detectableSchema, Detectabl
     return this.create(data);
   },
   inspectorFields: [
-    { path: 'detectable.shapeId', label: '引用形状ID', type: 'string', tip: '引用 Shape 组件中定义的形状 Key (默认: body)', group: '被探测属性 (Detectable)' },
-    { path: 'detectable.labels', label: '被探测标签', type: 'json', tip: '定义我是什么 (例如: ["player", "enemy"])', group: '被探测属性 (Detectable)' }
+    { path: 'detectable.labels', label: '被探测标签', type: 'json', tip: '定义我是什么 (例如: ["player", "enemy"])', group: '被探测属性 (Detectable)' },
+    { path: 'detectable.ccdEnabled', label: '高速检测', type: 'checkbox', tip: '允许被 CCD 探测', group: '被探测属性 (Detectable)' }
   ]
 };
 

@@ -20,6 +20,8 @@ export const SyncTransformSystem: ISystem = {
                 const localTrans = e.localTransform;
 
                 // 简单的坐标相加 (如果不考虑旋转嵌套)
+                e.transform.prevX = e.transform.x;
+                e.transform.prevY = e.transform.y;
                 e.transform.x = parentTrans.x + localTrans.x;
                 e.transform.y = parentTrans.y + localTrans.y;
 
@@ -40,6 +42,8 @@ export const SyncTransformSystem: ISystem = {
                 const ox = e.shape?.offsetX || 0;
                 const oy = e.shape?.offsetY || 0;
 
+                e.transform.prevX = e.transform.x;
+                e.transform.prevY = e.transform.y;
                 e.transform.x = parent.transform.x + ox;
                 e.transform.y = parent.transform.y + oy;
             }

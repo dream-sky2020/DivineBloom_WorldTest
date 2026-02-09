@@ -8,7 +8,8 @@ import {
   ShapeType,
   DETECT_AREA_INSPECTOR_FIELDS,
   TRANSFORM_INSPECTOR_FIELDS,
-  Transform, Parent, Children, LocalTransform, Shape
+  Transform, Parent, Children, LocalTransform, Shape,
+  SHAPE_INSPECTOR_FIELDS, LOCAL_TRANSFORM_INSPECTOR_FIELDS
 } from '@components';
 
 // --- Schema Definition ---
@@ -130,13 +131,21 @@ export const PortalEntity: IEntityDefinition<typeof PortalEntitySchema> = {
           height: height,
       }),
       detectArea: DetectArea.create({
-          shapeId: 'sensor',
           target: 'player', // Always target player
           debugColor: isForced ? 'rgba(168, 85, 247, 0.8)' : 'rgba(249, 115, 22, 0.8)'
       })
     });
 
     root.children = Children.create([sensor]);
+    sensor.inspector = Inspector.create({
+      fields: [
+        ...(LOCAL_TRANSFORM_INSPECTOR_FIELDS || []),
+        ...(SHAPE_INSPECTOR_FIELDS || []),
+        ...(DETECT_AREA_INSPECTOR_FIELDS || [])
+      ],
+      hitPriority: 60,
+      editorBox: { w: 30, h: 30, scale: 1 }
+    });
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,

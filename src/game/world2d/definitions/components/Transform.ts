@@ -4,7 +4,9 @@ import { IComponentDefinition } from '../interface/IComponent';
 // 1. 定义 Schema (Zod)
 const transformSchema = z.object({
   x: z.number().default(0),
-  y: z.number().default(0)
+  y: z.number().default(0),
+  prevX: z.number().default(0),
+  prevY: z.number().default(0)
 });
 
 // 2. 推导类型 (TypeScript)
@@ -21,9 +23,11 @@ export const Transform: IComponentDefinition<typeof transformSchema, TransformDa
   create(xOrObj: number | Partial<TransformData> = 0, y: number = 0): TransformData {
     let data;
     if (typeof xOrObj === 'object') {
-      data = { x: xOrObj.x || 0, y: xOrObj.y || 0 };
+      const x = xOrObj.x || 0;
+      const yVal = xOrObj.y || 0;
+      data = { x, y: yVal, prevX: x, prevY: yVal };
     } else {
-      data = { x: xOrObj, y };
+      data = { x: xOrObj, y, prevX: xOrObj, prevY: y };
     }
     return transformSchema.parse(data);
   },
@@ -31,7 +35,9 @@ export const Transform: IComponentDefinition<typeof transformSchema, TransformDa
   serialize(component: TransformData) {
     return {
       x: component.x,
-      y: component.y
+      y: component.y,
+      prevX: component.prevX,
+      prevY: component.prevY
     };
   },
 

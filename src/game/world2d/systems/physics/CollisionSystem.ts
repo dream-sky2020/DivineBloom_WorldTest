@@ -10,6 +10,8 @@ import { IEntity } from '@definitions/interface/IEntity';
  */
 export const CollisionSystem: ISystem & {
     ITERATIONS: number;
+    _getShapeRadius(shape: any): number;
+    _checkSweepHit(prevPos: any, currPos: any, moverShape: any, targetShape: any, targetTransform: any, buffer: number): boolean;
     _checkBroadphase(transA: any, transB: any, shapeA: any, shapeB: any): boolean;
     _getBroadphaseSize(shape: any): number;
     _resolveCollision(entityA: IEntity, entityB: IEntity, mtv: any): void;
@@ -53,7 +55,73 @@ export const CollisionSystem: ISystem & {
                     const proxyA = { transform: transformA, shape: shapeA, collider: entityA.collider };
                     const proxyB = { transform: transformB, shape: shapeB, collider: entityB.collider };
 
-                    const mtv = CollisionUtils.checkCollision(proxyA, proxyB);
+                    let mtv = CollisionUtils.checkCollision(proxyA, proxyB);
+
+                    if (!mtv) {
+                        const prevA = {
+                            x: transformA.prevX ?? transformA.x,
+                            y: transformA.prevY ?? transformA.y
+                        };
+                        const prevB = {
+                            x: transformB.prevX ?? transformB.x,
+                            y: transformB.prevY ?? transformB.y
+                        };
+
+                        const moveDistA = Math.hypot(transformA.x - prevA.x, transformA.y - prevA.y);
+                        const moveDistB = Math.hypot(transformB.x - prevB.x, transformB.y - prevB.y);
+
+                        const ccdA = entityA.collider?.ccdEnabled && moveDistA >= (entityA.collider?.ccdMinDistance || 0);
+                        const ccdB = entityB.collider?.ccdEnabled && moveDistB >= (entityB.collider?.ccdMinDistance || 0);
+
+                        if (ccdA) {
+                            const moverPrev = {
+                                x: prevA.x + (shapeA.offsetX || 0),
+                                y: prevA.y + (shapeA.offsetY || 0)
+                            };
+                            const moverCurr = {
+                                x: transformA.x + (shapeA.offsetX || 0),
+                                y: transformA.y + (shapeA.offsetY || 0)
+                            };
+                            const hit = this._checkSweepHit(
+                                moverPrev,
+                                moverCurr,
+                                shapeA,
+                                shapeB,
+                                transformB,
+                                entityA.collider?.ccdBuffer || 0
+                            );
+                            if (hit && !entityA.collider?.isStatic) {
+                                transformA.x = prevA.x;
+                                transformA.y = prevA.y;
+                            }
+                        }
+
+                        if (ccdB) {
+                            const moverPrev = {
+                                x: prevB.x + (shapeB.offsetX || 0),
+                                y: prevB.y + (shapeB.offsetY || 0)
+                            };
+                            const moverCurr = {
+                                x: transformB.x + (shapeB.offsetX || 0),
+                                y: transformB.y + (shapeB.offsetY || 0)
+                            };
+                            const hit = this._checkSweepHit(
+                                moverPrev,
+                                moverCurr,
+                                shapeB,
+                                shapeA,
+                                transformA,
+                                entityB.collider?.ccdBuffer || 0
+                            );
+                            if (hit && !entityB.collider?.isStatic) {
+                                transformB.x = prevB.x;
+                                transformB.y = prevB.y;
+                            }
+                        }
+
+                        mtv = CollisionUtils.checkCollision(proxyA, proxyB);
+                    }
+
                     if (mtv) {
                         this._resolveCollision(entityA, entityB, mtv);
                     }
@@ -74,6 +142,57 @@ export const CollisionSystem: ISystem & {
                 }
             }
         }
+    },
+
+    _getShapeRadius(shape: any): number {
+        if (!shape) return 0;
+        if (shape.type === ShapeType.CIRCLE || shape.type === ShapeType.POINT) {
+            return shape.type === ShapeType.POINT ? 0.1 : (shape.radius || 0);
+        }
+        if (shape.type === ShapeType.AABB || shape.type === ShapeType.OBB) {
+            const w = shape.width || 0;
+            const h = shape.height || 0;
+            return Math.sqrt(w * w + h * h) / 2;
+        }
+        if (shape.type === ShapeType.CAPSULE) {
+            const p1 = shape.p1 || { x: 0, y: 0 };
+            const p2 = shape.p2 || { x: 0, y: 0 };
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            return (shape.radius || 0) + len / 2;
+        }
+        return 0;
+    },
+
+    _checkSweepHit(prevPos: any, currPos: any, moverShape: any, targetShape: any, targetTransform: any, buffer: number) {
+        if (!targetShape || !targetTransform) return false;
+
+        const moverRadius = this._getShapeRadius(moverShape) + (buffer || 0);
+        const targetCenter = {
+            x: targetTransform.x + (targetShape.offsetX || 0),
+            y: targetTransform.y + (targetShape.offsetY || 0)
+        };
+
+        if (targetShape.type === ShapeType.CIRCLE || targetShape.type === ShapeType.POINT) {
+            const radius = (targetShape.type === ShapeType.POINT ? 0.1 : (targetShape.radius || 0)) + moverRadius;
+            return CollisionUtils.checkSegmentCircle(prevPos, currPos, { ...targetCenter, radius });
+        }
+
+        if (targetShape.type === ShapeType.AABB) {
+            const halfW = (targetShape.width || 0) / 2 + moverRadius;
+            const halfH = (targetShape.height || 0) / 2 + moverRadius;
+            const aabb = {
+                minX: targetCenter.x - halfW,
+                maxX: targetCenter.x + halfW,
+                minY: targetCenter.y - halfH,
+                maxY: targetCenter.y + halfH
+            };
+            return CollisionUtils.checkSegmentAABB(prevPos, currPos, aabb);
+        }
+
+        const r = Math.max(targetShape.width || 0, targetShape.height || 0, targetShape.radius || 0) / 2 + moverRadius;
+        return CollisionUtils.checkSegmentCircle(prevPos, currPos, { ...targetCenter, radius: r });
     },
 
     /**

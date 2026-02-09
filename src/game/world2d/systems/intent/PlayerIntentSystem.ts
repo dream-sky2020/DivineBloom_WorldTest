@@ -33,8 +33,8 @@ export const PlayerIntentSystem: ISystem = {
                 });
             }
 
-            // Ensure weapon intent component exists (if entity has weapon)
-            if (e.weapon && !e.weaponIntent) {
+            // Ensure weapon intent component exists
+            if (!e.weaponIntent) {
                 world.addComponent(e, 'weaponIntent', {
                     wantsToFire: false,
                     aimDirection: { x: 1, y: 0 }
@@ -88,6 +88,36 @@ export const PlayerIntentSystem: ISystem = {
                         e.weaponIntent.aimDirection.y = dy;
                     }
                     // 否则保持上次的射击方向
+                }
+            }
+
+            // 将玩家的武器意图同步到跟随武器实体
+            if (e.weaponIntent) {
+                const weaponFollowers = world.with('weapon', 'follow');
+                for (const weaponEntity of weaponFollowers) {
+                    const w = weaponEntity as IEntity;
+                    const target = w.follow?.target;
+                    const match = target === 'player'
+                        || target === e.id
+                        || target === (e as any).__id
+                        || target === (e as any).uuid
+                        || target === e.name
+                        || target === e.type;
+
+                    if (!match) continue;
+
+                    if (!w.weaponIntent) {
+                        world.addComponent(w, 'weaponIntent', {
+                            wantsToFire: false,
+                            aimDirection: { x: 1, y: 0 }
+                        });
+                    }
+
+                    if (w.weaponIntent) {
+                        w.weaponIntent.wantsToFire = e.weaponIntent.wantsToFire;
+                        w.weaponIntent.aimDirection.x = e.weaponIntent.aimDirection.x;
+                        w.weaponIntent.aimDirection.y = e.weaponIntent.aimDirection.y;
+                    }
                 }
             }
 

@@ -9,6 +9,7 @@ import {
     ObstacleEntity,
     SceneEntity,
     BulletEntity,
+    WeaponEntity,
     GlobalEntity,
     PortalEntity,
     PortalDestinationEntity
@@ -32,6 +33,7 @@ class EntityRegistry {
         this.register(ObstacleEntity);
         this.register(SceneEntity);
         this.register(BulletEntity);
+        this.register(WeaponEntity);
         this.register(GlobalEntity);
         this.register(PortalEntity);
         this.register(PortalDestinationEntity);

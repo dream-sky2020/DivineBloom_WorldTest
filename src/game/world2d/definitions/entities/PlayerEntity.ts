@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import { PlayerConfig } from '@schema/assets';
+import { WeaponEntity } from './WeaponEntity';
 import {
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
@@ -10,15 +11,49 @@ import {
   Bounds, BOUNDS_INSPECTOR_FIELDS,
   Detectable,
   Health, HEALTH_INSPECTOR_FIELDS,
-  Weapon, WEAPON_INSPECTOR_FIELDS,
-  WeaponIntent,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Shape, ShapeType
+  Shape, ShapeType, SHAPE_INSPECTOR_FIELDS
 } from '@components';
 
 // --- Schema Definition ---
+
+const weaponConfigSchema = z.object({
+  weaponType: z.string().optional(),
+  damage: z.number().optional(),
+  fireRate: z.number().optional(),
+  bulletSpeed: z.number().optional(),
+  bulletColor: z.string().optional(),
+  bulletLifeTime: z.number().optional(),
+  bulletRadius: z.number().optional(),
+  bulletSpriteId: z.string().optional(),
+  bulletSpriteScale: z.number().optional(),
+  bulletDetectCcdEnabled: z.boolean().optional(),
+  bulletDetectCcdMinDistance: z.number().optional(),
+  bulletDetectCcdBuffer: z.number().optional(),
+  bulletShape: z.object({
+    type: z.string().optional(),
+    radius: z.number().optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    rotation: z.number().optional(),
+    offsetX: z.number().optional(),
+    offsetY: z.number().optional(),
+    p1: z.object({ x: z.number(), y: z.number() }).optional(),
+    p2: z.object({ x: z.number(), y: z.number() }).optional()
+  }).optional(),
+  orbitRadius: z.number().optional(),
+  orbitAngle: z.number().optional(),
+  orbitSpeed: z.number().optional(),
+  followSpeed: z.number().optional(),
+  followRangeX: z.number().optional(),
+  followRangeY: z.number().optional(),
+  linearAccelFactor: z.number().optional(),
+  spriteId: z.string().optional(),
+  spriteScale: z.number().optional(),
+  spriteTint: z.string().optional()
+});
 
 export const PlayerEntitySchema = z.object({
   x: z.number(),
@@ -26,15 +61,9 @@ export const PlayerEntitySchema = z.object({
   name: z.string().optional().default('Player'),
   assetId: z.string().optional().default('hero'),
   scale: z.number().optional().default(0.7),
-  // 允许传入武器配置
-  weaponConfig: z.object({
-    weaponType: z.string().optional(),
-    damage: z.number().optional(),
-    fireRate: z.number().optional(),
-    bulletSpeed: z.number().optional(),
-    bulletColor: z.string().optional(),
-    bulletLifeTime: z.number().optional()
-  }).optional()
+  // 允许传入单个或多个武器配置
+  weaponConfig: weaponConfigSchema.optional(),
+  weaponConfigs: z.array(weaponConfigSchema).optional()
 });
 
 export type PlayerEntityData = z.infer<typeof PlayerEntitySchema>;
@@ -47,8 +76,8 @@ const INSPECTOR_FIELDS = [
   { path: 'speed', label: '基础速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
   { path: 'fastSpeed', label: '奔跑速度', type: 'number', props: { min: 0, step: 10 }, group: '角色属性' },
   ...(HEALTH_INSPECTOR_FIELDS || []),
-  ...(WEAPON_INSPECTOR_FIELDS || []),
   ...(VELOCITY_INSPECTOR_FIELDS || []),
+  ...(SHAPE_INSPECTOR_FIELDS || []),
   ...(COLLIDER_INSPECTOR_FIELDS || []),
   ...(BOUNDS_INSPECTOR_FIELDS || []),
   ...(SPRITE_INSPECTOR_FIELDS || []),
@@ -69,14 +98,14 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       return null;
     }
 
-    const { x, y, name, assetId, scale, weaponConfig } = result.data;
+    const { x, y, name, assetId, scale, weaponConfig, weaponConfigs } = result.data;
 
     const root = world.add({
       type: 'player',
       name: name,
       transform: Transform.create(x, y),
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 12 }),
-      collider: Collider.create({ shapeId: 'body' }),
+      collider: Collider.create(),
       detectable: Detectable.create(['player', 'teleportable']),
       velocity: Velocity.create(),
       input: true,
@@ -85,15 +114,6 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       fastSpeed: (PlayerConfig as any).fastSpeed || 320,
       bounds: Bounds.create(),
       health: Health.create({ maxHealth: 100, currentHealth: 100 }),
-      weapon: Weapon.create({
-        weaponType: weaponConfig?.weaponType || 'pistol',
-        damage: weaponConfig?.damage || 10,
-        fireRate: weaponConfig?.fireRate || 0.5,
-        bulletSpeed: weaponConfig?.bulletSpeed || 500,
-        bulletColor: weaponConfig?.bulletColor || '#FFFF00',
-        bulletLifeTime: weaponConfig?.bulletLifeTime || 5
-      }),
-      weaponIntent: WeaponIntent.create(),
       sprite: Sprite.create(assetId, { scale }),
       animation: Animation.create('idle'),
     });
@@ -102,6 +122,48 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       fields: INSPECTOR_FIELDS,
       hitPriority: 100,
       editorBox: { w: 40, h: 40, scale: 1 }
+    });
+
+    const configList = (weaponConfigs && weaponConfigs.length > 0)
+      ? weaponConfigs
+      : (weaponConfig ? [weaponConfig] : [{}]);
+
+    const count = configList.length;
+    configList.forEach((cfg, index) => {
+      const orbitAngle = cfg.orbitAngle ?? (count > 1 ? (index * Math.PI * 2) / count : 0);
+      const weaponEntityData: any = {
+        x,
+        y,
+        ownerTarget: 'player',
+        orbitRadius: cfg.orbitRadius ?? 40,
+        orbitAngle,
+        orbitSpeed: cfg.orbitSpeed ?? 2,
+        followSpeed: cfg.followSpeed ?? 300,
+        followRangeX: cfg.followRangeX ?? 0,
+        followRangeY: cfg.followRangeY ?? 0,
+        linearAccelFactor: cfg.linearAccelFactor ?? 0,
+        weaponConfig: {
+          weaponType: cfg.weaponType,
+          damage: cfg.damage,
+          fireRate: cfg.fireRate,
+          bulletSpeed: cfg.bulletSpeed,
+          bulletColor: cfg.bulletColor,
+          bulletLifeTime: cfg.bulletLifeTime,
+          bulletRadius: cfg.bulletRadius,
+          bulletSpriteId: cfg.bulletSpriteId,
+          bulletSpriteScale: cfg.bulletSpriteScale,
+          bulletDetectCcdEnabled: cfg.bulletDetectCcdEnabled,
+          bulletDetectCcdMinDistance: cfg.bulletDetectCcdMinDistance,
+          bulletDetectCcdBuffer: cfg.bulletDetectCcdBuffer,
+          bulletShape: cfg.bulletShape
+        }
+      };
+
+      if (cfg.spriteId !== undefined) weaponEntityData.spriteId = cfg.spriteId;
+      if (cfg.spriteScale !== undefined) weaponEntityData.spriteScale = cfg.spriteScale;
+      if (cfg.spriteTint !== undefined) weaponEntityData.spriteTint = cfg.spriteTint;
+
+      WeaponEntity.create(weaponEntityData);
     });
 
     return root;

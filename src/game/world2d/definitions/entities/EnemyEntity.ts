@@ -13,7 +13,8 @@ import {
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Parent, Children, LocalTransform, Shape, ShapeType
+  Parent, Children, LocalTransform, Shape, ShapeType,
+  SHAPE_INSPECTOR_FIELDS, LOCAL_TRANSFORM_INSPECTOR_FIELDS
 } from '@components';
 
 // --- Schema Definition ---
@@ -58,6 +59,7 @@ const INSPECTOR_FIELDS = [
   { path: 'name', label: '名称', type: 'text', tip: '敌人在场景中的标识名', group: '基本属性' },
   ...(TRANSFORM_INSPECTOR_FIELDS || []),
   ...(VELOCITY_INSPECTOR_FIELDS || []),
+  ...(SHAPE_INSPECTOR_FIELDS || []),
   ...(COLLIDER_INSPECTOR_FIELDS || []),
   ...(BOUNDS_INSPECTOR_FIELDS || []),
   ...(HEALTH_INSPECTOR_FIELDS || []),
@@ -124,7 +126,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create(isStunned ? 'stunned' : 'idle'),
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
-      collider: Collider.create({ shapeId: 'body' }),
+      collider: Collider.create(),
       detectable: Detectable.create(['enemy', 'teleportable']),
 
       // Trigger 放在根节点
@@ -141,10 +143,19 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       localTransform: LocalTransform.create(0, 0),
       name: `${root.name}_Sensor`,
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: sensorRadius }),
-      detectArea: DetectArea.create({ shapeId: 'sensor', target: 'player' })
+      detectArea: DetectArea.create({ target: 'player' })
     });
 
     root.children = Children.create([sensor]);
+    sensor.inspector = Inspector.create({
+      fields: [
+        ...(LOCAL_TRANSFORM_INSPECTOR_FIELDS || []),
+        ...(SHAPE_INSPECTOR_FIELDS || []),
+        ...(DETECT_AREA_INSPECTOR_FIELDS || [])
+      ],
+      hitPriority: 60,
+      editorBox: { w: 30, h: 30, scale: 1 }
+    });
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,

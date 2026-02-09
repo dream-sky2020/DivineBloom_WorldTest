@@ -68,6 +68,8 @@ export const ExecuteUtils = {
                 return;
             }
 
+            targetEntity.transform.prevX = finalX;
+            targetEntity.transform.prevY = finalY;
             targetEntity.transform.x = finalX;
             targetEntity.transform.y = finalY;
 
@@ -89,7 +91,7 @@ export const ExecuteUtils = {
             logger.info(`Triggering transition to ${mapId}:${entryId} for player`);
 
             if (targetEntity) {
-                world.addComponent(targetEntity, 'sceneTransition', SceneTransition({
+                world.addComponent(targetEntity, 'sceneTransition', SceneTransition.create({
                     mapId,
                     entryId
                 }));

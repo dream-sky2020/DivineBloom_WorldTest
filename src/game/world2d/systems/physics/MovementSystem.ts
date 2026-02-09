@@ -21,6 +21,8 @@ export const MovementSystem: ISystem = {
             if (!transform || !velocity) continue;
 
             // 1. 基础位移 (Euler integration)
+            transform.prevX = transform.x;
+            transform.prevY = transform.y;
             transform.x += velocity.x * dt;
             transform.y += velocity.y * dt;
 

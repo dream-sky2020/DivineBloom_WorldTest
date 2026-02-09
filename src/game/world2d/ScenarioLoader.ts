@@ -79,6 +79,8 @@ export class ScenarioLoader {
         } else if (spawnPoint) {
             // 强制覆盖玩家位置到入口点
             if (result.player.transform) {
+                result.player.transform.prevX = spawnPoint.x
+                result.player.transform.prevY = spawnPoint.y
                 result.player.transform.x = spawnPoint.x
                 result.player.transform.y = spawnPoint.y
             }

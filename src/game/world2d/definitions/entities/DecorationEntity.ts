@@ -25,15 +25,22 @@ export const DecorationEntitySchema = z.object({
             height: z.number(),
             color: z.string()
         }).optional(),
-        collider: z.object({
-            type: z.string(), // z.nativeEnum(ShapeType) might be better if type matches ShapeType
+        shape: z.object({
+            type: z.nativeEnum(ShapeType).optional(),
             radius: z.number().optional(),
             width: z.number().optional(),
             height: z.number().optional(),
             rotation: z.number().optional(),
             offsetX: z.number().optional(),
             offsetY: z.number().optional(),
-            isStatic: z.boolean().optional().default(true)
+            p1: z.object({ x: z.number(), y: z.number() }).optional(),
+            p2: z.object({ x: z.number(), y: z.number() }).optional()
+        }).optional(),
+        collider: z.object({
+            isStatic: z.boolean().optional().default(true),
+            isTrigger: z.boolean().optional().default(false),
+            layer: z.number().optional().default(1),
+            mask: z.number().optional().default(0xFFFFFFFF)
         }).optional()
     }).optional().default({} as any)
 });
@@ -66,7 +73,7 @@ export const DecorationEntity: IEntityDefinition<typeof DecorationEntitySchema> 
         }
 
         const { x, y, name, config } = result.data;
-        const { spriteId, scale, zIndex, rect, collider: customCollider } = config;
+        const { spriteId, scale, zIndex, rect, shape: customShape, collider: customCollider } = config;
 
         let spriteComponent;
         let animationComponent;
@@ -90,17 +97,23 @@ export const DecorationEntity: IEntityDefinition<typeof DecorationEntitySchema> 
             collider = Collider.box(rect.width, rect.height, true);
         }
 
-        const colliderType = customCollider?.type || (rect ? ShapeType.AABB : ShapeType.CIRCLE);
-        const colliderShape = collider
+        const resolvedShape = customShape || (rect ? {
+            type: ShapeType.AABB,
+            width: rect.width,
+            height: rect.height
+        } : undefined);
+
+        const colliderShape = resolvedShape
             ? Shape.create({
-                // @ts-ignore
-                type: colliderType,
-                width: customCollider?.width || rect?.width || 0,
-                height: customCollider?.height || rect?.height || 0,
-                radius: customCollider?.radius || 0,
-                rotation: customCollider?.rotation || 0,
-                offsetX: customCollider?.offsetX || 0,
-                offsetY: customCollider?.offsetY || 0
+                type: resolvedShape.type,
+                width: resolvedShape.width,
+                height: resolvedShape.height,
+                radius: resolvedShape.radius,
+                rotation: resolvedShape.rotation,
+                offsetX: resolvedShape.offsetX,
+                offsetY: resolvedShape.offsetY,
+                p1: resolvedShape.p1,
+                p2: resolvedShape.p2
             })
             : undefined;
 
@@ -146,16 +159,18 @@ export const DecorationEntity: IEntityDefinition<typeof DecorationEntitySchema> 
                     height: rect.height,
                     color: rect.color || sprite?.tint
                 } : undefined,
-                collider: collider ? { 
-                    ...collider,
-                    type: shape?.type,
-                    width: shape?.width,
-                    height: shape?.height,
-                    radius: shape?.radius,
-                    rotation: shape?.rotation,
-                    offsetX: shape?.offsetX,
-                    offsetY: shape?.offsetY
-                } : undefined
+                shape: shape ? {
+                    type: shape.type,
+                    width: shape.width,
+                    height: shape.height,
+                    radius: shape.radius,
+                    rotation: shape.rotation,
+                    offsetX: shape.offsetX,
+                    offsetY: shape.offsetY,
+                    p1: shape.p1,
+                    p2: shape.p2
+                } : undefined,
+                collider: collider ? { ...collider } : undefined
             }
         }
     },

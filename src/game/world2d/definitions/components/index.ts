@@ -11,7 +11,7 @@ import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
 import { Detectable } from './Detectable';
 import { DetectInput } from './DetectInput';
-import { DetectProjectile } from './DetectProjectile';
+import { Follow } from './Follow';
 import { Health } from './Health';
 import { HordeAI } from './HordeAI';
 import { Inspector } from './Inspector';
@@ -46,7 +46,7 @@ const components = [
     DetectArea,
     Detectable,
     DetectInput,
-    DetectProjectile,
+    Follow,
     Health,
     HordeAI,
     Inspector,
@@ -86,7 +86,7 @@ export * from './Commands';
 export * from './DetectArea';
 export * from './Detectable';
 export * from './DetectInput';
-export * from './DetectProjectile';
+export * from './Follow';
 export * from './Health';
 export * from './Inspector';
 export * from './LifeTime';

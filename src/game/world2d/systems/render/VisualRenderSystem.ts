@@ -179,7 +179,10 @@ export const VisualRenderSystem: ISystem & {
         if (!sprite.id || sprite.id === 'rect') return;
 
         const texture = renderer.assetManager.getTexture(sprite.id);
-        if (!texture || texture.width === 0) return;
+        if (!texture || texture.width === 0) {
+            renderer.assetManager.loadTexture(sprite.id);
+            return;
+        }
         const isImage = typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement;
         if (isImage && !texture.complete) return;
 
@@ -207,7 +210,10 @@ export const VisualRenderSystem: ISystem & {
         if (!sprite.id) return;
 
         const texture = renderer.assetManager.getTexture(sprite.id);
-        if (!texture) return;
+        if (!texture) {
+            renderer.assetManager.loadTexture(sprite.id);
+            return;
+        }
 
         const drawPos = {
             x: transform.x + (sprite.offsetX || 0),

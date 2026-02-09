@@ -12,6 +12,7 @@ import { CameraSystem } from '@systems/camera/CameraSystem';
 
 // Control
 import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
+import { FollowSystem } from '@systems/control/FollowSystem';
 import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
 import { WeaponSystem } from '@systems/control/WeaponSystem';
 
@@ -50,6 +51,7 @@ import { EditorGridRenderSystem } from '@systems/render/EditorGridRenderSystem';
 import { PhysicsDebugRenderSystem } from '@systems/render/PhysicsDebugRenderSystem';
 import { PortalDebugRenderSystem } from '@systems/render/PortalDebugRenderSystem';
 import { StatusRenderSystem } from '@systems/render/StatusRenderSystem';
+import { WeaponDebugRenderSystem } from '@systems/render/WeaponDebugRenderSystem';
 import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
 
 // Sense
@@ -97,6 +99,7 @@ export const Registry: Record<string, any> = {
     'enemy-ai-intent': EnemyAIIntentSystem,
     'player-control': PlayerControlSystem,
     'enemy-control': EnemyControlSystem,
+    'follow': FollowSystem,
     'weapon': WeaponSystem,
 
     // --- Detection & AI Sense ---
@@ -120,6 +123,7 @@ export const Registry: Record<string, any> = {
     'physics-debug-render': PhysicsDebugRenderSystem,
     'portal-debug-render': PortalDebugRenderSystem,
     'status-render': StatusRenderSystem,
+    'weapon-debug-render': WeaponDebugRenderSystem,
 };
 
 /**

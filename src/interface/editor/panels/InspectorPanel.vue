@@ -19,6 +19,7 @@
           <span class="realtime-title">实时数据预览</span>
           <div class="realtime-actions">
             <button class="mini-btn" @click="refreshEntityPreview" title="刷新实体实时数据">🔄</button>
+            <button class="mini-btn" @click="copyEntitySnapshot" title="复制当前实体实时数据">📋</button>
             <button class="mini-btn export-btn" @click="exportEntitySnapshot" title="导出当前实体实时数据">
               💾
             </button>
@@ -96,7 +97,7 @@
 
                 <!-- 文本类型 -->
                 <input 
-                  v-else-if="field.type === 'text'"
+                  v-else-if="field.type === 'text' || field.type === 'string'"
                   :value="getNestedValue(activeEditingGroup === group.name ? groupDraftData : localEntityState, field.path, lastUpdate)"
                   @input="activeEditingGroup === group.name && setNestedValue(groupDraftData, field.path, getEventValue($event))"
                   :readonly="activeEditingGroup !== group.name"
@@ -519,6 +520,32 @@ const exportEntitySnapshot = () => {
   link.download = `${name}_realtime_${Date.now()}.json`
   link.click()
   URL.revokeObjectURL(url)
+}
+
+const copyEntitySnapshot = async () => {
+  if (!localEntityState.value) return
+  const snapshot = buildEntitySnapshot(localEntityState.value)
+  const json = safeStringify(snapshot, 2, 200000)
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(json)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = json
+      textarea.setAttribute('readonly', 'true')
+      textarea.style.position = 'absolute'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+    alert('已复制实体数据到剪贴板')
+  } catch (e) {
+    console.error('复制失败', e)
+    alert('复制失败，请查看控制台')
+  }
 }
 
 // 刷新频率控制

@@ -17,6 +17,8 @@ export const DetectAreaSystem: ISystem & {
     addedStaticEntities: WeakSet<object>;
     sceneId: string | null;
     _calculateBounds(transform: any, shape: any): any;
+    _getShapeRadius(shape: any): number;
+    _checkSweepHit(prevPos: any, currPos: any, detectorShape: any, targetShape: any, targetTransform: any, buffer: number): boolean;
     reset(): void;
 } = {
     name: 'detect-area',
@@ -30,6 +32,57 @@ export const DetectAreaSystem: ISystem & {
     // 场景是否重置过 (用于清空静态缓存)
     sceneId: null,
 
+    _getShapeRadius(shape: any): number {
+        if (!shape) return 0;
+        if (shape.type === ShapeType.CIRCLE || shape.type === ShapeType.POINT) {
+            return shape.type === ShapeType.POINT ? 0.1 : (shape.radius || 0);
+        }
+        if (shape.type === ShapeType.AABB || shape.type === ShapeType.OBB) {
+            const w = shape.width || 0;
+            const h = shape.height || 0;
+            return Math.sqrt(w * w + h * h) / 2;
+        }
+        if (shape.type === ShapeType.CAPSULE) {
+            const p1 = shape.p1 || { x: 0, y: 0 };
+            const p2 = shape.p2 || { x: 0, y: 0 };
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            return (shape.radius || 0) + len / 2;
+        }
+        return 0;
+    },
+
+    _checkSweepHit(prevPos: any, currPos: any, detectorShape: any, targetShape: any, targetTransform: any, buffer: number) {
+        if (!targetShape || !targetTransform) return false;
+
+        const detectorRadius = this._getShapeRadius(detectorShape) + (buffer || 0);
+        const targetCenter = {
+            x: targetTransform.x + (targetShape.offsetX || 0),
+            y: targetTransform.y + (targetShape.offsetY || 0)
+        };
+
+        if (targetShape.type === ShapeType.CIRCLE || targetShape.type === ShapeType.POINT) {
+            const radius = (targetShape.type === ShapeType.POINT ? 0.1 : (targetShape.radius || 0)) + detectorRadius;
+            return CollisionUtils.checkSegmentCircle(prevPos, currPos, { ...targetCenter, radius });
+        }
+
+        if (targetShape.type === ShapeType.AABB) {
+            const halfW = (targetShape.width || 0) / 2 + detectorRadius;
+            const halfH = (targetShape.height || 0) / 2 + detectorRadius;
+            const aabb = {
+                minX: targetCenter.x - halfW,
+                maxX: targetCenter.x + halfW,
+                minY: targetCenter.y - halfH,
+                maxY: targetCenter.y + halfH
+            };
+            return CollisionUtils.checkSegmentAABB(prevPos, currPos, aabb);
+        }
+
+        const r = Math.max(targetShape.width || 0, targetShape.height || 0, targetShape.radius || 0) / 2 + detectorRadius;
+        return CollisionUtils.checkSegmentCircle(prevPos, currPos, { ...targetCenter, radius: r });
+    },
+
     update(dt: number) {
         // 0. 场景变更检测 (简单起见，如果实体数量变为0或者外部通知，应重置)
         // 这里简单实现：每帧清理动态层
@@ -37,7 +90,6 @@ export const DetectAreaSystem: ISystem & {
 
         // 1. 准备实体查询
         const detectors = world.with('detectArea', 'shape', 'transform');
-        const projectiles = world.with('detectProjectile', 'transform');
         const targets = world.with('shape', 'transform');
 
         // 2. 更新空间索引 (Targets)
@@ -84,8 +136,21 @@ export const DetectAreaSystem: ISystem & {
 
             if (!shape || !transform) continue;
 
+            const detectorShape = shape;
+
+            const currCenter = {
+                x: transform.x + (detectorShape.offsetX || 0),
+                y: transform.y + (detectorShape.offsetY || 0)
+            };
+            const prevCenter = {
+                x: (transform.prevX ?? transform.x) + (detectorShape.offsetX || 0),
+                y: (transform.prevY ?? transform.y) + (detectorShape.offsetY || 0)
+            };
+            const moveDist = Math.hypot(currCenter.x - prevCenter.x, currCenter.y - prevCenter.y);
+            const useCCD = !!detect.ccdEnabled && moveDist >= (detect.ccdMinDistance || 0);
+
             // 构造 Detector 的 Bounds 用于查询网格
-            const detectorBounds = this._calculateBounds(transform, shape);
+            const detectorBounds = this._calculateBounds(transform, detectorShape);
 
             // 3.1 空间查询：只获取附近的潜在目标
             const candidates = this.grid.query(detectorBounds);
@@ -120,92 +185,28 @@ export const DetectAreaSystem: ISystem & {
                 if (!targetShape || !targetTransform) continue;
 
                 // 碰撞检测 (使用 CollisionUtils 的新统一接口)
-                const proxyEntity = { transform: transform, shape: shape };
+                const proxyEntity = { transform: transform, shape: detectorShape };
                 const proxyTarget = { transform: targetTransform, shape: targetShape };
 
-                if (CollisionUtils.checkCollision(proxyEntity, proxyTarget)) {
+                const allowCCD = !!detect.ccdEnabled && !!detectable.ccdEnabled;
+                let hit = false;
+
+                if (useCCD && allowCCD) {
+                    hit = this._checkSweepHit(prevCenter, currCenter, detectorShape, targetShape, targetTransform, detect.ccdBuffer || 0);
+                } else {
+                    hit = !!CollisionUtils.checkCollision(proxyEntity, proxyTarget);
+                }
+
+                if (hit) {
                     // [Updated] 存入结果的是逻辑实体 (通常是 Root)
                     const logicEntity = t.detectable ? t : t.parent.entity;
                     detect.results.push(logicEntity);
                 }
             }
+
         }
 
-        // 4. 处理投射物检测 (DetectProjectile - CCD)
-        for (const entity of projectiles) {
-            const e = entity as IEntity;
-            const proj = e.detectProjectile;
-            const currPos = e.transform;
-            const prevPos = proj.prevPosition || { x: currPos.x, y: currPos.y };
-
-            proj.results = [];
-
-            // 构造射线的包围盒
-            const minX = Math.min(prevPos.x, currPos.x) - 10; // 稍微扩大一点 buffer
-            const minY = Math.min(prevPos.y, currPos.y) - 10;
-            const maxX = Math.max(prevPos.x, currPos.x) + 10;
-            const maxY = Math.max(prevPos.y, currPos.y) + 10;
-
-            const rayBounds = { minX, minY, maxX, maxY };
-            const candidates = this.grid.query(rayBounds);
-
-            const requiredLabels = Array.isArray(proj.target) ? proj.target : [proj.target];
-            const requiredSet = new Set([...requiredLabels, ...(proj.includeTags || [])]);
-            const excludeSet = proj.excludeTags ? new Set(proj.excludeTags) : null;
-
-            for (const target of candidates) {
-                const t = target as IEntity;
-                if (t === e) continue;
-
-                // [Updated] 获取逻辑实体
-                const detectable = t.detectable || t.parent?.entity?.detectable;
-                if (!detectable) continue;
-
-                const labels = detectable.labels;
-                if (!labels.some((l: string) => requiredSet.has(l))) continue;
-                if (excludeSet && labels.some((l: string) => excludeSet.has(l))) continue;
-
-                // 射线检测
-                const tShape = t.shape;
-                const tPos = t.transform;
-
-                if (!tShape || !tPos) continue;
-
-                // 目标实际位置 (考虑 offset)
-                const targetCenter = {
-                    x: tPos.x + (tShape.offsetX || 0),
-                    y: tPos.y + (tShape.offsetY || 0)
-                };
-
-                let hit = false;
-
-                if (tShape.type === ShapeType.CIRCLE || tShape.type === ShapeType.POINT) {
-                    const radius = tShape.radius || (tShape.type === ShapeType.POINT ? 0.1 : 0);
-                    hit = CollisionUtils.checkSegmentCircle(prevPos, currPos, { ...targetCenter, radius });
-                } else if (tShape.type === ShapeType.AABB) {
-                    const aabb = {
-                        minX: targetCenter.x - tShape.width / 2,
-                        maxX: targetCenter.x + tShape.width / 2,
-                        minY: targetCenter.y - tShape.height / 2,
-                        maxY: targetCenter.y + tShape.height / 2
-                    };
-                    hit = CollisionUtils.checkSegmentAABB(prevPos, currPos, aabb);
-                } else {
-                    // 对于复杂形状 (Capsule, OBB)，退化为 AABB 检测或圆形检测
-                    const r = Math.max(tShape.width || 0, tShape.height || 0, tShape.radius || 0);
-                    hit = CollisionUtils.checkSegmentCircle(prevPos, currPos, { ...targetCenter, radius: r });
-                }
-
-                if (hit) {
-                    // [Updated] 存入结果的是逻辑实体
-                    const logicEntity = t.detectable ? t : t.parent.entity;
-                    proj.results.push(logicEntity);
-                }
-            }
-
-            // 更新上一帧位置
-            proj.prevPosition = { x: currPos.x, y: currPos.y };
-        }
+        // DetectProjectile 已废弃，统一由 DetectArea 处理
     },
 
     /**

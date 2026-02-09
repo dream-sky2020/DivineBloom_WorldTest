@@ -78,7 +78,13 @@ export const WeaponSystem: ISystem & { fireBullet(shooter: IEntity): void } = {
             damage: weapon.damage,
             color: weapon.bulletColor,
             radius: weapon.bulletRadius || 2,
-            maxLifeTime: weapon.bulletLifeTime || 3
+            maxLifeTime: weapon.bulletLifeTime || 3,
+            spriteId: weapon.bulletSpriteId,
+            spriteScale: weapon.bulletSpriteScale,
+            detectCcdEnabled: weapon.bulletDetectCcdEnabled,
+            detectCcdMinDistance: weapon.bulletDetectCcdMinDistance,
+            detectCcdBuffer: weapon.bulletDetectCcdBuffer,
+            bulletShape: weapon.bulletShape
         }) as IEntity;
 
         // 记录子弹来源（可选，用于避免击中自己）

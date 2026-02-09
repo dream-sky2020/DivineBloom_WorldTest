@@ -12,7 +12,7 @@ import {
   Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Shape, ShapeType
+  Shape, ShapeType, SHAPE_INSPECTOR_FIELDS
 } from '@components';
 
 // --- Schema Definition ---
@@ -50,6 +50,7 @@ const INSPECTOR_FIELDS = [
   { path: 'name', label: '名称', type: 'text', tip: '敌人在场景中的标识名', group: '基本属性' },
   ...(TRANSFORM_INSPECTOR_FIELDS || []),
   ...(VELOCITY_INSPECTOR_FIELDS || []),
+  ...(SHAPE_INSPECTOR_FIELDS || []),
   ...(HEALTH_INSPECTOR_FIELDS || []),
   { path: 'sprite.id', label: '精灵 ID', type: 'text', tip: '对应资源库中的敌人图片', group: '精灵 (Sprite)' },
   ...(SPRITE_INSPECTOR_FIELDS || []),
@@ -101,7 +102,7 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create('idle'),
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
-      collider: Collider.create({ shapeId: 'body' }),
+      collider: Collider.create(),
       detectable: Detectable.create(['enemy'])
     });
 

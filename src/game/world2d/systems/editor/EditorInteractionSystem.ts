@@ -79,6 +79,8 @@ export const EditorInteractionSystem: ISystem & {
         if (this.isDragging && target && target.transform) {
             if (mouse.isDown) {
                 // 更新位置 (通过响应式代理更新，Vue 就能感知到)
+                    target.transform.prevX = target.transform.x;
+                    target.transform.prevY = target.transform.y;
                 target.transform.x = worldX + this.dragOffset.x;
                 target.transform.y = worldY + this.dragOffset.y;
 
@@ -215,7 +217,7 @@ export const EditorInteractionSystem: ISystem & {
                 const inspector = e.inspector || e.parent?.entity?.inspector;
 
                 const priority = inspector?.hitPriority ??
-                    (inspector?.priority ? inspector.priority * 10 : 0) ??
+                    (inspector?.priority ? inspector.priority * 10 : undefined) ??
                     e.zIndex ?? 0;
 
                 if (priority >= maxPriority) {
