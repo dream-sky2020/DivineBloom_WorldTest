@@ -25,6 +25,8 @@ const weaponSchema = z.object({
     p1: z.object({ x: z.number(), y: z.number() }).optional(),
     p2: z.object({ x: z.number(), y: z.number() }).optional()
   }).optional(),
+  projectileCount: z.number().int().min(1).default(1),
+  projectileSpreadDeg: z.number().min(0).default(0),
   cooldown: z.number().min(0).default(0),
   isFiring: z.boolean().default(false),
   fireDirection: z.object({
@@ -72,6 +74,8 @@ export const Weapon: IComponentDefinition<typeof weaponSchema, WeaponData> = {
     { path: 'weapon.bulletDetectCcdMinDistance', label: '子弹 CCD 距离阈值', type: 'number', props: { min: 0, step: 1 }, group: '武器 (Weapon)' },
     { path: 'weapon.bulletDetectCcdBuffer', label: '子弹 CCD 缓冲', type: 'number', props: { step: 0.5 }, group: '武器 (Weapon)' },
     { path: 'weapon.bulletShape', label: '子弹形状', type: 'json', tip: '用于 Shape 组件', group: '武器 (Weapon)' },
+    { path: 'weapon.projectileCount', label: '子弹数量', type: 'number', props: { min: 1, step: 1 }, group: '武器 (Weapon)' },
+    { path: 'weapon.projectileSpreadDeg', label: '子弹散射角', type: 'number', props: { min: 0, step: 1 }, group: '武器 (Weapon)' },
     { path: 'weapon.attackMode', label: '攻击基准', type: 'text', group: '武器 (Weapon)' },
     { path: 'weapon.attackArcDeg', label: '允许偏移角', type: 'number', props: { min: 0, step: 5 }, group: '武器 (Weapon)' },
     { path: 'weapon.attackAngleOffsetDeg', label: '方向偏移', type: 'number', props: { step: 5 }, group: '武器 (Weapon)' },

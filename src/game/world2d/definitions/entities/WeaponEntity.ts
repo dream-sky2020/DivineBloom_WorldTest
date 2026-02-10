@@ -6,8 +6,7 @@ import {
     Transform, TRANSFORM_INSPECTOR_FIELDS,
     Weapon, WEAPON_INSPECTOR_FIELDS,
     WeaponIntent,
-    Trigger,
-    Actions,
+    WeaponSense, WEAPON_SENSE_INSPECTOR_FIELDS,
     Sprite, SPRITE_INSPECTOR_FIELDS,
     Inspector, EDITOR_INSPECTOR_FIELDS
 } from '@components';
@@ -36,6 +35,8 @@ const weaponConfigSchema = z.object({
         p1: z.object({ x: z.number(), y: z.number() }).optional(),
         p2: z.object({ x: z.number(), y: z.number() }).optional()
     }).optional(),
+    projectileCount: z.number().optional(),
+    projectileSpreadDeg: z.number().optional(),
     attackMode: z.string().optional(),
     attackArcDeg: z.number().optional(),
     attackAngleOffsetDeg: z.number().optional(),
@@ -63,7 +64,7 @@ const WeaponEntitySchema = z.object({
 export type WeaponEntityData = z.infer<typeof WeaponEntitySchema>;
 
 export function getWeaponFireDirection(entity: any): { x: number; y: number } | null {
-    const dir = entity?.weapon?.fireDirection || entity?.weaponIntent?.aimDirection;
+    const dir = entity?.weapon?.fireDirection || entity?.weaponIntent?.attackDirection;
     if (!dir) return null;
     const len = Math.hypot(dir.x, dir.y);
     if (!len) return null;
@@ -126,23 +127,18 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
                 bulletDetectCcdMinDistance: weaponConfig.bulletDetectCcdMinDistance,
                 bulletDetectCcdBuffer: weaponConfig.bulletDetectCcdBuffer,
                 bulletShape: weaponConfig.bulletShape,
+                projectileCount: weaponConfig.projectileCount,
+                projectileSpreadDeg: weaponConfig.projectileSpreadDeg,
                 attackMode: weaponConfig.attackMode,
                 attackArcDeg: weaponConfig.attackArcDeg,
                 attackAngleOffsetDeg: weaponConfig.attackAngleOffsetDeg,
                 blockIfOutOfRange: weaponConfig.blockIfOutOfRange
             }),
             weaponIntent: WeaponIntent.create(),
+            weaponSense: WeaponSense.create(),
             sprite: Sprite.create(params.spriteId, {
                 scale: params.spriteScale,
                 tint: params.spriteTint
-            }),
-            trigger: Trigger.create({
-                rules: [{ type: 'onSignal', signal: 'weapon_fire' }],
-                actions: ['CREATE_ENTITY'],
-                defaultCooldown: weaponConfig.fireRate ?? 0
-            }),
-            actionCreateEntity: Actions.CreateEntity({
-                entityType: 'bullet'
             })
         });
 
@@ -151,6 +147,7 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
                 ...(TRANSFORM_INSPECTOR_FIELDS || []),
                 ...(FOLLOW_INSPECTOR_FIELDS || []),
                 ...(WEAPON_INSPECTOR_FIELDS || []),
+                ...(WEAPON_SENSE_INSPECTOR_FIELDS || []),
                 ...(SPRITE_INSPECTOR_FIELDS || []),
                 ...(EDITOR_INSPECTOR_FIELDS || [])
             ]
@@ -188,6 +185,8 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
                 bulletDetectCcdMinDistance: entity.weapon.bulletDetectCcdMinDistance,
                 bulletDetectCcdBuffer: entity.weapon.bulletDetectCcdBuffer,
                 bulletShape: entity.weapon.bulletShape,
+                projectileCount: entity.weapon.projectileCount,
+                projectileSpreadDeg: entity.weapon.projectileSpreadDeg,
                 attackMode: entity.weapon.attackMode,
                 attackArcDeg: entity.weapon.attackArcDeg,
                 attackAngleOffsetDeg: entity.weapon.attackAngleOffsetDeg,

@@ -3,6 +3,7 @@ import { canSeePlayer } from '@world2d/ECSCalculateTool/AIUtils';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { AISensory } from '@components';
 
 const logger = createLogger('AISenseSystem');
 
@@ -100,7 +101,7 @@ export const AISenseSystem: ISystem & {
      * 初始化感知组件，带有随机化的计时器以平摊计算压力
      */
     _initSensoryComponent(entity: IEntity) {
-        world.addComponent(entity, 'aiSensory', {
+        world.addComponent(entity, 'aiSensory', AISensory.create({
             distSqToPlayer: Infinity,
             playerPos: { x: 0, y: 0 },
             hasPlayer: false,
@@ -113,7 +114,7 @@ export const AISenseSystem: ISystem & {
             bestPortal: null, // { pos: {x,y}, dest: {x,y}, distImprovement: number }
             // 障碍物感知
             nearbyObstacles: [] // Array of obstacle entities
-        });
+        }));
     },
 
     senseEnvironment(dt: number) {
@@ -137,6 +138,32 @@ export const AISenseSystem: ISystem & {
 
             if (!aiConfig || !transform) continue;
 
+            if (!playerPos) {
+                sensory.hasPlayer = false;
+                sensory.distSqToPlayer = Infinity;
+                sensory.canSeePlayer = false;
+                this._updateSuspicion(e, sensory, aiConfig, 0, dt);
+                continue;
+            }
+
+            // 全局追踪模式：跳过视野检测，默认一直看到玩家
+            if (aiConfig.alwaysTrackPlayer) {
+                sensory.hasPlayer = true;
+                sensory.playerPos.x = px;
+                sensory.playerPos.y = py;
+                const dx = px - transform.x;
+                const dy = py - transform.y;
+                sensory.distSqToPlayer = dx * dx + dy * dy;
+                sensory.canSeePlayer = true;
+                sensory.suspicion = 1.0;
+                if (e.aiState) {
+                    e.aiState.lastSeenPos = { x: px, y: py };
+                }
+                this._sensePortals(e, sensory, playerPos);
+                this._senseObstacles(e, sensory);
+                continue;
+            }
+
             // 1. 节流检测 (每秒约 10 次)
             sensory.senseTimer -= dt;
             if (sensory.senseTimer > 0) {
@@ -147,14 +174,6 @@ export const AISenseSystem: ISystem & {
 
             // 重置计时器，加入微小随机扰动防止后续重新对齐
             sensory.senseTimer = 0.1 + (Math.random() * 0.02 - 0.01);
-
-            if (!playerPos) {
-                sensory.hasPlayer = false;
-                sensory.distSqToPlayer = Infinity;
-                sensory.canSeePlayer = false;
-                this._updateSuspicion(e, sensory, aiConfig, 0, dt);
-                continue;
-            }
 
             // 2. 更新基础感知信息
             sensory.hasPlayer = true;

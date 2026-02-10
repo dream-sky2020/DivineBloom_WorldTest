@@ -2,6 +2,7 @@ import { componentRegistry } from '../../registries/ComponentRegistry';
 
 import { ActionDialogue, ActionTeleport, ActionCreateEntity, ActionEmitSignal } from './Actions';
 import { AIConfig, AIState } from './AI';
+import { AISensory } from './AISensory';
 import { Animation } from './Animation';
 import { Bounds } from './Bounds';
 import { Camera } from './Camera';
@@ -9,18 +10,25 @@ import { Children } from './Children';
 import { Collider } from './Collider';
 import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
+import { BulletDetect } from './BulletDetect';
+import { PortalDetect } from './PortalDetect';
+import { Portal } from './Portal';
 import { Detectable } from './Detectable';
 import { DetectInput } from './DetectInput';
 import { TriggerSignal } from './TriggerSignal';
 import { MonsterSpawn } from './MonsterSpawn';
+import { Monster } from './Monster';
 import { Experience } from './Experience';
 import { Follow } from './Follow';
 import { Health } from './Health';
-import { HordeAI } from './HordeAI';
 import { Inspector } from './Inspector';
+import { PlayerIntent } from './PlayerIntent';
+import { PortalIntent } from './PortalIntent';
+import { EnemyAIIntent } from './EnemyAIIntent';
 import { LifeTime } from './LifeTime';
 import { LocalTransform } from './LocalTransform';
 import { MousePosition } from './MousePosition';
+import { RawInput } from './RawInput';
 import { Parent } from './Parent';
 import { PathAI } from './PathAI';
 import { Projectile } from './Projectile';
@@ -33,14 +41,17 @@ import { Timer } from './Timer';
 import { Transform } from './Transform';
 import { Trigger } from './Trigger';
 import { Velocity } from './Velocity';
+import { WaveEmitter } from './WaveEmitter';
 import { Weapon } from './Weapon';
 import { WeaponIntent } from './WeaponIntent';
+import { WeaponSense } from './WeaponSense';
 import { WorldTransform } from './WorldTransform';
 
 // Register Core Components
 const components = [
     ActionDialogue, ActionTeleport, ActionCreateEntity, ActionEmitSignal,
     AIConfig, AIState,
+    AISensory,
     Animation,
     Bounds,
     Camera,
@@ -48,18 +59,25 @@ const components = [
     Collider,
     Commands,
     DetectArea,
+    BulletDetect,
+    PortalDetect,
+    Portal,
     Detectable,
     DetectInput,
     TriggerSignal,
     MonsterSpawn,
+    Monster,
     Experience,
     Follow,
     Health,
-    HordeAI,
     Inspector,
+    PlayerIntent,
+    PortalIntent,
+    EnemyAIIntent,
     LifeTime,
     LocalTransform,
     MousePosition,
+    RawInput,
     Parent,
     PathAI,
     Projectile,
@@ -72,8 +90,10 @@ const components = [
     Transform,
     Trigger,
     Velocity,
+    WaveEmitter,
     Weapon,
     WeaponIntent,
+    WeaponSense,
     WorldTransform
 ];
 
@@ -86,22 +106,31 @@ components.forEach(c => {
 // Re-export everything
 export * from './Actions';
 export * from './AI';
+export * from './AISensory';
 export * from './Animation';
 export * from './Bounds';
 export * from './Camera';
 export * from './Collider';
 export * from './Commands';
 export * from './DetectArea';
+export * from './BulletDetect';
+export * from './PortalDetect';
+export * from './Portal';
 export * from './Detectable';
 export * from './DetectInput';
 export * from './TriggerSignal';
 export * from './MonsterSpawn';
+export * from './Monster';
 export * from './Experience';
 export * from './Follow';
 export * from './Health';
 export * from './Inspector';
+export * from './PlayerIntent';
+export * from './PortalIntent';
+export * from './EnemyAIIntent';
 export * from './LifeTime';
 export * from './MousePosition';
+export * from './RawInput';
 export * from './Projectile';
 export * from './Requests';
 export * from './SceneConfig';
@@ -110,9 +139,10 @@ export * from './CombatProgress';
 export * from './Timer';
 export * from './Trigger';
 export * from './Velocity';
+export * from './WaveEmitter';
 export * from './Weapon';
 export * from './WeaponIntent';
-export * from './HordeAI';
+export * from './WeaponSense';
 export * from './PathAI';
 export * from './Transform';
 export * from './Shape';

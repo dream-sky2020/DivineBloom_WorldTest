@@ -8,7 +8,7 @@ import {
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Inspector,
   Projectile,
-  DetectArea, DETECT_AREA_INSPECTOR_FIELDS,
+  BulletDetect, BULLET_DETECT_INSPECTOR_FIELDS,
   LifeTime, LIFETIME_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
   Trigger
@@ -41,7 +41,7 @@ const BulletEntitySchema = z.object({
     p1: z.object({ x: z.number(), y: z.number() }).optional(),
     p2: z.object({ x: z.number(), y: z.number() }).optional()
   }).optional(),
-  // 速度方向（由 WeaponSystem 传入）
+  // 速度方向（由 WeaponControlSystem 传入）
   velocityX: z.number().optional(),
   velocityY: z.number().optional()
 });
@@ -81,8 +81,7 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
       }),
 
       // 高速探测 (CCD)
-      detectArea: DetectArea.create({
-        target: ['enemy', 'obstacle', 'player'], // 默认目标
+      bulletDetect: BulletDetect.create({
         ccdEnabled: params.detectCcdEnabled,
         ccdMinDistance: params.detectCcdMinDistance,
         ccdBuffer: params.detectCcdBuffer || params.radius
@@ -126,7 +125,7 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
         { path: 'projectile.maxLifeTime', label: 'Life Time', type: 'number' },
         ...(LIFETIME_INSPECTOR_FIELDS || []),
         ...(SPRITE_INSPECTOR_FIELDS || []),
-        ...(DETECT_AREA_INSPECTOR_FIELDS || [])
+        ...(BULLET_DETECT_INSPECTOR_FIELDS || [])
       ]
     })
     
@@ -147,9 +146,9 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
       color: sprite?.tint ?? '#FFFF00',
       spriteId: sprite?.id ?? 'particle_1',
       spriteScale: sprite?.scale ?? (projectile?.radius ? projectile.radius / 16 : 0.125),
-      detectCcdEnabled: entity.detectArea?.ccdEnabled ?? true,
-      detectCcdMinDistance: entity.detectArea?.ccdMinDistance ?? 0,
-      detectCcdBuffer: entity.detectArea?.ccdBuffer ?? 0
+      detectCcdEnabled: entity.bulletDetect?.ccdEnabled ?? true,
+      detectCcdMinDistance: entity.bulletDetect?.ccdMinDistance ?? 0,
+      detectCcdBuffer: entity.bulletDetect?.ccdBuffer ?? 0
     }
     return data;
   },

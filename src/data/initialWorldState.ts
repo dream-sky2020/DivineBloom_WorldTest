@@ -130,6 +130,33 @@ export const InitialWorldState: InitialWorldStateData = {
                     speed: 50,
                     sensorRadius: 40
                 }
+            },
+            // 6. 怪潮敌人生成器（监听波次信号后生成 horde_enemy）
+            {
+                type: 'horde_enemy_spawner',
+                x: 1300,
+                y: 900,
+                name: 'HordeSpawner_A',
+                signal: 'wave_spawn_1',
+                enemyName: 'Spawned Horde Enemy',
+                enemyOptions: {
+                    spriteId: 'enemy_slime',
+                    strategy: 'chase',
+                    baseSpeed: 90,
+                    visionRadius: 500,
+                    maxHealth: 50
+                }
+            },
+            // 7. 怪潮波次发信器（每 2 秒发送一次信号）
+            {
+                type: 'horde_wave_emitter',
+                x: 1250,
+                y: 900,
+                name: 'WaveEmitter_A',
+                signal: 'wave_spawn_1',
+                interval: 2,
+                active: true,
+                emitOnStart: true
             }
         ]
     },

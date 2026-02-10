@@ -6,6 +6,8 @@ const aiConfigSchema = z.object({
   type: z.string().default('wander'),
   visionRadius: z.number().default(120),
   speed: z.number().default(80),
+  alwaysTrackPlayer: z.boolean().default(false),
+  hideVisionRender: z.boolean().default(false),
   visionType: z.string().default('circle'),
   visionAngle: z.number().default(Math.PI / 2),
   visionProximity: z.number().default(40),
@@ -38,6 +40,8 @@ export const AIConfig: IComponentDefinition<typeof aiConfigSchema, AIConfigData>
       type,
       visionRadius,
       speed,
+      alwaysTrackPlayer: extraOptions.alwaysTrackPlayer,
+      hideVisionRender: extraOptions.hideVisionRender,
       visionType: extraOptions.visionType,
       visionAngle: visionAngle, // Use processed angle
       visionProximity: extraOptions.visionProximity,

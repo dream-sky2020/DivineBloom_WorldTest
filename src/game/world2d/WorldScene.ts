@@ -87,23 +87,27 @@ export class WorldScene {
             // 逻辑阶段 (Logic Phases)
             logic: {
                 sense: [
+                    getSystem('detect-sense'),
+                    getSystem('weapon-sense'),
                     getSystem('ai-sense'),
-                    getSystem('detect-area'),
-                    getSystem('detect-input'),
                     getSystem('mouse-position-sense')
                 ],
                 intent: [
                     getSystem('player-intent'),
+                    getSystem('weapon-intent'),
+                    getSystem('portal-intent'),
                     getSystem('enemy-ai-intent')
                 ],
                 decision: [
+                    getSystem('wave-emitter'),
                     getSystem('trigger')
                 ],
                 control: [
                     getSystem('player-control'),
+                    getSystem('portal-control'),
                     getSystem('enemy-control'),
                     getSystem('follow'),
-                    getSystem('weapon')
+                    getSystem('weapon-control')
                 ],
                 physics: [
                     getSystem('movement'),
@@ -112,6 +116,7 @@ export class WorldScene {
                     getSystem('sync-transform')
                 ],
                 lifecycle: [
+                    getSystem('health-cleanup'),
                     getSystem('lifetime')
                 ],
                 execution: [

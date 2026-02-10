@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
-  DetectArea, DetectInput, Trigger,
-  Actions,
+  PortalDetect, Portal,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   ShapeType,
-  DETECT_AREA_INSPECTOR_FIELDS,
+  PORTAL_DETECT_INSPECTOR_FIELDS,
+  PORTAL_INSPECTOR_FIELDS,
   TRANSFORM_INSPECTOR_FIELDS,
   Transform, Parent, Children, LocalTransform, Shape,
   SHAPE_INSPECTOR_FIELDS, LOCAL_TRANSFORM_INSPECTOR_FIELDS
@@ -42,38 +42,6 @@ export type PortalEntityData = z.infer<typeof PortalEntitySchema>;
 const INSPECTOR_FIELDS = [
   { path: 'name', label: '传送门名称', type: 'text', group: '基本属性' },
   ...(TRANSFORM_INSPECTOR_FIELDS || []),
-  ...(DETECT_AREA_INSPECTOR_FIELDS || []),
-  {
-    path: 'isForced',
-    label: '强制传送',
-    type: 'checkbox',
-    tip: '勾选则触碰即走，不勾选需按交互键',
-    group: '交互逻辑',
-    onUpdate: (entity: any, newValue: boolean) => {
-      // 同步 Trigger 规则
-      entity.trigger.rules = newValue
-        ? [{ type: 'onStay' }]
-        : [{ type: 'onPress', requireArea: true }];
-
-      entity.trigger.defaultCooldown = newValue ? 0 : 0.8;
-
-      // 同步探测区域目标和颜色
-      entity.detectArea.target = 'player'; // Always target player to avoid enemies triggering portals
-      entity.detectArea.debugColor = newValue
-        ? 'rgba(168, 85, 247, 0.8)'
-        : 'rgba(249, 115, 22, 0.8)';
-
-      // 处理交互输入组件
-      if (newValue) {
-        if (entity.detectInput) world.removeComponent(entity, 'detectInput');
-      } else if (!entity.detectInput) {
-        world.addComponent(entity, 'detectInput', DetectInput.create({ keys: ['Interact'] }));
-      }
-    }
-  },
-  { path: 'actionTeleport.mapId', label: '目标地图', type: 'text', group: '目标位置' },
-  { path: 'actionTeleport.entryId', label: '入口 ID', type: 'text', group: '目标位置' },
-  { path: 'actionTeleport.destinationId', label: '同图目的地', type: 'text', group: '目标位置' },
   ...(EDITOR_INSPECTOR_FIELDS || [])
 ];
 
@@ -99,25 +67,8 @@ export const PortalEntity: IEntityDefinition<typeof PortalEntitySchema> = {
     const root = world.add({
       type: 'portal',
       name: portalName,
-      transform: Transform.create(x, y),
-      isForced: isForced,
-      trigger: Trigger.create({
-        rules: isForced ? [{ type: 'onEnter' }] : [{ type: 'onPress', requireArea: true }],
-        actions: ['TELEPORT'],
-        defaultCooldown: isForced ? 0.5 : 0.8 // 增加默认冷却防止重复触发
-      }),
-      actionTeleport: Actions.Teleport(
-        isCrossMap ? targetMapId : undefined,
-        isCrossMap ? targetEntryId : undefined,
-        isLocalTeleport && destinationId ? destinationId : undefined,
-        isLocalTeleport && targetX != null ? targetX : undefined,
-        isLocalTeleport && targetY != null ? targetY : undefined
-      ),
+      transform: Transform.create(x, y)
     });
-
-    if (!isForced) {
-      world.addComponent(root, 'detectInput', DetectInput.create({ keys: ['Interact'] }));
-    }
 
     // Sensor Child (Detection Only)
     const sensor = world.add({
@@ -130,9 +81,15 @@ export const PortalEntity: IEntityDefinition<typeof PortalEntitySchema> = {
           width: width,
           height: height,
       }),
-      detectArea: DetectArea.create({
-          target: 'player', // Always target player
-          debugColor: isForced ? 'rgba(168, 85, 247, 0.8)' : 'rgba(249, 115, 22, 0.8)'
+      portalDetect: PortalDetect.create({}),
+      portal: Portal.create({
+        mapId: isCrossMap ? targetMapId : undefined,
+        entryId: isCrossMap ? targetEntryId : undefined,
+        destinationId: isLocalTeleport && destinationId ? destinationId : undefined,
+        targetX: isLocalTeleport && targetX != null ? targetX : undefined,
+        targetY: isLocalTeleport && targetY != null ? targetY : undefined,
+        defaultCooldown: isForced ? 0.5 : 0.8,
+        isForced
       })
     });
 
@@ -141,7 +98,8 @@ export const PortalEntity: IEntityDefinition<typeof PortalEntitySchema> = {
       fields: [
         ...(LOCAL_TRANSFORM_INSPECTOR_FIELDS || []),
         ...(SHAPE_INSPECTOR_FIELDS || []),
-        ...(DETECT_AREA_INSPECTOR_FIELDS || [])
+        ...(PORTAL_DETECT_INSPECTOR_FIELDS || []),
+        ...(PORTAL_INSPECTOR_FIELDS || [])
       ],
       hitPriority: 60,
       editorBox: { w: 30, h: 30, scale: 1 }
@@ -157,12 +115,13 @@ export const PortalEntity: IEntityDefinition<typeof PortalEntitySchema> = {
   },
 
   serialize(entity: any) {
-    const { transform, actionTeleport, name, isForced, children } = entity
+    const { transform, name, children } = entity
     
     // 从子实体中获取探测区域尺寸
     // @ts-ignore
-    const sensor = children?.entities.find(e => e.detectArea);
+    const sensor = children?.entities.find(e => e.portalDetect || e.portal);
     const shape = sensor?.shape;
+    const portal = sensor?.portal;
 
     const data: any = {
       type: 'portal',
@@ -171,17 +130,17 @@ export const PortalEntity: IEntityDefinition<typeof PortalEntitySchema> = {
       name: name,
       width: shape?.width ?? 0,
       height: shape?.height ?? 0,
-      isForced: isForced ?? true
+      isForced: portal?.isForced ?? true
     }
 
-    if (actionTeleport?.mapId != null && actionTeleport?.entryId != null) {
-      data.targetMapId = actionTeleport.mapId
-      data.targetEntryId = actionTeleport.entryId
-    } else if (actionTeleport?.destinationId != null) {
-      data.destinationId = actionTeleport.destinationId
-    } else if (actionTeleport?.targetX != null && actionTeleport?.targetY != null) {
-      data.targetX = actionTeleport.targetX
-      data.targetY = actionTeleport.targetY
+    if (portal?.mapId != null && portal?.entryId != null) {
+      data.targetMapId = portal.mapId
+      data.targetEntryId = portal.entryId
+    } else if (portal?.destinationId != null) {
+      data.destinationId = portal.destinationId
+    } else if (portal?.targetX != null && portal?.targetY != null) {
+      data.targetX = portal.targetX
+      data.targetY = portal.targetY
     }
     return data;
   },

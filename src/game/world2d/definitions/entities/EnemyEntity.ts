@@ -3,6 +3,7 @@ import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
   DetectArea, Trigger, DetectInput, Detectable,
+  Monster,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
   Velocity, VELOCITY_INSPECTOR_FIELDS,
@@ -99,6 +100,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       transform: Transform.create(x, y),
       velocity: Velocity.create(),
       enemy: true,
+      monster: Monster.create({ category: 'normal', priority: 1 }),
 
       interaction: { uuid },
       bounds: Bounds.create(),

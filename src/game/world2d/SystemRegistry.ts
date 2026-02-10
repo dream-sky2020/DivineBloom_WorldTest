@@ -14,11 +14,8 @@ import { CameraSystem } from '@systems/camera/CameraSystem';
 import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
 import { FollowSystem } from '@systems/control/FollowSystem';
 import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
-import { WeaponSystem } from '@systems/control/WeaponSystem';
-
-// Detect
-import { DetectAreaSystem } from '@systems/detect/DetectAreaSystem';
-import { DetectInputSystem } from '@systems/detect/DetectInputSystem';
+import { PortalControlSystem } from '@systems/control/PortalControlSystem';
+import { WeaponControlSystem } from '@systems/control/WeaponControlSystem';
 
 // Editor
 import { EditorHighlightRenderSystem } from '@systems/editor/EditorHighlightRenderSystem';
@@ -32,9 +29,12 @@ import { ExecuteSystem } from '@systems/execute/ExecuteSystem';
 
 // Intent
 import { EnemyAIIntentSystem } from '@systems/intent/EnemyAIIntentSystem';
+import { PortalIntentSystem } from '@systems/intent/PortalIntentSystem';
 import { PlayerIntentSystem } from '@systems/intent/PlayerIntentSystem';
+import { WeaponIntentSystem } from '@systems/intent/WeaponIntentSystem';
 
 // Lifecycle
+import { HealthCleanupSystem } from '@systems/lifecycle/HealthCleanupSystem';
 import { LifeTimeSystem } from '@systems/lifecycle/LifeTimeSystem';
 
 // Physics
@@ -55,12 +55,15 @@ import { WeaponDebugRenderSystem } from '@systems/render/WeaponDebugRenderSystem
 import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
 
 // Sense
+import { DetectSenseSystem } from '@systems/sense/DetectSenseSystem';
 import { AISenseSystem } from '@systems/sense/AISenseSystem';
 import { InputSenseSystem } from '@systems/sense/InputSenseSystem';
 import { MousePositionSenseSystem } from '@systems/sense/MousePositionSenseSystem';
+import { WeaponSenseSystem } from '@systems/sense/WeaponSenseSystem';
 
 // Time
 import { TimeSystem } from '@systems/time/TimeSystem';
+import { WaveEmitterSystem } from '@systems/time/WaveEmitterSystem';
 
 /**
  * 系统类型枚举，用于分类管理
@@ -80,6 +83,7 @@ export const SystemType = {
 export const Registry: Record<string, any> = {
     // --- Core Systems ---
     'time': TimeSystem,
+    'wave-emitter': WaveEmitterSystem,
     'input-sense': InputSenseSystem,
     'mouse-position-sense': MousePositionSenseSystem,
     'visual-render': VisualRenderSystem,
@@ -92,20 +96,25 @@ export const Registry: Record<string, any> = {
     'collision': CollisionSystem,
 
     // --- Lifecycle Management ---
+    'health-cleanup': HealthCleanupSystem,
     'lifetime': LifeTimeSystem,
 
     // --- Intent & Control ---
     'player-intent': PlayerIntentSystem,
+    'weapon-intent': WeaponIntentSystem,
+    'portal-intent': PortalIntentSystem,
     'enemy-ai-intent': EnemyAIIntentSystem,
     'player-control': PlayerControlSystem,
+    'portal-control': PortalControlSystem,
     'enemy-control': EnemyControlSystem,
     'follow': FollowSystem,
-    'weapon': WeaponSystem,
+    'weapon': WeaponControlSystem,
+    'weapon-control': WeaponControlSystem,
 
     // --- Detection & AI Sense ---
+    'detect-sense': DetectSenseSystem,
+    'weapon-sense': WeaponSenseSystem,
     'ai-sense': AISenseSystem,
-    'detect-area': DetectAreaSystem,
-    'detect-input': DetectInputSystem,
 
     // --- Execution & Events ---
     'execute': ExecuteSystem,

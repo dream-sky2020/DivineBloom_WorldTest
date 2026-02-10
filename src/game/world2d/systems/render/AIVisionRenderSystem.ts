@@ -35,6 +35,7 @@ export const AIVisionRenderSystem: ISystem & { LAYER: number } = {
         for (const entity of visionEntities) {
             const e = entity as IEntity;
             if (!e.transform || !e.aiConfig || !e.aiState) continue;
+            if (e.aiConfig.hideVisionRender) continue;
 
             // 剔除屏幕外的
             if (!isVisible(e.transform)) continue;

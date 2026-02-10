@@ -2,6 +2,7 @@ import { world } from '@world2d/world';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { PlayerIntent } from '@components';
 
 const logger = createLogger('PlayerIntentSystem');
 
@@ -24,22 +25,7 @@ export const PlayerIntentSystem: ISystem = {
 
             // Ensure intent component exists
             if (!e.playerIntent) {
-                world.addComponent(e, 'playerIntent', {
-                    move: { x: 0, y: 0 },
-                    wantsToRun: false,
-                    wantsToInteract: false,
-                    wantsToOpenMenu: false,
-                    wantsToOpenShop: false
-                });
-            }
-
-            // Ensure weapon intent component exists
-            if (!e.weaponIntent) {
-                world.addComponent(e, 'weaponIntent', {
-                    wantsToFire: false,
-                    aimDirection: { x: 1, y: 0 },
-                    facingDirection: { x: 1, y: 0 }
-                });
+                world.addComponent(e, 'playerIntent', PlayerIntent.create());
             }
 
             const raw = e.rawInput;
@@ -77,67 +63,9 @@ export const PlayerIntentSystem: ISystem = {
             intent.wantsToOpenMenu = !!raw.buttons.menu;
             intent.wantsToOpenShop = !!raw.buttons.shop;
 
-            // 3. Process Weapon Intent (if entity has weapon)
-            if (e.weaponIntent) {
-                e.weaponIntent.wantsToFire = !!raw.buttons.attack;
-
-                // 计算瞄准方向（基于移动方向或鼠标位置）
-                if (raw.buttons.attack) {
-                    // 如果有移动输入，朝移动方向射击
-                    if (dx !== 0 || dy !== 0) {
-                        e.weaponIntent.aimDirection.x = dx;
-                        e.weaponIntent.aimDirection.y = dy;
-                        e.weaponIntent.facingDirection.x = dx;
-                        e.weaponIntent.facingDirection.y = dy;
-                    }
-                    // 否则保持上次的射击方向
-                }
-                // 没有攻击输入但有移动时，更新朝向
-                if (!raw.buttons.attack && (dx !== 0 || dy !== 0)) {
-                    e.weaponIntent.facingDirection.x = dx;
-                    e.weaponIntent.facingDirection.y = dy;
-                }
-            }
-
-            // 将玩家的武器意图同步到跟随武器实体
-            if (e.weaponIntent) {
-                const weaponFollowers = world.with('weapon', 'follow');
-                for (const weaponEntity of weaponFollowers) {
-                    const w = weaponEntity as IEntity;
-                    const target = w.follow?.target;
-                    const match = target === 'player'
-                        || target === e.id
-                        || target === (e as any).__id
-                        || target === (e as any).uuid
-                        || target === e.name
-                        || target === e.type;
-
-                    if (!match) continue;
-
-                    if (!w.weaponIntent) {
-                        world.addComponent(w, 'weaponIntent', {
-                            wantsToFire: false,
-                            aimDirection: { x: 1, y: 0 },
-                            facingDirection: { x: 1, y: 0 }
-                        });
-                    }
-
-                    if (w.weaponIntent) {
-                        w.weaponIntent.wantsToFire = e.weaponIntent.wantsToFire;
-                        w.weaponIntent.aimDirection.x = e.weaponIntent.aimDirection.x;
-                        w.weaponIntent.aimDirection.y = e.weaponIntent.aimDirection.y;
-                        w.weaponIntent.facingDirection.x = e.weaponIntent.facingDirection.x;
-                        w.weaponIntent.facingDirection.y = e.weaponIntent.facingDirection.y;
-                    }
-                }
-            }
-
             // Debug Log (Optional)
             if (intent.wantsToInteract) {
                 logger.debug(`Interaction Intent Registered! Entity: ${e.name || e.type || 'N/A'}`);
-            }
-            if (e.weaponIntent?.wantsToFire) {
-                logger.debug(`Fire Intent Registered! Entity: ${e.name || e.type || 'N/A'}, Direction: (${e.weaponIntent.aimDirection.x.toFixed(2)}, ${e.weaponIntent.aimDirection.y.toFixed(2)})`);
             }
         }
     }

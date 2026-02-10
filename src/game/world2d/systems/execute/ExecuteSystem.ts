@@ -194,40 +194,6 @@ export const ExecuteSystem: IExecuteSystem = {
 
         const finalData = { ...(customData || {}) };
 
-        if (entityType === 'bullet' && source?.weapon && source.transform) {
-            const dir = source.weapon.fireDirection || source.weaponIntent?.aimDirection;
-            const len = dir ? Math.hypot(dir.x, dir.y) : 0;
-            if (!dir || !len) {
-                logger.warn('CREATE_ENTITY: bullet missing fire direction');
-                return;
-            }
-            const normalized = { x: dir.x / len, y: dir.y / len };
-            const offset = 15;
-            finalData.x = (resolvedPosition?.x ?? source.transform.x) + normalized.x * offset;
-            finalData.y = (resolvedPosition?.y ?? source.transform.y) + normalized.y * offset;
-            finalData.velocityX = normalized.x * source.weapon.bulletSpeed;
-            finalData.velocityY = normalized.y * source.weapon.bulletSpeed;
-            finalData.damage = source.weapon.damage;
-            finalData.color = source.weapon.bulletColor;
-            finalData.radius = source.weapon.bulletRadius || 2;
-            finalData.maxLifeTime = source.weapon.bulletLifeTime || 3;
-            finalData.spriteId = source.weapon.bulletSpriteId;
-            finalData.spriteScale = source.weapon.bulletSpriteScale;
-            finalData.detectCcdEnabled = source.weapon.bulletDetectCcdEnabled;
-            finalData.detectCcdMinDistance = source.weapon.bulletDetectCcdMinDistance;
-            finalData.detectCcdBuffer = source.weapon.bulletDetectCcdBuffer;
-            finalData.bulletShape = source.weapon.bulletShape;
-
-            if (source.weapon.blockIfOutOfRange && source.weapon.isFiring === false) {
-                logger.debug('CREATE_ENTITY: weapon blocked by range');
-                return;
-            }
-            if (source.weapon.cooldown > 0) {
-                return;
-            }
-            source.weapon.cooldown = source.weapon.fireRate;
-        }
-
         if (templateId) {
             logger.info(`Creating entity from template: ${templateId}`, resolved);
             try {
@@ -245,6 +211,10 @@ export const ExecuteSystem: IExecuteSystem = {
         }
 
         if (entityType) {
+            if (resolvedPosition) {
+                if (finalData.x == null) finalData.x = resolvedPosition.x;
+                if (finalData.y == null) finalData.y = resolvedPosition.y;
+            }
             logger.info(`Creating entity by type: ${entityType}`, resolved);
             try {
                 const entity = EntityCreator.create(null, entityType, finalData) as IEntity;

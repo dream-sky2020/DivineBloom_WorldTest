@@ -8,9 +8,13 @@ import {
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Bounds, BOUNDS_INSPECTOR_FIELDS,
   Detectable,
-  HordeAI,
+  Monster,
+  AI,
+  Children,
   Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
+  LocalTransform,
+  Parent,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
   Shape, ShapeType, SHAPE_INSPECTOR_FIELDS
 } from '@components';
@@ -25,17 +29,10 @@ export const HordeEnemyEntitySchema = z.object({
     spriteId: z.string().default('enemy_slime'),
     scale: z.number().optional(),
     
-    // HordeAI Config
+    // AI Config
     strategy: z.enum(['chase', 'steering']).default('chase'),
     baseSpeed: z.number().default(80),
     visionRadius: z.number().default(500),
-    
-    // Dynamic Speed Config
-    proximitySpeedEnabled: z.boolean().default(true),
-    minDistance: z.number().optional(),
-    maxDistance: z.number().optional(),
-    minMultiplier: z.number().optional(),
-    maxMultiplier: z.number().optional(),
 
     // Health
     maxHealth: z.number().default(50),
@@ -54,8 +51,10 @@ const INSPECTOR_FIELDS = [
   ...(HEALTH_INSPECTOR_FIELDS || []),
   { path: 'sprite.id', label: '精灵 ID', type: 'text', tip: '对应资源库中的敌人图片', group: '精灵 (Sprite)' },
   ...(SPRITE_INSPECTOR_FIELDS || []),
-  { path: 'hordeAIConfig.strategy', label: 'AI 策略', type: 'select', props: { options: ['chase', 'steering'] }, group: '怪潮 AI' },
-  { path: 'hordeAIConfig.baseSpeed', label: '基础速度', type: 'number', props: { min: 0 }, group: '怪潮 AI' },
+  { path: 'aiConfig.type', label: 'AI 策略', type: 'select', props: { options: ['chase', 'steering'] }, group: 'AI 配置' },
+  { path: 'aiConfig.speed', label: '基础速度', type: 'number', props: { min: 0 }, group: 'AI 配置' },
+  { path: 'aiConfig.alwaysTrackPlayer', label: '全局追踪', type: 'checkbox', group: 'AI 配置' },
+  { path: 'aiConfig.hideVisionRender', label: '隐藏视野绘制', type: 'checkbox', group: 'AI 配置' },
   ...(EDITOR_INSPECTOR_FIELDS || [])
 ];
 
@@ -81,23 +80,21 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       transform: Transform.create(x, y),
       velocity: Velocity.create(),
       enemy: true, // 保持 enemy 标签以便被玩家武器检测到
+      monster: Monster.create({ category: 'horde', priority: 2 }),
       
       bounds: Bounds.create(),
       
-      hordeAIConfig: HordeAI.Config({
-        strategy: options.strategy,
-        baseSpeed: options.baseSpeed,
+      aiConfig: AI.Config({
+        type: options.strategy === 'steering' ? 'chase' : options.strategy,
         visionRadius: options.visionRadius,
-        proximitySpeed: {
-          enabled: options.proximitySpeedEnabled,
-          minDistance: options.minDistance,
-          maxDistance: options.maxDistance,
-          minMultiplier: options.minMultiplier,
-          maxMultiplier: options.maxMultiplier
-        }
+        speed: options.baseSpeed,
+        detectedState: 'chase',
+        alwaysTrackPlayer: true,
+        hideVisionRender: true,
+        homePosition: { x, y },
+        patrolRadius: Math.max(80, Math.floor(options.visionRadius * 0.5))
       }),
-
-      hordeAIState: HordeAI.State(),
+      aiState: AI.State(false, 0, 'chase'),
       health: Health.create({ maxHealth: options.maxHealth, currentHealth: options.maxHealth }),
       sprite: Sprite.create(visualId, { scale: options.scale }),
       animation: Animation.create('idle'),
@@ -105,6 +102,17 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       collider: Collider.create(),
       detectable: Detectable.create(['enemy'])
     });
+
+    // 子节点：挂载被探测组件，便于后续扩展命中盒/独立部件系统
+    const coreNode = world.add({
+      type: 'horde_enemy_core',
+      name: `${root.name}_Core`,
+      parent: Parent.create(root),
+      transform: Transform.create(x, y),
+      localTransform: LocalTransform.create(0, 0),
+      detectable: Detectable.create(['enemy'])
+    });
+    root.children = Children.create([coreNode]);
 
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
@@ -116,7 +124,7 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
   },
 
   serialize(entity: any) {
-    const { transform, hordeAIConfig, sprite, name, health } = entity
+    const { transform, aiConfig, sprite, name, health } = entity
     return {
       type: 'horde_enemy',
       x: transform.x,
@@ -125,14 +133,9 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       options: {
         spriteId: sprite?.id,
         scale: sprite?.scale,
-        strategy: hordeAIConfig.strategy,
-        baseSpeed: hordeAIConfig.baseSpeed,
-        visionRadius: hordeAIConfig.visionRadius,
-        proximitySpeedEnabled: hordeAIConfig.proximitySpeed.enabled,
-        minDistance: hordeAIConfig.proximitySpeed.minDistance,
-        maxDistance: hordeAIConfig.proximitySpeed.maxDistance,
-        minMultiplier: hordeAIConfig.proximitySpeed.minMultiplier,
-        maxMultiplier: hordeAIConfig.proximitySpeed.maxMultiplier,
+        strategy: aiConfig?.type || 'chase',
+        baseSpeed: aiConfig?.speed ?? 80,
+        visionRadius: aiConfig?.visionRadius ?? 500,
         maxHealth: health.maxHealth
       }
     }

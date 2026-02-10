@@ -79,31 +79,27 @@ export const PortalDebugRenderSystem: ISystem & {
      * 渲染从传送门到其目的地的连接线
      */
     _drawPortalConnections(ctx: any, camera: any) {
-        // 查询所有带有传送行为和位置的实体
-        const portals = world.with('actionTeleport', 'transform');
+        // 查询所有带有 Portal 数据和位置的实体（新结构下通常是 sensor 子节点）
+        const portals = world.with('portal', 'transform');
         // 查询所有目的地实体，用于连接线终点查找
         const destinations = world.with('destinationId', 'transform');
         const destList = [...destinations];
 
         for (const entity of portals) {
             const e = entity as IEntity;
-            const { actionTeleport, transform, children } = e;
-            if (!actionTeleport || !transform) continue;
-
-            const { mapId, destinationId, targetX, targetY } = actionTeleport;
+            const { portal, transform } = e;
+            if (!portal || !transform) continue;
+            const { mapId, destinationId, targetX, targetY } = portal;
 
             // 仅渲染同地图传送的连线
             if (mapId != null) continue;
 
             // 1. 确定起点（传送门中心）
-            // [Updated] 由于现在 detectArea 在子实体上，我们需要找到那个子实体
-            let sensor: any = null;
-            if (children && Array.isArray(children.entities)) {
-                sensor = children.entities.find((c: any) => c.detectArea);
-            }
-            const startX = sensor ? sensor.transform.x : transform.x;
-            const startY = sensor ? sensor.transform.y : transform.y;
-            const debugColor = sensor?.detectArea?.debugColor || 'rgba(168, 85, 247, 0.6)';
+            // 新结构下 portal 在 sensor 上，直接用当前实体坐标
+            const startX = transform.x;
+            const startY = transform.y;
+            const isTriggered = !!(e.portalDetect?.results && e.portalDetect.results.length > 0);
+            const debugColor = isTriggered ? 'rgba(239, 68, 68, 0.7)' : 'rgba(168, 85, 247, 0.6)';
 
             // 2. 确定终点
             let destX: number | undefined;

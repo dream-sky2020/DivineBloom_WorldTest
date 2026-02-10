@@ -11,7 +11,9 @@ import {
     PortalEntity, 
     PortalDestinationEntity,
     EnemyEntity,
-    BackgroundEntity
+    BackgroundEntity,
+    HordeEnemySpawnerEntity,
+    HordeWaveEmitterEntity
 } from '@entities'
 
 /**
@@ -88,6 +90,43 @@ export class EntityTemplateRegistry {
                     aiType: 'patrol',
                     visionRadius: 150
                 }
+            })
+        })
+
+        this.register({
+            id: 'horde_enemy_spawner',
+            name: '怪潮生成器',
+            description: '监听波次信号并生成怪潮敌人',
+            icon: '🌀',
+            category: 'gameplay',
+            factory: HordeEnemySpawnerEntity.create.bind(HordeEnemySpawnerEntity),
+            getDefaultData: (mousePos) => ({
+                x: mousePos?.x || 400,
+                y: mousePos?.y || 300,
+                signal: 'wave_spawn_1',
+                enemyOptions: {
+                    spriteId: 'enemy_slime',
+                    strategy: 'chase',
+                    baseSpeed: 80,
+                    visionRadius: 500,
+                    maxHealth: 50
+                }
+            })
+        })
+
+        this.register({
+            id: 'horde_wave_emitter',
+            name: '怪潮波次发信器',
+            description: '按固定间隔向生成器广播信号',
+            icon: '⏱️',
+            category: 'system',
+            factory: HordeWaveEmitterEntity.create.bind(HordeWaveEmitterEntity),
+            getDefaultData: (mousePos) => ({
+                x: mousePos?.x || 420,
+                y: mousePos?.y || 300,
+                signal: 'wave_spawn_1',
+                interval: 3,
+                active: true
             })
         })
 

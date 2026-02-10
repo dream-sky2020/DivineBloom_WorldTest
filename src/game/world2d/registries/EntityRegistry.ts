@@ -4,6 +4,8 @@ import {
     NPCEntity,
     EnemyEntity,
     HordeEnemyEntity,
+    HordeEnemySpawnerEntity,
+    HordeWaveEmitterEntity,
     BackgroundEntity,
     DecorationEntity,
     ObstacleEntity,
@@ -28,6 +30,8 @@ class EntityRegistry {
         this.register(NPCEntity);
         this.register(EnemyEntity);
         this.register(HordeEnemyEntity);
+        this.register(HordeEnemySpawnerEntity);
+        this.register(HordeWaveEmitterEntity);
         this.register(BackgroundEntity);
         this.register(DecorationEntity);
         this.register(ObstacleEntity);

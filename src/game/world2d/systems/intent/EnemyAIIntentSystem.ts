@@ -6,6 +6,7 @@ import { StunnedState } from '@world2d/ECSCalculateTool/states/StunnedState';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { EnemyAIIntent } from '@components';
 
 const logger = createLogger('EnemyAIIntentSystem');
 
@@ -34,6 +35,15 @@ export const EnemyAIIntentSystem: ISystem = {
             }
 
             const { aiState, aiSensory } = e;
+            if (!e.enemyAIIntent) {
+                world.addComponent(e, 'enemyAIIntent', EnemyAIIntent.create({
+                    state: aiState.state,
+                    action: aiState.state === 'stunned' ? 'stunned' : 'move',
+                    targetPos: aiState.targetPos ?? null,
+                    suspicion: aiState.suspicion ?? 0,
+                    hasBattleResult: !!aiSensory?.lastBattleResult
+                }));
+            }
 
             // --------------------------------------------------------
             // 1. High Priority: React to Battle Results (External Events)
@@ -75,6 +85,14 @@ export const EnemyAIIntentSystem: ISystem = {
             } else {
                 // Unknown state fallback
                 aiState.state = 'wander';
+            }
+
+            if (e.enemyAIIntent) {
+                e.enemyAIIntent.state = aiState.state;
+                e.enemyAIIntent.action = aiState.state === 'stunned' ? 'stunned' : 'move';
+                e.enemyAIIntent.targetPos = aiState.targetPos ?? null;
+                e.enemyAIIntent.suspicion = aiState.suspicion ?? 0;
+                e.enemyAIIntent.hasBattleResult = !!aiSensory?.lastBattleResult;
             }
         }
     }

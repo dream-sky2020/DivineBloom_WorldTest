@@ -14,6 +14,7 @@ export const LifeTimeSystem: ISystem & { requestRemoval(entity: IEntity): void }
 
     update(dt: number) {
         const lifeTimeEntities = world.with('lifeTime');
+        const pending: IEntity[] = [];
         for (const entity of lifeTimeEntities) {
             const e = entity as IEntity;
             const lifeTime = e.lifeTime;
@@ -26,8 +27,12 @@ export const LifeTimeSystem: ISystem & { requestRemoval(entity: IEntity): void }
 
             // 2. 检查是否需要删除
             if (lifeTime.currentTime <= 0 && lifeTime.autoRemove) {
-                this.requestRemoval(e);
+                pending.push(e);
             }
+        }
+
+        for (const entity of pending) {
+            this.requestRemoval(entity);
         }
     },
 
@@ -35,28 +40,36 @@ export const LifeTimeSystem: ISystem & { requestRemoval(entity: IEntity): void }
      * 请求删除实体
      */
     requestRemoval(entity: IEntity) {
-        // 获取全局命令队列
-        const globalEntity = world.with('commands').first;
+        const removeTree = (current: IEntity, visited: WeakSet<object> = new WeakSet()) => {
+            if (!current || visited.has(current)) return;
+            visited.add(current);
 
-        if (!globalEntity) {
-            // 降级方案：直接删除（不推荐，但保证功能可用）
-            logger.warn('Global commands queue not found, removing entity directly', {
-                type: entity.type,
-                name: entity.name
-            });
-            world.remove(entity);
+            const children = current.children?.entities;
+            if (Array.isArray(children)) {
+                for (const child of [...children]) {
+                    removeTree(child as IEntity, visited);
+                }
+                current.children.entities = [];
+            }
+
+            const parent = current.parent?.entity;
+            if (parent?.children?.entities && Array.isArray(parent.children.entities)) {
+                parent.children.entities = parent.children.entities.filter((child: any) => child !== current);
+            }
+
+            if (world.entities.includes(current)) {
+                world.remove(current);
+            }
+        };
+
+        if (!world.entities.includes(entity)) {
             return;
         }
-
-        // 发送删除命令到 ExecuteSystem
-        globalEntity.commands.queue.push({
-            type: 'DELETE_ENTITY',
-            payload: { entity }
-        });
+        removeTree(entity);
 
         logger.debug(`Requested removal for entity: ${entity.name || entity.type || 'N/A'}`, {
             type: entity.type,
-            remainingTime: entity.lifeTime.currentTime
+            remainingTime: entity.lifeTime?.currentTime
         });
     }
 };

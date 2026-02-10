@@ -9,13 +9,10 @@ import {
   Velocity, VELOCITY_INSPECTOR_FIELDS,
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Bounds, BOUNDS_INSPECTOR_FIELDS,
-  DetectInput,
   Detectable,
   Health, HEALTH_INSPECTOR_FIELDS,
   Inspector, EDITOR_INSPECTOR_FIELDS,
   DETECT_AREA_INSPECTOR_FIELDS,
-  Trigger,
-  Actions,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
   Shape, ShapeType, SHAPE_INSPECTOR_FIELDS
 } from '@components';
@@ -46,6 +43,8 @@ const weaponConfigSchema = z.object({
     p1: z.object({ x: z.number(), y: z.number() }).optional(),
     p2: z.object({ x: z.number(), y: z.number() }).optional()
   }).optional(),
+  projectileCount: z.number().optional(),
+  projectileSpreadDeg: z.number().optional(),
   attackMode: z.string().optional(),
   attackArcDeg: z.number().optional(),
   attackAngleOffsetDeg: z.number().optional(),
@@ -122,16 +121,7 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       bounds: Bounds.create(),
       health: Health.create({ maxHealth: 100, currentHealth: 100 }),
       sprite: Sprite.create(assetId, { scale }),
-      animation: Animation.create('idle'),
-      detectInput: DetectInput.create({ keys: ['Attack'] }),
-      trigger: Trigger.create({
-        rules: [{ type: 'onPress' }],
-        actions: ['EMIT_SIGNAL'],
-        defaultCooldown: 0
-      }),
-      actionEmitSignal: Actions.EmitSignal({
-        signal: 'weapon_fire'
-      })
+      animation: Animation.create('idle')
     });
 
     root.inspector = Inspector.create({
@@ -172,6 +162,8 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
           bulletDetectCcdMinDistance: cfg.bulletDetectCcdMinDistance,
           bulletDetectCcdBuffer: cfg.bulletDetectCcdBuffer,
           bulletShape: cfg.bulletShape,
+          projectileCount: cfg.projectileCount,
+          projectileSpreadDeg: cfg.projectileSpreadDeg,
           attackMode: cfg.attackMode,
           attackArcDeg: cfg.attackArcDeg,
           attackAngleOffsetDeg: cfg.attackAngleOffsetDeg,
