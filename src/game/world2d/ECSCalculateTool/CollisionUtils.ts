@@ -1,16 +1,18 @@
 /**
- * 轻量级 2D 碰撞数学工具库
- * 支持: Circle, AABB, OBB (旋转矩形), Capsule, Point
- * 提供检测与 MTV (最小位移向量) 计算
+ * Lightweight 2D collision math helpers.
+ * Supports: Circle, AABB, OBB, Capsule, Point.
  */
-
 import { ShapeType } from '../definitions/enums/Shape';
 
+type Vec2 = { x: number; y: number };
+type MTV = Vec2 | null;
+
+type Circle = Vec2 & { radius: number };
+type AABB = { minX: number; maxX: number; minY: number; maxY: number; centerX?: number; centerY?: number };
+type Vertex = Vec2;
+
 export const CollisionUtils = {
-  /**
-   * 圆形 vs 圆形
-   */
-  checkCircleCircle(c1, c2) {
+  checkCircleCircle(c1: Circle, c2: Circle): MTV {
     const dx = c2.x - c1.x;
     const dy = c2.y - c1.y;
     const distanceSq = dx * dx + dy * dy;
@@ -21,41 +23,30 @@ export const CollisionUtils = {
     const distance = Math.sqrt(distanceSq);
     const overlap = radiusSum - distance;
 
-    // 如果重叠但圆心重合，给一个默认方向
     const nx = distance > 0 ? dx / distance : 1;
     const ny = distance > 0 ? dy / distance : 0;
 
     return { x: nx * overlap, y: ny * overlap };
   },
 
-  /**
-   * AABB vs AABB
-   */
-  checkAABBAABB(a, b) {
+  checkAABBAABB(a: AABB, b: AABB): MTV {
     const overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX);
     const overlapY = Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY);
 
     if (overlapX <= 0 || overlapY <= 0) return null;
 
-    // 找最小重叠轴，MTV 方向定义为 A -> B
     if (overlapX < overlapY) {
-      const dir = (a.centerX < b.centerX) ? 1 : -1;
+      const dir = (a.centerX as number) < (b.centerX as number) ? 1 : -1;
       return { x: dir * overlapX, y: 0 };
-    } else {
-      const dir = (a.centerY < b.centerY) ? 1 : -1;
-      return { x: 0, y: dir * overlapY };
     }
+    const dir = (a.centerY as number) < (b.centerY as number) ? 1 : -1;
+    return { x: 0, y: dir * overlapY };
   },
 
-  /**
-   * 分离轴定律 (SAT) 通用实现 - 用于旋转矩形 (OBB)
-   * 也可用于任意凸多边形
-   */
-  checkSAT(verticesA, verticesB) {
+  checkSAT(verticesA: Vertex[], verticesB: Vertex[]): MTV {
     let minOverlap = Infinity;
     let mtvAxis = { x: 0, y: 0 };
 
-    // 获取两个多边形的所有法轴
     const axes = [
       ...this._getAxes(verticesA),
       ...this._getAxes(verticesB)
@@ -66,8 +57,7 @@ export const CollisionUtils = {
       const projB = this._project(verticesB, axis);
 
       const overlap = Math.min(projA.max, projB.max) - Math.max(projA.min, projB.min);
-
-      if (overlap <= 0) return null; // 发现分离轴，不碰撞
+      if (overlap <= 0) return null;
 
       if (overlap < minOverlap) {
         minOverlap = overlap;
@@ -75,7 +65,6 @@ export const CollisionUtils = {
       }
     }
 
-    // 计算中心点，确保 MTV 方向是从 A 指向 B
     const centerA = this._getCenter(verticesA);
     const centerB = this._getCenter(verticesB);
     const dot = (centerB.x - centerA.x) * mtvAxis.x + (centerB.y - centerA.y) * mtvAxis.y;
@@ -88,31 +77,24 @@ export const CollisionUtils = {
     return { x: mtvAxis.x * minOverlap, y: mtvAxis.y * minOverlap };
   },
 
-  /**
-   * 圆形 vs AABB
-   */
-  checkCircleAABB(circle, aabb) {
-    // 1. 找到 AABB 上离圆心最近的点
+  checkCircleAABB(circle: Circle, aabb: AABB): MTV {
     const closestX = Math.max(aabb.minX, Math.min(circle.x, aabb.maxX));
     const closestY = Math.max(aabb.minY, Math.min(circle.y, aabb.maxY));
 
-    const dx = closestX - circle.x; // 方向改为 A -> B (circle -> aabb)
+    const dx = closestX - circle.x;
     const dy = closestY - circle.y;
     const distanceSq = dx * dx + dy * dy;
 
-    // 如果圆心在 AABB 内部
     if (distanceSq === 0) {
-      // 找到最近的边界推出去
       const dl = circle.x - aabb.minX;
       const dr = aabb.maxX - circle.x;
       const dt = circle.y - aabb.minY;
       const db = aabb.maxY - circle.y;
       const min = Math.min(dl, dr, dt, db);
 
-      // MTV 方向 A -> B
-      if (min === dl) return { x: (dl + circle.radius), y: 0 };
+      if (min === dl) return { x: dl + circle.radius, y: 0 };
       if (min === dr) return { x: -(dr + circle.radius), y: 0 };
-      if (min === dt) return { x: 0, y: (dt + circle.radius) };
+      if (min === dt) return { x: 0, y: dt + circle.radius };
       return { x: 0, y: -(db + circle.radius) };
     }
 
@@ -126,11 +108,7 @@ export const CollisionUtils = {
     };
   },
 
-  /**
-   * 圆形 vs OBB (旋转矩形)
-   */
-  checkCircleOBB(circle, obbPos, obbWidth, obbHeight, obbRotation) {
-    // 1. 将圆心转到 OBB 的本地坐标 (反向旋转)
+  checkCircleOBB(circle: Circle, obbPos: Vec2, obbWidth: number, obbHeight: number, obbRotation: number): MTV {
     const dx = circle.x - obbPos.x;
     const dy = circle.y - obbPos.y;
     const cos = Math.cos(-obbRotation);
@@ -142,7 +120,6 @@ export const CollisionUtils = {
       radius: circle.radius
     };
 
-    // 2. 在本地空间执行 Circle vs AABB
     const localAABB = {
       minX: -obbWidth / 2, maxX: obbWidth / 2,
       minY: -obbHeight / 2, maxY: obbHeight / 2
@@ -151,7 +128,6 @@ export const CollisionUtils = {
     const localMTV = this.checkCircleAABB(localCircle, localAABB);
     if (!localMTV) return null;
 
-    // 3. 将结果转回世界坐标 (正向旋转)
     const worldCos = Math.cos(obbRotation);
     const worldSin = Math.sin(obbRotation);
 
@@ -161,46 +137,25 @@ export const CollisionUtils = {
     };
   },
 
-  /**
-   * 胶囊体 vs 圆形
-   * @param {Object} capsule - 胶囊体 {p1, p2, radius}
-   * @param {Object} circle - 圆形 {x, y, radius}
-   * @returns {Object|null} MTV (从胶囊指向圆形) 或 null
-   */
-  checkCapsuleCircle(capsule, circle) {
-    // 防御性检查
+  checkCapsuleCircle(capsule: any, circle: Circle): MTV {
     if (!capsule || !circle || !capsule.p1 || !capsule.p2) {
       console.warn('[CollisionUtils] Invalid capsule or circle data');
       return null;
     }
 
-    // 找到线段上离圆心最近的点
     const closest = this.getClosestPointOnSegment(circle, capsule.p1, capsule.p2);
-
-    // 将最近点视为一个圆，进行圆圆碰撞检测
-    // MTV 方向：从胶囊（closest点）指向圆形
     return this.checkCircleCircle(
       { x: closest.x, y: closest.y, radius: capsule.radius },
       circle
     );
   },
 
-  /**
-   * 胶囊体 vs 任何东西 (分发器)
-   * @param {Object} entityCapsule - 胶囊体实体
-   * @param {Object} entityOther - 另一个实体
-   * @returns {Object|null} MTV (从胶囊指向另一个实体) 或 null
-   */
-  checkCapsuleCollision(entityCapsule, entityOther) {
-    // [Updated] 从 shape 获取几何信息
+  checkCapsuleCollision(entityCapsule: any, entityOther: any): MTV {
     const colCap = entityCapsule.shape;
     const colOther = entityOther.shape;
-    
-    // transform
     const transCap = entityCapsule.transform;
     const transOther = entityOther.transform;
 
-    // 防御性检查
     if (!colCap || !colOther || !colCap.p1 || !colCap.p2) {
       console.warn('[CollisionUtils] Invalid capsule collider data');
       return null;
@@ -211,14 +166,10 @@ export const CollisionUtils = {
       y: transCap.y + (colCap.offsetY || 0)
     };
 
-    // 🎯 关键修复: 应用整体旋转到胶囊的端点
-    // 胶囊的 p1 和 p2 是相对于实体位置的局部坐标
-    // 需要先旋转，然后加到世界坐标上
     const rot = colCap.rotation || 0;
     const cos = Math.cos(rot);
     const sin = Math.sin(rot);
 
-    // 计算旋转后的世界坐标
     const p1 = {
       x: posCap.x + (colCap.p1.x * cos - colCap.p1.y * sin),
       y: posCap.y + (colCap.p1.x * sin + colCap.p1.y * cos)
@@ -235,80 +186,49 @@ export const CollisionUtils = {
       y: transOther.y + (colOther.offsetY || 0)
     };
 
-    // 胶囊 vs 圆形 或 点
     if (colOther.type === ShapeType.CIRCLE || colOther.type === ShapeType.POINT) {
       const r = colOther.type === ShapeType.POINT ? 0.1 : colOther.radius;
       return this.checkCapsuleCircle(capsule, { ...posOther, radius: r });
     }
 
-    // 🎯 修复 2: 解决“长胶囊体”中间失效问题 - 使用分段采样
     if (colOther.type === ShapeType.AABB || colOther.type === ShapeType.OBB) {
       const dx = p2.x - p1.x;
       const dy = p2.y - p1.y;
       const length = Math.sqrt(dx * dx + dy * dy);
-
-      // 每 20 像素采样一个点，或者至少采样两端和中间
       const stepCount = Math.max(2, Math.ceil(length / 20));
 
       for (let i = 0; i <= stepCount; i++) {
         const t = i / stepCount;
-        const samplePoint = {
-          x: p1.x + dx * t,
-          y: p1.y + dy * t
-        };
-
-        // 将采样点视为一个圆，与矩形做碰撞
-        // 使用 checkCollision 递归，构造符合 Proxy 结构的对象
-        // [Updated] 构造带有 shape 的 Proxy
+        const samplePoint = { x: p1.x + dx * t, y: p1.y + dy * t };
         const mtv = this.checkCollision(
-          { 
-            transform: samplePoint, 
+          {
+            transform: samplePoint,
             shape: { type: ShapeType.CIRCLE, radius: capsule.radius },
-            collider: { layer: entityCapsule.collider?.layer, mask: entityCapsule.collider?.mask } // 传递物理层级
+            collider: { layer: entityCapsule.collider?.layer, mask: entityCapsule.collider?.mask }
           },
           entityOther
         );
-
-        if (mtv) {
-          return mtv;
-        }
+        if (mtv) return mtv;
       }
     }
 
     return null;
   },
 
-  /**
-   * 线段 vs 圆形 (用于高速子弹的连续碰撞检测)
-   * @param {Object} p1 - 起点 {x, y}
-   * @param {Object} p2 - 终点 {x, y}
-   * @param {Object} circle - 圆形 {x, y, radius}
-   * @returns {boolean}
-   */
-  checkSegmentCircle(p1, p2, circle) {
-    // 1. 找到线段上离圆心最近的点
+  checkSegmentCircle(p1: Vec2, p2: Vec2, circle: Circle): boolean {
     const closest = this.getClosestPointOnSegment(circle, p1, p2);
-
-    // 2. 检查最近点到圆心的距离平方是否小于半径平方
     const dx = closest.x - circle.x;
     const dy = closest.y - circle.y;
     const distanceSq = dx * dx + dy * dy;
     return distanceSq <= circle.radius * circle.radius;
   },
 
-  /**
-   * 线段 vs AABB (用于高速子弹的连续碰撞检测)
-   * @param {Object} p1 - 起点 {x, y}
-   * @param {Object} p2 - 终点 {x, y}
-   * @param {Object} aabb - 矩形 {minX, maxX, minY, maxY}
-   * @returns {boolean}
-   */
-  checkSegmentAABB(p1, p2, aabb) {
-    let tmin = 0, tmax = 1;
+  checkSegmentAABB(p1: Vec2, p2: Vec2, aabb: AABB): boolean {
+    let tmin = 0;
+    let tmax = 1;
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
 
-    // 检查 X 轴上的投影重叠
     if (Math.abs(dx) < 0.000001) {
       if (p1.x < aabb.minX || p1.x > aabb.maxX) return false;
     } else {
@@ -321,7 +241,6 @@ export const CollisionUtils = {
       if (tmin > tmax) return false;
     }
 
-    // 检查 Y 轴上的投影重叠
     if (Math.abs(dy) < 0.000001) {
       if (p1.y < aabb.minY || p1.y > aabb.maxY) return false;
     } else {
@@ -337,63 +256,43 @@ export const CollisionUtils = {
     return true;
   },
 
-  /**
-   * 自动调度碰撞检测
-   * 支持传入 (EntityA, EntityB) 或者 (ProxyA, ProxyB)
-   * Proxy 结构: { transform: {x,y}, shape: {...}, collider?: {...} }
-   */
-  checkCollision(objA, objB) {
+  checkCollision(objA: any, objB: any): MTV {
     if (!objA || !objB) return null;
 
-    // [Updated] 统一从 shape 获取几何信息
-    // 兼容: 如果对象没有 shape 但有 collider/detectArea (旧数据残留), 这里不再支持, 强制要求 shape
     const colA = objA.shape;
     const colB = objB.shape;
-    
-    // 物理属性 (layer, mask) 仍然从 collider 获取 (如果是 Entity)
     const physA = objA.collider;
     const physB = objB.collider;
-
-    // transform 同理
     const transA = objA.transform;
     const transB = objB.transform;
 
     if (!colA || !colB || !transA || !transB) return null;
-    
-    // 如果有 layer/mask 定义则检查 (从 collider 获取)
+
     if (physA?.mask !== undefined && physB?.layer !== undefined) {
-       if (!(physA.mask & physB.layer)) return null;
+      if (!(physA.mask & physB.layer)) return null;
     }
-    // 反向检查
     if (physB?.mask !== undefined && physA?.layer !== undefined) {
-       if (!(physB.mask & physA.layer)) return null;
+      if (!(physB.mask & physA.layer)) return null;
     }
 
     const posA = { x: transA.x + (colA.offsetX || 0), y: transA.y + (colA.offsetY || 0) };
     const posB = { x: transB.x + (colB.offsetX || 0), y: transB.y + (colB.offsetY || 0) };
 
-    // 处理胶囊体
     if (colA.type === ShapeType.CAPSULE) return this.checkCapsuleCollision(objA, objB);
     if (colB.type === ShapeType.CAPSULE) {
       const mtv = this.checkCapsuleCollision(objB, objA);
       return mtv ? { x: -mtv.x, y: -mtv.y } : null;
     }
 
-    // --- 1. Circle/Point vs Circle/Point ---
-    // Point 视为半径极小的 Circle
-    if ((colA.type === ShapeType.CIRCLE || colA.type === ShapeType.POINT) && 
+    if ((colA.type === ShapeType.CIRCLE || colA.type === ShapeType.POINT) &&
         (colB.type === ShapeType.CIRCLE || colB.type === ShapeType.POINT)) {
       const rA = colA.type === ShapeType.POINT ? 0.1 : colA.radius;
       const rB = colB.type === ShapeType.POINT ? 0.1 : colB.radius;
-      return this.checkCircleCircle(
-        { ...posA, radius: rA },
-        { ...posB, radius: rB }
-      );
+      return this.checkCircleCircle({ ...posA, radius: rA }, { ...posB, radius: rB });
     }
 
-    // --- 2. AABB vs AABB ---
     if (colA.type === ShapeType.AABB && colB.type === ShapeType.AABB) {
-      const getAABB = (p, c) => ({
+      const getAABB = (p: Vec2, c: any) => ({
         minX: p.x - c.width / 2, maxX: p.x + c.width / 2,
         minY: p.y - c.height / 2, maxY: p.y + c.height / 2,
         centerX: p.x, centerY: p.y
@@ -401,10 +300,8 @@ export const CollisionUtils = {
       return this.checkAABBAABB(getAABB(posA, colA), getAABB(posB, colB));
     }
 
-    // --- 3. Circle/Point vs AABB / OBB ---
     if (colA.type === ShapeType.CIRCLE || colA.type === ShapeType.POINT) {
       const rA = colA.type === ShapeType.POINT ? 0.1 : colA.radius;
-      
       if (colB.type === ShapeType.AABB) {
         const aabb = {
           minX: posB.x - colB.width / 2, maxX: posB.x + colB.width / 2,
@@ -416,32 +313,26 @@ export const CollisionUtils = {
         return this.checkCircleOBB({ ...posA, radius: rA }, posB, colB.width, colB.height, colB.rotation);
       }
     }
-    // 反向
+
     if (colB.type === ShapeType.CIRCLE || colB.type === ShapeType.POINT) {
       const mtv = this.checkCollision(objB, objA);
       return mtv ? { x: -mtv.x, y: -mtv.y } : null;
     }
 
-    // --- 4. OBB vs OBB / AABB ---
     if (colA.type === ShapeType.OBB || colB.type === ShapeType.OBB) {
-      const vA = colA.type === ShapeType.OBB ?
-        this.getOBBVertices(posA.x, posA.y, colA.width, colA.height, colA.rotation) :
-        this._getAABBVertices(posA.x, posA.y, colA.width, colA.height);
-
-      const vB = colB.type === ShapeType.OBB ?
-        this.getOBBVertices(posB.x, posB.y, colB.width, colB.height, colB.rotation) :
-        this._getAABBVertices(posB.x, posB.y, colB.width, colB.height);
-
+      const vA = colA.type === ShapeType.OBB
+        ? this.getOBBVertices(posA.x, posA.y, colA.width, colA.height, colA.rotation)
+        : this._getAABBVertices(posA.x, posA.y, colA.width, colA.height);
+      const vB = colB.type === ShapeType.OBB
+        ? this.getOBBVertices(posB.x, posB.y, colB.width, colB.height, colB.rotation)
+        : this._getAABBVertices(posB.x, posB.y, colB.width, colB.height);
       return this.checkSAT(vA, vB);
     }
 
     return null;
   },
 
-  /**
-   * 找到线段上离点最近的点
-   */
-  getClosestPointOnSegment(p, p1, p2) {
+  getClosestPointOnSegment(p: Vec2, p1: Vec2, p2: Vec2): Vec2 {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     const l2 = dx * dx + dy * dy;
@@ -450,16 +341,11 @@ export const CollisionUtils = {
     let t = ((p.x - p1.x) * dx + (p.y - p1.y) * dy) / l2;
     t = Math.max(0, Math.min(1, t));
 
-    return {
-      x: p1.x + t * dx,
-      y: p1.y + t * dy
-    };
+    return { x: p1.x + t * dx, y: p1.y + t * dy };
   },
 
-  // --- 内部辅助函数 ---
-
-  _getAxes(vertices) {
-    const axes = [];
+  _getAxes(vertices: Vertex[]): Vec2[] {
+    const axes: Vec2[] = [];
     for (let i = 0; i < vertices.length; i++) {
       const p1 = vertices[i];
       const p2 = vertices[(i + 1) % vertices.length];
@@ -471,7 +357,7 @@ export const CollisionUtils = {
     return axes;
   },
 
-  _project(vertices, axis) {
+  _project(vertices: Vertex[], axis: Vec2) {
     let min = Infinity;
     let max = -Infinity;
     for (const p of vertices) {
@@ -482,8 +368,9 @@ export const CollisionUtils = {
     return { min, max };
   },
 
-  _getCenter(vertices) {
-    let x = 0, y = 0;
+  _getCenter(vertices: Vertex[]): Vec2 {
+    let x = 0;
+    let y = 0;
     for (const v of vertices) {
       x += v.x;
       y += v.y;
@@ -491,7 +378,7 @@ export const CollisionUtils = {
     return { x: x / vertices.length, y: y / vertices.length };
   },
 
-  _getAABBVertices(x, y, w, h) {
+  _getAABBVertices(x: number, y: number, w: number, h: number): Vertex[] {
     const hw = w / 2;
     const hh = h / 2;
     return [
@@ -502,7 +389,7 @@ export const CollisionUtils = {
     ];
   },
 
-  getOBBVertices(x, y, width, height, rotation) {
+  getOBBVertices(x: number, y: number, width: number, height: number, rotation: number): Vertex[] {
     const cos = Math.cos(rotation);
     const sin = Math.sin(rotation);
     const hw = width / 2;
@@ -521,21 +408,16 @@ export const CollisionUtils = {
     }));
   },
 
-  /**
-   * 强制将实体限制在地图边界内
-   * @param {Object} pos 位置组件 {x, y}
-   * @param {Object} shape 形状组件 (原 collider)
-   * @param {Object} mapBounds {width, height}
-   * @returns {boolean} 是否发生了位置修正
-   */
-  resolveMapBounds(pos, shape, mapBounds) {
+  resolveMapBounds(pos: Vec2, shape: any, mapBounds: { width: number; height: number } | null | undefined): boolean {
     if (!mapBounds || !shape) return false;
 
     let moved = false;
     const { width, height } = mapBounds;
 
-    // 根据碰撞体类型计算边界偏移
-    let left = 0, right = 0, top = 0, bottom = 0;
+    let left = 0;
+    let right = 0;
+    let top = 0;
+    let bottom = 0;
 
     if (shape.type === ShapeType.CIRCLE || shape.type === ShapeType.POINT) {
       const r = shape.type === ShapeType.POINT ? 0.1 : shape.radius;
@@ -551,16 +433,12 @@ export const CollisionUtils = {
 
       if (top < 0) { pos.y += -top; moved = true; }
       else if (bottom > height) { pos.y -= (bottom - height); moved = true; }
-    } 
-    else if (shape.type === ShapeType.AABB || shape.type === ShapeType.OBB) {
-      // 简化处理：使用 AABB 包围盒检查
+    } else if (shape.type === ShapeType.AABB || shape.type === ShapeType.OBB) {
       const hw = shape.width / 2;
       const hh = shape.height / 2;
       const ox = shape.offsetX || 0;
       const oy = shape.offsetY || 0;
-      
-      // 如果有旋转，这里其实需要更复杂的 OBB 边界检查，
-      // 但对于地图边界，简单的 AABB 投影通常足够
+
       left = pos.x + ox - hw;
       right = pos.x + ox + hw;
       top = pos.y + oy - hh;

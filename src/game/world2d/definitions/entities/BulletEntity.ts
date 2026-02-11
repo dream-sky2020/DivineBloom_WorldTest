@@ -7,7 +7,7 @@ import {
   ShapeType, Shape, SHAPE_INSPECTOR_FIELDS,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Inspector,
-  Projectile,
+  Bullet, BULLET_INSPECTOR_FIELDS,
   BulletDetect, BULLET_DETECT_INSPECTOR_FIELDS,
   LifeTime, LIFETIME_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
@@ -67,7 +67,7 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
       // 基础位置
       transform: Transform.create(params.x, params.y),
 
-      // 速度组件（独立于 projectile.speed）
+      // 速度组件（独立于 bullet.speed）
       velocity: Velocity.create(params.velocityX || 0, params.velocityY || 0),
 
       sprite: Sprite.create(params.spriteId, {
@@ -75,9 +75,12 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
         tint: params.color
       }),
 
-      // 战斗属性（仅伤害相关）
-      projectile: Projectile.create({
-        damage: params.damage
+      // 战斗与弹体属性
+      bullet: Bullet.create({
+        damage: params.damage,
+        radius: params.radius,
+        speed: Math.hypot(params.velocityX || 0, params.velocityY || 0),
+        maxLifeTime: params.maxLifeTime
       }),
 
       // 高速探测 (CCD)
@@ -113,6 +116,12 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
       })
     });
 
+    // 运行时双缓冲命中集合兜底初始化（不参与序列化）
+    if (root.bulletDetect) {
+      if (!root.bulletDetect.lastHits) root.bulletDetect.lastHits = new Set<string>();
+      if (!root.bulletDetect.activeHits) root.bulletDetect.activeHits = new Set<string>();
+    }
+
     // 编辑器支持
     root.inspector = Inspector.create({
       fields: [
@@ -120,9 +129,7 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
         ...(VELOCITY_INSPECTOR_FIELDS || []),
         ...(SHAPE_INSPECTOR_FIELDS || []),
         ...(COLLIDER_INSPECTOR_FIELDS || []),
-        { path: 'projectile.damage', label: 'Damage', type: 'number' },
-        { path: 'projectile.speed', label: 'Speed', type: 'number' },
-        { path: 'projectile.maxLifeTime', label: 'Life Time', type: 'number' },
+        ...(BULLET_INSPECTOR_FIELDS || []),
         ...(LIFETIME_INSPECTOR_FIELDS || []),
         ...(SPRITE_INSPECTOR_FIELDS || []),
         ...(BULLET_DETECT_INSPECTOR_FIELDS || [])
@@ -135,17 +142,17 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
 
   serialize(entity: any) {
     // Bullet 通常是瞬态的，可能不需要复杂的序列化，或者仅用于调试
-    const { transform, projectile, sprite, lifeTime, children } = entity
+    const { transform, bullet, sprite, lifeTime, children } = entity
     const data: any = {
       type: 'bullet',
       x: transform?.x ?? 0,
       y: transform?.y ?? 0,
-      radius: projectile?.radius ?? 2,
-      damage: projectile?.damage ?? 10,
+      radius: bullet?.radius ?? 2,
+      damage: bullet?.damage ?? 10,
       maxLifeTime: lifeTime?.maxTime ?? 3,
       color: sprite?.tint ?? '#FFFF00',
       spriteId: sprite?.id ?? 'particle_1',
-      spriteScale: sprite?.scale ?? (projectile?.radius ? projectile.radius / 16 : 0.125),
+      spriteScale: sprite?.scale ?? (bullet?.radius ? bullet.radius / 16 : 0.125),
       detectCcdEnabled: entity.bulletDetect?.ccdEnabled ?? true,
       detectCcdMinDistance: entity.bulletDetect?.ccdMinDistance ?? 0,
       detectCcdBuffer: entity.bulletDetect?.ccdBuffer ?? 0

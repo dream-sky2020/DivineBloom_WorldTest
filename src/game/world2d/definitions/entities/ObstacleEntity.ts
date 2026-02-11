@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
-import { Collider, COLLIDER_INSPECTOR_FIELDS, Shape, SHAPE_INSPECTOR_FIELDS, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS, Detectable } from '@components';
+import { Collider, COLLIDER_INSPECTOR_FIELDS, Shape, SHAPE_INSPECTOR_FIELDS, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS, Detectable, BulletDetectable, PortalDetectable } from '@components';
 
 export const ObstacleEntitySchema = z.object({
   x: z.number(),
@@ -61,7 +61,9 @@ export const ObstacleEntity: IEntityDefinition<typeof ObstacleEntitySchema> = {
       collider: Collider.create({
         isStatic: true
       }),
-      detectable: Detectable.create(['obstacle'])
+      detectable: Detectable.create(['obstacle']),
+      bulletDetectable: BulletDetectable.create(['obstacle']),
+      portalDetectable: PortalDetectable.create(['obstacle'])
     });
 
     // 添加 Inspector 到主实体，以便编辑器操作

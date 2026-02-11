@@ -87,7 +87,8 @@ export class WorldScene {
             // 逻辑阶段 (Logic Phases)
             logic: {
                 sense: [
-                    getSystem('detect-sense'),
+                    getSystem('bullet-detect-sense'),
+                    getSystem('portal-detect-sense'),
                     getSystem('weapon-sense'),
                     getSystem('ai-sense'),
                     getSystem('mouse-position-sense')

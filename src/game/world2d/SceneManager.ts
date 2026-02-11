@@ -2,7 +2,8 @@ import { world, clearWorld } from '@world2d/world'
 // import { getMapData } from '@schema/maps' // Removed static import
 import { createLogger } from '@/utils/logger'
 import { SceneLifecycle } from '@world2d/resources/SceneLifecycle'
-import { DetectSenseSystem } from '@systems/sense/DetectSenseSystem'
+import { BulletDetectSenseSystem } from '@systems/sense/BulletDetectSenseSystem'
+import { PortalDetectSenseSystem } from '@systems/sense/PortalDetectSenseSystem'
 import { SyncTransformSystem } from '@systems/physics/SyncTransformSystem'
 import { GameEngine } from './GameEngine'
 import { WorldScene } from './WorldScene'
@@ -139,7 +140,8 @@ export class SceneManager {
         // 3. 清理 ECS 世界
         clearWorld()
         // 3.1 重置探测区域系统的缓存 (清除旧地图的静态实体)
-        DetectSenseSystem.reset()
+        BulletDetectSenseSystem.reset()
+        PortalDetectSenseSystem.reset()
 
         // 4. 更新 Store 指向新地图 (真正切换 ID)
         this.worldStore.currentMapId = mapId

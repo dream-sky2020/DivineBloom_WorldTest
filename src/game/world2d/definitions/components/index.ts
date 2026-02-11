@@ -12,10 +12,13 @@ import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
 import { BulletIntent } from './BulletIntent';
 import { BulletDetect } from './BulletDetect';
+import { BulletDetectable } from './BulletDetectable';
 import { PortalDetect } from './PortalDetect';
+import { PortalDetectable } from './PortalDetectable';
 import { Portal } from './Portal';
 import { Detectable } from './Detectable';
 import { DetectInput } from './DetectInput';
+import { Damage } from './Damage';
 import { TriggerSignal } from './TriggerSignal';
 import { MonsterSpawn } from './MonsterSpawn';
 import { Monster } from './Monster';
@@ -32,7 +35,7 @@ import { MousePosition } from './MousePosition';
 import { RawInput } from './RawInput';
 import { Parent } from './Parent';
 import { PathAI } from './PathAI';
-import { Projectile } from './Projectile';
+import { Bullet } from './Bullet';
 import { SceneTransition } from './Requests';
 import { SceneConfig } from './SceneConfig';
 import { Shape } from './Shape';
@@ -62,10 +65,13 @@ const components = [
     DetectArea,
     BulletIntent,
     BulletDetect,
+    BulletDetectable,
     PortalDetect,
+    PortalDetectable,
     Portal,
     Detectable,
     DetectInput,
+    Damage,
     TriggerSignal,
     MonsterSpawn,
     Monster,
@@ -82,7 +88,7 @@ const components = [
     RawInput,
     Parent,
     PathAI,
-    Projectile,
+    Bullet,
     SceneTransition,
     SceneConfig,
     Shape,
@@ -117,10 +123,13 @@ export * from './Commands';
 export * from './DetectArea';
 export * from './BulletIntent';
 export * from './BulletDetect';
+export * from './BulletDetectable';
 export * from './PortalDetect';
+export * from './PortalDetectable';
 export * from './Portal';
 export * from './Detectable';
 export * from './DetectInput';
+export * from './Damage';
 export * from './TriggerSignal';
 export * from './MonsterSpawn';
 export * from './Monster';
@@ -134,7 +143,7 @@ export * from './EnemyAIIntent';
 export * from './LifeTime';
 export * from './MousePosition';
 export * from './RawInput';
-export * from './Projectile';
+export * from './Bullet';
 export * from './Requests';
 export * from './SceneConfig';
 export * from './Sprite';

@@ -21,12 +21,22 @@ const bulletDetectSchema = z.object({
 
 export type BulletDetectLiteResult = z.infer<typeof bulletDetectLiteResultSchema>;
 export type BulletDetectData = z.infer<typeof bulletDetectSchema>;
+export type BulletDetectRuntimeData = BulletDetectData & {
+  // 双缓冲命中集合：仅运行时使用，不参与序列化
+  lastHits: Set<string>;
+  activeHits: Set<string>;
+};
 
-export const BulletDetect: IComponentDefinition<typeof bulletDetectSchema, BulletDetectData> = {
+export const BulletDetect: IComponentDefinition<typeof bulletDetectSchema, BulletDetectRuntimeData> = {
   name: 'BulletDetect',
   schema: bulletDetectSchema,
   create(config: Partial<BulletDetectData> = {}) {
-    return bulletDetectSchema.parse(config);
+    const parsed = bulletDetectSchema.parse(config);
+    return {
+      ...parsed,
+      lastHits: new Set<string>(),
+      activeHits: new Set<string>()
+    };
   },
   serialize(component) {
     // results 是运行时数据，不需要保存

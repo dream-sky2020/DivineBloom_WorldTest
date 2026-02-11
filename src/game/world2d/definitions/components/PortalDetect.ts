@@ -21,12 +21,22 @@ const portalDetectSchema = z.object({
 
 export type PortalDetectLiteResult = z.infer<typeof portalDetectLiteResultSchema>;
 export type PortalDetectData = z.infer<typeof portalDetectSchema>;
+export type PortalDetectRuntimeData = PortalDetectData & {
+  // 双缓冲命中集合：仅运行时使用，不参与序列化
+  lastHits: Set<string>;
+  activeHits: Set<string>;
+};
 
-export const PortalDetect: IComponentDefinition<typeof portalDetectSchema, PortalDetectData> = {
+export const PortalDetect: IComponentDefinition<typeof portalDetectSchema, PortalDetectRuntimeData> = {
   name: 'PortalDetect',
   schema: portalDetectSchema,
   create(config: Partial<PortalDetectData> = {}) {
-    return portalDetectSchema.parse(config);
+    const parsed = portalDetectSchema.parse(config);
+    return {
+      ...parsed,
+      lastHits: new Set<string>(),
+      activeHits: new Set<string>()
+    };
   },
   serialize(component) {
     // results 是运行时数据，不需要保存

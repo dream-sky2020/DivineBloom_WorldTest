@@ -56,7 +56,8 @@ import { WeaponDebugRenderSystem } from '@systems/render/WeaponDebugRenderSystem
 import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
 
 // Sense
-import { DetectSenseSystem } from '@systems/sense/DetectSenseSystem';
+import { BulletDetectSenseSystem } from '@systems/sense/BulletDetectSenseSystem';
+import { PortalDetectSenseSystem } from '@systems/sense/PortalDetectSenseSystem';
 import { AISenseSystem } from '@systems/sense/AISenseSystem';
 import { InputSenseSystem } from '@systems/sense/InputSenseSystem';
 import { MousePositionSenseSystem } from '@systems/sense/MousePositionSenseSystem';
@@ -114,7 +115,8 @@ export const Registry: Record<string, any> = {
     'weapon-control': WeaponControlSystem,
 
     // --- Detection & AI Sense ---
-    'detect-sense': DetectSenseSystem,
+    'bullet-detect-sense': BulletDetectSenseSystem,
+    'portal-detect-sense': PortalDetectSenseSystem,
     'weapon-sense': WeaponSenseSystem,
     'ai-sense': AISenseSystem,
 

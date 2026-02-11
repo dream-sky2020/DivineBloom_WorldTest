@@ -8,6 +8,8 @@ import {
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Bounds, BOUNDS_INSPECTOR_FIELDS,
   Detectable,
+  BulletDetectable,
+  PortalDetectable,
   Monster,
   AI,
   Children,
@@ -100,7 +102,9 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       animation: Animation.create('idle'),
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
       collider: Collider.create(),
-      detectable: Detectable.create(['enemy'])
+      detectable: Detectable.create(['enemy']),
+      bulletDetectable: BulletDetectable.create(['enemy']),
+      portalDetectable: PortalDetectable.create(['enemy'])
     });
 
     // 子节点：挂载被探测组件，便于后续扩展命中盒/独立部件系统
@@ -110,7 +114,9 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       parent: Parent.create(root),
       transform: Transform.create(x, y),
       localTransform: LocalTransform.create(0, 0),
-      detectable: Detectable.create(['enemy'])
+      detectable: Detectable.create(['enemy']),
+      bulletDetectable: BulletDetectable.create(['enemy']),
+      portalDetectable: PortalDetectable.create(['enemy'])
     });
     root.children = Children.create([coreNode]);
 
