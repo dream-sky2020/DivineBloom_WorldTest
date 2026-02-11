@@ -38,6 +38,7 @@ import { HealthCleanupSystem } from '@systems/lifecycle/HealthCleanupSystem';
 import { LifeTimeSystem } from '@systems/lifecycle/LifeTimeSystem';
 
 // Physics
+import { BoundSystem } from '@systems/physics/BoundSystem';
 import { CollisionSystem } from '@systems/physics/CollisionSystem';
 import { MovementSystem } from '@systems/physics/MovementSystem';
 import { SyncTransformSystem } from '@systems/physics/SyncTransformSystem';
@@ -93,6 +94,7 @@ export const Registry: Record<string, any> = {
     // --- Physics & Movement ---
     'sync-transform': SyncTransformSystem,
     'movement': MovementSystem,
+    'bound': BoundSystem,
     'collision': CollisionSystem,
 
     // --- Lifecycle Management ---

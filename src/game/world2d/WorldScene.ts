@@ -111,6 +111,7 @@ export class WorldScene {
                 ],
                 physics: [
                     getSystem('movement'),
+                    getSystem('bound'),
                     getSystem('sync-transform'),
                     getSystem('collision'),
                     getSystem('sync-transform')

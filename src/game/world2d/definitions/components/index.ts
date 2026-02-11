@@ -10,6 +10,7 @@ import { Children } from './Children';
 import { Collider } from './Collider';
 import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
+import { BulletIntent } from './BulletIntent';
 import { BulletDetect } from './BulletDetect';
 import { PortalDetect } from './PortalDetect';
 import { Portal } from './Portal';
@@ -59,6 +60,7 @@ const components = [
     Collider,
     Commands,
     DetectArea,
+    BulletIntent,
     BulletDetect,
     PortalDetect,
     Portal,
@@ -113,6 +115,7 @@ export * from './Camera';
 export * from './Collider';
 export * from './Commands';
 export * from './DetectArea';
+export * from './BulletIntent';
 export * from './BulletDetect';
 export * from './PortalDetect';
 export * from './Portal';
