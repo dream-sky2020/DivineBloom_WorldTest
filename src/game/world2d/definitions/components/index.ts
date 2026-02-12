@@ -5,14 +5,15 @@ import { AIConfig, AIState } from './AI';
 import { AISensory } from './AISensory';
 import { Animation } from './Animation';
 import { Bounds } from './Bounds';
+import { Bounce } from './Bounce';
 import { Camera } from './Camera';
 import { Children } from './Children';
 import { Collider } from './Collider';
 import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
 import { BulletIntent } from './BulletIntent';
-import { BulletDetect } from './BulletDetect';
-import { BulletDetectable } from './BulletDetectable';
+import { DamageDetect } from './DamageDetect';
+import { DamageDetectable } from './DamageDetectable';
 import { PortalDetect } from './PortalDetect';
 import { PortalDetectable } from './PortalDetectable';
 import { Portal } from './Portal';
@@ -58,14 +59,15 @@ const components = [
     AISensory,
     Animation,
     Bounds,
+    Bounce,
     Camera,
     Children,
     Collider,
     Commands,
     DetectArea,
     BulletIntent,
-    BulletDetect,
-    BulletDetectable,
+    DamageDetect,
+    DamageDetectable,
     PortalDetect,
     PortalDetectable,
     Portal,
@@ -117,13 +119,14 @@ export * from './AI';
 export * from './AISensory';
 export * from './Animation';
 export * from './Bounds';
+export * from './Bounce';
 export * from './Camera';
 export * from './Collider';
 export * from './Commands';
 export * from './DetectArea';
 export * from './BulletIntent';
-export * from './BulletDetect';
-export * from './BulletDetectable';
+export * from './DamageDetect';
+export * from './DamageDetectable';
 export * from './PortalDetect';
 export * from './PortalDetectable';
 export * from './Portal';

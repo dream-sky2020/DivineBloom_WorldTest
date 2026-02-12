@@ -54,7 +54,7 @@ const bulletIntentSchema = z.object({
     requests: []
   }),
 
-  // 穿透次数消耗意图：命中后由系统消费 bullet.penetrationCount
+  // 命中次数消耗意图：命中后由系统消费 damage.remainingHitCount
   penetrationConsumeIntent: z.object({
     enabled: z.boolean().default(false),
     consumeCount: z.number().int().min(0).default(0)
@@ -63,7 +63,7 @@ const bulletIntentSchema = z.object({
     consumeCount: 0
   }),
 
-  // 反弹次数消耗意图：反弹后由系统消费 bullet.remainingBounces
+  // 反弹次数消耗意图：反弹后由系统消费 bounce.remainingBounces
   bounceConsumeIntent: z.object({
     enabled: z.boolean().default(false),
     consumeCount: z.number().int().min(0).default(0)
@@ -118,8 +118,8 @@ export const BulletIntent: IComponentDefinition<typeof bulletIntentSchema, Bulle
     { path: 'bulletIntent.sizeChangeIntent.enabled', label: '启用大小变更意图', type: 'checkbox', group: '子弹意图 (BulletIntent)' },
     { path: 'bulletIntent.sizeChangeIntent.targetRadius', label: '目标半径', type: 'number', props: { step: 0.1 }, group: '子弹意图 (BulletIntent)' },
     { path: 'bulletIntent.sizeChangeIntent.deltaRadius', label: '半径增量', type: 'number', props: { step: 0.1 }, group: '子弹意图 (BulletIntent)' },
-    { path: 'bulletIntent.penetrationConsumeIntent.enabled', label: '启用穿透消耗意图', type: 'checkbox', group: '子弹意图 (BulletIntent)' },
-    { path: 'bulletIntent.penetrationConsumeIntent.consumeCount', label: '穿透消耗次数', type: 'number', props: { min: 0, step: 1 }, group: '子弹意图 (BulletIntent)' },
+    { path: 'bulletIntent.penetrationConsumeIntent.enabled', label: '启用命中消耗意图', type: 'checkbox', group: '子弹意图 (BulletIntent)' },
+    { path: 'bulletIntent.penetrationConsumeIntent.consumeCount', label: '命中消耗次数', type: 'number', props: { min: 0, step: 1 }, group: '子弹意图 (BulletIntent)' },
     { path: 'bulletIntent.bounceConsumeIntent.enabled', label: '启用反弹消耗意图', type: 'checkbox', group: '子弹意图 (BulletIntent)' },
     { path: 'bulletIntent.bounceConsumeIntent.consumeCount', label: '反弹消耗次数', type: 'number', props: { min: 0, step: 1 }, group: '子弹意图 (BulletIntent)' },
     { path: 'bulletIntent.destroyIntent.shouldDestroy', label: '请求销毁', type: 'checkbox', group: '子弹意图 (BulletIntent)' },

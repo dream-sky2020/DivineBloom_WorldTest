@@ -8,7 +8,7 @@ import {
   Collider, COLLIDER_INSPECTOR_FIELDS,
   Bounds, BOUNDS_INSPECTOR_FIELDS,
   Detectable,
-  BulletDetectable,
+  DamageDetectable,
   PortalDetectable,
   Monster,
   AI,
@@ -103,7 +103,7 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
       collider: Collider.create(),
       detectable: Detectable.create(['enemy']),
-      bulletDetectable: BulletDetectable.create(['enemy']),
+      damageDetectable: DamageDetectable.create(['enemy']),
       portalDetectable: PortalDetectable.create(['enemy'])
     });
 
@@ -115,7 +115,7 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       transform: Transform.create(x, y),
       localTransform: LocalTransform.create(0, 0),
       detectable: Detectable.create(['enemy']),
-      bulletDetectable: BulletDetectable.create(['enemy']),
+      damageDetectable: DamageDetectable.create(['enemy']),
       portalDetectable: PortalDetectable.create(['enemy'])
     });
     root.children = Children.create([coreNode]);

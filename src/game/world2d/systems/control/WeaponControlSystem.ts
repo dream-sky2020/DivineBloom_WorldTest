@@ -73,9 +73,9 @@ export const WeaponControlSystem: ISystem = {
                     maxLifeTime: projectileLifeTime,
                     spriteId: weapon.bulletSpriteId,
                     spriteScale: weapon.bulletSpriteScale,
-                    detectCcdEnabled: weapon.bulletDetectCcdEnabled,
-                    detectCcdMinDistance: weapon.bulletDetectCcdMinDistance,
-                    detectCcdBuffer: weapon.bulletDetectCcdBuffer,
+                    detectCcdEnabled: weapon.damageDetectCcdEnabled,
+                    detectCcdMinDistance: weapon.damageDetectCcdMinDistance,
+                    detectCcdBuffer: weapon.damageDetectCcdBuffer,
                     bulletShape: weapon.bulletShape
                 });
             }

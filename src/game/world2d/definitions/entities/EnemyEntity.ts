@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
-  DetectArea, Trigger, DetectInput, Detectable, BulletDetectable, PortalDetectable,
+  DetectArea, Trigger, DetectInput, Detectable, DamageDetectable, PortalDetectable,
   Monster,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
@@ -130,7 +130,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
       collider: Collider.create(),
       detectable: Detectable.create(['enemy', 'teleportable']),
-      bulletDetectable: BulletDetectable.create(['enemy']),
+      damageDetectable: DamageDetectable.create(['enemy']),
       portalDetectable: PortalDetectable.create(['enemy', 'teleportable']),
 
       // Trigger 放在根节点

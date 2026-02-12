@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
-import { Collider, COLLIDER_INSPECTOR_FIELDS, Shape, SHAPE_INSPECTOR_FIELDS, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS, Detectable, BulletDetectable, PortalDetectable } from '@components';
+import { Collider, COLLIDER_INSPECTOR_FIELDS, Shape, SHAPE_INSPECTOR_FIELDS, ShapeType, Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS, Detectable, DamageDetectable, PortalDetectable } from '@components';
 
 export const ObstacleEntitySchema = z.object({
   x: z.number(),
@@ -62,7 +62,7 @@ export const ObstacleEntity: IEntityDefinition<typeof ObstacleEntitySchema> = {
         isStatic: true
       }),
       detectable: Detectable.create(['obstacle']),
-      bulletDetectable: BulletDetectable.create(['obstacle']),
+      damageDetectable: DamageDetectable.create(['obstacle']),
       portalDetectable: PortalDetectable.create(['obstacle'])
     });
 

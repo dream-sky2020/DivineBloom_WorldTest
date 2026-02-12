@@ -1,5 +1,6 @@
 export * from './components'
 export * from './entities'
+export * from './buffers'
 export * from './EntityManager'
 export * from './internal/EntityTemplateRegistry'
 export * from './internal/EntityCreator'

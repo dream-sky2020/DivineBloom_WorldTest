@@ -6,7 +6,7 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { DetectionLayer } from '@components';
 
-type BulletDetectComponent = {
+type DamageDetectComponent = {
     layerMask?: number;
     ccdEnabled?: boolean;
     ccdMinDistance?: number;
@@ -18,7 +18,7 @@ type BulletDetectComponent = {
     activeHits?: Set<string>;
 };
 
-type BulletDetectableComponent = {
+type DamageDetectableComponent = {
     labels?: string[];
     ccdEnabled?: boolean;
     layer?: number;
@@ -27,20 +27,21 @@ type BulletDetectableComponent = {
 };
 
 /**
- * BulletDetectSenseSystem
- * 专门处理 BulletDetect / BulletDetectable。
+ * DamageDetectSenseSystem
+ * 专门处理 DamageDetect / DamageDetectable。
  */
-export const BulletDetectSenseSystem: ISystem & {
+export const DamageDetectSenseSystem: ISystem & {
     grid: any;
     addedStaticEntities: WeakSet<object>;
     _buildFullResult(logicEntity: IEntity, detectable: any): any;
-    _resolveDetectableForTarget(target: IEntity): BulletDetectableComponent | undefined;
-    _resolveLogicEntityAndDetectable(target: IEntity): { logicEntity: IEntity | undefined; logicDetectable: BulletDetectableComponent | undefined };
+    _resolveDetectableForTarget(target: IEntity): DamageDetectableComponent | undefined;
+    _resolveLogicEntityAndDetectable(target: IEntity): { logicEntity: IEntity | undefined; logicDetectable: DamageDetectableComponent | undefined };
     _prepareDetectableBuffers(targets: any): void;
     _processDetectors(detectors: any): void;
     reset(): void;
+    init(mapData?: any): void;
 } = {
-    name: 'bullet-detect-sense',
+    name: 'damage-detect-sense',
 
     grid: new SpatialHashGrid({ x: 0, y: 0, width: 4000, height: 4000 }, 100),
     addedStaticEntities: new WeakSet(),
@@ -61,20 +62,20 @@ export const BulletDetectSenseSystem: ISystem & {
         };
     },
 
-    _resolveDetectableForTarget(target: IEntity): BulletDetectableComponent | undefined {
+    _resolveDetectableForTarget(target: IEntity): DamageDetectableComponent | undefined {
         return (
-            (target as any).bulletDetectable ||
-            (target as any).parent?.entity?.bulletDetectable
+            (target as any).damageDetectable ||
+            (target as any).parent?.entity?.damageDetectable
         );
     },
 
     _resolveLogicEntityAndDetectable(target: IEntity) {
-        const ownDetectable = (target as any).bulletDetectable;
+        const ownDetectable = (target as any).damageDetectable;
         const logicEntity = ownDetectable ? target : (target as any).parent?.entity;
         if (!logicEntity) return { logicEntity: undefined, logicDetectable: undefined };
         return {
             logicEntity,
-            logicDetectable: (logicEntity as any).bulletDetectable
+            logicDetectable: (logicEntity as any).damageDetectable
         };
     },
 
@@ -99,7 +100,7 @@ export const BulletDetectSenseSystem: ISystem & {
     _processDetectors(detectors: any) {
         for (const entity of detectors) {
             const e = entity as IEntity;
-            const detect = (e as any).bulletDetect as BulletDetectComponent | undefined;
+            const detect = (e as any).damageDetect as DamageDetectComponent | undefined;
             if (!detect) continue;
             const detectorId = String(e.uuid ?? e.id ?? (e as any).__id ?? '');
 
@@ -198,8 +199,8 @@ export const BulletDetectSenseSystem: ISystem & {
         for (const target of targets) {
             const t = target as IEntity;
             const detectable =
-                (t as any).bulletDetectable ||
-                (t as any).parent?.entity?.bulletDetectable;
+                (t as any).damageDetectable ||
+                (t as any).parent?.entity?.damageDetectable;
             if (!detectable) continue;
 
             const transform = t.transform;
@@ -221,9 +222,9 @@ export const BulletDetectSenseSystem: ISystem & {
             }
         }
 
-        const bulletDetectors = world.with('bulletDetect', 'shape', 'transform');
+        const damageDetectors = world.with('damageDetect', 'shape', 'transform');
         this._prepareDetectableBuffers(targets);
-        this._processDetectors(bulletDetectors);
+        this._processDetectors(damageDetectors);
     },
 
     reset() {

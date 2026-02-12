@@ -1,6 +1,6 @@
 import { EntityManager } from '@definitions'
 import { getSystem } from '@world2d/SystemRegistry'
-import { clearWorld, world } from '@world2d/world'
+import { clearWorld, floatingTextQueue, world } from '@world2d/world'
 import { GlobalEntity } from '@entities'
 import { editorManager } from '../editor/core/EditorCore'
 import { createLogger } from '@/utils/logger'
@@ -87,7 +87,7 @@ export class WorldScene {
             // 逻辑阶段 (Logic Phases)
             logic: {
                 sense: [
-                    getSystem('bullet-detect-sense'),
+                    getSystem('damage-detect-sense'),
                     getSystem('portal-detect-sense'),
                     getSystem('weapon-sense'),
                     getSystem('ai-sense'),
@@ -108,7 +108,8 @@ export class WorldScene {
                     getSystem('portal-control'),
                     getSystem('enemy-control'),
                     getSystem('follow'),
-                    getSystem('weapon-control')
+                    getSystem('weapon-control'),
+                    getSystem('damage-control')
                 ],
                 physics: [
                     getSystem('movement'),
@@ -132,6 +133,7 @@ export class WorldScene {
                 getSystem('ai-vision-render'),       // Layer 15
                 getSystem('visual-render'),          // Layer 20
                 getSystem('status-render'),          // Layer 30
+                getSystem('floating-text-render'),   // Layer 40
                 getSystem('physics-debug-render'),   // Layer 110
                 getSystem('detect-area-render'),     // Layer 100 (Debug)
                 getSystem('portal-debug-render'),    // Layer 105 (Portal Debug)
@@ -283,6 +285,7 @@ export class WorldScene {
         // 1. 始终运行的系统 (动画、时间等)
         getSystem('visual-render').update(dt)
         getSystem('time').update(dt)
+        floatingTextQueue.update(dt)
 
         // 2. 编辑器模式逻辑
         if (this.editMode) {

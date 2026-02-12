@@ -11,6 +11,7 @@
 import { CameraSystem } from '@systems/camera/CameraSystem';
 
 // Control
+import { DamageControlSystem } from '@systems/control/DamageControlSystem';
 import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
 import { FollowSystem } from '@systems/control/FollowSystem';
 import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
@@ -49,6 +50,7 @@ import { AIVisionRenderSystem } from '@systems/render/AIVisionRenderSystem';
 // import { BackgroundRenderSystem } from '@systems/render/BackgroundRenderSystem'; // Merged into VisualRenderSystem
 import { DetectAreaRenderSystem } from '@systems/render/DetectAreaRenderSystem';
 import { EditorGridRenderSystem } from '@systems/render/EditorGridRenderSystem';
+import { FloatingTextRenderSystem } from '@systems/render/FloatingTextRenderSystem';
 import { PhysicsDebugRenderSystem } from '@systems/render/PhysicsDebugRenderSystem';
 import { PortalDebugRenderSystem } from '@systems/render/PortalDebugRenderSystem';
 import { StatusRenderSystem } from '@systems/render/StatusRenderSystem';
@@ -56,7 +58,7 @@ import { WeaponDebugRenderSystem } from '@systems/render/WeaponDebugRenderSystem
 import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
 
 // Sense
-import { BulletDetectSenseSystem } from '@systems/sense/BulletDetectSenseSystem';
+import { DamageDetectSenseSystem } from '@systems/sense/DamageDetectSenseSystem';
 import { PortalDetectSenseSystem } from '@systems/sense/PortalDetectSenseSystem';
 import { AISenseSystem } from '@systems/sense/AISenseSystem';
 import { InputSenseSystem } from '@systems/sense/InputSenseSystem';
@@ -109,13 +111,14 @@ export const Registry: Record<string, any> = {
     'enemy-ai-intent': EnemyAIIntentSystem,
     'player-control': PlayerControlSystem,
     'portal-control': PortalControlSystem,
+    'damage-control': DamageControlSystem,
     'enemy-control': EnemyControlSystem,
     'follow': FollowSystem,
     'weapon': WeaponControlSystem,
     'weapon-control': WeaponControlSystem,
 
     // --- Detection & AI Sense ---
-    'bullet-detect-sense': BulletDetectSenseSystem,
+    'damage-detect-sense': DamageDetectSenseSystem,
     'portal-detect-sense': PortalDetectSenseSystem,
     'weapon-sense': WeaponSenseSystem,
     'ai-sense': AISenseSystem,
@@ -136,6 +139,7 @@ export const Registry: Record<string, any> = {
     'physics-debug-render': PhysicsDebugRenderSystem,
     'portal-debug-render': PortalDebugRenderSystem,
     'status-render': StatusRenderSystem,
+    'floating-text-render': FloatingTextRenderSystem,
     'weapon-debug-render': WeaponDebugRenderSystem,
 };
 

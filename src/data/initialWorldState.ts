@@ -99,9 +99,9 @@ export const InitialWorldState: InitialWorldStateData = {
                 weaponConfig: {
                     weaponType: 'pistol',
                     bulletSpriteScale: 0.5,
-                    bulletDetectCcdEnabled: true,
-                    bulletDetectCcdMinDistance: 0,
-                    bulletDetectCcdBuffer: 2,
+                    damageDetectCcdEnabled: true,
+                    damageDetectCcdMinDistance: 0,
+                    damageDetectCcdBuffer: 2,
                     bulletShape: { type: 'circle', radius: 48 }
                 }
             },
@@ -216,9 +216,9 @@ export const InitialWorldState: InitialWorldStateData = {
                 weaponConfig: {
                     weaponType: 'pistol',
                     bulletSpriteScale: 0.5,
-                    bulletDetectCcdEnabled: true,
-                    bulletDetectCcdMinDistance: 0,
-                    bulletDetectCcdBuffer: 2,
+                    damageDetectCcdEnabled: true,
+                    damageDetectCcdMinDistance: 0,
+                    damageDetectCcdBuffer: 2,
                     bulletShape: { type: 'circle', radius: 6 }
                 }
             }
@@ -280,9 +280,9 @@ export const InitialWorldState: InitialWorldStateData = {
                 weaponConfig: {
                     weaponType: 'pistol',
                     bulletSpriteScale: 0.5,
-                    bulletDetectCcdEnabled: true,
-                    bulletDetectCcdMinDistance: 0,
-                    bulletDetectCcdBuffer: 2,
+                    damageDetectCcdEnabled: true,
+                    damageDetectCcdMinDistance: 0,
+                    damageDetectCcdBuffer: 2,
                     bulletShape: { type: 'circle', radius: 6 }
                 }
             }

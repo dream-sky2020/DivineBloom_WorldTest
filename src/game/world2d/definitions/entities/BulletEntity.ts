@@ -2,13 +2,15 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
+  Bounce, BOUNCE_INSPECTOR_FIELDS,
   Velocity, VELOCITY_INSPECTOR_FIELDS,
   Collider, COLLIDER_INSPECTOR_FIELDS,
   ShapeType, Shape, SHAPE_INSPECTOR_FIELDS,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Inspector,
   Bullet, BULLET_INSPECTOR_FIELDS,
-  BulletDetect, BULLET_DETECT_INSPECTOR_FIELDS,
+  Damage, DAMAGE_INSPECTOR_FIELDS,
+  DamageDetect, DAMAGE_DETECT_INSPECTOR_FIELDS,
   LifeTime, LIFETIME_INSPECTOR_FIELDS,
   Transform, TRANSFORM_INSPECTOR_FIELDS,
   Trigger
@@ -21,6 +23,8 @@ const BulletEntitySchema = z.object({
   radius: z.number().default(2),
   // 战斗属性
   damage: z.number().default(10),
+  maxHitCount: z.number().int().min(0).default(1),
+  remainingHitCount: z.number().int().min(0).optional(),
   // 生命周期
   maxLifeTime: z.number().default(3),
   // 视觉属性
@@ -68,7 +72,10 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
       transform: Transform.create(params.x, params.y),
 
       // 速度组件（独立于 bullet.speed）
-      velocity: Velocity.create(params.velocityX || 0, params.velocityY || 0),
+      velocity: Velocity.create({
+        x: params.velocityX || 0,
+        y: params.velocityY || 0
+      }),
 
       sprite: Sprite.create(params.spriteId, {
         scale: params.spriteScale ?? (params.radius / 16), // particle_1.png 大小约为 32px
@@ -76,15 +83,16 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
       }),
 
       // 战斗与弹体属性
-      bullet: Bullet.create({
-        damage: params.damage,
-        radius: params.radius,
-        speed: Math.hypot(params.velocityX || 0, params.velocityY || 0),
-        maxLifeTime: params.maxLifeTime
+      bullet: Bullet.create(),
+      bounce: Bounce.create(),
+      damage: Damage.create({
+        amount: params.damage,
+        maxHitCount: params.maxHitCount,
+        remainingHitCount: params.remainingHitCount ?? params.maxHitCount
       }),
 
       // 高速探测 (CCD)
-      bulletDetect: BulletDetect.create({
+      damageDetect: DamageDetect.create({
         ccdEnabled: params.detectCcdEnabled,
         ccdMinDistance: params.detectCcdMinDistance,
         ccdBuffer: params.detectCcdBuffer || params.radius
@@ -117,9 +125,9 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
     });
 
     // 运行时双缓冲命中集合兜底初始化（不参与序列化）
-    if (root.bulletDetect) {
-      if (!root.bulletDetect.lastHits) root.bulletDetect.lastHits = new Set<string>();
-      if (!root.bulletDetect.activeHits) root.bulletDetect.activeHits = new Set<string>();
+    if (root.damageDetect) {
+      if (!root.damageDetect.lastHits) root.damageDetect.lastHits = new Set<string>();
+      if (!root.damageDetect.activeHits) root.damageDetect.activeHits = new Set<string>();
     }
 
     // 编辑器支持
@@ -130,9 +138,11 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
         ...(SHAPE_INSPECTOR_FIELDS || []),
         ...(COLLIDER_INSPECTOR_FIELDS || []),
         ...(BULLET_INSPECTOR_FIELDS || []),
+        ...(BOUNCE_INSPECTOR_FIELDS || []),
+        ...(DAMAGE_INSPECTOR_FIELDS || []),
         ...(LIFETIME_INSPECTOR_FIELDS || []),
         ...(SPRITE_INSPECTOR_FIELDS || []),
-        ...(BULLET_DETECT_INSPECTOR_FIELDS || [])
+        ...(DAMAGE_DETECT_INSPECTOR_FIELDS || [])
       ]
     })
     
@@ -142,20 +152,22 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
 
   serialize(entity: any) {
     // Bullet 通常是瞬态的，可能不需要复杂的序列化，或者仅用于调试
-    const { transform, bullet, sprite, lifeTime, children } = entity
+    const { transform, shape, sprite, lifeTime, damage } = entity
     const data: any = {
       type: 'bullet',
       x: transform?.x ?? 0,
       y: transform?.y ?? 0,
-      radius: bullet?.radius ?? 2,
-      damage: bullet?.damage ?? 10,
+      radius: shape?.radius ?? 2,
+      damage: damage?.amount ?? 10,
+      maxHitCount: damage?.maxHitCount ?? 1,
+      remainingHitCount: damage?.remainingHitCount ?? (damage?.maxHitCount ?? 1),
       maxLifeTime: lifeTime?.maxTime ?? 3,
       color: sprite?.tint ?? '#FFFF00',
       spriteId: sprite?.id ?? 'particle_1',
-      spriteScale: sprite?.scale ?? (bullet?.radius ? bullet.radius / 16 : 0.125),
-      detectCcdEnabled: entity.bulletDetect?.ccdEnabled ?? true,
-      detectCcdMinDistance: entity.bulletDetect?.ccdMinDistance ?? 0,
-      detectCcdBuffer: entity.bulletDetect?.ccdBuffer ?? 0
+      spriteScale: sprite?.scale ?? ((shape?.radius ? shape.radius / 16 : 0.125)),
+      detectCcdEnabled: entity.damageDetect?.ccdEnabled ?? true,
+      detectCcdMinDistance: entity.damageDetect?.ccdMinDistance ?? 0,
+      detectCcdBuffer: entity.damageDetect?.ccdBuffer ?? 0
     }
     return data;
   },
