@@ -11,7 +11,6 @@ import { Children } from './Children';
 import { Collider } from './Collider';
 import { Commands } from './Commands';
 import { DetectArea } from './DetectArea';
-import { BulletIntent } from './BulletIntent';
 import { DamageDetect } from './DamageDetect';
 import { DamageDetectable } from './DamageDetectable';
 import { PortalDetect } from './PortalDetect';
@@ -33,6 +32,7 @@ import { EnemyAIIntent } from './EnemyAIIntent';
 import { LifeTime } from './LifeTime';
 import { LocalTransform } from './LocalTransform';
 import { MousePosition } from './MousePosition';
+import { Motion } from './Motion';
 import { RawInput } from './RawInput';
 import { Parent } from './Parent';
 import { PathAI } from './PathAI';
@@ -65,7 +65,6 @@ const components = [
     Collider,
     Commands,
     DetectArea,
-    BulletIntent,
     DamageDetect,
     DamageDetectable,
     PortalDetect,
@@ -87,6 +86,7 @@ const components = [
     LifeTime,
     LocalTransform,
     MousePosition,
+    Motion,
     RawInput,
     Parent,
     PathAI,
@@ -124,7 +124,6 @@ export * from './Camera';
 export * from './Collider';
 export * from './Commands';
 export * from './DetectArea';
-export * from './BulletIntent';
 export * from './DamageDetect';
 export * from './DamageDetectable';
 export * from './PortalDetect';
@@ -145,6 +144,7 @@ export * from './PortalIntent';
 export * from './EnemyAIIntent';
 export * from './LifeTime';
 export * from './MousePosition';
+export * from './Motion';
 export * from './RawInput';
 export * from './Bullet';
 export * from './Requests';
@@ -162,6 +162,7 @@ export * from './PathAI';
 export * from './Transform';
 export * from './Shape';
 export * from '../enums/Shape';
+export * from '../enums/Motion';
 export * from './Parent';
 export * from './LocalTransform';
 export * from './WorldTransform';

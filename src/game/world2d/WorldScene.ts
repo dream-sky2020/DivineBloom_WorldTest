@@ -109,7 +109,8 @@ export class WorldScene {
                     getSystem('enemy-control'),
                     getSystem('follow'),
                     getSystem('weapon-control'),
-                    getSystem('damage-control')
+                    getSystem('damage-process'),
+                    getSystem('damage-apply')
                 ],
                 physics: [
                     getSystem('movement'),

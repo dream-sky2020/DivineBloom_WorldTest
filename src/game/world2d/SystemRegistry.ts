@@ -10,13 +10,18 @@
 // Camera
 import { CameraSystem } from '@systems/camera/CameraSystem';
 
+// Apply
+import { DamageApplySystem } from '@systems/apply/DamageApplySystem';
+
 // Control
-import { DamageControlSystem } from '@systems/control/DamageControlSystem';
 import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
 import { FollowSystem } from '@systems/control/FollowSystem';
 import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
 import { PortalControlSystem } from '@systems/control/PortalControlSystem';
 import { WeaponControlSystem } from '@systems/control/WeaponControlSystem';
+
+// Process
+import { DamageProcessSystem } from '@systems/process/DamageProcessSystem';
 
 // Editor
 import { EditorHighlightRenderSystem } from '@systems/editor/EditorHighlightRenderSystem';
@@ -111,7 +116,8 @@ export const Registry: Record<string, any> = {
     'enemy-ai-intent': EnemyAIIntentSystem,
     'player-control': PlayerControlSystem,
     'portal-control': PortalControlSystem,
-    'damage-control': DamageControlSystem,
+    'damage-process': DamageProcessSystem,
+    'damage-apply': DamageApplySystem,
     'enemy-control': EnemyControlSystem,
     'follow': FollowSystem,
     'weapon': WeaponControlSystem,

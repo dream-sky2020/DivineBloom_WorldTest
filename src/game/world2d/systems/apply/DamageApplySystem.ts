@@ -3,7 +3,7 @@ import { IEntity } from '@definitions/interface/IEntity';
 import { ISystem } from '@definitions/interface/ISystem';
 import { damageQueue, world } from '@world2d/world';
 
-const logger = createLogger('DamageControlSystem');
+const logger = createLogger('DamageApplySystem');
 
 type TargetDamageAggregate = {
   damage: number;
@@ -25,11 +25,11 @@ function indexHealthEntities(): Map<string, IEntity> {
 }
 
 /**
- * DamageControlSystem
- * 消费全局 damageQueue 的 mergedBuckets，并按 targetId 一次性回写 damage/health。
+ * DamageApplySystem
+ * 仅负责消费 damageQueue，并把聚合后的伤害应用到实体 Health。
  */
-export const DamageControlSystem: ISystem = {
-  name: 'damage-control',
+export const DamageApplySystem: ISystem = {
+  name: 'damage-apply',
 
   update(_dt: number) {
     const drained = damageQueue.drain();
@@ -58,10 +58,7 @@ export const DamageControlSystem: ISystem = {
       const appliedHits = Math.max(0, Math.floor(agg.hits));
       if (appliedDamage <= 0 && appliedHits <= 0) continue;
 
-      // 扣除血量
       entity.health.currentHealth = Math.max(0, (entity.health.currentHealth || 0) - appliedDamage);
-
-      // 更新受伤统计信息 (Health 组件已包含原 Damaged 功能)
       entity.health.totalDamageTaken += appliedDamage;
       entity.health.totalHitCount += appliedHits;
       entity.health.lastDamageAmount = appliedDamage;
