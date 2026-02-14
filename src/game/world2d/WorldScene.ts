@@ -88,6 +88,7 @@ export class WorldScene {
             logic: {
                 sense: [
                     getSystem('damage-detect-sense'),
+                    getSystem('motion-sense'),
                     getSystem('portal-detect-sense'),
                     getSystem('weapon-sense'),
                     getSystem('ai-sense'),
@@ -96,6 +97,7 @@ export class WorldScene {
                 intent: [
                     getSystem('player-intent'),
                     getSystem('weapon-intent'),
+                    getSystem('motion-intent'),
                     getSystem('portal-intent'),
                     getSystem('enemy-ai-intent')
                 ],
@@ -107,7 +109,7 @@ export class WorldScene {
                     getSystem('player-control'),
                     getSystem('portal-control'),
                     getSystem('enemy-control'),
-                    getSystem('follow'),
+                    getSystem('motion-control'),
                     getSystem('weapon-control'),
                     getSystem('damage-process'),
                     getSystem('damage-apply')

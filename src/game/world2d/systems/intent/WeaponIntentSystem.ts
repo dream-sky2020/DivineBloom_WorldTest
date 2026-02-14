@@ -21,19 +21,19 @@ function rotateDirection(dir: { x: number; y: number }, rad: number) {
 }
 
 function resolveOwnerEntity(weaponEntity: IEntity): IEntity | null {
-    const followTarget = weaponEntity.follow?.target;
-    if (!followTarget) return null;
+    const ownerTarget = (weaponEntity as any).motion?.target?.entityId;
+    if (!ownerTarget) return null;
 
     const players = world.with('player', 'transform');
     for (const entity of players) {
         const p = entity as IEntity;
         if (
-            followTarget === 'player'
-            || followTarget === p.id
-            || followTarget === (p as any).__id
-            || followTarget === (p as any).uuid
-            || followTarget === p.name
-            || followTarget === p.type
+            ownerTarget === 'player'
+            || ownerTarget === p.id
+            || ownerTarget === (p as any).__id
+            || ownerTarget === (p as any).uuid
+            || ownerTarget === p.name
+            || ownerTarget === p.type
         ) {
             return p;
         }

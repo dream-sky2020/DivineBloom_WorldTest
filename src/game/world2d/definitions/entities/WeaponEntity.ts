@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
-    Follow, FOLLOW_INSPECTOR_FIELDS,
+    Motion, MotionMode, MOTION_INSPECTOR_FIELDS,
     Transform, TRANSFORM_INSPECTOR_FIELDS,
     Weapon, WEAPON_INSPECTOR_FIELDS,
     WeaponIntent,
@@ -104,14 +104,25 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
             name: params.name,
             tags: ['weapon'],
             transform: Transform.create(initialX, initialY),
-            follow: Follow.create({
-                target: params.ownerTarget || 'player',
-                speed: params.followSpeed,
-                offset: { x: params.orbitRadius, y: 0 },
-                range: { x: params.followRangeX, y: params.followRangeY },
-                linearAccelFactor: params.linearAccelFactor,
-                orbitAngle: params.orbitAngle,
-                orbitSpeed: params.orbitSpeed
+            motion: Motion.create({
+                enabled: true,
+                mode: Math.abs(params.orbitSpeed || 0) > 0 ? MotionMode.ORBIT : MotionMode.FOLLOW,
+                maxSpeed: params.followSpeed,
+                distanceSpeedFactor: params.linearAccelFactor,
+                deadZoneAxis: {
+                    x: params.followRangeX,
+                    y: params.followRangeY
+                },
+                target: {
+                    entityId: params.ownerTarget || 'player',
+                    offset: { x: params.orbitRadius, y: 0 }
+                },
+                orbit: {
+                    radius: params.orbitRadius,
+                    angle: params.orbitAngle,
+                    angularSpeed: Math.abs(params.orbitSpeed || 0),
+                    clockwise: (params.orbitSpeed || 0) < 0
+                }
             }),
             weapon: Weapon.create({
                 weaponType: weaponConfig.weaponType,
@@ -145,7 +156,7 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
         root.inspector = Inspector.create({
             fields: [
                 ...(TRANSFORM_INSPECTOR_FIELDS || []),
-                ...(FOLLOW_INSPECTOR_FIELDS || []),
+                ...(MOTION_INSPECTOR_FIELDS || []),
                 ...(WEAPON_INSPECTOR_FIELDS || []),
                 ...(WEAPON_SENSE_INSPECTOR_FIELDS || []),
                 ...(SPRITE_INSPECTOR_FIELDS || []),
@@ -160,14 +171,14 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
             x: entity.transform?.x ?? 0,
             y: entity.transform?.y ?? 0,
             name: entity.name ?? 'Weapon',
-            ownerTarget: entity.follow?.target ?? 'player',
-            orbitRadius: entity.follow?.offset?.x ?? 40,
-            orbitAngle: entity.follow?.orbitAngle ?? 0,
-            orbitSpeed: entity.follow?.orbitSpeed ?? 0,
-            followSpeed: entity.follow?.speed ?? 300,
-            followRangeX: entity.follow?.range?.x ?? 0,
-            followRangeY: entity.follow?.range?.y ?? 0,
-            linearAccelFactor: entity.follow?.linearAccelFactor ?? 0,
+            ownerTarget: entity.motion?.target?.entityId ?? 'player',
+            orbitRadius: entity.motion?.orbit?.radius ?? entity.motion?.target?.offset?.x ?? 40,
+            orbitAngle: entity.motion?.orbit?.angle ?? 0,
+            orbitSpeed: (entity.motion?.orbit?.clockwise ? -1 : 1) * (entity.motion?.orbit?.angularSpeed ?? 0),
+            followSpeed: entity.motion?.maxSpeed ?? 300,
+            followRangeX: entity.motion?.deadZoneAxis?.x ?? 0,
+            followRangeY: entity.motion?.deadZoneAxis?.y ?? 0,
+            linearAccelFactor: entity.motion?.distanceSpeedFactor ?? 0,
             spriteId: entity.sprite?.id ?? 'rect',
             spriteScale: entity.sprite?.scale ?? 0.5,
             spriteTint: entity.sprite?.tint ?? '#ffffff',

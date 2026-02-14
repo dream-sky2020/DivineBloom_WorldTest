@@ -15,7 +15,7 @@ import { DamageApplySystem } from '@systems/apply/DamageApplySystem';
 
 // Control
 import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
-import { FollowSystem } from '@systems/control/FollowSystem';
+import { MotionControlSystem } from '@systems/control/MotionControlSystem';
 import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
 import { PortalControlSystem } from '@systems/control/PortalControlSystem';
 import { WeaponControlSystem } from '@systems/control/WeaponControlSystem';
@@ -35,6 +35,7 @@ import { ExecuteSystem } from '@systems/execute/ExecuteSystem';
 
 // Intent
 import { EnemyAIIntentSystem } from '@systems/intent/EnemyAIIntentSystem';
+import { MotionIntentSystem } from '@systems/intent/MotionIntentSystem';
 import { PortalIntentSystem } from '@systems/intent/PortalIntentSystem';
 import { PlayerIntentSystem } from '@systems/intent/PlayerIntentSystem';
 import { WeaponIntentSystem } from '@systems/intent/WeaponIntentSystem';
@@ -64,6 +65,7 @@ import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
 
 // Sense
 import { DamageDetectSenseSystem } from '@systems/sense/DamageDetectSenseSystem';
+import { MotionSenseSystem } from '@systems/sense/MotionSenseSystem';
 import { PortalDetectSenseSystem } from '@systems/sense/PortalDetectSenseSystem';
 import { AISenseSystem } from '@systems/sense/AISenseSystem';
 import { InputSenseSystem } from '@systems/sense/InputSenseSystem';
@@ -112,6 +114,7 @@ export const Registry: Record<string, any> = {
     // --- Intent & Control ---
     'player-intent': PlayerIntentSystem,
     'weapon-intent': WeaponIntentSystem,
+    'motion-intent': MotionIntentSystem,
     'portal-intent': PortalIntentSystem,
     'enemy-ai-intent': EnemyAIIntentSystem,
     'player-control': PlayerControlSystem,
@@ -119,12 +122,13 @@ export const Registry: Record<string, any> = {
     'damage-process': DamageProcessSystem,
     'damage-apply': DamageApplySystem,
     'enemy-control': EnemyControlSystem,
-    'follow': FollowSystem,
+    'motion-control': MotionControlSystem,
     'weapon': WeaponControlSystem,
     'weapon-control': WeaponControlSystem,
 
     // --- Detection & AI Sense ---
     'damage-detect-sense': DamageDetectSenseSystem,
+    'motion-sense': MotionSenseSystem,
     'portal-detect-sense': PortalDetectSenseSystem,
     'weapon-sense': WeaponSenseSystem,
     'ai-sense': AISenseSystem,

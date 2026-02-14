@@ -19,6 +19,11 @@ const motionSchema = z.object({
   deceleration: z.number().default(480),
   stopDistance: z.number().default(2),
   deadZone: z.number().default(0),
+  deadZoneAxis: z.object({
+    x: z.number().default(0),
+    y: z.number().default(0)
+  }).default({ x: 0, y: 0 }),
+  distanceSpeedFactor: z.number().default(0),
   turnRate: z.number().default(9999),
 
   // 目标定义：可按实体、标签或固定位置驱动
@@ -149,6 +154,9 @@ export const Motion: IComponentDefinition<typeof motionSchema, MotionData> = {
     { path: 'motion.acceleration', label: '加速度', type: 'number', props: { step: 10 }, group: '运动控制 (Motion)' },
     { path: 'motion.deceleration', label: '减速度', type: 'number', props: { step: 10 }, group: '运动控制 (Motion)' },
     { path: 'motion.stopDistance', label: '停止半径', type: 'number', props: { step: 1 }, group: '运动控制 (Motion)' },
+    { path: 'motion.deadZoneAxis.x', label: '轴向死区 X', type: 'number', props: { step: 1 }, group: '运动控制 (Motion)' },
+    { path: 'motion.deadZoneAxis.y', label: '轴向死区 Y', type: 'number', props: { step: 1 }, group: '运动控制 (Motion)' },
+    { path: 'motion.distanceSpeedFactor', label: '距离增速系数', type: 'number', props: { step: 0.1 }, group: '运动控制 (Motion)' },
     { path: 'motion.target.entityId', label: '目标实体', type: 'text', group: '运动目标 (Motion)' },
     { path: 'motion.target.tag', label: '目标标签', type: 'text', group: '运动目标 (Motion)' },
     { path: 'motion.target.position', label: '目标坐标', type: 'json', group: '运动目标 (Motion)' },

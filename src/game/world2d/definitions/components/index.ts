@@ -23,7 +23,6 @@ import { TriggerSignal } from './TriggerSignal';
 import { MonsterSpawn } from './MonsterSpawn';
 import { Monster } from './Monster';
 import { Experience } from './Experience';
-import { Follow } from './Follow';
 import { Health } from './Health';
 import { Inspector } from './Inspector';
 import { PlayerIntent } from './PlayerIntent';
@@ -77,7 +76,6 @@ const components = [
     MonsterSpawn,
     Monster,
     Experience,
-    Follow,
     Health,
     Inspector,
     PlayerIntent,
@@ -136,7 +134,6 @@ export * from './TriggerSignal';
 export * from './MonsterSpawn';
 export * from './Monster';
 export * from './Experience';
-export * from './Follow';
 export * from './Health';
 export * from './Inspector';
 export * from './PlayerIntent';
