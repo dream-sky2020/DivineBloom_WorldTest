@@ -87,6 +87,51 @@ export const InitialWorldState: InitialWorldStateData = {
                 assetId: 'hero',
                 scale: 0.7
             },
+            // 3.05 宠物实体（跟随玩家 + 可使用传送门捷径）
+            {
+                type: 'pet',
+                x: 960,
+                y: 1010,
+                name: 'HeroPet',
+                petId: 'pet_hero_01',
+                ownerTarget: 'player',
+                spriteId: 'fleshsprite_scene_1',
+                spriteScale: 0.22,
+                spriteTint: '#ffffff',
+                followSpeed: 300,
+                followStopDistance: 10,
+                followRangeX: 14,
+                followRangeY: 14,
+                followOffsetX: -42,
+                followOffsetY: 0,
+                followDistanceSpeedFactor: 0.35,
+                weapon: {
+                    orbitRadius: 26,
+                    orbitAngle: 0,
+                    orbitSpeed: 3.2,
+                    followSpeed: 280,
+                    followRangeX: 0,
+                    followRangeY: 0,
+                    linearAccelFactor: 0,
+                    spriteId: 'particle_3',
+                    spriteScale: 0.16,
+                    spriteTint: '#9cf4ff',
+                    weaponConfig: {
+                        weaponType: 'pet_orbiter',
+                        damage: 8,
+                        fireRate: 5,
+                        bulletSpeed: 620,
+                        bulletLifeTime: 1.4,
+                        bulletRadius: 5,
+                        bulletSpriteId: 'particle_3',
+                        bulletSpriteScale: 0.38,
+                        damageDetectCcdEnabled: true,
+                        damageDetectCcdMinDistance: 0,
+                        damageDetectCcdBuffer: 4,
+                        bulletShape: { type: 'circle', radius: 5 }
+                    }
+                }
+            },
             // 3.1 武器实体 (对应 WeaponEntity.ts)
             {
                 type: 'weapon',
@@ -157,6 +202,67 @@ export const InitialWorldState: InitialWorldStateData = {
                 interval: 2,
                 active: true,
                 emitOnStart: true
+            },
+            // 8. 传送终点（用于测试宠物是否能及时通过捷径跟随玩家）
+            {
+                type: 'portal_destination',
+                id: 'pet_test_dest_a',
+                x: 330,
+                y: 340,
+                name: 'PetTestDestA',
+                visual: { color: '#7c3aed', size: 20 }
+            },
+            {
+                type: 'portal_destination',
+                id: 'pet_test_dest_b',
+                x: 1710,
+                y: 1710,
+                name: 'PetTestDestB',
+                visual: { color: '#0ea5e9', size: 20 }
+            },
+            // 9. 双向同图强制传送门（玩家穿门后观察宠物追随表现）
+            {
+                type: 'portal',
+                x: 980,
+                y: 950,
+                name: 'PetTestPortal_To_A',
+                width: 84,
+                height: 84,
+                isForced: true,
+                destinationId: 'pet_test_dest_a'
+            },
+            {
+                type: 'portal',
+                x: 300,
+                y: 300,
+                name: 'PetTestPortal_Back_B',
+                width: 84,
+                height: 84,
+                isForced: true,
+                destinationId: 'pet_test_dest_b'
+            },
+            // 10. 另一组远距离坐标传送门（提高压测覆盖）
+            {
+                type: 'portal',
+                x: 1540,
+                y: 960,
+                name: 'PetTestPortal_To_Coord',
+                width: 72,
+                height: 72,
+                isForced: true,
+                targetX: 420,
+                targetY: 1580
+            },
+            {
+                type: 'portal',
+                x: 420,
+                y: 1580,
+                name: 'PetTestPortal_Back_Center',
+                width: 72,
+                height: 72,
+                isForced: true,
+                targetX: 1000,
+                targetY: 1000
             }
         ]
     },

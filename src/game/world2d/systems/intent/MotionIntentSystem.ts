@@ -45,12 +45,17 @@ export const MotionIntentSystem: ISystem = {
       }
 
       const mode = motion.mode || MotionMode.NONE;
-      const maxSpeed = Math.max(0, Number(motion.maxSpeed || 0));
+      const profile = (e as any).motionSteerProfile;
+      const speedScale = Math.max(0, Number(profile?.speedScale ?? 1));
+      const distanceSpeedScale = Math.max(0, Number(profile?.distanceSpeedScale ?? 1));
+      const portalAttractWeight = Math.max(0, Number(profile?.weights?.portalAttract ?? 0));
+
+      const maxSpeed = Math.max(0, Number(motion.maxSpeed || 0)) * speedScale;
       const minSpeed = Math.max(0, Number(motion.minSpeed || 0));
       const stopDistance = Math.max(0, Number(motion.stopDistance || 0));
       const deadZone = Math.max(0, Number(motion.deadZone || 0));
       const deadZoneAxis = motion.deadZoneAxis || { x: 0, y: 0 };
-      const distanceSpeedFactor = Number(motion.distanceSpeedFactor || 0);
+      const distanceSpeedFactor = Number(motion.distanceSpeedFactor || 0) * distanceSpeedScale;
 
       if (mode === MotionMode.LINE) {
         const dir = normalize(Number(motion.line?.direction?.x || 0), Number(motion.line?.direction?.y || 0));
@@ -137,6 +142,25 @@ export const MotionIntentSystem: ISystem = {
           const w = Math.sin(motion.runtime.elapsedTime * freq + phase) * amp;
           vx += -n.y * w;
           vy += n.x * w;
+        }
+      }
+
+      // 融合传送门捷径 steer（由 MotionPortalSenseSystem 提供）
+      if (portalAttractWeight > 0) {
+        const bestPortal = motion.runtime?.portalSense?.bestPortal;
+        if (bestPortal?.pos) {
+          const dirPortal = normalize(
+            Number(bestPortal.pos.x || 0) - e.transform.x,
+            Number(bestPortal.pos.y || 0) - e.transform.y
+          );
+          if (dirPortal.len > 0.0001) {
+            const baseSpeed = Math.max(Math.hypot(vx, vy), maxSpeed);
+            const guideVx = dirPortal.x * baseSpeed;
+            const guideVy = dirPortal.y * baseSpeed;
+            const w = portalAttractWeight;
+            vx = (vx + guideVx * w) / (1 + w);
+            vy = (vy + guideVy * w) / (1 + w);
+          }
         }
       }
 

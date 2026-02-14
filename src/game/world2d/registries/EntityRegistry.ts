@@ -1,6 +1,7 @@
 import { IEntityDefinition } from '../definitions/interface/IEntity';
 import {
     PlayerEntity,
+    PetEntity,
     NPCEntity,
     EnemyEntity,
     HordeEnemyEntity,
@@ -27,6 +28,7 @@ class EntityRegistry {
     private registerAll() {
         // Register all known entities
         this.register(PlayerEntity);
+        this.register(PetEntity);
         this.register(NPCEntity);
         this.register(EnemyEntity);
         this.register(HordeEnemyEntity);

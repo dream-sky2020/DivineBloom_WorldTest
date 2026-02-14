@@ -65,6 +65,7 @@ import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
 
 // Sense
 import { DamageDetectSenseSystem } from '@systems/sense/DamageDetectSenseSystem';
+import { MotionPortalSenseSystem } from '@systems/sense/MotionPortalSenseSystem';
 import { MotionSenseSystem } from '@systems/sense/MotionSenseSystem';
 import { PortalDetectSenseSystem } from '@systems/sense/PortalDetectSenseSystem';
 import { AISenseSystem } from '@systems/sense/AISenseSystem';
@@ -129,6 +130,7 @@ export const Registry: Record<string, any> = {
     // --- Detection & AI Sense ---
     'damage-detect-sense': DamageDetectSenseSystem,
     'motion-sense': MotionSenseSystem,
+    'motion-portal-sense': MotionPortalSenseSystem,
     'portal-detect-sense': PortalDetectSenseSystem,
     'weapon-sense': WeaponSenseSystem,
     'ai-sense': AISenseSystem,

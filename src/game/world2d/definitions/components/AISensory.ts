@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { IComponentDefinition } from '../interface/IComponent';
 
 const aiSensorySchema = z.object({
-  distSqToPlayer: z.number().default(Number.POSITIVE_INFINITY),
+  distSqToPlayer: z.union([z.number(), z.literal(Number.POSITIVE_INFINITY)]).default(Number.POSITIVE_INFINITY),
   playerPos: z.object({
     x: z.number().default(0),
     y: z.number().default(0)

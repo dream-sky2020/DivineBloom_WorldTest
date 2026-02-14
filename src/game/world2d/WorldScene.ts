@@ -89,6 +89,7 @@ export class WorldScene {
                 sense: [
                     getSystem('damage-detect-sense'),
                     getSystem('motion-sense'),
+                    getSystem('motion-portal-sense'),
                     getSystem('portal-detect-sense'),
                     getSystem('weapon-sense'),
                     getSystem('ai-sense'),

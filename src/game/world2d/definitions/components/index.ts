@@ -32,6 +32,7 @@ import { LifeTime } from './LifeTime';
 import { LocalTransform } from './LocalTransform';
 import { MousePosition } from './MousePosition';
 import { Motion } from './Motion';
+import { MotionSteerProfile } from './MotionSteerProfile';
 import { RawInput } from './RawInput';
 import { Parent } from './Parent';
 import { PathAI } from './PathAI';
@@ -85,6 +86,7 @@ const components = [
     LocalTransform,
     MousePosition,
     Motion,
+    MotionSteerProfile,
     RawInput,
     Parent,
     PathAI,
@@ -142,6 +144,7 @@ export * from './EnemyAIIntent';
 export * from './LifeTime';
 export * from './MousePosition';
 export * from './Motion';
+export * from './MotionSteerProfile';
 export * from './RawInput';
 export * from './Bullet';
 export * from './Requests';
