@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+export type SpawnContext = {
+    x: number;
+    y: number;
+    params?: Record<string, any>;
+    sourceEntity?: any;
+};
+
+export type SpawnFactory<TRuntime = any> = (context: SpawnContext) => TRuntime;
+
 /**
  * 实体定义接口
  * 
@@ -37,6 +46,12 @@ export interface IEntityDefinition<TSchema extends z.ZodType, TRuntime = any> {
      * 用于运行时校验和类型推导
      */
     readonly schema: TSchema;
+
+    /**
+     * 产卵函数 (可选)
+     * 用于从统一的 SpawnContext 生成实体
+     */
+    readonly spawnFactory?: SpawnFactory<TRuntime>;
 
     /**
      * 创建/初始化实体实例

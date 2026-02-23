@@ -45,14 +45,32 @@ export const PortalControlSystem: ISystem = {
           finalY = intent.targetY;
         }
 
-        if (finalX != null && finalY != null && e.transform) {
-          e.transform.prevX = finalX;
-          e.transform.prevY = finalY;
-          e.transform.x = finalX;
-          e.transform.y = finalY;
-          if (e.velocity) {
-            e.velocity.x = 0;
-            e.velocity.y = 0;
+        if (finalX != null && finalY != null) {
+          const sourcePortalId =
+            (intent as any)?.source?.id ||
+            (intent as any)?.source?.uuid ||
+            (intent as any)?.source?.name;
+
+          if ((e as any).motion) {
+            if (!(e as any).motion.runtime || typeof (e as any).motion.runtime !== 'object') {
+              (e as any).motion.runtime = {};
+            }
+            (e as any).motion.runtime.teleportRequest = {
+              x: finalX,
+              y: finalY,
+              keepVelocity: false,
+              ...(typeof sourcePortalId === 'string' ? { sourcePortalId } : {})
+            };
+          } else if (e.transform) {
+            // fallback：无 motion 的实体仍然直接设置 transform。
+            e.transform.prevX = finalX;
+            e.transform.prevY = finalY;
+            e.transform.x = finalX;
+            e.transform.y = finalY;
+            if (e.velocity) {
+              e.velocity.x = 0;
+              e.velocity.y = 0;
+            }
           }
         }
 

@@ -10,6 +10,7 @@ import {
   Detectable,
   DamageDetectable,
   PortalDetectable,
+  SpawnMask,
   Monster,
   AI,
   Children,
@@ -30,7 +31,7 @@ export const HordeEnemyEntitySchema = z.object({
   options: z.object({
     spriteId: z.string().default('enemy_slime'),
     scale: z.number().optional(),
-    
+
     // AI Config
     strategy: z.enum(['chase', 'steering']).default('chase'),
     baseSpeed: z.number().default(80),
@@ -66,6 +67,23 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
   order: 11,
   creationIndex: 0,
   schema: HordeEnemyEntitySchema,
+  spawnFactory(ctx) {
+    const params = ctx.params || {};
+    const optionParams = (params.options ?? params) as Record<string, any>;
+    return HordeEnemyEntity.create({
+      x: ctx.x,
+      y: ctx.y,
+      name: params.name,
+      options: {
+        spriteId: optionParams.spriteId ?? 'enemy_slime',
+        strategy: optionParams.strategy ?? 'chase',
+        baseSpeed: optionParams.baseSpeed ?? 80,
+        visionRadius: optionParams.visionRadius ?? 500,
+        maxHealth: optionParams.maxHealth ?? 50,
+        scale: optionParams.scale
+      }
+    });
+  },
   create(data: HordeEnemyEntityData) {
     const result = HordeEnemyEntitySchema.safeParse(data);
     if (!result.success) {
@@ -82,17 +100,19 @@ export const HordeEnemyEntity: IEntityDefinition<typeof HordeEnemyEntitySchema> 
       transform: Transform.create(x, y),
       velocity: Velocity.create(),
       enemy: true, // 保持 enemy 标签以便被玩家武器检测到
+      chaseEnemy: true,
       monster: Monster.create({ category: 'horde', priority: 2 }),
-      
+      spawnMask: SpawnMask.create({ group: 'monster' }),
+
       bounds: Bounds.create(),
-      
+
       aiConfig: AI.Config({
         type: options.strategy === 'steering' ? 'chase' : options.strategy,
         visionRadius: options.visionRadius,
         speed: options.baseSpeed,
         detectedState: 'chase',
-        alwaysTrackPlayer: true,
-        hideVisionRender: true,
+        alwaysTrackPlayer: false,
+        hideVisionRender: false,
         homePosition: { x, y },
         patrolRadius: Math.max(80, Math.floor(options.visionRadius * 0.5))
       }),

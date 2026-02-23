@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import { PlayerConfig } from '@schema/assets';
-import { WeaponEntity } from './WeaponEntity';
 import {
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
@@ -134,53 +133,9 @@ export const PlayerEntity: IEntityDefinition<typeof PlayerEntitySchema> = {
       editorBox: { w: 40, h: 40, scale: 1 }
     });
 
-    const configList = (weaponConfigs && weaponConfigs.length > 0)
-      ? weaponConfigs
-      : (weaponConfig ? [weaponConfig] : [{}]);
-
-    const count = configList.length;
-    configList.forEach((cfg, index) => {
-      const orbitAngle = cfg.orbitAngle ?? (count > 1 ? (index * Math.PI * 2) / count : 0);
-      const weaponEntityData: any = {
-        x,
-        y,
-        ownerTarget: 'player',
-        orbitRadius: cfg.orbitRadius ?? 40,
-        orbitAngle,
-        orbitSpeed: cfg.orbitSpeed ?? 2,
-        followSpeed: cfg.followSpeed ?? 300,
-        followRangeX: cfg.followRangeX ?? 0,
-        followRangeY: cfg.followRangeY ?? 0,
-        linearAccelFactor: cfg.linearAccelFactor ?? 0,
-        weaponConfig: {
-          weaponType: cfg.weaponType,
-          damage: cfg.damage,
-          fireRate: cfg.fireRate,
-          bulletSpeed: cfg.bulletSpeed,
-          bulletColor: cfg.bulletColor,
-          bulletLifeTime: cfg.bulletLifeTime,
-          bulletRadius: cfg.bulletRadius,
-          bulletSpriteId: cfg.bulletSpriteId,
-          bulletSpriteScale: cfg.bulletSpriteScale,
-          damageDetectCcdEnabled: cfg.damageDetectCcdEnabled,
-          damageDetectCcdMinDistance: cfg.damageDetectCcdMinDistance,
-          damageDetectCcdBuffer: cfg.damageDetectCcdBuffer,
-          bulletShape: cfg.bulletShape,
-          projectileCount: cfg.projectileCount,
-          projectileSpreadDeg: cfg.projectileSpreadDeg,
-          attackMode: cfg.attackMode,
-          attackArcDeg: cfg.attackArcDeg,
-          attackAngleOffsetDeg: cfg.attackAngleOffsetDeg,
-          blockIfOutOfRange: cfg.blockIfOutOfRange
-        }
-      };
-
-      if (cfg.spriteId !== undefined) weaponEntityData.spriteId = cfg.spriteId;
-      if (cfg.spriteScale !== undefined) weaponEntityData.spriteScale = cfg.spriteScale;
-      if (cfg.spriteTint !== undefined) weaponEntityData.spriteTint = cfg.spriteTint;
-
-      WeaponEntity.create(weaponEntityData);
-    });
+    // No-op: weapon entities are intentionally disabled in idle/incremental mode.
+    void weaponConfig;
+    void weaponConfigs;
 
     return root;
   },

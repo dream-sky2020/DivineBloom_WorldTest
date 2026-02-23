@@ -19,6 +19,20 @@ import {
 // Create the global ECS world
 export const world = new World<any>()
 
+// Shared spawn group count cache (spawn group -> entity count)
+export const spawnGroupCountMap = new Map<string, number>()
+
+// Dirty flag: when true, ComponentCountSenseSystem rebuilds spawnGroupCountMap
+export let shouldUpdateSpawnGroupCountMap = true
+
+export function requestComponentCountRefresh() {
+  shouldUpdateSpawnGroupCountMap = true
+}
+
+export function setShouldUpdateComponentCountMap(value: boolean) {
+  shouldUpdateSpawnGroupCountMap = value
+}
+
 // Simple Event Queue for ECS
 export const eventQueue = {
   _events: [] as { type: string, payload: any }[],
@@ -42,7 +56,6 @@ export const eventQueue = {
 }
 
 export const actionQueue: any[] = []
-export const triggerQueue: any[] = []
 export const damageEventBuffer: DamageEventBufferData = createDamageEventBuffer()
 export const floatingTextBuffer: FloatingTextBufferData = createFloatingTextBuffer()
 
@@ -87,7 +100,8 @@ export function clearWorld() {
 
   eventQueue._events = []
   actionQueue.length = 0
-  triggerQueue.length = 0
   clearDamageEventBuffer(damageEventBuffer)
   clearFloatingTextBuffer(floatingTextBuffer)
+  spawnGroupCountMap.clear()
+  shouldUpdateSpawnGroupCountMap = true
 }

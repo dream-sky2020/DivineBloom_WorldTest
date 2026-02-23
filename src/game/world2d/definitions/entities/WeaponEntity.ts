@@ -7,6 +7,7 @@ import {
     Weapon, WEAPON_INSPECTOR_FIELDS,
     WeaponIntent,
     WeaponSense, WEAPON_SENSE_INSPECTOR_FIELDS,
+    MotionSteerProfile,
     Sprite, SPRITE_INSPECTOR_FIELDS,
     Inspector, EDITOR_INSPECTOR_FIELDS
 } from '@components';
@@ -144,6 +145,25 @@ export const WeaponEntity: IEntityDefinition<typeof WeaponEntitySchema> = {
                 attackArcDeg: weaponConfig.attackArcDeg,
                 attackAngleOffsetDeg: weaponConfig.attackAngleOffsetDeg,
                 blockIfOutOfRange: weaponConfig.blockIfOutOfRange
+            }),
+            motionSteerProfile: MotionSteerProfile.create({
+                profileId: 'weapon_float',
+                speedScale: 1,
+                distanceSpeedScale: 1,
+                weights: {
+                    seek: 1,
+                    arrive: 1,
+                    separation: 0.8, // 浮游炮之间应该互相避让
+                    avoidObstacle: 0, // 武器通常可以穿墙或不需要避障
+                    portalAttract: 0,
+                    flee: 0,
+                    wander: 0
+                },
+                sensing: {
+                    separationRadius: 30, // 较小的分离半径
+                    obstacleCheckDistance: 0,
+                    obstacleCheckRadius: 0
+                }
             }),
             weaponIntent: WeaponIntent.create(),
             weaponSense: WeaponSense.create(),

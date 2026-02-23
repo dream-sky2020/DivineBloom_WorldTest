@@ -18,6 +18,7 @@ import { EnemyControlSystem } from '@systems/control/EnemyControlSystem';
 import { MotionControlSystem } from '@systems/control/MotionControlSystem';
 import { PlayerControlSystem } from '@systems/control/PlayerControlSystem';
 import { PortalControlSystem } from '@systems/control/PortalControlSystem';
+import { SpawnerControlSystem } from '@systems/control/SpawnerControlSystem';
 import { WeaponControlSystem } from '@systems/control/WeaponControlSystem';
 
 // Process
@@ -27,9 +28,6 @@ import { DamageProcessSystem } from '@systems/process/DamageProcessSystem';
 import { EditorHighlightRenderSystem } from '@systems/editor/EditorHighlightRenderSystem';
 import { EditorInteractionSystem } from '@systems/editor/EditorInteractionSystem';
 
-// Event
-import { TriggerSystem } from '@systems/event/TriggerSystem';
-
 // Execute
 import { ExecuteSystem } from '@systems/execute/ExecuteSystem';
 
@@ -38,6 +36,7 @@ import { EnemyAIIntentSystem } from '@systems/intent/EnemyAIIntentSystem';
 import { MotionIntentSystem } from '@systems/intent/MotionIntentSystem';
 import { PortalIntentSystem } from '@systems/intent/PortalIntentSystem';
 import { PlayerIntentSystem } from '@systems/intent/PlayerIntentSystem';
+import { SpawnerIntentSystem } from '@systems/intent/SpawnerIntentSystem';
 import { WeaponIntentSystem } from '@systems/intent/WeaponIntentSystem';
 
 // Lifecycle
@@ -59,6 +58,7 @@ import { EditorGridRenderSystem } from '@systems/render/EditorGridRenderSystem';
 import { FloatingTextRenderSystem } from '@systems/render/FloatingTextRenderSystem';
 import { PhysicsDebugRenderSystem } from '@systems/render/PhysicsDebugRenderSystem';
 import { PortalDebugRenderSystem } from '@systems/render/PortalDebugRenderSystem';
+import { SpawnDebugRenderSystem } from '@systems/render/SpawnDebugRenderSystem';
 import { StatusRenderSystem } from '@systems/render/StatusRenderSystem';
 import { WeaponDebugRenderSystem } from '@systems/render/WeaponDebugRenderSystem';
 import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
@@ -69,13 +69,14 @@ import { MotionPortalSenseSystem } from '@systems/sense/MotionPortalSenseSystem'
 import { MotionSenseSystem } from '@systems/sense/MotionSenseSystem';
 import { PortalDetectSenseSystem } from '@systems/sense/PortalDetectSenseSystem';
 import { AISenseSystem } from '@systems/sense/AISenseSystem';
+import { ComponentCountSenseSystem } from '@systems/sense/ComponentCountSenseSystem';
 import { InputSenseSystem } from '@systems/sense/InputSenseSystem';
 import { MousePositionSenseSystem } from '@systems/sense/MousePositionSenseSystem';
+import { SpawnerSenseSystem } from '@systems/sense/SpawnerSenseSystem';
 import { WeaponSenseSystem } from '@systems/sense/WeaponSenseSystem';
 
 // Time
 import { TimeSystem } from '@systems/time/TimeSystem';
-import { WaveEmitterSystem } from '@systems/time/WaveEmitterSystem';
 
 /**
  * 系统类型枚举，用于分类管理
@@ -95,7 +96,6 @@ export const SystemType = {
 export const Registry: Record<string, any> = {
     // --- Core Systems ---
     'time': TimeSystem,
-    'wave-emitter': WaveEmitterSystem,
     'input-sense': InputSenseSystem,
     'mouse-position-sense': MousePositionSenseSystem,
     'visual-render': VisualRenderSystem,
@@ -118,12 +118,14 @@ export const Registry: Record<string, any> = {
     'motion-intent': MotionIntentSystem,
     'portal-intent': PortalIntentSystem,
     'enemy-ai-intent': EnemyAIIntentSystem,
+    'spawner-intent': SpawnerIntentSystem,
     'player-control': PlayerControlSystem,
     'portal-control': PortalControlSystem,
     'damage-process': DamageProcessSystem,
     'damage-apply': DamageApplySystem,
     'enemy-control': EnemyControlSystem,
     'motion-control': MotionControlSystem,
+    'spawner-control': SpawnerControlSystem,
     'weapon': WeaponControlSystem,
     'weapon-control': WeaponControlSystem,
 
@@ -134,10 +136,11 @@ export const Registry: Record<string, any> = {
     'portal-detect-sense': PortalDetectSenseSystem,
     'weapon-sense': WeaponSenseSystem,
     'ai-sense': AISenseSystem,
+    'component-count-sense': ComponentCountSenseSystem,
+    'spawner-sense': SpawnerSenseSystem,
 
-    // --- Execution & Events ---
+    // --- Execution ---
     'execute': ExecuteSystem,
-    'trigger': TriggerSystem,
 
     // --- Editor Systems ---
     'editor-highlight-render': EditorHighlightRenderSystem,
@@ -150,6 +153,7 @@ export const Registry: Record<string, any> = {
     'detect-area-render': DetectAreaRenderSystem,
     'physics-debug-render': PhysicsDebugRenderSystem,
     'portal-debug-render': PortalDebugRenderSystem,
+    'spawn-debug-render': SpawnDebugRenderSystem,
     'status-render': StatusRenderSystem,
     'floating-text-render': FloatingTextRenderSystem,
     'weapon-debug-render': WeaponDebugRenderSystem,

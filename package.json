@@ -3,12 +3,24 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "main": "platform/electron/main.cjs",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "clean:dist": "rimraf dist",
+        "build": "node ./scripts/build-target.mjs",
+        "build:web": "cross-env TARGET=web vite build --mode production",
+        "build:ios": "cross-env TARGET=ios vite build --mode production",
+        "build:android": "cross-env TARGET=android vite build --mode production",
+        "build:steam": "cross-env TARGET=steam vite build --mode production",
+        "build:all": "npm run clean:dist && run-s build:web build:ios build:android build:steam",
+        "cap:sync:ios": "npm run build -- --target=ios && npx cap sync ios",
+        "cap:sync:android": "npm run build -- --target=android && npx cap sync android",
+        "cap:sync:all": "run-s cap:sync:ios cap:sync:android",
+        "pack:steam": "npm run build -- --target=steam && cross-env ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/ npx electron-builder --config platform/electron/electron-builder.json --config.win.signAndEditExecutable=false",
         "preview": "vite preview"
     },
     "dependencies": {
+        "@capacitor/core": "^7.4.3",
         "consola": "^3.4.2",
         "miniplex": "^2.0.0",
         "pinia": "^3.0.4",
@@ -17,7 +29,16 @@
         "zod": "^4.3.5"
     },
     "devDependencies": {
+        "@capacitor/android": "^7.4.3",
+        "@capacitor/cli": "^7.4.3",
+        "@capacitor/ios": "^7.4.3",
         "@vitejs/plugin-vue": "^5.0.0",
+        "7zip-bin": "^5.2.0",
+        "cross-env": "^10.1.0",
+        "electron": "^37.5.1",
+        "electron-builder": "^26.0.12",
+        "npm-run-all": "^4.1.5",
+        "rimraf": "^6.0.1",
         "typescript": "^5.9.3",
         "vite": "^5.4.21"
     }

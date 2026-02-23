@@ -9,6 +9,7 @@ import { IEntity } from '@definitions/interface/IEntity';
  */
 export const PortalDebugRenderSystem: ISystem & {
     LAYER: number;
+    _drawPortalAreas(ctx: any, camera: any): void;
     _drawDestinations(ctx: any, camera: any): void;
     _drawPortalConnections(ctx: any, camera: any): void;
 } = {
@@ -25,11 +26,67 @@ export const PortalDebugRenderSystem: ISystem & {
         const ctx = renderer.ctx;
         const camera = renderer.camera || { x: 0, y: 0 };
 
+        // 0. 渲染传送区域 (Area)
+        this._drawPortalAreas(ctx, camera);
+
         // 1. 渲染目的地标记 (Circle & Cross)
         this._drawDestinations(ctx, camera);
 
         // 2. 渲染传送门到目的地的连接线 (Lines)
         this._drawPortalConnections(ctx, camera);
+    },
+
+    /**
+     * 渲染传送区域（portal sensor shape）
+     */
+    _drawPortalAreas(ctx: any, camera: any) {
+        // 以 portalDetect 为准绘制传送区域，和 PortalDetectSenseSystem 对齐
+        const detectors = world.with('portalDetect', 'shape', 'transform');
+        for (const entity of detectors) {
+            const e = entity as IEntity;
+            const { shape, transform } = e;
+            if (!shape || !transform) continue;
+
+            const centerX = (transform.x + (shape.offsetX || 0)) - camera.x;
+            const centerY = (transform.y + (shape.offsetY || 0)) - camera.y;
+            const isTriggered = !!(e.portalDetect?.results && e.portalDetect.results.length > 0);
+
+            ctx.save();
+            // 高对比调试色：触发=红，未触发=青，避免紫色系不易分辨
+            ctx.strokeStyle = isTriggered ? '#ff1f45' : '#00e5ff';
+            ctx.fillStyle = isTriggered ? 'rgba(255, 31, 69, 0.35)' : 'rgba(0, 229, 255, 0.26)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+
+            // AABB / OBB
+            if (shape.width != null && shape.height != null) {
+                const w = Number(shape.width || 0);
+                const h = Number(shape.height || 0);
+                const rotation = Number(shape.rotation || 0);
+
+                ctx.translate(centerX, centerY);
+                if (rotation) ctx.rotate(rotation);
+                ctx.fillRect(-w / 2, -h / 2, w, h);
+                ctx.strokeRect(-w / 2, -h / 2, w, h);
+            } else {
+                // Circle / fallback
+                const radius = Number(shape.radius || 20);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // 中心十字辅助定位
+            ctx.beginPath();
+            ctx.moveTo(centerX - 8, centerY);
+            ctx.lineTo(centerX + 8, centerY);
+            ctx.moveTo(centerX, centerY - 8);
+            ctx.lineTo(centerX, centerY + 8);
+            ctx.stroke();
+
+            ctx.restore();
+        }
     },
 
     /**
@@ -46,17 +103,18 @@ export const PortalDebugRenderSystem: ISystem & {
             const x = transform.x - camera.x;
             const y = transform.y - camera.y;
 
-            const color = visual?.color || '#8b5cf6';
+            // 目的地统一高亮黄，优先可读性；不再受原 visual 偏紫配色影响
+            const color = '#ffd400';
             const size = visual?.size || 20;
 
             ctx.save();
             // 绘制目的地标记
             ctx.beginPath();
             ctx.arc(x, y, size / 2, 0, Math.PI * 2);
-            ctx.fillStyle = color.replace(')', ', 0.3)').replace('rgb', 'rgba');
+            ctx.fillStyle = 'rgba(255, 212, 0, 0.32)';
             ctx.fill();
             ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.stroke();
 
             // 绘制中心十字
@@ -67,9 +125,13 @@ export const PortalDebugRenderSystem: ISystem & {
             ctx.stroke();
 
             // 绘制文字
+            // 黑边+黄字，亮背景下也清晰
+            ctx.strokeStyle = '#111111';
+            ctx.lineWidth = 3;
             ctx.fillStyle = color;
             ctx.font = 'bold 12px Arial';
             ctx.textAlign = 'center';
+            ctx.strokeText(name || destinationId, x, y + size / 2 + 15);
             ctx.fillText(name || destinationId, x, y + size / 2 + 15);
             ctx.restore();
         }
@@ -99,7 +161,10 @@ export const PortalDebugRenderSystem: ISystem & {
             const startX = transform.x;
             const startY = transform.y;
             const isTriggered = !!(e.portalDetect?.results && e.portalDetect.results.length > 0);
-            const debugColor = isTriggered ? 'rgba(239, 68, 68, 0.7)' : 'rgba(168, 85, 247, 0.6)';
+            // 连接线：触发中=红，destinationId=绿，坐标传送=橙
+            const debugColor = isTriggered
+                ? '#ff1f45'
+                : (destinationId != null ? '#22c55e' : '#ff8a00');
 
             // 2. 确定终点
             let destX: number | undefined;
@@ -124,13 +189,13 @@ export const PortalDebugRenderSystem: ISystem & {
 
             ctx.save();
             ctx.beginPath();
-            ctx.setLineDash([5, 5]);
+            ctx.setLineDash([8, 4]);
             ctx.moveTo(sX, sY);
             ctx.lineTo(tX, tY);
 
             // 优先使用实体自带的 debugColor，否则使用默认紫色
             ctx.strokeStyle = debugColor;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.stroke();
 
             // 4. 如果是旧式坐标传送，在终点画个 X

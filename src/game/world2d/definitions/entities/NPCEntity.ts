@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
-  DetectArea, DetectInput, Trigger,
+  DetectArea, DetectInput,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
   Collider, COLLIDER_INSPECTOR_FIELDS,
@@ -78,13 +78,8 @@ export const NPCEntity: IEntityDefinition<typeof NPCEntitySchema> = {
       animation: Animation.create('default'),
       shape: Shape.create({ type: ShapeType.CIRCLE, radius: 15 }),
       collider: Collider.create({ isStatic: true }),
-      
-      // Trigger 放在根节点，逻辑更清晰
-      detectInput: DetectInput.create({ keys: ['Interact'] }),
-      trigger: Trigger.create({
-        rules: [{ type: 'onPress', requireArea: true }],
-        actions: ['DIALOGUE']
-      })
+
+      detectInput: DetectInput.create({ keys: ['Interact'] })
     });
 
     // 2. Sensor Child (Detection)

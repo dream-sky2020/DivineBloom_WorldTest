@@ -59,6 +59,7 @@ export const PortalIntentSystem: ISystem & {
 
   update(dt: number) {
     const portalSensors = world.with('portal', 'portalDetect');
+    const handledTargets = new Set<any>();
 
     for (const sensor of portalSensors) {
       const s = sensor as IEntity;
@@ -74,6 +75,7 @@ export const PortalIntentSystem: ISystem & {
 
       for (const hit of fullResults) {
         const target = (hit?.entity || hit) as IEntity;
+        if (!target || handledTargets.has(target) || (target as any).portalIntent) continue;
         const labels = hit?.detectable?.labels || target?.detectable?.labels || [];
         if (!Array.isArray(labels) || !labels.includes('player')) continue;
 
@@ -83,6 +85,7 @@ export const PortalIntentSystem: ISystem & {
 
         const emitted = this._emitPortalIntent(s, portal, target);
         if (emitted) {
+          handledTargets.add(target);
           portal.cooldownTimer = portal.defaultCooldown || 0;
           break;
         }

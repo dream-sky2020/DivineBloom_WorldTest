@@ -25,7 +25,7 @@ export class ScenarioLoader {
         // 1. 版本迁移 (保留以应对组件结构升级)
         const migratedBundle = SceneMigration.migrate(bundle)
         const config = migratedBundle.header?.config || {}
-        
+
         const result: { player: any; entities: any[] } = {
             player: null,
             entities: []
@@ -53,6 +53,7 @@ export class ScenarioLoader {
 
         migratedBundle.entities.forEach((entityData: any) => {
             const normalized = normalizeEntityData(entityData);
+            if (normalized?.type === 'weapon') return;
             // 直接透传数据给 EntityManager
             // 假设 entityData 结构为 { type: '...', components: { ... } }
             const entity = EntityManager.create(engine, normalized?.type, normalized, {

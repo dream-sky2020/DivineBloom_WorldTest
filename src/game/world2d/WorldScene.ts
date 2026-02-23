@@ -47,15 +47,15 @@ export class WorldScene {
      * @param {Object} [stateProvider]
      */
     constructor(
-        engine: GameEngine, 
-        onEncounter: ((enemyGroup: any, enemyUuid: any) => void) | null = null, 
-        initialState: any = null, 
-        mapData: any = null, 
-        entryId: string = 'default', 
-        onSwitchMap: ((targetMapId: string) => void) | null = null, 
-        onInteract: ((interaction: any) => void) | null = null, 
-        onOpenMenu: (() => void) | null = null, 
-        onOpenShop: (() => void) | null = null, 
+        engine: GameEngine,
+        onEncounter: ((enemyGroup: any, enemyUuid: any) => void) | null = null,
+        initialState: any = null,
+        mapData: any = null,
+        entryId: string = 'default',
+        onSwitchMap: ((targetMapId: string) => void) | null = null,
+        onInteract: ((interaction: any) => void) | null = null,
+        onOpenMenu: (() => void) | null = null,
+        onOpenShop: (() => void) | null = null,
         stateProvider: StateProvider | null = null
     ) {
         // Clear ECS world on scene init to prevent stale entities
@@ -87,6 +87,8 @@ export class WorldScene {
             // 逻辑阶段 (Logic Phases)
             logic: {
                 sense: [
+                    getSystem('component-count-sense'),
+                    getSystem('spawner-sense'),
                     getSystem('damage-detect-sense'),
                     getSystem('motion-sense'),
                     getSystem('motion-portal-sense'),
@@ -100,17 +102,16 @@ export class WorldScene {
                     getSystem('weapon-intent'),
                     getSystem('motion-intent'),
                     getSystem('portal-intent'),
-                    getSystem('enemy-ai-intent')
+                    getSystem('enemy-ai-intent'),
+                    getSystem('spawner-intent')
                 ],
-                decision: [
-                    getSystem('wave-emitter'),
-                    getSystem('trigger')
-                ],
+                decision: [],
                 control: [
                     getSystem('player-control'),
                     getSystem('portal-control'),
                     getSystem('enemy-control'),
                     getSystem('motion-control'),
+                    getSystem('spawner-control'),
                     getSystem('weapon-control'),
                     getSystem('damage-process'),
                     getSystem('damage-apply')
@@ -141,6 +142,7 @@ export class WorldScene {
                 getSystem('physics-debug-render'),   // Layer 110
                 getSystem('detect-area-render'),     // Layer 100 (Debug)
                 getSystem('portal-debug-render'),    // Layer 105 (Portal Debug)
+                getSystem('spawn-debug-render'),     // Layer 104 (Spawn Area Debug)
                 getSystem('weapon-debug-render')     // Layer 115 (Weapon Debug)
             ],
             // 编辑器阶段 (Editor Phases)
@@ -203,7 +205,7 @@ export class WorldScene {
 
         const aiSense = getSystem('ai-sense');
         if (aiSense && aiSense.init) aiSense.init(mapData);
-        
+
         logger.info('Map systems reinitialized')
     }
 

@@ -1,4 +1,4 @@
-import { actionQueue, eventQueue, triggerQueue, world } from '@world2d/world';
+import { actionQueue, eventQueue, world } from '@world2d/world';
 import { getSystem } from '@world2d/SystemRegistry';
 import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry';
 import { EntityCreator } from '@definitions/internal/EntityCreator';
@@ -25,7 +25,7 @@ const EventHandlers: Record<string, (payload: any, callbacks: any) => void> = {
 /**
  * ExecuteSystem
  * 任务执行总管
- * 接收 TriggerSystem 产生的 Action 请求，以及 UI 产生的 Command 请求，统一分发执行
+ * 接收 ECS 产生的 Action 请求，以及 UI 产生的 Command 请求，统一分发执行
  */
 interface IExecuteSystem extends ISystem {
     dispatch(item: any, callbacks: any, mapData: any): void;
@@ -242,9 +242,8 @@ export const ExecuteSystem: IExecuteSystem = {
             return;
         }
 
-        triggerQueue.push({
+        logger.warn('EMIT_SIGNAL is deprecated after Trigger removal; ignored.', {
             signal: resolved.signal,
-            payload: resolved.payload,
             source,
             target: resolved.target || target
         });

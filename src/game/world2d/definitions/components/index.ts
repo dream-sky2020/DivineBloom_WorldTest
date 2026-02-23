@@ -20,7 +20,8 @@ import { Detectable } from './Detectable';
 import { DetectInput } from './DetectInput';
 import { Damage } from './Damage';
 import { TriggerSignal } from './TriggerSignal';
-import { MonsterSpawn } from './MonsterSpawn';
+import { Spawn } from './Spawn';
+import { SpawnMask } from './SpawnMask';
 import { Monster } from './Monster';
 import { Experience } from './Experience';
 import { Health } from './Health';
@@ -44,9 +45,7 @@ import { Sprite } from './Sprite';
 import { CombatProgress } from './CombatProgress';
 import { Timer } from './Timer';
 import { Transform } from './Transform';
-import { Trigger } from './Trigger';
 import { Velocity } from './Velocity';
-import { WaveEmitter } from './WaveEmitter';
 import { Weapon } from './Weapon';
 import { WeaponIntent } from './WeaponIntent';
 import { WeaponSense } from './WeaponSense';
@@ -74,7 +73,8 @@ const components = [
     DetectInput,
     Damage,
     TriggerSignal,
-    MonsterSpawn,
+    Spawn,
+    SpawnMask,
     Monster,
     Experience,
     Health,
@@ -98,9 +98,7 @@ const components = [
     CombatProgress,
     Timer,
     Transform,
-    Trigger,
     Velocity,
-    WaveEmitter,
     Weapon,
     WeaponIntent,
     WeaponSense,
@@ -133,7 +131,8 @@ export * from './Detectable';
 export * from './DetectInput';
 export * from './Damage';
 export * from './TriggerSignal';
-export * from './MonsterSpawn';
+export * from './Spawn';
+export * from './SpawnMask';
 export * from './Monster';
 export * from './Experience';
 export * from './Health';
@@ -152,9 +151,7 @@ export * from './SceneConfig';
 export * from './Sprite';
 export * from './CombatProgress';
 export * from './Timer';
-export * from './Trigger';
 export * from './Velocity';
-export * from './WaveEmitter';
 export * from './Weapon';
 export * from './WeaponIntent';
 export * from './WeaponSense';

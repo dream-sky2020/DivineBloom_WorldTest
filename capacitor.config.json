@@ -1,0 +1,6 @@
+{
+  "appId": "com.worldtest.game",
+  "appName": "WorldTest",
+  "webDir": "dist/mobile",
+  "bundledWebRuntime": false
+}

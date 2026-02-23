@@ -1,4 +1,5 @@
 import { IEntityDefinition } from '../definitions/interface/IEntity';
+import { spawnRegistry } from './SpawnRegistry';
 import {
     PlayerEntity,
     PetEntity,
@@ -6,7 +7,8 @@ import {
     EnemyEntity,
     HordeEnemyEntity,
     HordeEnemySpawnerEntity,
-    HordeWaveEmitterEntity,
+    FleeEnemyEntity,
+    FleeEnemySpawnerEntity,
     BackgroundEntity,
     DecorationEntity,
     ObstacleEntity,
@@ -33,7 +35,8 @@ class EntityRegistry {
         this.register(EnemyEntity);
         this.register(HordeEnemyEntity);
         this.register(HordeEnemySpawnerEntity);
-        this.register(HordeWaveEmitterEntity);
+        this.register(FleeEnemyEntity);
+        this.register(FleeEnemySpawnerEntity);
         this.register(BackgroundEntity);
         this.register(DecorationEntity);
         this.register(ObstacleEntity);
@@ -51,6 +54,9 @@ class EntityRegistry {
             return;
         }
         this.definitions.set(def.type, def);
+        if (def.spawnFactory) {
+            spawnRegistry.register(def.type, def.spawnFactory);
+        }
     }
 
     get(type: string): IEntityDefinition<any> | undefined {

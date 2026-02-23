@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
-  DetectArea, Trigger, DetectInput, Detectable, DamageDetectable, PortalDetectable,
+  DetectArea, DetectInput, Detectable, DamageDetectable, PortalDetectable,
   Monster,
   Sprite, SPRITE_INSPECTOR_FIELDS,
   Animation,
@@ -131,13 +131,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       collider: Collider.create(),
       detectable: Detectable.create(['enemy', 'teleportable']),
       damageDetectable: DamageDetectable.create(['enemy']),
-      portalDetectable: PortalDetectable.create(['enemy', 'teleportable']),
-
-      // Trigger 放在根节点
-      trigger: Trigger.create({
-        rules: [{ type: 'onEnter', condition: 'notStunned' }],
-        actions: []
-      })
+      portalDetectable: PortalDetectable.create(['enemy', 'teleportable'])
     });
 
     // 2. Sensor Child (Battle Detection Only)

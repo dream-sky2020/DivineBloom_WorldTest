@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { IComponentDefinition } from '../interface/IComponent';
 import { MotionMode } from '../enums/Motion';
+import { MotionStatus } from '../enums/MotionStatus';
 
 const pointSchema = z.object({
   x: z.number().default(0),
@@ -118,11 +119,39 @@ const motionSchema = z.object({
   runtime: z.object({
     elapsedTime: z.number().default(0),
     pathDirection: z.union([z.literal(1), z.literal(-1)]).default(1),
-    initialized: z.boolean().default(false)
+    initialized: z.boolean().default(false),
+    status: z.nativeEnum(MotionStatus).default(MotionStatus.IDLE),
+    statusTime: z.number().default(0),
+    stuckTimer: z.number().default(0),
+    lastPosition: pointSchema.nullable().default(null),
+    currentSpeed: z.number().default(0),
+    desiredVelocity: pointSchema.default({ x: 0, y: 0 }),
+    teleportRequest: z.object({
+      x: z.number(),
+      y: z.number(),
+      keepVelocity: z.boolean().default(false),
+      sourcePortalId: z.string().optional()
+    }).nullable().default(null),
+
+    // 感知系统写入的临时状态
+    hasTarget: z.boolean().default(false),
+    targetEntityId: z.string().nullable().default(null),
+    targetPos: pointSchema.nullable().default(null),
+    portalSense: z.any().optional() // 弱类型引用，避免循环依赖
   }).default({
     elapsedTime: 0,
     pathDirection: 1,
-    initialized: false
+    initialized: false,
+    status: MotionStatus.IDLE,
+    statusTime: 0,
+    stuckTimer: 0,
+    lastPosition: null,
+    currentSpeed: 0,
+    desiredVelocity: { x: 0, y: 0 },
+    teleportRequest: null,
+    hasTarget: false,
+    targetEntityId: null,
+    targetPos: null
   })
 });
 
@@ -140,7 +169,17 @@ export const Motion: IComponentDefinition<typeof motionSchema, MotionData> = {
       runtime: {
         elapsedTime: 0,
         pathDirection: 1,
-        initialized: false
+        initialized: false,
+        status: MotionStatus.IDLE,
+        statusTime: 0,
+        stuckTimer: 0,
+        lastPosition: null,
+        currentSpeed: 0,
+        desiredVelocity: { x: 0, y: 0 },
+        teleportRequest: null,
+        hasTarget: false,
+        targetEntityId: null,
+        targetPos: null
       }
     };
   },
@@ -172,7 +211,9 @@ export const Motion: IComponentDefinition<typeof motionSchema, MotionData> = {
     { path: 'motion.path.pingPong', label: '路径往返', type: 'checkbox', group: '路径运动 (Motion)' },
     { path: 'motion.wave.enabled', label: '启用波动', type: 'checkbox', group: '波动运动 (Motion)' },
     { path: 'motion.wave.amplitude', label: '波动振幅', type: 'number', props: { step: 1 }, group: '波动运动 (Motion)' },
-    { path: 'motion.wave.frequency', label: '波动频率', type: 'number', props: { step: 0.1 }, group: '波动运动 (Motion)' }
+    { path: 'motion.wave.frequency', label: '波动频率', type: 'number', props: { step: 0.1 }, group: '波动运动 (Motion)' },
+    { path: 'motion.runtime.status', label: '当前状态', type: 'text', props: { readonly: true }, group: '运行时 (Debug)' },
+    { path: 'motion.runtime.currentSpeed', label: '当前速度', type: 'number', props: { readonly: true, step: 0.1 }, group: '运行时 (Debug)' }
   ]
 };
 

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
-import { WeaponEntity } from './WeaponEntity';
 import {
   Bounds,
   BOUNDS_INSPECTOR_FIELDS,
@@ -70,14 +69,6 @@ const petWeaponConfigSchema = z.object({
     attackAngleOffsetDeg: z.number().optional(),
     blockIfOutOfRange: z.boolean().optional()
   }).optional()
-}).default({
-  orbitRadius: 30,
-  orbitAngle: 0,
-  orbitSpeed: 2.5,
-  followSpeed: 260,
-  followRangeX: 0,
-  followRangeY: 0,
-  linearAccelFactor: 0
 });
 
 const PetEntitySchema = z.object({
@@ -99,7 +90,7 @@ const PetEntitySchema = z.object({
   followOffsetX: z.number().optional().default(-28),
   followOffsetY: z.number().optional().default(0),
   followDistanceSpeedFactor: z.number().optional().default(0.2),
-  weapon: petWeaponConfigSchema
+  weapon: petWeaponConfigSchema.optional()
 });
 
 export type PetEntityData = z.infer<typeof PetEntitySchema>;
@@ -176,7 +167,14 @@ export const PetEntity: IEntityDefinition<typeof PetEntitySchema> = {
           arrive: 1,
           separation: 0.15,
           avoidObstacle: 0.4,
-          portalAttract: 0.9
+          portalAttract: 0.9,
+          flee: 0,
+          wander: 0
+        },
+        sensing: {
+          separationRadius: 50,
+          obstacleCheckDistance: 100,
+          obstacleCheckRadius: params.radius || 10
         },
         portal: {
           enabled: true,
@@ -191,25 +189,7 @@ export const PetEntity: IEntityDefinition<typeof PetEntitySchema> = {
       })
     });
 
-    const weapon = WeaponEntity.create({
-      x: params.x,
-      y: params.y,
-      name: `${params.name}_Weapon`,
-      ownerTarget: petId,
-      orbitRadius: params.weapon.orbitRadius,
-      orbitAngle: params.weapon.orbitAngle,
-      orbitSpeed: params.weapon.orbitSpeed,
-      followSpeed: params.weapon.followSpeed,
-      followRangeX: params.weapon.followRangeX,
-      followRangeY: params.weapon.followRangeY,
-      linearAccelFactor: params.weapon.linearAccelFactor,
-      spriteId: params.weapon.spriteId,
-      spriteScale: params.weapon.spriteScale,
-      spriteTint: params.weapon.spriteTint,
-      weaponConfig: params.weapon.weaponConfig
-    } as any);
-
-    root.children = Children.create(weapon ? [weapon] : []);
+    root.children = Children.create([]);
     root.inspector = Inspector.create({
       fields: INSPECTOR_FIELDS,
       hitPriority: 85,
@@ -241,39 +221,41 @@ export const PetEntity: IEntityDefinition<typeof PetEntitySchema> = {
       followOffsetX: entity.motion?.target?.offset?.x ?? -28,
       followOffsetY: entity.motion?.target?.offset?.y ?? 0,
       followDistanceSpeedFactor: entity.motion?.distanceSpeedFactor ?? 0.2,
-      weapon: {
-        orbitRadius: weaponEntity?.motion?.orbit?.radius ?? 30,
-        orbitAngle: weaponEntity?.motion?.orbit?.angle ?? 0,
-        orbitSpeed: (weaponEntity?.motion?.orbit?.clockwise ? -1 : 1) * (weaponEntity?.motion?.orbit?.angularSpeed ?? 2.5),
-        followSpeed: weaponEntity?.motion?.maxSpeed ?? 260,
-        followRangeX: weaponEntity?.motion?.deadZoneAxis?.x ?? 0,
-        followRangeY: weaponEntity?.motion?.deadZoneAxis?.y ?? 0,
-        linearAccelFactor: weaponEntity?.motion?.distanceSpeedFactor ?? 0,
-        spriteId: weaponEntity?.sprite?.id,
-        spriteScale: weaponEntity?.sprite?.scale,
-        spriteTint: weaponEntity?.sprite?.tint,
-        weaponConfig: weaponEntity?.weapon ? {
-          weaponType: weaponEntity.weapon.weaponType,
-          damage: weaponEntity.weapon.damage,
-          fireRate: weaponEntity.weapon.fireRate,
-          bulletSpeed: weaponEntity.weapon.bulletSpeed,
-          bulletColor: weaponEntity.weapon.bulletColor,
-          bulletLifeTime: weaponEntity.weapon.bulletLifeTime,
-          bulletRadius: weaponEntity.weapon.bulletRadius,
-          bulletSpriteId: weaponEntity.weapon.bulletSpriteId,
-          bulletSpriteScale: weaponEntity.weapon.bulletSpriteScale,
-          damageDetectCcdEnabled: weaponEntity.weapon.damageDetectCcdEnabled,
-          damageDetectCcdMinDistance: weaponEntity.weapon.damageDetectCcdMinDistance,
-          damageDetectCcdBuffer: weaponEntity.weapon.damageDetectCcdBuffer,
-          bulletShape: weaponEntity.weapon.bulletShape,
-          projectileCount: weaponEntity.weapon.projectileCount,
-          projectileSpreadDeg: weaponEntity.weapon.projectileSpreadDeg,
-          attackMode: weaponEntity.weapon.attackMode,
-          attackArcDeg: weaponEntity.weapon.attackArcDeg,
-          attackAngleOffsetDeg: weaponEntity.weapon.attackAngleOffsetDeg,
-          blockIfOutOfRange: weaponEntity.weapon.blockIfOutOfRange
-        } : undefined
-      }
+      ...(weaponEntity ? {
+        weapon: {
+          orbitRadius: weaponEntity.motion?.orbit?.radius ?? 30,
+          orbitAngle: weaponEntity.motion?.orbit?.angle ?? 0,
+          orbitSpeed: (weaponEntity.motion?.orbit?.clockwise ? -1 : 1) * (weaponEntity.motion?.orbit?.angularSpeed ?? 2.5),
+          followSpeed: weaponEntity.motion?.maxSpeed ?? 260,
+          followRangeX: weaponEntity.motion?.deadZoneAxis?.x ?? 0,
+          followRangeY: weaponEntity.motion?.deadZoneAxis?.y ?? 0,
+          linearAccelFactor: weaponEntity.motion?.distanceSpeedFactor ?? 0,
+          spriteId: weaponEntity.sprite?.id,
+          spriteScale: weaponEntity.sprite?.scale,
+          spriteTint: weaponEntity.sprite?.tint,
+          weaponConfig: weaponEntity.weapon ? {
+            weaponType: weaponEntity.weapon.weaponType,
+            damage: weaponEntity.weapon.damage,
+            fireRate: weaponEntity.weapon.fireRate,
+            bulletSpeed: weaponEntity.weapon.bulletSpeed,
+            bulletColor: weaponEntity.weapon.bulletColor,
+            bulletLifeTime: weaponEntity.weapon.bulletLifeTime,
+            bulletRadius: weaponEntity.weapon.bulletRadius,
+            bulletSpriteId: weaponEntity.weapon.bulletSpriteId,
+            bulletSpriteScale: weaponEntity.weapon.bulletSpriteScale,
+            damageDetectCcdEnabled: weaponEntity.weapon.damageDetectCcdEnabled,
+            damageDetectCcdMinDistance: weaponEntity.weapon.damageDetectCcdMinDistance,
+            damageDetectCcdBuffer: weaponEntity.weapon.damageDetectCcdBuffer,
+            bulletShape: weaponEntity.weapon.bulletShape,
+            projectileCount: weaponEntity.weapon.projectileCount,
+            projectileSpreadDeg: weaponEntity.weapon.projectileSpreadDeg,
+            attackMode: weaponEntity.weapon.attackMode,
+            attackArcDeg: weaponEntity.weapon.attackArcDeg,
+            attackAngleOffsetDeg: weaponEntity.weapon.attackAngleOffsetDeg,
+            blockIfOutOfRange: weaponEntity.weapon.blockIfOutOfRange
+          } : undefined
+        }
+      } : {})
     };
   },
 

@@ -4,16 +4,15 @@
  * 统一管理所有可创建的实体类型，提供模板信息供编辑器使用
  */
 
-import { 
-    NPCEntity, 
-    DecorationEntity, 
-    ObstacleEntity, 
-    PortalEntity, 
+import {
+    NPCEntity,
+    DecorationEntity,
+    ObstacleEntity,
+    PortalEntity,
     PortalDestinationEntity,
     EnemyEntity,
     BackgroundEntity,
-    HordeEnemySpawnerEntity,
-    HordeWaveEmitterEntity
+    HordeEnemySpawnerEntity
 } from '@entities'
 
 /**
@@ -111,22 +110,6 @@ export class EntityTemplateRegistry {
                     visionRadius: 500,
                     maxHealth: 50
                 }
-            })
-        })
-
-        this.register({
-            id: 'horde_wave_emitter',
-            name: '怪潮波次发信器',
-            description: '按固定间隔向生成器广播信号',
-            icon: '⏱️',
-            category: 'system',
-            factory: HordeWaveEmitterEntity.create.bind(HordeWaveEmitterEntity),
-            getDefaultData: (mousePos) => ({
-                x: mousePos?.x || 420,
-                y: mousePos?.y || 300,
-                signal: 'wave_spawn_1',
-                interval: 3,
-                active: true
             })
         })
 

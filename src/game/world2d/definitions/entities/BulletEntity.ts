@@ -12,8 +12,7 @@ import {
   Damage, DAMAGE_INSPECTOR_FIELDS,
   DamageDetect, DAMAGE_DETECT_INSPECTOR_FIELDS,
   LifeTime, LIFETIME_INSPECTOR_FIELDS,
-  Transform, TRANSFORM_INSPECTOR_FIELDS,
-  Trigger
+  Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components';
 
 const BulletEntitySchema = z.object({
@@ -67,7 +66,7 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
     const root = world.add({
       type: 'bullet',
       tags: ['bullet'],
-      
+
       // 基础位置
       transform: Transform.create(params.x, params.y),
 
@@ -113,15 +112,9 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
         isTrigger: true, // 子弹是触发器
         isStatic: false
       }),
-      
-      // 生命周期管理
-      lifeTime: LifeTime.create(params.maxLifeTime, true),
 
-      // 添加 Trigger 支持动作分发（例如子弹命中后产生特殊效果）
-      trigger: Trigger.create({
-        rules: [{ type: 'onEnter' }], // 当 detectArea 产生结果时触发
-        actions: [] // 预留
-      })
+      // 生命周期管理
+      lifeTime: LifeTime.create(params.maxLifeTime, true)
     });
 
     // 运行时双缓冲命中集合兜底初始化（不参与序列化）
@@ -145,7 +138,7 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
         ...(DAMAGE_DETECT_INSPECTOR_FIELDS || [])
       ]
     })
-    
+
     // 添加到世界中
     return root
   },
@@ -173,6 +166,6 @@ export const BulletEntity: IEntityDefinition<typeof BulletEntitySchema> = {
   },
 
   deserialize(data: any) {
-      return this.create(data);
+    return this.create(data);
   }
 }

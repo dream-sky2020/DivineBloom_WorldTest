@@ -2,10 +2,9 @@ import { z } from 'zod';
 import { world } from '@world2d/world';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
-    Actions,
+    Spawn,
     Inspector, EDITOR_INSPECTOR_FIELDS,
-    Transform, TRANSFORM_INSPECTOR_FIELDS,
-    Trigger
+    Transform, TRANSFORM_INSPECTOR_FIELDS
 } from '@components';
 
 const hordeEnemyOptionsSchema = z.object({
@@ -21,7 +20,11 @@ export const HordeEnemySpawnerEntitySchema = z.object({
     x: z.number(),
     y: z.number(),
     name: z.string().optional().default('Horde Spawner'),
-    signal: z.string().default('wave_spawn_1'),
+    spawnEnabled: z.boolean().default(true),
+    spawnLimit: z.number().min(0).default(50),
+    spawnInterval: z.number().min(0).default(3),
+    spawnBatchSize: z.number().min(1).default(1),
+    spawnGroup: z.string().default('monster'),
     enemyName: z.string().optional(),
     enemyOptions: hordeEnemyOptionsSchema.default({} as any)
 });
@@ -31,11 +34,20 @@ export type HordeEnemySpawnerEntityData = z.infer<typeof HordeEnemySpawnerEntity
 const INSPECTOR_FIELDS = [
     { path: 'name', label: '名称', type: 'text', group: '基础属性' },
     ...(TRANSFORM_INSPECTOR_FIELDS || []),
-    { path: 'trigger.rules.0.signal', label: '监听信号', type: 'text', group: '生成器' },
-    { path: 'actionCreateEntity.customData.name', label: '敌人名称', type: 'text', group: '生成器' },
-    { path: 'actionCreateEntity.customData.options.spriteId', label: '敌人 Sprite', type: 'text', group: '生成器' },
-    { path: 'actionCreateEntity.customData.options.baseSpeed', label: '敌人速度', type: 'number', props: { min: 0, step: 10 }, group: '生成器' },
-    { path: 'actionCreateEntity.customData.options.maxHealth', label: '敌人生命', type: 'number', props: { min: 1, step: 1 }, group: '生成器' },
+    { path: 'spawn.enabled', label: '启用产卵', type: 'checkbox', group: '生成器' },
+    { path: 'spawn.spawnLimit', label: '产卵上限', type: 'number', props: { min: 0, step: 1 }, group: '生成器' },
+    { path: 'spawn.spawnInterval', label: '产卵间隔', type: 'number', props: { min: 0, step: 0.1 }, group: '生成器' },
+    { path: 'spawn.spawnBatchSize', label: '每批数量', type: 'number', props: { min: 1, step: 1 }, group: '生成器' },
+    { path: 'spawn.spawnGroup', label: '生成分组', type: 'text', group: '生成器' },
+    { path: 'spawn.spawnEntityId', label: '产卵实体 ID', type: 'text', group: '生成器' },
+    { path: 'spawn.spawnPosition.mode', label: '生成范围模式', type: 'select', props: { options: ['self', 'target', 'offset', 'randomRadius', 'randomRect'] }, group: '生成器' },
+    { path: 'spawn.spawnPosition.radius', label: '圆形半径', type: 'number', props: { min: 0, step: 1 }, group: '生成器' },
+    { path: 'spawn.spawnPosition.rectWidth', label: '矩形宽度', type: 'number', props: { min: 0, step: 1 }, group: '生成器' },
+    { path: 'spawn.spawnPosition.rectHeight', label: '矩形高度', type: 'number', props: { min: 0, step: 1 }, group: '生成器' },
+    { path: 'spawn.spawnParams.name', label: '敌人名称', type: 'text', group: '生成器' },
+    { path: 'spawn.spawnParams.options.spriteId', label: '敌人 Sprite', type: 'text', group: '生成器' },
+    { path: 'spawn.spawnParams.options.baseSpeed', label: '敌人速度', type: 'number', props: { min: 0, step: 10 }, group: '生成器' },
+    { path: 'spawn.spawnParams.options.maxHealth', label: '敌人生命', type: 'number', props: { min: 1, step: 1 }, group: '生成器' },
     ...(EDITOR_INSPECTOR_FIELDS || [])
 ];
 
@@ -46,25 +58,49 @@ export const HordeEnemySpawnerEntity: IEntityDefinition<typeof HordeEnemySpawner
     creationIndex: 0,
     schema: HordeEnemySpawnerEntitySchema,
     create(data: HordeEnemySpawnerEntityData) {
-        const result = HordeEnemySpawnerEntitySchema.safeParse(data);
+        const normalizedData = {
+            ...(data as any),
+            spawnGroup: (data as any)?.spawnGroup ?? (data as any)?.countByComponent
+        };
+        const result = HordeEnemySpawnerEntitySchema.safeParse(normalizedData);
         if (!result.success) {
             console.error('[HordeEnemySpawnerEntity] Validation failed', result.error);
             return null;
         }
 
-        const { x, y, name, signal, enemyName, enemyOptions } = result.data;
+        const {
+            x,
+            y,
+            name,
+            spawnEnabled,
+            spawnLimit,
+            spawnInterval,
+            spawnBatchSize,
+            spawnGroup,
+            enemyName,
+            enemyOptions
+        } = result.data;
         const root = world.add({
             type: 'horde_enemy_spawner',
             name,
             transform: Transform.create(x, y),
-            trigger: Trigger.create({
-                rules: [{ type: 'onSignal', signal }],
-                actions: ['CREATE_ENTITY'],
-                defaultCooldown: 0
-            }),
-            actionCreateEntity: Actions.CreateEntity({
-                entityType: 'horde_enemy',
-                customData: {
+            spawn: Spawn.create({
+                enabled: spawnEnabled,
+                spawnLimit,
+                spawnInterval,
+                cooldown: 0,
+                spawnBatchSize,
+                spawnGroup,
+                spawnEntityId: 'horde_enemy',
+                spawnPosition: {
+                    mode: 'self',
+                    offsetX: 0,
+                    offsetY: 0,
+                    radius: 120,
+                    rectWidth: 240,
+                    rectHeight: 160
+                },
+                spawnParams: {
                     name: enemyName,
                     options: enemyOptions
                 }
@@ -85,9 +121,13 @@ export const HordeEnemySpawnerEntity: IEntityDefinition<typeof HordeEnemySpawner
             x: entity.transform?.x ?? 0,
             y: entity.transform?.y ?? 0,
             name: entity.name ?? 'Horde Spawner',
-            signal: entity.trigger?.rules?.[0]?.signal ?? 'wave_spawn_1',
-            enemyName: entity.actionCreateEntity?.customData?.name,
-            enemyOptions: entity.actionCreateEntity?.customData?.options ?? {}
+            spawnEnabled: entity.spawn?.enabled ?? true,
+            spawnLimit: entity.spawn?.spawnLimit ?? 50,
+            spawnInterval: entity.spawn?.spawnInterval ?? 3,
+            spawnBatchSize: entity.spawn?.spawnBatchSize ?? 1,
+            spawnGroup: entity.spawn?.spawnGroup ?? 'monster',
+            enemyName: entity.spawn?.spawnParams?.name,
+            enemyOptions: entity.spawn?.spawnParams?.options ?? {}
         };
     },
     deserialize(data: any) {

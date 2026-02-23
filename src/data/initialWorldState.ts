@@ -104,65 +104,9 @@ export const InitialWorldState: InitialWorldStateData = {
                 followRangeY: 14,
                 followOffsetX: -42,
                 followOffsetY: 0,
-                followDistanceSpeedFactor: 0.35,
-                weapon: {
-                    orbitRadius: 26,
-                    orbitAngle: 0,
-                    orbitSpeed: 3.2,
-                    followSpeed: 280,
-                    followRangeX: 0,
-                    followRangeY: 0,
-                    linearAccelFactor: 0,
-                    spriteId: 'particle_3',
-                    spriteScale: 0.16,
-                    spriteTint: '#9cf4ff',
-                    weaponConfig: {
-                        weaponType: 'pet_orbiter',
-                        damage: 8,
-                        fireRate: 5,
-                        bulletSpeed: 620,
-                        bulletLifeTime: 1.4,
-                        bulletRadius: 5,
-                        bulletSpriteId: 'particle_3',
-                        bulletSpriteScale: 0.38,
-                        damageDetectCcdEnabled: true,
-                        damageDetectCcdMinDistance: 0,
-                        damageDetectCcdBuffer: 4,
-                        bulletShape: { type: 'circle', radius: 5 }
-                    }
-                }
+                followDistanceSpeedFactor: 0.35
             },
-            // 3.1 武器实体 (对应 WeaponEntity.ts)
-            {
-                type: 'weapon',
-                name: 'HeroWeapon',
-                ownerTarget: 'player',
-                orbitRadius: 40,
-                orbitSpeed: 2,
-                spriteId: 'particle_3',
-                spriteScale: 0.2,
-                weaponConfig: {
-                    weaponType: 'pistol',
-                    bulletSpriteScale: 0.5,
-                    damageDetectCcdEnabled: true,
-                    damageDetectCcdMinDistance: 0,
-                    damageDetectCcdBuffer: 2,
-                    bulletShape: { type: 'circle', radius: 48 }
-                }
-            },
-            // 4. NPC 示例
-            {
-                type: 'npc',
-                x: 1200,
-                y: 1000,
-                name: 'Guide NPC',
-                assetId: 'npc_guide',
-                config: {
-                    dialogueId: 'welcome',
-                    range: 80
-                }
-            },
-            // 5. 敌人示例
+            // 4. 敌人示例
             {
                 type: 'enemy',
                 x: 1500,
@@ -176,13 +120,14 @@ export const InitialWorldState: InitialWorldStateData = {
                     sensorRadius: 40
                 }
             },
-            // 6. 怪潮敌人生成器（监听波次信号后生成 horde_enemy）
+            // 5. 怪潮敌人生成器（按 Spawn 配置持续生成 horde_enemy）
             {
                 type: 'horde_enemy_spawner',
                 x: 1300,
                 y: 900,
                 name: 'HordeSpawner_A',
-                signal: 'wave_spawn_1',
+                spawnLimit: 3,
+                spawnGroup: 'monster',
                 enemyName: 'Spawned Horde Enemy',
                 enemyOptions: {
                     spriteId: 'enemy_slime',
@@ -192,18 +137,22 @@ export const InitialWorldState: InitialWorldStateData = {
                     maxHealth: 50
                 }
             },
-            // 7. 怪潮波次发信器（每 2 秒发送一次信号）
             {
-                type: 'horde_wave_emitter',
-                x: 1250,
+                type: 'flee_enemy_spawner',
+                x: 1450,
                 y: 900,
-                name: 'WaveEmitter_A',
-                signal: 'wave_spawn_1',
-                interval: 2,
-                active: true,
-                emitOnStart: true
+                name: 'FleeSpawner_A',
+                spawnLimit: 10,
+                spawnGroup: 'fleeEnemy',
+                enemyName: 'Spawned Flee Enemy',
+                enemyOptions: {
+                    spriteId: 'enemy_slime',
+                    baseSpeed: 115,
+                    visionRadius: 600,
+                    maxHealth: 45
+                }
             },
-            // 8. 传送终点（用于测试宠物是否能及时通过捷径跟随玩家）
+            // 6. 传送终点（用于测试宠物是否能及时通过捷径跟随玩家）
             {
                 type: 'portal_destination',
                 id: 'pet_test_dest_a',
@@ -220,7 +169,7 @@ export const InitialWorldState: InitialWorldStateData = {
                 name: 'PetTestDestB',
                 visual: { color: '#0ea5e9', size: 20 }
             },
-            // 9. 双向同图强制传送门（玩家穿门后观察宠物追随表现）
+            // 7. 双向同图强制传送门（玩家穿门后观察宠物追随表现）
             {
                 type: 'portal',
                 x: 980,
@@ -233,15 +182,15 @@ export const InitialWorldState: InitialWorldStateData = {
             },
             {
                 type: 'portal',
-                x: 300,
-                y: 300,
+                x: 170,
+                y: 180,
                 name: 'PetTestPortal_Back_B',
                 width: 84,
                 height: 84,
                 isForced: true,
                 destinationId: 'pet_test_dest_b'
             },
-            // 10. 另一组远距离坐标传送门（提高压测覆盖）
+            // 8. 另一组远距离坐标传送门（提高压测覆盖）
             {
                 type: 'portal',
                 x: 1540,
@@ -255,7 +204,7 @@ export const InitialWorldState: InitialWorldStateData = {
             },
             {
                 type: 'portal',
-                x: 420,
+                x: 600,
                 y: 1580,
                 name: 'PetTestPortal_Back_Center',
                 width: 72,
@@ -311,23 +260,6 @@ export const InitialWorldState: InitialWorldStateData = {
                 assetId: 'hero',
                 scale: 0.7
             },
-            {
-                type: 'weapon',
-                name: 'HeroWeapon',
-                ownerTarget: 'player',
-                orbitRadius: 40,
-                orbitSpeed: 2,
-                spriteId: 'particle_3',
-                spriteScale: 0.3,
-                weaponConfig: {
-                    weaponType: 'pistol',
-                    bulletSpriteScale: 0.5,
-                    damageDetectCcdEnabled: true,
-                    damageDetectCcdMinDistance: 0,
-                    damageDetectCcdBuffer: 2,
-                    bulletShape: { type: 'circle', radius: 6 }
-                }
-            }
         ]
     },
     scene_yellow: {
@@ -375,23 +307,6 @@ export const InitialWorldState: InitialWorldStateData = {
                 assetId: 'hero',
                 scale: 0.7
             },
-            {
-                type: 'weapon',
-                name: 'HeroWeapon',
-                ownerTarget: 'player',
-                orbitRadius: 40,
-                orbitSpeed: 2,
-                spriteId: 'particle_3',
-                spriteScale: 0.3,
-                weaponConfig: {
-                    weaponType: 'pistol',
-                    bulletSpriteScale: 0.5,
-                    damageDetectCcdEnabled: true,
-                    damageDetectCcdMinDistance: 0,
-                    damageDetectCcdBuffer: 2,
-                    bulletShape: { type: 'circle', radius: 6 }
-                }
-            }
         ]
     }
 };

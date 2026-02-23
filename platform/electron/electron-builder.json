@@ -1,0 +1,11 @@
+{
+  "appId": "com.worldtest.steam",
+  "productName": "WorldTest",
+  "directories": {
+    "output": "release/steam"
+  },
+  "files": [
+    "platform/electron/main.cjs",
+    "dist/steam/**/*"
+  ]
+}
