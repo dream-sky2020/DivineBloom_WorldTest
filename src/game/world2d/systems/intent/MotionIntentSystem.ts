@@ -2,7 +2,7 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { MotionMode } from '@components';
 import { MotionStatus } from '@definitions/enums/MotionStatus';
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 
 // --------------------------------------------------------------------------
 // Vector Math Helpers

@@ -16,7 +16,8 @@ export class WorldMapController {
     public worldStore: any;
     public dialogueStore: any;
     public debugInfo: Ref<DebugInfo>;
-    private uiRafId: number = 0;
+    private uiTickTimer: ReturnType<typeof setTimeout> | null = null;
+    private readonly uiTickMs = 80; // ~12.5Hz
 
     constructor() {
         this.gameStore = useGameStore();
@@ -39,9 +40,11 @@ export class WorldMapController {
     syncUI = () => {
         // ✅ 使用统一的 API 获取调试信息
         const debugInfo = world2d.getDebugInfo();
-        
-        if (!world2d.currentScene.value || !world2d.engine) {
-            this.uiRafId = requestAnimationFrame(this.syncUI);
+
+        const sceneInfo = world2d.getCurrentSceneInfo();
+        const systemState = world2d.getSystemState();
+        if (!sceneInfo || !systemState.isInitialized) {
+            this.uiTickTimer = setTimeout(this.syncUI, this.uiTickMs);
             return;
         }
 
@@ -54,8 +57,8 @@ export class WorldMapController {
             lastInput: debugInfo.lastInput,
             chasingCount: debugInfo.chasingCount
         };
-        
-        this.uiRafId = requestAnimationFrame(this.syncUI);
+
+        this.uiTickTimer = setTimeout(this.syncUI, this.uiTickMs);
     };
 
     async start() {
@@ -65,12 +68,13 @@ export class WorldMapController {
     }
 
     stop() {
-        if (this.uiRafId) {
-            cancelAnimationFrame(this.uiRafId);
+        if (this.uiTickTimer) {
+            clearTimeout(this.uiTickTimer);
+            this.uiTickTimer = null;
         }
         // 离开时保存状态
-        if (world2d.currentScene.value) {
-            this.worldStore.saveState(world2d.currentScene.value);
+        if (world2d.getCurrentSceneInfo()) {
+            this.worldStore.saveState();
         }
     }
 

@@ -43,7 +43,7 @@
     <div class="explorer-body" v-show="panelMode !== 'realtime'">
       <div 
         v-for="e in sortedEntities" 
-        :key="e.uuid || e.id" 
+        :key="e.id" 
         class="entity-item"
         :class="{ selected: selectedEntity === e }"
         @click="selectEntity(e)"
@@ -84,22 +84,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, toRaw } from 'vue'
-import { world2d } from '@world2d' // ✅ 使用统一接口
+import { world2d } from '@world2d/World2DFacade'
 import { editorManager } from '@/game/editor'
 import EditorPanel from '../components/EditorPanel.vue'
-
-// ✅ 延迟获取函数（避免循环依赖）
-const getWorld = () => world2d.getWorld()
 
 const { openContextMenu } = inject('editorContextMenu') as any;
 
 const entities = ref<any[]>([])
-const mapId = computed(() => world2d.currentScene.value?.mapData?.id || '')
+const mapId = computed(() => world2d.getCurrentSceneInfo()?.mapId || '')
 const selectedEntity = computed(() => editorManager.selectedEntity)
 const sceneRealtimePreview = ref('')
 const showRealtimePanel = ref(true)
 const panelMode = ref<'all' | 'explorer' | 'realtime'>('all')
 let previewTimer: any = 0
+let syncTimer: any = 0
 
 const toggleRealtime = () => {
   if (panelMode.value === 'all') panelMode.value = 'explorer';
@@ -158,18 +156,10 @@ const confirmDelete = (entity: any) => {
   if (confirm(`确定要删除实体 "${name}" 吗？`)) {
     // [FIX] 使用 toRaw 获取原始实体对象，而不是 Vue 的 Proxy
     const rawEntity = toRaw(entity);
-    
-    // 发送命令给 ExecuteSystem
-    const globalEntity = getWorld().with('commands').first;
-    if (globalEntity) {
-      globalEntity.commands.queue.push({
-        type: 'DELETE_ENTITY',
-        payload: { entity: rawEntity }
-      });
-    } else {
-      // 降级方案（如果全局实体还没初始化）
-      getWorld().remove(rawEntity);
-    }
+    world2d.enqueueCommand({
+      type: 'DELETE_ENTITY',
+      payload: { entityId: rawEntity?.id, entity: rawEntity }
+    });
 
     if (editorManager.selectedEntity === entity) {
       editorManager.selectedEntity = null;
@@ -185,7 +175,7 @@ const handleExport = () => {
     return;
   }
   
-  const mapId = world2d.currentScene.value?.mapData?.id || 'unknown';
+  const mapId = world2d.getCurrentSceneInfo()?.mapId || 'unknown';
   const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -204,24 +194,26 @@ const refreshScenePreview = () => {
   sceneRealtimePreview.value = safeStringify(bundle, 2, 8000)
 }
 
-let rafId = 0
+const shouldSyncEntities = () => {
+  const panelVisible = panelMode.value !== 'realtime'
+  return editorManager.editMode && panelVisible
+}
+
 const syncData = () => {
-  const allEntities = []
-  for (const entity of getWorld()) {
-    allEntities.push(entity)
+  if (shouldSyncEntities()) {
+    entities.value = world2d.getEditorEntities()
   }
-  entities.value = allEntities
-  rafId = requestAnimationFrame(syncData)
 }
 
 onMounted(() => {
   syncData()
+  syncTimer = setInterval(syncData, 250)
   refreshScenePreview()
   previewTimer = setInterval(refreshScenePreview, 1200)
 })
 
 onUnmounted(() => {
-  cancelAnimationFrame(rafId)
+  clearInterval(syncTimer)
   clearInterval(previewTimer)
 })
 

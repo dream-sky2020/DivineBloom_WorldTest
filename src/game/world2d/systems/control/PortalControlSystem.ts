@@ -1,6 +1,6 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { SceneTransition } from '@components';
 
 /**
@@ -46,10 +46,8 @@ export const PortalControlSystem: ISystem = {
         }
 
         if (finalX != null && finalY != null) {
-          const sourcePortalId =
-            (intent as any)?.source?.id ||
-            (intent as any)?.source?.uuid ||
-            (intent as any)?.source?.name;
+          const source = (intent as any)?.source;
+          const sourcePortalId = getEntityId(source) || source?.name;
 
           if ((e as any).motion) {
             if (!(e as any).motion.runtime || typeof (e as any).motion.runtime !== 'object') {

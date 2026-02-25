@@ -1,4 +1,6 @@
-export interface ISystem {
+import type { SystemContextBase } from './SystemContext';
+
+export interface ISystem<TContext = SystemContextBase> {
     /**
      * 系统名称 (用于注册和调试)
      */
@@ -7,10 +9,9 @@ export interface ISystem {
     /**
      * 系统更新方法
      * @param dt 增量时间 (delta time), 单位秒或毫秒，取决于游戏循环
-     * @param callbacks 可选的回调函数集合，或者通用上下文对象 1
-     * @param context 可选的上下文数据 (如 mapData)，或者通用上下文对象 2
+     * @param ctx 可选的系统上下文对象
      */
-    update?(dt?: number, callbacks?: any, context?: any): void;
+    update?(dt?: number, ctx?: TContext): void;
 
     /**
      * 系统渲染方法 (可选)

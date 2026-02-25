@@ -1,9 +1,27 @@
 import { EditorInteractionSystem } from './EditorInteractionSystem';
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { editorManager } from '../../../editor/core/EditorCore';
 import { toRaw } from 'vue';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+
+type EditorHighlightRenderSystemType = ISystem & {
+    LAYER: number;
+    _drawBox: (
+        ctx: CanvasRenderingContext2D,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        isSelected: boolean,
+        isDragging: boolean,
+        label: string,
+        worldX: number,
+        worldY: number
+    ) => void;
+    _drawGlobalIndicator: (ctx: CanvasRenderingContext2D, isDragging: boolean) => void;
+    _roundRect: (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => void;
+};
 
 /**
  * Editor Highlight Render System
@@ -11,7 +29,7 @@ import { IEntity } from '@definitions/interface/IEntity';
  * 1. 为所有实体在中心位置绘制小圆点（Handle）
  * 2. 为选中的实体绘制高亮虚线框
  */
-export const EditorHighlightRenderSystem: ISystem & { LAYER: number } = {
+export const EditorHighlightRenderSystem: EditorHighlightRenderSystemType = {
     name: 'editor-highlight-render',
     LAYER: 1001, // 略高于网格
 

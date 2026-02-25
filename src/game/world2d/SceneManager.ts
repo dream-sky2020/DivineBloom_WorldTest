@@ -1,4 +1,4 @@
-import { world, clearWorld } from '@world2d/world'
+import { world, clearWorld } from '@world2d/runtime/WorldEcsRuntime'
 // import { getMapData } from '@schema/maps' // Removed static import
 import { createLogger } from '@/utils/logger'
 import { SceneLifecycle } from '@world2d/resources/SceneLifecycle'

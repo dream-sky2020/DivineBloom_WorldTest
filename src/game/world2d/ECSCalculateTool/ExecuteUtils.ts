@@ -1,7 +1,8 @@
-import { world } from '@world2d/world'
+import { world } from '@world2d/runtime/WorldEcsRuntime'
 import { SceneTransition } from '@components'
 import { createLogger } from '@/utils/logger'
 import { IEntity } from '@definitions/interface/IEntity'
+import { enqueueCommand } from '../bridge/ExternalBridge'
 
 const logger = createLogger('ExecuteUtils')
 
@@ -16,7 +17,7 @@ export const ExecuteUtils = {
      * @param callbacks 回调函数集合
      * @param mapData 地图数据
      */
-    handleTeleport(request: { source: IEntity, target?: IEntity }, callbacks: any, mapData?: any) {
+    handleTeleport(request: { source: IEntity, target?: IEntity }, mapData?: any) {
         const entity = request.source as IEntity;
         const targetEntity = request.target as IEntity;
 
@@ -113,13 +114,20 @@ export const ExecuteUtils = {
      * @param entity 触发对话的实体
      * @param callbacks 回调函数集合
      */
-    handleDialogue(entity: IEntity, callbacks: any) {
-        if (callbacks.onInteract && entity.actionDialogue) {
-            callbacks.onInteract({
+    handleDialogue(entity: IEntity) {
+        if (!entity.actionDialogue) return;
+
+        const interactionPayload = {
                 type: 'dialogue',
                 id: entity.actionDialogue.scriptId,
                 ...entity.actionDialogue.params
-            });
-        }
+            };
+
+        // 新通路：统一写入命令，由 ExecuteSystem 消费
+        enqueueCommand({
+            type: 'INTERACT',
+            payload: interactionPayload
+        });
+
     }
 };

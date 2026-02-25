@@ -1,4 +1,4 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
@@ -52,6 +52,7 @@ export const WeaponControlSystem: ISystem = {
             const projectileDamage = intent.projectileDamage ?? weapon.damage;
             const projectileRadius = intent.projectileRadius ?? (weapon.bulletRadius || 2);
             const projectileLifeTime = intent.projectileLifeTime ?? (weapon.bulletLifeTime || 3);
+            const projectileMaxHitCount = weapon.bulletMaxHitCount ?? 1;
             const offset = 15;
 
             const projectileList = Array.isArray(intent.projectiles) && intent.projectiles.length > 0
@@ -68,6 +69,7 @@ export const WeaponControlSystem: ISystem = {
                     velocityX: dir.x * speed,
                     velocityY: dir.y * speed,
                     damage: projectileDamage,
+                    maxHitCount: projectileMaxHitCount,
                     color: weapon.bulletColor,
                     radius: projectileRadius,
                     maxLifeTime: projectileLifeTime,

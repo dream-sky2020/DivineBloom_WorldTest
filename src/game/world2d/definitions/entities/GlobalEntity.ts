@@ -1,12 +1,11 @@
 import { z } from 'zod';
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
     // BattleResultSchema, BATTLE_RESULT_INSPECTOR_FIELDS, // 暂时禁用，等待战斗系统实现
     Camera,
     Timer, TimerSchema,
     Inspector, EDITOR_INSPECTOR_FIELDS,
-    Commands,
     MousePosition,
     CombatProgress, CombatProgressSchema, COMBAT_PROGRESS_INSPECTOR_FIELDS
 } from '@components';
@@ -80,7 +79,6 @@ export const GlobalEntity: IEntityDefinition<typeof GlobalEntitySchema> = {
             inputState: inputState,
             timer: Timer.create(timerData),
             mousePosition: MousePosition.create(),
-            commands: Commands.create(),
             inspector: null as any
         };
 

@@ -1,6 +1,6 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { WeaponSense } from '@components';
 
 type NearbyEnemy = {
@@ -75,7 +75,7 @@ export const WeaponSenseSystem: ISystem = {
                 const distance = Math.sqrt(distSq);
                 const dirX = distance > 0 ? dx / distance : 1;
                 const dirY = distance > 0 ? dy / distance : 0;
-                const idRaw = monster.uuid ?? monster.id ?? monster.__id ?? '';
+                const idRaw = getEntityId(monster);
 
                 nearbyEnemies.push({
                     id: String(idRaw),

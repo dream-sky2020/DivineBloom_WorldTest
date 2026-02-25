@@ -2,6 +2,15 @@ node_modules
 .DS_Store
 dist
 dist-ssr
+build
+out
+coverage
+.cache
+.temp
+.tmp
+.vite
+.parcel-cache
+.turbo
 *.local
 .idea
 .vscode
@@ -12,3 +21,9 @@ dist-ssr
 *.sw?
 
 release/
+*.zip
+*.7z
+*.tar
+*.tgz
+*.gz
+*.rar

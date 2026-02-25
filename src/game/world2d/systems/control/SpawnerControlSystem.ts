@@ -1,5 +1,5 @@
 import { ISystem } from '@definitions/interface/ISystem';
-import { requestComponentCountRefresh, world } from '@world2d/world';
+import { requestComponentCountRefresh, world } from '@world2d/runtime/WorldEcsRuntime';
 import { spawnRegistry } from '@world2d/registries/SpawnRegistry';
 
 type XY = { x: number; y: number };

@@ -1,6 +1,6 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -27,11 +27,10 @@ function resolveOwnerEntity(weaponEntity: IEntity): IEntity | null {
     const players = world.with('player', 'transform');
     for (const entity of players) {
         const p = entity as IEntity;
+        const playerId = getEntityId(p);
         if (
             ownerTarget === 'player'
-            || ownerTarget === p.id
-            || ownerTarget === (p as any).__id
-            || ownerTarget === (p as any).uuid
+            || ownerTarget === playerId
             || ownerTarget === p.name
             || ownerTarget === p.type
         ) {
@@ -121,7 +120,7 @@ export const WeaponIntentSystem: ISystem & {
             intent.shouldFire = shouldFire;
             intent.fireThisTick = fireThisTick;
             intent.sourceMode = manualAttack ? 'manual' : (this.autoAttackEnabled ? 'auto' : 'idle');
-            intent.targetId = primaryTarget?.id ? String(primaryTarget.id) : null;
+            intent.targetId = primaryTarget?.entity ? getEntityId(primaryTarget.entity) || null : null;
             intent.attackDirection = desiredDirection;
             intent.aimAngle = Math.atan2(desiredDirection.y, desiredDirection.x);
             intent.projectileSpeed = weapon.bulletSpeed;

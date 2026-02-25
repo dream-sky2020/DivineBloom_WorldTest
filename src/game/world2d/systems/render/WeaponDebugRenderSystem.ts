@@ -1,4 +1,4 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { getWeaponFireDirection } from '@entities/WeaponEntity';

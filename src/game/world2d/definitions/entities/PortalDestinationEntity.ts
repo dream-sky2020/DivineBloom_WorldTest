@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { IEntityDefinition } from '../interface/IEntity';
 import { Inspector, EDITOR_INSPECTOR_FIELDS, Transform, TRANSFORM_INSPECTOR_FIELDS } from '@components';
 

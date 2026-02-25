@@ -1,9 +1,9 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { CollisionUtils } from '@world2d/ECSCalculateTool/CollisionUtils';
 import { SpatialHashGrid } from '@world2d/ECSCalculateTool/SpatialHashGrid';
 import { calculateShapeBounds, checkSweepHit } from '@world2d/ECSCalculateTool/DetectCalcUtils';
 import { ISystem } from '@definitions/interface/ISystem';
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { DetectionLayer } from '@components';
 
 type PortalDetectComponent = {
@@ -46,11 +46,9 @@ export const PortalDetectSenseSystem: ISystem & {
     addedStaticEntities: new WeakSet(),
 
     _buildFullResult(logicEntity: IEntity, detectable: any) {
-        const idRaw = logicEntity?.uuid ?? logicEntity?.id ?? logicEntity?.__id ?? '';
-        const id = String(idRaw);
+        const id = getEntityId(logicEntity);
         return {
             id,
-            uuid: logicEntity?.uuid,
             type: logicEntity?.type,
             entity: logicEntity,
             detectable: {
@@ -101,7 +99,7 @@ export const PortalDetectSenseSystem: ISystem & {
             const e = entity as IEntity;
             const detect = (e as any).portalDetect as PortalDetectComponent | undefined;
             if (!detect) continue;
-            const detectorId = String(e.uuid ?? e.id ?? (e as any).__id ?? '');
+            const detectorId = getEntityId(e);
 
             if (!(detect.lastHits instanceof Set)) detect.lastHits = new Set<string>();
             if (!(detect.activeHits instanceof Set)) detect.activeHits = new Set<string>();
@@ -180,7 +178,6 @@ export const PortalDetectSenseSystem: ISystem & {
                 } else {
                     detect.results.push({
                         id: fullResult.id,
-                        uuid: fullResult.uuid,
                         type: fullResult.type,
                         labels: fullResult.detectable.labels
                     });

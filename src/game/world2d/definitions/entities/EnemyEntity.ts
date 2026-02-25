@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { IEntityDefinition } from '../interface/IEntity';
 import {
   DetectArea, DetectInput, Detectable, DamageDetectable, PortalDetectable,
@@ -26,7 +26,7 @@ export const EnemyEntitySchema = z.object({
   name: z.string().optional(),
   assetId: z.string().optional(), // 顶层 assetId 优先
   options: z.object({
-    uuid: z.string().optional(),
+    id: z.string().optional(),
     isStunned: z.boolean().default(false),
     stunnedTimer: z.number().default(0),
     spriteId: z.string().default('enemy_slime'),
@@ -89,7 +89,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
     }
 
     const { x, y, name, assetId, options } = result.data;
-    const uuid = options.uuid || Math.random().toString(36).substr(2, 9);
+    const protocolId = options.id || Math.random().toString(36).substr(2, 9);
     const isStunned = options.isStunned;
     const visualId = assetId || options.spriteId;
     const sensorRadius = options.sensorRadius ?? 40;
@@ -102,7 +102,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       enemy: true,
       monster: Monster.create({ category: 'normal', priority: 1 }),
 
-      interaction: { uuid },
+      interaction: { id: protocolId },
       bounds: Bounds.create(),
 
       aiConfig: AI.Config(
@@ -161,6 +161,10 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       editorBox: { w: 40, h: 40, scale: 1 }
     });
 
+    // Keep interaction.id aligned with canonical entity.id
+    if (!root.interaction) root.interaction = {};
+    if (!root.interaction.id) root.interaction.id = root.id;
+
     return root;
   },
 
@@ -174,7 +178,7 @@ export const EnemyEntity: IEntityDefinition<typeof EnemyEntitySchema> = {
       name: name,
       assetId: visualId,
       options: {
-        uuid: interaction.uuid,
+        id: interaction?.id || entity.id,
         isStunned: aiState.state === 'stunned',
         stunnedTimer: aiState.state === 'stunned' ? aiState.timer : 0,
         aiType: aiConfig.type,

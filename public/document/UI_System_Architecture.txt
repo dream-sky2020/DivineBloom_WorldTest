@@ -1,0 +1,188 @@
+================================================================================
+                              UI 系统架构与实施方案
+================================================================================
+版本: 1.0
+日期: 2026-02-24
+适用架构: ECS (Miniplex) + Vue + Sense/Intent/Control 模式
+
+1. 核心设计理念
+--------------------------------------------------------------------------------
+本方案旨在将 UI 交互逻辑完全纳入 ECS 的 "Sense -> Intent -> Control" 循环中，
+避免 UI 层直接修改游戏状态，确保逻辑流向单向、可预测、可调试。
+
+[原则]
+1. UI (Vue) 只负责 "渲染" (Render) 和 "产生信号" (Input)。
+2. ECS 负责 "决策" (Intent) 和 "执行" (Control)。
+3. 禁止 Vue 组件直接调用 `world.update()` 或修改 `Component`。
+
+2. 架构流程图 (Data Flow)
+--------------------------------------------------------------------------------
+
+[外部] Vue UI Layer
+       |
+       | (点击按钮 / 按键)
+       v
+[桥接] UIInputBuffer (全局队列)
+       |
+       | (每一帧读取)
+       v
+[阶段1] UISenseSystem (感知)
+       -> 读取 Buffer，写入 `UISense` 组件
+       -> "玩家按下了B键" / "玩家点击了背包图标"
+       |
+       v
+[阶段2] UIIntentSystem (意图)
+       -> 读取 `UISense` + 游戏状态 (是否战斗中/是否死亡)
+       -> 生成 `UIIntent` 组件
+       -> "玩家想要打开背包" (Valid) / "玩家想要打开背包但被拒绝" (Invalid)
+       |
+       v
+[阶段3] UIControlSystem (控制)
+       -> 读取 `UIIntent`
+       -> 执行状态变更: 修改 `UIState` 组件 / 触发游戏逻辑
+       -> "将背包面板加入 activePanels 列表"
+       |
+       v
+[同步] UISyncSystem (同步)
+       -> 将 ECS `UIState` 同步回 Vue 响应式数据 (Pinia/Ref)
+       |
+       v
+[外部] Vue UI Layer (Re-render)
+       -> 界面更新显示
+
+
+3. 详细设计 (Detailed Design)
+--------------------------------------------------------------------------------
+
+3.1 桥接层 (Bridge Layer)
+-------------------------
+文件: src/game/world2d/buffers/UIInputBuffer.ts
+
+创建一个简单的全局对象，用于 Vue 组件向 ECS 投递消息。
+
+interface UICommand {
+    type: 'OPEN_PANEL' | 'CLOSE_PANEL' | 'USE_ITEM' | 'CRAFT_ITEM';
+    payload: any;
+}
+
+const queue: UICommand[] = [];
+
+export const UIInputBuffer = {
+    push(cmd: UICommand) { queue.push(cmd); },
+    drain() { return queue.splice(0, queue.length); } // 取出并清空
+};
+
+3.2 组件定义 (Components)
+-------------------------
+所有组件挂载于 `GlobalEntity` 或独立的 `UIManagerEntity`。
+
+A. UISense (感知)
+----------------
+描述: 记录当前帧的所有 UI 输入信号。
+Schema:
+{
+    commands: UICommand[],     // 这一帧的指令队列
+    cursor: { x, y, hoverUI }  // 鼠标状态 (是否悬停在 UI 上，用于阻挡射线)
+}
+
+B. UIIntent (意图)
+----------------
+描述: 经过逻辑过滤后的明确操作意图。
+Schema:
+{
+    wantsToOpenPanel: string | null,  // 想要打开哪个面板
+    wantsToClosePanel: string | null, // 想要关闭哪个面板
+    wantsToUseItem: string | null,    // 想要使用哪个物品ID
+    wantsToCastSkill: string | null   // 想要释放哪个技能ID
+}
+
+C. UIState (状态)
+----------------
+描述: UI 的最终状态 (Source of Truth)。Vue 仅渲染此数据。
+Schema:
+{
+    activePanels: string[],    // 当前打开的面板列表 ['inventory', 'status']
+    modalStack: string[],      // 模态框栈
+    toasts: ToastMessage[],    // 浮动提示队列
+    dragItem: string | null    // 当前拖拽的物品
+}
+
+3.3 系统职责 (Systems)
+----------------------
+
+A. UISenseSystem
+----------------
+- 职责: 
+  1. 调用 `UIInputBuffer.drain()` 获取 Vue 发来的指令。
+  2. 监听键盘快捷键 (InputSystem)。
+  3. 将所有信号写入 `UISense` 组件。
+
+B. UIIntentSystem
+----------------
+- 职责: 
+  1. 读取 `UISense`。
+  2. 结合 `PlayerStatus` (如: 眩晕、死亡、战斗锁) 进行仲裁。
+  3. 生成 `UIIntent`。
+  4. 处理互斥逻辑 (如: 打开地图时自动关闭背包)。
+
+C. UIControlSystem
+----------------
+- 职责: 
+  1. 读取 `UIIntent`。
+  2. 执行 `UIState` 的变更 (push/filter activePanels)。
+  3. 触发具体的游戏逻辑 (如: 调用 InventorySystem 消耗物品)。
+  4. 清空已处理的 Intent。
+
+D. UISyncSystem
+----------------
+- 职责:
+  1. 每帧结束时，将 `UIState` 组件的数据深拷贝或同步到 Vue 的 Store 中。
+  2. 触发 Vue 的响应式更新。
+
+4. 实施步骤 (Implementation Steps)
+--------------------------------------------------------------------------------
+
+[Step 1] 基础建设
+1. 创建 `src/game/world2d/buffers/UIInputBuffer.ts`。
+2. 在 `GlobalEntity` 或新实体中添加 `uiSense`, `uiIntent`, `uiState` 组件定义。
+
+[Step 2] 系统实现
+1. 实现 `UISenseSystem`: 对接 Buffer 和 Input。
+2. 实现 `UIIntentSystem`: 编写核心仲裁逻辑。
+3. 实现 `UIControlSystem`: 编写状态修改逻辑。
+4. 将这三个系统注册到 `WorldScene` 的 update 循环中 (建议在 Input 之后，Physics 之前)。
+
+[Step 3] Vue 对接
+1. 修改 Vue 组件 (如背包按钮)，不再直接改 data，而是 `UIInputBuffer.push(...)`。
+2. 创建 Pinia Store 或 ref `useGameUI()`。
+3. 实现 `UISyncSystem` 将 ECS 数据同步到 `useGameUI()`。
+
+5. 代码示例 (Example)
+--------------------------------------------------------------------------------
+
+// Vue Component
+<button @click="openBag">背包</button>
+<script>
+  function openBag() {
+    // 仅仅是发送请求
+    UIInputBuffer.push({ type: 'OPEN_PANEL', payload: 'inventory' });
+  }
+</script>
+
+// UIIntentSystem.ts
+update() {
+  const sense = entity.uiSense;
+  const intent = entity.uiIntent;
+  const player = world.with('isPlayer').first;
+
+  for (const cmd of sense.commands) {
+    if (cmd.type === 'OPEN_PANEL') {
+       // 逻辑判断: 死亡时不能打开背包
+       if (player.health.current <= 0) {
+         intent.wantsToShowToast = "死人不需要背包";
+         continue;
+       }
+       intent.wantsToOpenPanel = cmd.payload;
+    }
+  }
+}

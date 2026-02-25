@@ -1,20 +1,26 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { RawInput } from '@components';
+import { createLogger } from '@/utils/logger';
+import type { SystemContextBase } from '@definitions/interface/SystemContext';
+import { getFrameContext } from '../../bridge/ExternalBridge';
+
+const logger = createLogger('InputSenseSystem');
 
 /**
  * Input Sense System
  * 负责读取硬件输入 (Keyboard/Gamepad) 并记录为原始输入组件 (RawInput)
  * 不涉及游戏逻辑判断，只忠实记录当前帧的输入状态
  */
-export const InputSenseSystem: ISystem = {
+export const InputSenseSystem: ISystem<SystemContextBase> = {
     name: 'input-sense',
 
-    update(dt: number, input: any) {
-        // Defensive Check: Input source
+    update(dt: number, _ctx?: SystemContextBase) {
+        const frameContext = getFrameContext();
+        const input = frameContext.input || frameContext.engine?.input;
         if (!input) {
-            return;
+            throw new Error('[InputSenseSystem] Missing required input in runtime frameContext');
         }
 
         const inputEntities = world.with('input');
@@ -30,7 +36,7 @@ export const InputSenseSystem: ISystem = {
 
             // Defensive check for raw structure
             if (!raw.axes || !raw.buttons) {
-                console.error(`[InputSenseSystem] Invalid rawInput structure on Entity ${e.id || 'N/A'}`);
+                logger.error(`[InputSenseSystem] Invalid rawInput structure on Entity ${e.id || 'N/A'}`);
                 Object.assign(raw, RawInput.create());
             }
 
@@ -84,7 +90,7 @@ export const InputSenseSystem: ISystem = {
                     raw.__prevButtons.autoAttackDisable = autoAttackDisableDown;
                 }
             } catch (error) {
-                console.error('[InputSenseSystem] Error reading input:', error);
+                logger.error('[InputSenseSystem] Error reading input:', error);
             }
         }
     }

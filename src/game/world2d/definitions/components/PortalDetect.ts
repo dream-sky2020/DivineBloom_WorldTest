@@ -4,7 +4,6 @@ import { DetectionLayer } from './Detectable';
 
 const portalDetectLiteResultSchema = z.object({
   id: z.string(),
-  uuid: z.string().optional(),
   type: z.string().optional(),
   labels: z.array(z.string()).optional()
 });
@@ -58,7 +57,7 @@ export const PortalDetect: IComponentDefinition<typeof portalDetectSchema, Porta
     { path: 'portalDetect.ccdEnabled', label: '高速检测', type: 'checkbox', tip: '启用连续碰撞检测 (CCD)', group: '探测逻辑 (PortalDetect)' },
     { path: 'portalDetect.ccdMinDistance', label: 'CCD 最小距离', type: 'number', props: { min: 0, step: 1 }, tip: '本帧位移小于该值时使用普通检测', group: '探测逻辑 (PortalDetect)' },
     { path: 'portalDetect.ccdBuffer', label: 'CCD 缓冲', type: 'number', props: { step: 0.5 }, tip: '扩大检测半径，避免高速穿透', group: '探测逻辑 (PortalDetect)' },
-    { path: 'portalDetect.resultMode', label: '结果模式', type: 'select', props: { options: ['id', 'lite'] }, tip: 'id=仅存 UUID，lite=存最小结果对象', group: '探测逻辑 (PortalDetect)' }
+    { path: 'portalDetect.resultMode', label: '结果模式', type: 'select', props: { options: ['id', 'lite'] }, tip: 'id=仅存实体ID，lite=存最小结果对象', group: '探测逻辑 (PortalDetect)' }
   ]
 };
 

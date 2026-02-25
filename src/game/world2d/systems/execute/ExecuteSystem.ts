@@ -1,4 +1,4 @@
-import { actionQueue, eventQueue, world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { getSystem } from '@world2d/SystemRegistry';
 import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry';
 import { EntityCreator } from '@definitions/internal/EntityCreator';
@@ -6,80 +6,69 @@ import { editorManager } from '../../../editor/core/EditorCore';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { ExecuteUtils } from '../../ECSCalculateTool/ExecuteUtils';
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
+import type { SystemContextBase } from '@definitions/interface/SystemContext';
+import {
+    drainCommands,
+    getFrameContext,
+    getRuntimeService,
+    enqueueCommand,
+    setViewState
+} from '../../bridge/ExternalBridge';
 
 const logger = createLogger('ExecuteSystem');
-
-/**
- * 遗留事件处理器
- */
-const EventHandlers: Record<string, (payload: any, callbacks: any) => void> = {
-    TRIGGER_MAP_SWITCH: (payload, callbacks) => {
-        if (callbacks && callbacks.onSwitchMap) callbacks.onSwitchMap(payload.targetMapId, payload.targetEntryId);
-    },
-    INTERACT_NPC: (payload, callbacks) => {
-        if (callbacks && callbacks.onInteract) callbacks.onInteract(payload.interaction);
-    }
-};
 
 /**
  * ExecuteSystem
  * 任务执行总管
  * 接收 ECS 产生的 Action 请求，以及 UI 产生的 Command 请求，统一分发执行
  */
-interface IExecuteSystem extends ISystem {
-    dispatch(item: any, callbacks: any, mapData: any): void;
-    handleDelete(entity: IEntity, callbacks: any): void;
-    handleCreateEntity(payload: any, callbacks: any, source?: IEntity, target?: IEntity): void;
+interface IExecuteSystem extends ISystem<SystemContextBase> {
+    dispatch(item: any, context: any, mapData: any): void;
+    handleDelete(entity: IEntity): void;
+    handleCreateEntity(payload: any, source?: IEntity, target?: IEntity): void;
     handleEmitSignal(payload: any, source?: IEntity, target?: IEntity): void;
+    resolveEntityFromPayload(payload: any): IEntity | null;
 }
 
 export const ExecuteSystem: IExecuteSystem = {
     name: 'execute',
 
-    update(dt?: number, callbacks: any = {}, mapData: any = null) {
-        // 1. 处理全局命令队列 (Commands Component)
-        const globalEntity = world.with('commands').first;
-        if (globalEntity && globalEntity.commands.queue.length > 0) {
-            const queue = globalEntity.commands.queue.splice(0, globalEntity.commands.queue.length);
-            for (const item of queue) {
-                this.dispatch(item, callbacks, mapData);
-            }
+    update(dt?: number, _ctx?: SystemContextBase) {
+        const frameContext = getFrameContext();
+        const runtimeGameManager = getRuntimeService('gameManager');
+        const runtimeWorldStore = getRuntimeService('worldStore');
+        if (!runtimeGameManager) {
+            throw new Error('[ExecuteSystem] Missing required runtime service: gameManager');
         }
-
-        // 2. 处理 ActionQueue (ECS 内部产生)
-        if (actionQueue && actionQueue.length > 0) {
-            const requests = actionQueue.splice(0, actionQueue.length);
-            for (const request of requests) {
-                this.dispatch(request, callbacks, mapData);
-            }
+        if (!runtimeWorldStore) {
+            throw new Error('[ExecuteSystem] Missing required runtime service: worldStore');
         }
-
-        // 3. 处理全局玩家意图 (Player Intent)
+        const context = {
+            ...frameContext,
+            gameManager: runtimeGameManager,
+            worldStore: runtimeWorldStore
+        };
+        const mapData = frameContext.mapData ?? null;
+        // 0. 把玩家意图收敛为命令（统一通路）
         const playerEntity = world.with('player', 'playerIntent').first;
         if (playerEntity) {
             if (playerEntity.playerIntent.wantsToOpenMenu) {
-                if (callbacks.onOpenMenu) {
-                    callbacks.onOpenMenu();
-                    playerEntity.playerIntent.wantsToOpenMenu = false;
-                }
+                enqueueCommand({ type: 'UI_OPEN_MENU' });
+                playerEntity.playerIntent.wantsToOpenMenu = false;
             }
             if (playerEntity.playerIntent.wantsToOpenShop) {
-                if (callbacks.onOpenShop) {
-                    callbacks.onOpenShop();
-                    playerEntity.playerIntent.wantsToOpenShop = false;
-                }
+                enqueueCommand({ type: 'UI_OPEN_SHOP' });
+                playerEntity.playerIntent.wantsToOpenShop = false;
             }
         }
 
-        // 4. 处理 Legacy/UI Events (EventQueue) - 保持兼容性
-        if (eventQueue) {
-            const events = eventQueue.drain();
-            for (const event of events) {
-                if (event.type && event.payload) {
-                    const handler = EventHandlers[event.type];
-                    if (handler) handler(event.payload, callbacks);
-                }
+        // 1. 统一只从命令通道消费；允许命令在同帧生成并继续消费
+        for (let pass = 0; pass < 4; pass++) {
+            const commands = drainCommands(128);
+            if (!commands.length) break;
+            for (const command of commands) {
+                this.dispatch(command, context, mapData);
             }
         }
     },
@@ -87,7 +76,7 @@ export const ExecuteSystem: IExecuteSystem = {
     /**
      * 统一分发器 (Dispatch Center)
      */
-    dispatch(item: any, callbacks: any, mapData: any) {
+    dispatch(item: any, context: any, mapData: any) {
         if (!item || !item.type) return;
 
         const type = item.type;
@@ -101,24 +90,59 @@ export const ExecuteSystem: IExecuteSystem = {
             // --- 游戏逻辑动作 (Actions) ---
             case 'DIALOGUE': {
                 // 使用新的工具类处理
-                ExecuteUtils.handleDialogue(source, callbacks);
+                ExecuteUtils.handleDialogue(source);
                 break;
             }
 
             case 'TELEPORT': {
                 // 使用新的工具类处理
-                ExecuteUtils.handleTeleport(item, callbacks, mapData);
+                ExecuteUtils.handleTeleport(item, mapData);
                 break;
             }
 
             // --- 编辑器/UI 指令 (Commands) ---
             case 'DELETE_ENTITY':
             case 'DELETE':
-                this.handleDelete(payload.entity || target || source, callbacks);
+                this.handleDelete(payload.entity || this.resolveEntityFromPayload(payload) || target || source);
                 break;
 
             case 'CREATE_ENTITY':
-                this.handleCreateEntity(payload, callbacks, source, target);
+                this.handleCreateEntity(payload, source, target);
+                break;
+
+            case 'UI_OPEN_MENU':
+                if (context.gameManager) {
+                    context.gameManager.state.system = 'list-menu';
+                }
+                setViewState({ activeOverlay: 'list-menu' });
+                break;
+
+            case 'UI_OPEN_SHOP':
+                if (context.gameManager) {
+                    context.gameManager.state.system = 'shop';
+                }
+                setViewState({ activeOverlay: 'shop' });
+                break;
+
+            case 'MAP_SWITCH': {
+                const mapId = payload.mapId || payload.targetMapId;
+                const entryId = payload.entryId || payload.targetEntryId || 'default';
+                if (mapId && context.gameManager?.loadMap) {
+                    void context.gameManager.loadMap(mapId, entryId);
+                }
+                break;
+            }
+
+            case 'INTERACT':
+                if (context.gameManager?.handleInteractCommand) {
+                    context.gameManager.handleInteractCommand(payload.interaction || payload);
+                }
+                break;
+
+            case 'ENCOUNTER':
+                if (context.gameManager?.handleEncounterCommand) {
+                    context.gameManager.handleEncounterCommand(payload.enemyGroup ?? payload.group, payload.enemyId ?? payload.id);
+                }
                 break;
 
             case 'EMIT_SIGNAL':
@@ -126,11 +150,13 @@ export const ExecuteSystem: IExecuteSystem = {
                 break;
 
             case 'SAVE_SCENE':
-                if (callbacks.onSaveScene) callbacks.onSaveScene(payload);
+                if (context.worldStore?.saveState) context.worldStore.saveState(payload);
                 break;
 
             case 'LOAD_MAP':
-                if (callbacks.onLoadMap) callbacks.onLoadMap(payload.mapId);
+                if (context.gameManager?.loadMap && payload.mapId) {
+                    void context.gameManager.loadMap(payload.mapId, payload.entryId || 'default');
+                }
                 break;
 
             default:
@@ -141,44 +167,45 @@ export const ExecuteSystem: IExecuteSystem = {
     /**
      * 统一处理实体删除
      */
-    handleDelete(entity: IEntity, callbacks: any) {
-        if (!entity) return;
+    handleDelete(entity: IEntity) {
+        const resolvedEntity = entity;
+        if (!resolvedEntity) return;
 
         // 安全检查
-        if ((entity as any).globalManager || entity.inspector?.allowDelete === false) {
-            logger.warn('Attempted to delete a protected entity:', entity.type);
+        if ((resolvedEntity as any).globalManager || resolvedEntity.inspector?.allowDelete === false) {
+            logger.warn('Attempted to delete a protected entity:', resolvedEntity.type);
             return;
         }
 
-        logger.info('Deleting entity:', entity.type, entity.id || entity.uuid);
+        logger.info('Deleting entity:', resolvedEntity.type, getEntityId(resolvedEntity) || 'N/A');
 
         // 同步 UI 状态
-        if (editorManager.selectedEntity === entity) {
+        if (editorManager.selectedEntity === resolvedEntity) {
             editorManager.selectedEntity = null;
         }
 
         // 同步交互系统状态
         const editorInteraction = getSystem('editor-interaction') as any;
-        if (editorInteraction && editorInteraction.selectedEntity === entity) {
+        if (editorInteraction && editorInteraction.selectedEntity === resolvedEntity) {
             editorInteraction.selectedEntity = null;
         }
 
         // [New] 递归删除子实体
-        if (entity.children && Array.isArray(entity.children.entities)) {
-            for (const child of entity.children.entities) {
+        if (resolvedEntity.children && Array.isArray(resolvedEntity.children.entities)) {
+            for (const child of resolvedEntity.children.entities) {
                 if (world.entities.includes(child)) {
                     world.remove(child);
                 }
             }
         }
 
-        world.remove(entity);
+        world.remove(resolvedEntity);
     },
 
     /**
      * 处理实体创建
      */
-    handleCreateEntity(payload: any, callbacks: any, source?: IEntity, target?: IEntity) {
+    handleCreateEntity(payload: any, source?: IEntity, target?: IEntity) {
         const actionData = (source as any)?.actionCreateEntity || {};
         const resolved = payload && Object.keys(payload).length > 0 ? payload : actionData;
         const { templateId, entityType, position, customData = {} } = resolved;
@@ -247,5 +274,15 @@ export const ExecuteSystem: IExecuteSystem = {
             source,
             target: resolved.target || target
         });
+    }
+    ,
+    resolveEntityFromPayload(payload: any) {
+        const entityId = payload?.entityId;
+        if (entityId == null) return null;
+        for (const entity of world) {
+            const id = getEntityId(entity);
+            if (id !== '' && id == entityId) return entity as IEntity;
+        }
+        return null;
     }
 };

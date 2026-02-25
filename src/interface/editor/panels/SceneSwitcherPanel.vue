@@ -113,7 +113,7 @@
 import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
 // import { schemasManager } from '@/schemas/SchemasManager'
 import { useGameStore } from '@/stores/game'
-import { world2d } from '@world2d' // ✅ 使用统一接口
+import { world2d } from '@world2d/World2DFacade'
 import { editorManager } from '@/game/editor'
 import { createLogger } from '@/utils/logger'
 import EditorPanel from '../components/EditorPanel.vue'
@@ -257,8 +257,8 @@ const switchMap = async (mapId: string) => {
     loadingMapId.value = mapId
     
     // 1. 保存当前地图状态
-    if (world2d.currentScene.value) {
-      worldStore.saveState(world2d.currentScene.value)
+    if (world2d.getCurrentSceneInfo()) {
+      worldStore.saveState()
     }
     
     // 2. ✅ 使用统一 API 切换场景
@@ -273,9 +273,11 @@ const switchMap = async (mapId: string) => {
 }
 
 const handleExportProject = async () => {
-  // ✅ 使用兼容接口获取 ScenarioLoader（高级功能）
-  const ScenarioLoader = world2d.getScenarioLoader()
-  const bundle = await ScenarioLoader.exportProject(world2d.engine, worldStore.worldStates, {} /* schemasManager.mapLoaders */)
+  const bundle = await world2d.exportProject(worldStore.worldStates, {} /* schemasManager.mapLoaders */)
+  if (!bundle) {
+    alert('导出失败：引擎未初始化')
+    return
+  }
   const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -306,9 +308,7 @@ const handleImportProject = (event: Event) => {
   reader.onload = (e: any) => {
     try {
       const bundle = JSON.parse(e.target.result)
-      // ✅ 使用兼容接口获取 ScenarioLoader
-      const ScenarioLoader = world2d.getScenarioLoader()
-      const newStates = ScenarioLoader.importProject(bundle)
+      const newStates = world2d.importProject(bundle)
       worldStore.bulkUpdateStates(newStates)
       alert('场景导入成功！请重新加载或切换地图。')
     } catch (err) {

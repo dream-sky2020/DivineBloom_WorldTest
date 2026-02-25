@@ -1,8 +1,8 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { canSeePlayer } from '@world2d/ECSCalculateTool/AIUtils';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { AISensory } from '@components';
 
 const logger = createLogger('AISenseSystem');
@@ -20,7 +20,7 @@ let currentMapData: any = null;
 
 /**
  * AI Sense System
- * 优化版：引入了 UUID 缓存查找和感知分摊机制
+ * 优化版：引入了 ID 缓存查找和感知分摊机制
  */
 export const AISenseSystem: ISystem & {
     _refreshEntityMap(): void;
@@ -49,7 +49,7 @@ export const AISenseSystem: ISystem & {
     },
 
     /**
-     * 更新实体 UUID 映射缓存
+     * 更新实体 ID 映射缓存
      */
     _refreshEntityMap() {
         entityMapCache.clear();
@@ -57,9 +57,9 @@ export const AISenseSystem: ISystem & {
         for (const entity of aiEntities) {
             const e = entity as IEntity;
             // TODO: check type definitions for actionBattle/interaction
-            const uuid = (e as any).actionBattle?.uuid || (e as any).interaction?.uuid;
-            if (uuid) {
-                entityMapCache.set(uuid, e);
+            const id = (e as any).actionBattle?.id || (e as any).interaction?.id || getEntityId(e);
+            if (id) {
+                entityMapCache.set(String(id), e);
             }
         }
     },
@@ -72,14 +72,15 @@ export const AISenseSystem: ISystem & {
         const globalEntity = world.with('globalManager', 'battleResult').first as IEntity;
 
         if (globalEntity) {
-            const { uuid, result } = (globalEntity as any).battleResult;
-            logger.info(`🚨 Sensed Battle Result for UUID: ${uuid}`, result);
+            const { id, result } = (globalEntity as any).battleResult;
+            const battleEntityId = id == null ? '' : String(id);
+            logger.info(`🚨 Sensed Battle Result for ID: ${battleEntityId}`, result);
 
             // 按需更新缓存
             this._refreshEntityMap();
 
             // O(1) 查找替代 O(N) 遍历
-            const entity = entityMapCache.get(uuid);
+            const entity = battleEntityId ? entityMapCache.get(battleEntityId) : undefined;
 
             if (entity) {
                 if (!entity.aiSensory) {
@@ -87,9 +88,9 @@ export const AISenseSystem: ISystem & {
                 }
                 // 写入结果
                 entity.aiSensory.lastBattleResult = result;
-                logger.debug(`✅ Applied battle result to entity: ${uuid}`);
+                logger.debug(`✅ Applied battle result to entity: ${battleEntityId}`);
             } else {
-                logger.error(`❌ Target entity for battle result ${uuid} NOT FOUND!`);
+                logger.error(`❌ Target entity for battle result ${battleEntityId || 'N/A'} NOT FOUND!`);
             }
 
             // 消费掉结果 (移除组件)

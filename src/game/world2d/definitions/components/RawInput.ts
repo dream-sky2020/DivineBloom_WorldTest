@@ -17,12 +17,27 @@ const rawInputSchema = z.object({
     attackJustReleased: z.boolean().default(false),
     autoAttackEnable: z.boolean().default(false),
     autoAttackDisable: z.boolean().default(false)
-  }).default({}),
+  }).default({
+    interact: false,
+    run: false,
+    menu: false,
+    cancel: false,
+    shop: false,
+    attack: false,
+    attackJustPressed: false,
+    attackJustReleased: false,
+    autoAttackEnable: false,
+    autoAttackDisable: false
+  }),
   __prevButtons: z.object({
     attack: z.boolean().default(false),
     autoAttackEnable: z.boolean().default(false),
     autoAttackDisable: z.boolean().default(false)
-  }).default({})
+  }).default({
+    attack: false,
+    autoAttackEnable: false,
+    autoAttackDisable: false
+  })
 });
 
 export type RawInputData = z.infer<typeof rawInputSchema>;

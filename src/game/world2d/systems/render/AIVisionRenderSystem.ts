@@ -1,4 +1,4 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 // @ts-ignore
 import { drawVision } from '@world2d/ECSCalculateTool/ECSSceneGizmosRendererCalculateTool';
 import { ISystem } from '@definitions/interface/ISystem';

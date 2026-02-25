@@ -114,7 +114,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, provide } from 'vue';
-import { world2d, getSystem } from '@world2d'; 
+import { world2d } from '@world2d';
+import { getSystem } from '@world2d/SystemRegistry';
 import { editor, EditorInteractionController, type MenuItem, type MouseInfo } from '@/game/editor';
 import { createLogger } from '@/utils/logger';
 import { WorldMapController } from '@/game/interface/WorldMapController';
@@ -254,6 +255,12 @@ const onResize = () => {
 };
 
 onMounted(async () => {
+  world2d.registerStateSource('game-ui', () => ({
+    system: currentSystem.value,
+    isEditMode: editor.editMode,
+    dialogueActive: dialogueStore.isActive
+  }));
+
   // 1. Canvas Manager Setup
   window.addEventListener('resize', onResize);
   canvasMgr.resize();
@@ -279,6 +286,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  world2d.unregisterStateSource('game-ui');
   window.removeEventListener('resize', onResize);
   window.removeEventListener('keydown', handleKeyDown);
   worldMapCtrl.stop();

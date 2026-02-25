@@ -1,6 +1,6 @@
 import { ISystem } from '@definitions/interface/ISystem';
-import { IEntity } from '@definitions/interface/IEntity';
-import { world } from '@world2d/world';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 
 function resolveEntityByToken(token: string | number): IEntity | null {
   if (token === undefined || token === null || token === '') return null;
@@ -14,8 +14,9 @@ function resolveEntityByToken(token: string | number): IEntity | null {
   const entities = world.with('transform');
   for (const entity of entities) {
     const e = entity as any;
+    const entityId = getEntityId(e);
     // 使用弱等于 (==) 来匹配 string/number 差异
-    if (e.id == token || e.uuid == token || e.name == token || e.type == token) {
+    if ((entityId !== '' && entityId == token) || e.name == token || e.type == token) {
       return e as IEntity;
     }
     if (Array.isArray(e.tags) && e.tags.includes(token)) {
@@ -75,7 +76,7 @@ export const MotionSenseSystem: ISystem = {
       // 5. 更新 Runtime
       motion.runtime.hasTarget = targetX != null && targetY != null;
       motion.runtime.targetEntityId = targetEntity
-        ? (targetEntity.id ?? (targetEntity as any).uuid ?? (targetEntity as any).__id)
+        ? getEntityId(targetEntity)
         : null;
 
       motion.runtime.targetPos = motion.runtime.hasTarget ? { x: targetX, y: targetY } : null;

@@ -1,5 +1,5 @@
 import { ISystem } from '@definitions/interface/ISystem';
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 
 export const SpawnerIntentSystem: ISystem = {
   name: 'spawner-intent',

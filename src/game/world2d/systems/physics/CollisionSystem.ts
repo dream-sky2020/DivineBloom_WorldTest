@@ -1,14 +1,15 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { CollisionUtils } from '@world2d/ECSCalculateTool/CollisionUtils';
 import { ShapeType } from '@world2d/definitions/enums/Shape';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import type { SystemContextBase } from '@definitions/interface/SystemContext';
 
 /**
  * 自定义碰撞处理系统
  * 负责检测实体间重叠并进行位置修正（Resolution）
  */
-export const CollisionSystem: ISystem & {
+export const CollisionSystem: ISystem<SystemContextBase> & {
     ITERATIONS: number;
     _getShapeRadius(shape: any): number;
     _checkSweepHit(prevPos: any, currPos: any, moverShape: any, targetShape: any, targetTransform: any, buffer: number): boolean;
@@ -20,7 +21,7 @@ export const CollisionSystem: ISystem & {
     // 迭代次数，防止物体在角落抖动
     ITERATIONS: 2,
 
-    update(dt: number, _callbacks?: any, context: { mapBounds?: { width: number, height: number } | null } = {}) {
+    update(dt: number, context: SystemContextBase = {}) {
         const mapBounds = context.mapBounds;
         const collidableEntities = world.with('collider', 'shape', 'transform');
 

@@ -151,8 +151,8 @@ export class GameManager {
         // Handle return from battle
         // 暂时禁用，等待战斗系统实现
         // if (battleStore.lastBattleResult) {
-        //     const { result, enemyUuid } = battleStore.lastBattleResult
-        //     worldStore.applyBattleResult(result, enemyUuid)
+        //     const { result, enemyId } = battleStore.lastBattleResult
+        //     worldStore.applyBattleResult(result, enemyId)
         //     battleStore.lastBattleResult = null
         // }
 
@@ -234,14 +234,9 @@ export class GameManager {
         // 创建场景实例（只初始化，不创建实体）
         const scene = new WorldScene(
             this.engine,
-            this._onEncounter.bind(this),
             null, // initialState 不传递，由 SceneLifecycle 处理
             mapData,
             entryId,
-            (targetMapId) => { worldStore.currentMapId = targetMapId },
-            this._onInteract.bind(this),
-            () => { this.state.system = 'list-menu' }, // onOpenMenu
-            () => { this.state.system = 'shop' }, // onOpenShop
             { worldStore, sceneManager: this.sceneManager ?? undefined, gameManager: this }
         )
 
@@ -289,9 +284,8 @@ export class GameManager {
         editorManager.toggleEditMode();
     }
 
-    // --- Callbacks ---
-
-    _onEncounter(enemyGroup: any, enemyUuid: any) {
+    // --- Command Handlers ---
+    handleEncounterCommand(enemyGroup: any, enemyId: any) {
         logger.info('Encounter:', enemyGroup)
         const gameStore = useGameStore()
         // const battleStore = gameStore.battle // 暂时禁用，等待战斗系统实现
@@ -303,13 +297,13 @@ export class GameManager {
         }
 
         // 暂时禁用，等待战斗系统实现
-        // battleStore.initBattle(enemyGroup, enemyUuid)
+        // battleStore.initBattle(enemyGroup, enemyId)
         // this.startBattle()
 
         logger.warn('战斗系统暂未实现，遭遇敌人:', enemyGroup)
     }
 
-    _onInteract(interaction: any) {
+    handleInteractCommand(interaction: any) {
         const gameStore = useGameStore()
         const dialogueStore = gameStore.dialogue
         if (dialogueStore.isActive) return

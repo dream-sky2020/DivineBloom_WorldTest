@@ -1,6 +1,6 @@
 import { entityRegistry } from '../../registries/EntityRegistry';
 import { componentRegistry } from '../../registries/ComponentRegistry';
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('EntityCreator');
@@ -61,7 +61,7 @@ export const EntityCreator = {
     createFromData(data: any) {
         // 1. Create ECS entity base
         const entity: any = {
-            __id: data.id, 
+            id: data.id,
             type: data.type || 'unknown',
             name: data.name || data.type || 'Entity',
             components: {} 

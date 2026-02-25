@@ -1,7 +1,7 @@
 // @ts-ignore
 import { ScenarioLoader } from '@world2d/ScenarioLoader'
 import { ResourceDeclaration } from './ResourceDeclaration'
-// import { world } from '@world2d/world' // 看起来没用到 world
+// import { world } from '@world2d/runtime/WorldEcsRuntime' // 看起来没用到 world
 import { createLogger } from '@/utils/logger'
 import { GameEngine } from '../GameEngine'
 

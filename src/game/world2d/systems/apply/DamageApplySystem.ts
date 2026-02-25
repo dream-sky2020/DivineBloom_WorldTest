@@ -1,7 +1,7 @@
 import { createLogger } from '@/utils/logger';
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { ISystem } from '@definitions/interface/ISystem';
-import { damageQueue, world } from '@world2d/world';
+import { damageQueue, world } from '@world2d/runtime/WorldEcsRuntime';
 
 const logger = createLogger('DamageApplySystem');
 
@@ -15,11 +15,8 @@ function indexHealthEntities(): Map<string, IEntity> {
   const healthEntities = world.with('health');
   for (const entity of healthEntities) {
     const e = entity as IEntity;
-    const idCandidates = [e.id, e.uuid, (e as any).__id];
-    for (const id of idCandidates) {
-      if (id == null) continue;
-      map.set(String(id), e);
-    }
+    const id = getEntityId(e);
+    if (id) map.set(id, e);
   }
   return map;
 }

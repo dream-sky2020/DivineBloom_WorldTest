@@ -59,9 +59,9 @@ export const EntitySerializer = {
             components: {}
         };
 
-        // Optional: Save ID if it's a UUID
-        if (entity.uuid) serialized.id = entity.uuid;
-        if (entity.interaction?.uuid) serialized.id = entity.interaction.uuid;
+        // Optional: Save entity ID (canonical), fallback to interaction payload
+        if (entity.id) serialized.id = String(entity.id);
+        else if (entity.interaction?.id) serialized.id = String(entity.interaction.id);
 
         // Iterate over all registered components
         const componentNames = componentRegistry.getAllNames();

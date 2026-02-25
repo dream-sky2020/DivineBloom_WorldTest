@@ -1,7 +1,7 @@
 import { EntityManager } from '@definitions'
 import { SceneMigration } from '@definitions/internal/SceneMigration'
 import { createLogger } from '@/utils/logger'
-import { world } from '@world2d/world'
+import { world } from '@world2d/runtime/WorldEcsRuntime'
 import { EntitySerializer } from '@definitions/internal/EntitySerializer'
 import { GameEngine } from './GameEngine'
 

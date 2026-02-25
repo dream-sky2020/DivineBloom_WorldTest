@@ -38,8 +38,7 @@ export class EditorInteractionController {
     handleEmptyRightClick(mouseInfo: MouseInfo) {
         const worldX = Math.round(mouseInfo.worldX);
         const worldY = Math.round(mouseInfo.worldY);
-        const entityTemplateRegistry = world2d.getEntityTemplateRegistry();
-        const templates = entityTemplateRegistry.getAll();
+        const templates = world2d.getEntityTemplates();
 
         const menuItems: MenuItem[] = [
             { icon: '📍', label: `位置: X=${worldX}, Y=${worldY}`, disabled: true, class: 'menu-header' },
@@ -98,18 +97,10 @@ export class EditorInteractionController {
      * 创建实体核心逻辑
      */
     createEntityAtPosition(templateId: string, x: number, y: number) {
-        const world = world2d.getWorld();
-        const globalEntity = world.with('commands').first;
-        
-        if (globalEntity) {
-            globalEntity.commands.queue.push({
-                type: 'CREATE_ENTITY',
-                payload: { templateId, position: { x, y } }
-            });
-        } else {
-            const entity = world2d.getEntityTemplateRegistry().createEntity(templateId, null, { x, y });
-            if (entity) editorManager.selectedEntity = entity;
-        }
+        world2d.enqueueCommand({
+            type: 'CREATE_ENTITY',
+            payload: { templateId, position: { x, y } }
+        });
     }
 
     /**
@@ -119,14 +110,10 @@ export class EditorInteractionController {
         const name = entity.name || entity.type || '未命名实体';
         if (confirm(`确定要删除实体 "${name}" 吗？`)) {
             const rawEntity = toRaw(entity);
-            const world = world2d.getWorld();
-            const globalEntity = world.with('commands').first;
-
-            if (globalEntity) {
-                globalEntity.commands.queue.push({ type: 'DELETE_ENTITY', payload: { entity: rawEntity } });
-            } else {
-                world.remove(rawEntity);
-            }
+            world2d.enqueueCommand({
+                type: 'DELETE_ENTITY',
+                payload: { entityId: rawEntity?.id, entity: rawEntity }
+            });
             editorManager.selectedEntity = null;
         }
     }

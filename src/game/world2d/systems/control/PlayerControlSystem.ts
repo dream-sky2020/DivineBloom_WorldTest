@@ -1,6 +1,9 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('PlayerControlSystem');
 
 /**
  * Player Control System
@@ -15,11 +18,11 @@ export const PlayerControlSystem: ISystem = {
             const e = entity as IEntity;
             // Defensive checks
             if (!e.playerIntent) {
-                console.warn(`[PlayerControlSystem] Entity ${e.id || 'N/A'} missing playerIntent!`);
+                logger.warn(`[PlayerControlSystem] Entity ${e.id || 'N/A'} missing playerIntent!`);
                 continue;
             }
             if (!e.velocity) {
-                console.error(`[PlayerControlSystem] Entity ${e.id || 'N/A'} missing velocity!`);
+                logger.error(`[PlayerControlSystem] Entity ${e.id || 'N/A'} missing velocity!`);
                 continue;
             }
 
@@ -27,7 +30,7 @@ export const PlayerControlSystem: ISystem = {
 
             // Defensive check for move object
             if (!move || typeof move.x !== 'number' || typeof move.y !== 'number') {
-                console.error(`[PlayerControlSystem] Invalid move intent for Entity ${e.id || 'N/A'}:`, move);
+                logger.error(`[PlayerControlSystem] Invalid move intent for Entity ${e.id || 'N/A'}:`, move);
                 e.velocity.x = 0;
                 e.velocity.y = 0;
                 continue;

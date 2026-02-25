@@ -1,6 +1,6 @@
-import { IEntity } from '@definitions/interface/IEntity';
+import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { ISystem } from '@definitions/interface/ISystem';
-import { damageQueue, world } from '@world2d/world';
+import { damageQueue, world } from '@world2d/runtime/WorldEcsRuntime';
 
 type DamageDetectRuntime = {
   activeHits?: Set<string>;
@@ -17,14 +17,8 @@ type DamageRuntime = {
   minDamage?: number;
 };
 
-function getEntityId(entity: IEntity): string | null {
-  const id = entity.id ?? entity.uuid ?? (entity as any).__id;
-  return id == null ? null : String(id);
-}
-
 function resolveTargetId(hitId: string, hitResult: any): string {
   if (typeof hitResult?.id === 'string' && hitResult.id.length > 0) return hitResult.id;
-  if (typeof hitResult?.uuid === 'string' && hitResult.uuid.length > 0) return hitResult.uuid;
   return hitId;
 }
 
@@ -75,7 +69,7 @@ export const DamageProcessSystem: ISystem = {
         }
       }
 
-      const fallbackSourceId = getEntityId(attacker);
+      const fallbackSourceId = getEntityId(attacker) || null;
       const sourceId = typeof damage.sourceId === 'string' && damage.sourceId.length > 0
         ? damage.sourceId
         : fallbackSourceId;

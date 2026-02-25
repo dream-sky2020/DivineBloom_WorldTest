@@ -1,4 +1,5 @@
 import { World } from 'miniplex'
+import { ensureEntityId } from '../definitions/interface/IEntity'
 import {
   clearDamageEventBuffer,
   clearFloatingTextBuffer,
@@ -14,13 +15,23 @@ import {
   type DamageEventInput,
   type FloatingTextBufferData,
   type FloatingTextSpawnInput
-} from './definitions/buffers'
+} from '../definitions/buffers'
 
 // Create the global ECS world
 export const world = new World<any>()
+const worldRuntime = world as any
+const originalWorldAdd = worldRuntime.add.bind(worldRuntime)
+worldRuntime.add = (entity: any) => {
+  ensureEntityId(entity)
+  return originalWorldAdd(entity)
+}
 
 // Shared spawn group count cache (spawn group -> entity count)
 export const spawnGroupCountMap = new Map<string, number>()
+
+export const worldRuntimeStats = {
+  chasingEnemyCount: 0
+}
 
 // Dirty flag: when true, ComponentCountSenseSystem rebuilds spawnGroupCountMap
 export let shouldUpdateSpawnGroupCountMap = true
@@ -33,29 +44,10 @@ export function setShouldUpdateComponentCountMap(value: boolean) {
   shouldUpdateSpawnGroupCountMap = value
 }
 
-// Simple Event Queue for ECS
-export const eventQueue = {
-  _events: [] as { type: string, payload: any }[],
-  /**
-   * Push an event to the queue
-   * @param {string} type 
-   * @param {any} payload 
-   */
-  emit(type: string, payload: any) {
-    this._events.push({ type, payload })
-  },
-  /**
-   * Get and clear all events
-   * @returns {Array<{type: string, payload: any}>}
-   */
-  drain() {
-    const events = [...this._events]
-    this._events = []
-    return events
-  }
+export function updateWorldRuntimeStats(patch: Partial<typeof worldRuntimeStats>) {
+  Object.assign(worldRuntimeStats, patch)
 }
 
-export const actionQueue: any[] = []
 export const damageEventBuffer: DamageEventBufferData = createDamageEventBuffer()
 export const floatingTextBuffer: FloatingTextBufferData = createFloatingTextBuffer()
 
@@ -98,10 +90,9 @@ export function clearWorld() {
     }
   }
 
-  eventQueue._events = []
-  actionQueue.length = 0
   clearDamageEventBuffer(damageEventBuffer)
   clearFloatingTextBuffer(floatingTextBuffer)
   spawnGroupCountMap.clear()
   shouldUpdateSpawnGroupCountMap = true
+  worldRuntimeStats.chasingEnemyCount = 0
 }

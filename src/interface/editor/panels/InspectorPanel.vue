@@ -350,18 +350,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, toRaw, computed, watch } from 'vue'
-import { world2d } from '@world2d' // ✅ 使用统一接口
+import { world2d } from '@world2d/World2DFacade'
 import { editorManager } from '@/game/editor'
 import EditorPanel from '../components/EditorPanel.vue'
-
-// ✅ 延迟获取函数（避免循环依赖）
-const getWorld = () => world2d.getWorld()
 
 // 属性编辑同步
 const localEntityState = ref<any>(null)
 const lastUpdate = ref(Date.now())
 const showRealtimePanel = ref(true)
 const panelMode = ref<'all' | 'explorer' | 'realtime'>('all')
+const entityRealtimePreview = ref('')
+let refreshTimer: any = 0
 
 const toggleRealtime = () => {
   if (panelMode.value === 'all') panelMode.value = 'explorer';
@@ -376,16 +375,13 @@ const toggleExplorer = () => {
 }
 
 const refreshEntityPreview = () => {
-  lastUpdate.value = Date.now()
-}
-
-const entityRealtimePreview = computed(() => {
-  if (!localEntityState.value) return ''
-  // 依赖 lastUpdate 以保持实时刷新
-  lastUpdate.value
+  if (!localEntityState.value) {
+    entityRealtimePreview.value = ''
+    return
+  }
   const snapshot = buildEntitySnapshot(localEntityState.value)
-  return safeStringify(snapshot, 2, 7000)
-})
+  entityRealtimePreview.value = safeStringify(snapshot, 2, 7000)
+}
 
 // 局部编辑状态管理
 const activeEditingGroup = ref<string | null>(null)
@@ -473,7 +469,14 @@ watch(() => editorManager.selectedEntity, (newEntity) => {
   localEntityState.value = newEntity;
   activeEditingGroup.value = null;
   groupDraftData.value = {};
+  refreshEntityPreview()
 }, { immediate: true });
+
+watch([showRealtimePanel, panelMode, () => editorManager.editMode], () => {
+  if (shouldRefreshInspector()) {
+    refreshEntityPreview()
+  }
+})
 
 const confirmDelete = () => {
   const entity = localEntityState.value;
@@ -488,17 +491,10 @@ const confirmDelete = () => {
   if (confirm(`确定要删除实体 "${name}" 吗？`)) {
     // [FIX] 使用 toRaw 获取原始实体对象，而不是 Vue 的 Proxy
     const rawEntity = toRaw(entity);
-    
-    // 发送命令
-    const globalEntity = getWorld().with('commands').first;
-    if (globalEntity) {
-      globalEntity.commands.queue.push({
-        type: 'DELETE_ENTITY',
-        payload: { entity: rawEntity }
-      });
-    } else {
-      getWorld().remove(rawEntity);
-    }
+    world2d.enqueueCommand({
+      type: 'DELETE_ENTITY',
+      payload: { entityId: rawEntity?.id, entity: rawEntity }
+    });
     editorManager.selectedEntity = null;
   }
 }
@@ -548,21 +544,27 @@ const copyEntitySnapshot = async () => {
   }
 }
 
-// 刷新频率控制
-let rafId = 0
+const shouldRefreshInspector = () => {
+  const panelExpanded = showRealtimePanel.value && panelMode.value !== 'explorer'
+  return editorManager.editMode && panelExpanded
+}
+
 const syncEntityData = () => {
-  // 不再在这里直接赋值 localEntityState.value，而是通过上面的 watch 监听
-  // 但我们仍然可以保持 RAF 来刷新 UI 上的时间戳或其他动态数据
+  if (!editorManager.editMode) return
+  // 500ms tick 仅用于触发表单实时字段刷新（替代原 RAF）
   lastUpdate.value = Date.now()
-  rafId = requestAnimationFrame(syncEntityData)
+  if (shouldRefreshInspector()) {
+    refreshEntityPreview()
+  }
 }
 
 onMounted(() => {
   syncEntityData()
+  refreshTimer = setInterval(syncEntityData, 500)
 })
 
 onUnmounted(() => {
-  cancelAnimationFrame(rafId)
+  clearInterval(refreshTimer)
 })
 
 const syncLegacyInteraction = () => {

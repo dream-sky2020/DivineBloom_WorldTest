@@ -1,8 +1,11 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 // @ts-ignore
 import { drawSuspicion, drawAlert, drawStunned } from '@world2d/ECSCalculateTool/ECSSceneGizmosRendererCalculateTool';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('StatusRenderSystem');
 
 /**
  * Status Render System
@@ -17,7 +20,7 @@ export const StatusRenderSystem: ISystem & { LAYER: number } = {
     draw(renderer: any) {
         // Defensive Check: Renderer
         if (!renderer || !renderer.ctx || !renderer.camera) {
-            console.error('[StatusRenderSystem] Invalid renderer instance!');
+            logger.error('[StatusRenderSystem] Invalid renderer instance!');
             return;
         }
 
@@ -41,11 +44,11 @@ export const StatusRenderSystem: ISystem & { LAYER: number } = {
             const e = entity as IEntity;
             // Defensive checks for components
             if (!e.transform) {
-                console.warn(`[StatusRenderSystem] Entity ${e.id || 'N/A'} missing transform!`);
+                logger.warn(`[StatusRenderSystem] Entity ${e.id || 'N/A'} missing transform!`);
                 continue;
             }
             if (!e.aiState) {
-                console.warn(`[StatusRenderSystem] Entity ${e.id || 'N/A'} missing aiState!`);
+                logger.warn(`[StatusRenderSystem] Entity ${e.id || 'N/A'} missing aiState!`);
                 continue;
             }
 

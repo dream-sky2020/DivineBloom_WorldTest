@@ -1,5 +1,5 @@
 import { ISystem } from '@definitions/interface/ISystem';
-import { spawnGroupCountMap, world } from '@world2d/world';
+import { spawnGroupCountMap, world } from '@world2d/runtime/WorldEcsRuntime';
 
 export const SpawnerSenseSystem: ISystem = {
   name: 'spawner-sense',

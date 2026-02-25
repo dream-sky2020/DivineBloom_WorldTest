@@ -1,4 +1,4 @@
-import { world } from '@world2d/world';
+import { updateWorldRuntimeStats, world } from '@world2d/runtime/WorldEcsRuntime';
 import { WanderState } from '@world2d/ECSCalculateTool/states/WanderState';
 import { ChaseState } from '@world2d/ECSCalculateTool/states/ChaseState';
 import { FleeState } from '@world2d/ECSCalculateTool/states/FleeState';
@@ -27,6 +27,7 @@ export const EnemyAIIntentSystem: ISystem = {
 
     update(dt: number) {
         const enemyEntities = world.with('enemy', 'transform', 'velocity', 'aiState', 'aiConfig');
+        let chasingEnemyCount = 0;
         for (const entity of enemyEntities) {
             const e = entity as IEntity;
             // Defensive Checks
@@ -94,6 +95,12 @@ export const EnemyAIIntentSystem: ISystem = {
                 e.enemyAIIntent.suspicion = aiState.suspicion ?? 0;
                 e.enemyAIIntent.hasBattleResult = !!aiSensory?.lastBattleResult;
             }
+
+            if (aiState.state === 'chase') {
+                chasingEnemyCount++;
+            }
         }
+
+        updateWorldRuntimeStats({ chasingEnemyCount });
     }
 };

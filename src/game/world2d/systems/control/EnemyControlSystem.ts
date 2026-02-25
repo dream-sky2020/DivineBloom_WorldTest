@@ -1,6 +1,9 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('EnemyControlSystem');
 
 /**
  * Enemy Control System
@@ -16,15 +19,15 @@ export const EnemyControlSystem: ISystem = {
             const e = entity as IEntity;
             // Defensive Checks
             if (!e.aiState) {
-                console.error(`[EnemyControlSystem] Entity ${e.id || 'N/A'} missing aiState!`);
+                logger.error(`[EnemyControlSystem] Entity ${e.id || 'N/A'} missing aiState!`);
                 continue;
             }
             if (!e.aiConfig) {
-                console.error(`[EnemyControlSystem] Entity ${e.id || 'N/A'} missing aiConfig!`);
+                logger.error(`[EnemyControlSystem] Entity ${e.id || 'N/A'} missing aiConfig!`);
                 continue;
             }
             if (!e.velocity) {
-                console.error(`[EnemyControlSystem] Entity ${e.id || 'N/A'} missing velocity!`);
+                logger.error(`[EnemyControlSystem] Entity ${e.id || 'N/A'} missing velocity!`);
                 continue;
             }
 
@@ -34,7 +37,7 @@ export const EnemyControlSystem: ISystem = {
 
             // Validate moveDir
             if (!moveDir || typeof moveDir.x !== 'number' || typeof moveDir.y !== 'number') {
-                console.warn(`[EnemyControlSystem] Invalid moveDir for Entity ${e.id || 'N/A'}:`, moveDir);
+                logger.warn(`[EnemyControlSystem] Invalid moveDir for Entity ${e.id || 'N/A'}:`, moveDir);
                 // Fail safe: stop moving
                 velocity.x = 0;
                 velocity.y = 0;

@@ -1,15 +1,20 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { editorManager } from '../../../editor/core/EditorCore';
 import { toRaw } from 'vue';
 import { ShapeType } from '@world2d/definitions/enums/Shape';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { createLogger } from '@/utils/logger';
+import type { SystemContextBase } from '@definitions/interface/SystemContext';
+import { getFrameContext } from '../../bridge/ExternalBridge';
+
+const logger = createLogger('EditorInteractionSystem');
 
 /**
  * Editor Interaction System
  * 负责编辑模式下的鼠标交互：点击选中、拖拽移动、右键菜单
  */
-export const EditorInteractionSystem: ISystem & {
+export const EditorInteractionSystem: ISystem<SystemContextBase> & {
     selectedEntity: any;
     isDragging: boolean;
     dragOffset: { x: number, y: number };
@@ -27,8 +32,12 @@ export const EditorInteractionSystem: ISystem & {
     onEntityRightClick: null, // 右键点击实体的回调
     onEmptyRightClick: null, // 右键点击空白地面的回调
 
-    update(dt: number, engine: any, gameManager: any) {
-        if (!engine) return;
+    update(dt: number, _ctx?: SystemContextBase) {
+        const frameContext = getFrameContext();
+        const engine = frameContext.engine;
+        if (!engine) {
+            throw new Error('[EditorInteractionSystem] Missing required engine in runtime frameContext');
+        }
 
         const { input, renderer } = engine;
         const { mouse } = input;
@@ -65,7 +74,7 @@ export const EditorInteractionSystem: ISystem & {
                     this.dragOffset.y = target.transform.y - worldY;
                 }
 
-                console.log('[Editor] Selected:', target.name || target.id || 'unnamed', target === rawHit ? '(Direct)' : '(Via Child)');
+                logger.debug('[Editor] Selected:', target.name || target.id || 'unnamed', target === rawHit ? '(Direct)' : '(Via Child)');
             } else {
                 this.selectedEntity = null;
                 editorManager.selectedEntity = null; // Sync with reactive state

@@ -7,45 +7,66 @@
  * 设计原则：
  * 1. 隐藏内部实现细节（ECS、Systems、Entities等）
  * 2. 提供清晰的 API 和数据格式
- * 3. 统一管理内外部回调注册
+ * 3. 统一管理状态输入、命令执行与视图输出
  */
 
 import { gameManager } from './GameManager'
-import { world } from './world'
+import { world, worldRuntimeStats } from './runtime/WorldEcsRuntime'
 import { ScenarioLoader } from './ScenarioLoader'
 import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry'
 import { createLogger } from '@/utils/logger'
+import { getEntityId } from '@definitions/interface/IEntity'
+import {
+    clearHostRuntimeState as clearHostRuntimeStateBridge,
+    drainCommands as drainExternalCommands,
+    enqueueCommand as enqueueExternalCommand,
+    getFrameContext as getFrameContextSnapshot,
+    getHostState as getHostStateSnapshot,
+    getRuntimeService as getRuntimeServiceBridge,
+    getRuntimeServices as getRuntimeServicesSnapshot,
+    getSceneState as getSceneStateSnapshot,
+    getExternalState as getExternalStateSnapshot,
+    getViewState as getViewStateSnapshot,
+    registerStateSource as registerExternalStateSource,
+    setFrameContext as setFrameContextPatch,
+    setHostState as setHostStatePatch,
+    setRuntimeService as setRuntimeServiceBridge,
+    setSceneState as setSceneStatePatch,
+    setExternalState as setExternalStatePatch,
+    setViewState as setViewStatePatch,
+    unregisterStateSource as unregisterExternalStateSource
+} from './bridge/ExternalBridge'
+import type {
+    ExternalState,
+    FrameContextState,
+    HostState,
+    RuntimeServices,
+    SceneState,
+    ViewState,
+    World2DCommand
+} from './bridge/ExternalBridge'
+
+export type {
+    ExternalState,
+    FrameContextState,
+    HostState,
+    RuntimeServices,
+    SceneState,
+    ViewState,
+    World2DCommand
+} from './bridge/ExternalBridge'
 
 const logger = createLogger('World2DFacade')
-
-export interface Callbacks {
-    onEncounter?: (enemyGroup: any, enemyUuid: any) => void;
-    onInteract?: (interaction: any) => void;
-    onSwitchMap?: (targetMapId: string) => void;
-    onOpenMenu?: () => void;
-    onOpenShop?: () => void;
-    onStateChange?: () => void;
-    [key: string]: any;
-}
 
 /**
  * World2D 统一外部接口类
  */
 class World2DFacade {
     _gameManager: typeof gameManager;
-    _callbacks: Callbacks;
 
     constructor() {
         // 内部管理器引用（不暴露给外部）
         this._gameManager = gameManager
-        this._callbacks = {
-            onEncounter: undefined,
-            onInteract: undefined,
-            onSwitchMap: undefined,
-            onOpenMenu: undefined,
-            onOpenShop: undefined,
-            onStateChange: undefined
-        }
     }
 
     // ==================== 生命周期管理 ====================
@@ -58,6 +79,12 @@ class World2DFacade {
     init(canvas: HTMLCanvasElement) {
         logger.info('Initializing World2D system')
         this._gameManager.init(canvas)
+        setRuntimeServiceBridge('gameManager', this._gameManager)
+        setHostStatePatch({
+            isInitialized: true,
+            system: this._gameManager.state.system,
+            isPaused: this._gameManager.state.isPaused
+        })
     }
 
     /**
@@ -101,6 +128,7 @@ class World2DFacade {
     destroy() {
         logger.info('Destroying World2D system')
         this._gameManager.destroy()
+        clearHostRuntimeStateBridge()
     }
 
     // ==================== 场景管理 ====================
@@ -157,6 +185,38 @@ class World2DFacade {
         return ScenarioLoader.exportScene(engine, mapId)
     }
 
+    /**
+     * 导出整个项目（编辑器/工具链）
+     */
+    async exportProject(worldStates: Record<string, any>, mapLoaders: Record<string, any> = {}) {
+        const engine = this._gameManager.engine
+        if (!engine) return null
+        const currentScene = this.exportCurrentScene()
+        return {
+            header: {
+                version: '1.0.0',
+                exportTime: new Date().toISOString()
+            },
+            mapLoaders,
+            worldStates,
+            currentScene
+        }
+    }
+
+    /**
+     * 导入项目（编辑器/工具链）
+     */
+    importProject(bundle: any) {
+        if (!bundle || typeof bundle !== 'object') return {}
+        if (bundle.worldStates && typeof bundle.worldStates === 'object') {
+            return bundle.worldStates
+        }
+        if (bundle.maps && typeof bundle.maps === 'object') {
+            return bundle.maps
+        }
+        return {}
+    }
+
     // ==================== 状态查询 ====================
 
     /**
@@ -164,11 +224,134 @@ class World2DFacade {
      * @returns {Object} 系统状态 DTO
      */
     getSystemState() {
-        return {
+        const state = {
             system: this._gameManager.state.system,
             isPaused: this._gameManager.state.isPaused,
             isInitialized: !!this._gameManager.engine
         }
+        setHostStatePatch(state)
+        return state
+    }
+
+    // ==================== 状态源与命令通道 ====================
+
+    /**
+     * 注册外部状态源（UI/Store）
+     */
+    registerStateSource(sourceId: string, getter: () => Partial<ExternalState> | null | undefined) {
+        registerExternalStateSource(sourceId, getter)
+    }
+
+    /**
+     * 注销外部状态源
+     */
+    unregisterStateSource(sourceId: string) {
+        unregisterExternalStateSource(sourceId)
+    }
+
+    /**
+     * 直接写入外部输入态（增量）
+     */
+    setExternalState(patch: Partial<ExternalState>) {
+        setExternalStatePatch(patch)
+    }
+
+    /**
+     * 获取聚合后的输入态快照（内部系统读取）
+     */
+    getExternalState() {
+        return getExternalStateSnapshot()
+    }
+
+    /**
+     * 写入强动作命令（外部入口）
+     */
+    enqueueCommand(cmd: World2DCommand) {
+        enqueueExternalCommand(cmd)
+    }
+
+    /**
+     * 消费命令队列（内部系统调用）
+     */
+    drainCommands(maxPerFrame: number = Number.POSITIVE_INFINITY) {
+        return drainExternalCommands(maxPerFrame)
+    }
+
+    /**
+     * 获取只读视图态（UI 展示）
+     */
+    getViewState() {
+        return getViewStateSnapshot()
+    }
+
+    /**
+     * 仅内部系统更新视图态（迁移期保持 public）
+     */
+    setViewState(patch: Partial<ViewState>) {
+        setViewStatePatch(patch)
+    }
+
+    /**
+     * 更新宿主运行态（system/pause/flags）
+     */
+    setHostState(patch: Partial<HostState>) {
+        setHostStatePatch(patch)
+    }
+
+    /**
+     * 获取宿主运行态快照
+     */
+    getHostState() {
+        return getHostStateSnapshot()
+    }
+
+    /**
+     * 更新场景运行态（map/edit/transition 等）
+     */
+    setSceneState(patch: Partial<SceneState>) {
+        setSceneStatePatch(patch)
+    }
+
+    /**
+     * 获取场景运行态快照
+     */
+    getSceneState() {
+        return getSceneStateSnapshot()
+    }
+
+    /**
+     * 更新每帧上下文快照（引擎/视口/mapBounds 等）
+     */
+    setFrameContext(patch: Partial<FrameContextState>) {
+        setFrameContextPatch(patch)
+    }
+
+    /**
+     * 获取每帧上下文快照
+     */
+    getFrameContext() {
+        return getFrameContextSnapshot()
+    }
+
+    /**
+     * 注册运行时服务引用
+     */
+    setRuntimeService<K extends keyof RuntimeServices>(name: K, value: RuntimeServices[K]) {
+        setRuntimeServiceBridge(name, value)
+    }
+
+    /**
+     * 获取运行时服务引用
+     */
+    getRuntimeService<K extends keyof RuntimeServices>(name: K) {
+        return getRuntimeServiceBridge(name)
+    }
+
+    /**
+     * 获取所有运行时服务快照
+     */
+    getRuntimeServices() {
+        return getRuntimeServicesSnapshot()
     }
 
     /**
@@ -201,24 +384,14 @@ class World2DFacade {
         // @ts-ignore
         const mousePos = globalEntity?.mousePosition || { worldX: 0, worldY: 0 }
 
-        // 统计追击中的敌人
-        let chasingCount = 0
-        if (scene) {
-            for (const entity of world) {
-                if (entity.aiState && entity.aiState.state === 'chase') {
-                    chasingCount++
-                }
-            }
-        }
-
         return {
             playerX: playerPos?.x || 0,
             playerY: playerPos?.y || 0,
             mouseWorldX: mousePos.worldX,
             mouseWorldY: mousePos.worldY,
             lastInput: engine?.input?.lastInput || '',
-            chasingCount,
-            entityCount: world ? [...world].length : 0,
+            chasingCount: worldRuntimeStats.chasingEnemyCount || 0,
+            entityCount: (world as any)?.entities?.length || 0,
             // @ts-ignore
             fps: engine?.lastDt ? Math.round(1 / engine.lastDt) : 0
         }
@@ -231,10 +404,10 @@ class World2DFacade {
     getSceneEntities() {
         const entities = []
         for (const entity of world) {
-            if (entity.globalManager) continue // 排除全局实体
-
             entities.push({
-                id: entity.__id,
+                id: getEntityId(entity),
+                name: entity.name,
+                globalManager: !!entity.globalManager,
                 type: entity.sprite?.texture || entity.physics?.shape || 'unknown',
                 // @ts-ignore
                 position: entity.position ? { ...entity.position } : null,
@@ -243,6 +416,24 @@ class World2DFacade {
             })
         }
         return entities
+    }
+
+    /**
+     * 获取编辑器实体引用（迁移期封装）
+     */
+    getEditorEntities() {
+        return [...world]
+    }
+
+    /**
+     * 通过 id 获取实体（迁移期封装）
+     */
+    getEntityById(entityId: string | number) {
+        for (const entity of world) {
+            const id = getEntityId(entity)
+            if (id !== '' && id == entityId) return entity
+        }
+        return null
     }
 
     // ==================== 命令执行 ====================
@@ -271,13 +462,14 @@ class World2DFacade {
 
     /**
      * 从场景中移除实体
-     * @param {number} entityId - 实体 ID
+     * @param {string | number} entityId - 实体 ID
      * @returns {boolean} 是否成功
      */
-    removeEntity(entityId: number) {
+    removeEntity(entityId: string | number) {
         try {
             for (const entity of world) {
-                if (entity.__id === entityId) {
+                const id = getEntityId(entity)
+                if (id !== '' && id == entityId) {
                     world.remove(entity)
                     logger.info(`Removed entity: ${entityId}`)
                     return true
@@ -299,35 +491,11 @@ class World2DFacade {
         this._gameManager.toggleEditMode()
     }
 
-    // ==================== 回调注册 ====================
-
     /**
-     * 注册外部回调函数
-     * @param {Object} callbacks - 回调函数集合
+     * 获取可创建实体模板（编辑器）
      */
-    registerCallbacks(callbacks: Callbacks) {
-        logger.info('Registering external callbacks')
-        Object.assign(this._callbacks, callbacks)
-
-        // 将回调传递给 GameManager（通过依赖注入）
-        // GameManager 会在创建 WorldScene 时使用这些回调
-        if (callbacks.onEncounter) {
-            this._gameManager._onEncounter = callbacks.onEncounter.bind(this._gameManager)
-        }
-        if (callbacks.onInteract) {
-            this._gameManager._onInteract = callbacks.onInteract.bind(this._gameManager)
-        }
-    }
-
-    /**
-     * 触发回调（内部系统使用）
-     * @private
-     */
-    _triggerCallback(type: string, ...args: any[]) {
-        const callback = this._callbacks[type]
-        if (callback && typeof callback === 'function') {
-            callback(...args)
-        }
+    getEntityTemplates() {
+        return entityTemplateRegistry.getAll()
     }
 
     // ==================== 直接访问器（仅用于渐进式迁移） ====================
@@ -368,34 +536,6 @@ class World2DFacade {
         return this._gameManager.editor
     }
 
-    // ==================== 兼容层：实体模板注册表访问 ====================
-
-    /**
-     * 获取实体模板注册表（编辑器用）
-     * @deprecated 请使用 spawnEntity() 方法
-     * @returns {Object}
-     */
-    getEntityTemplateRegistry() {
-        return entityTemplateRegistry
-    }
-
-    /**
-     * 获取 ECS World 实例（编辑器/调试用）
-     * @deprecated 仅用于渐进式迁移，请尽快迁移到 API 方法
-     * @returns {import('miniplex').World}
-     */
-    getWorld() {
-        return world
-    }
-
-    /**
-     * 获取场景加载器（存档系统用）
-     * @deprecated 请使用 exportCurrentScene() 和 serializeCurrentScene()
-     * @returns {Object}
-     */
-    getScenarioLoader() {
-        return ScenarioLoader
-    }
 }
 
 // 创建单例实例

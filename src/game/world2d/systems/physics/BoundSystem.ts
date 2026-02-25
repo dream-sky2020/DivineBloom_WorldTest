@@ -1,15 +1,16 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import type { SystemContextBase } from '@definitions/interface/SystemContext';
 
 /**
  * BoundSystem
  * 只处理具备 bounds + transform 的实体边界约束。
  */
-export const BoundSystem: ISystem = {
+export const BoundSystem: ISystem<SystemContextBase> = {
     name: 'bound',
 
-    update(_dt: number, _callbacks?: any, context: { mapBounds?: { width: number, height: number } | null } = {}) {
+    update(_dt: number, context: SystemContextBase = {}) {
         const boundedEntities = world.with('bounds', 'transform');
         const mapBounds = context.mapBounds;
 

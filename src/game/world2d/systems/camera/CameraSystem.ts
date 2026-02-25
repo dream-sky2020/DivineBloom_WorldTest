@@ -1,11 +1,14 @@
-import { world } from '@world2d/world';
+import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import type { MapBounds, SystemContextBase } from '@definitions/interface/SystemContext';
+import { getFrameContext } from '../../bridge/ExternalBridge';
 
-interface CameraContext {
+interface CameraContext extends SystemContextBase {
     viewportWidth: number;
     viewportHeight: number;
-    mapBounds?: { width: number; height: number } | null;
+    viewport?: { width: number; height: number };
+    mapBounds?: MapBounds | null;
 }
 
 /**
@@ -21,23 +24,27 @@ const applyLerp = (camera: any, dt: number) => {
  * Camera System
  * 负责更新相机位置，使其跟随目标（玩家）并处理边界限制
  */
-export const CameraSystem: ISystem = {
+export const CameraSystem: ISystem<CameraContext> = {
     name: 'camera',
 
     /**
      * @param dt 
-     * @param _callbacks 
-     * @param context 
+     * @param cameraContext
      */
-    update(dt: number, _callbacks?: any, context?: CameraContext) {
-        // 兼容旧调用：部分调用方把 context 当成第二参数传入
-        const cameraContext = (context || _callbacks) as CameraContext | undefined;
-        if (!cameraContext) return;
-        
-        // 兜底视口尺寸，防止因为 engine 尚未初始化或 resize 导致的 0 尺寸
-        const viewportWidth = cameraContext.viewportWidth || 1920;
-        const viewportHeight = cameraContext.viewportHeight || 1080;
-        const { mapBounds = null } = cameraContext;
+    update(dt: number, _cameraContext?: CameraContext) {
+        const frameContext = getFrameContext();
+        const resolvedContext = frameContext as CameraContext;
+
+        const viewportWidth = resolvedContext.viewportWidth
+            || resolvedContext.viewport?.width
+            || resolvedContext.engine?.width;
+        const viewportHeight = resolvedContext.viewportHeight
+            || resolvedContext.viewport?.height
+            || resolvedContext.engine?.height;
+        if (!viewportWidth || !viewportHeight) {
+            throw new Error('[CameraSystem] Missing required viewport size in runtime frameContext');
+        }
+        const { mapBounds = null } = resolvedContext;
 
         const globalEntity = world.with('globalManager').first as IEntity;
         if (!globalEntity || !globalEntity.camera) return;

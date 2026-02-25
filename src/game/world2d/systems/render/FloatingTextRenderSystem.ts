@@ -1,5 +1,5 @@
 import { ISystem } from '@definitions/interface/ISystem';
-import { floatingTextQueue } from '@world2d/world';
+import { floatingTextQueue } from '@world2d/runtime/WorldEcsRuntime';
 
 /**
  * FloatingTextRenderSystem

@@ -70,12 +70,13 @@ export const useWorld2dStore = defineStore('world2d', () => {
     /**
      * 应用战斗结果 (示例逻辑)
      */
-    const applyBattleResult = (result: 'victory' | 'defeat' | 'flee', enemyUuid: string) => {
+    const applyBattleResult = (result: 'victory' | 'defeat' | 'flee', enemyId: string) => {
         const removeEnemy = (entities: any[]) => {
             if (!entities) return [];
             return entities.filter(e => {
-                // 假设 Enemy 组件数据结构: { type: 'enemy', options: { uuid: ... } }
-                if (e.type === 'enemy' && e.options && e.options.uuid === enemyUuid) {
+                // Enemy 配置中的协议主键统一为 options.id
+                const id = e?.options?.id;
+                if (e.type === 'enemy' && id === enemyId) {
                      if (result === 'victory') return false; 
                 }
                 return true;

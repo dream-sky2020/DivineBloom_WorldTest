@@ -81,4 +81,35 @@ export interface IEntityDefinition<TSchema extends z.ZodType, TRuntime = any> {
  * 运行时实体实例接口 (ECS 容器)
  * 这是一个通用的实体类型，包含所有可能的组件
  */
+export type EntityId = string;
+
+export function getEntityId(entity: any): EntityId {
+    const value = entity?.id;
+    return value == null ? '' : String(value);
+}
+
+let entityIdSeq = 0;
+
+export function createEntityId(): EntityId {
+    entityIdSeq += 1;
+    const timePart = Date.now().toString(36);
+    const seqPart = entityIdSeq.toString(36);
+    const randPart = Math.random().toString(36).slice(2, 8);
+    return `e_${timePart}_${seqPart}_${randPart}`;
+}
+
+export function ensureEntityId(entity: any): EntityId {
+    if (!entity || typeof entity !== 'object') return '';
+
+    const current = getEntityId(entity);
+    const normalizedId = current || createEntityId();
+    entity.id = normalizedId;
+
+    if ('uuid' in entity) {
+        delete entity.uuid;
+    }
+
+    return normalizedId;
+}
+
 export type IEntity = any;

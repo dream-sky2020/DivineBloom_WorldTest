@@ -4,7 +4,7 @@ import {
   setShouldUpdateComponentCountMap,
   shouldUpdateSpawnGroupCountMap,
   world
-} from '@world2d/world';
+} from '@world2d/runtime/WorldEcsRuntime';
 
 /**
  * Component Count Sense System
