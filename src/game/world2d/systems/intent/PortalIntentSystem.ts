@@ -4,6 +4,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { PortalIntent } from '@components';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('PortalIntentSystem');
 
 /**
@@ -15,6 +17,7 @@ export const PortalIntentSystem: ISystem & {
   _isInteractJustPressed(targetEntity: IEntity): boolean;
 } = {
   name: 'portal-intent',
+  executionPolicy: ExecutionPolicy.RunningOnly,
 
   _isInteractJustPressed(targetEntity: IEntity) {
     const intent = targetEntity?.playerIntent;

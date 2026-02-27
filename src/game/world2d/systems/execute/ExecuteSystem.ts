@@ -16,6 +16,8 @@ import {
     setViewState
 } from '../../bridge/ExternalBridge';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('ExecuteSystem');
 
 /**
@@ -33,6 +35,7 @@ interface IExecuteSystem extends ISystem<SystemContextBase> {
 
 export const ExecuteSystem: IExecuteSystem = {
     name: 'execute',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt?: number, _ctx?: SystemContextBase) {
         const frameContext = getFrameContext();

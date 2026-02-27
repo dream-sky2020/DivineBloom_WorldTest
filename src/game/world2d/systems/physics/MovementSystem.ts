@@ -2,12 +2,15 @@ import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * Movement System (Physics)
  * 仅处理基础位移计算。
  */
 export const MovementSystem: ISystem = {
     name: 'movement',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt: number) {
         const movingEntities = world.with('transform', 'velocity');

@@ -10,6 +10,8 @@ import { getFrameContext } from '../../bridge/ExternalBridge';
 
 const logger = createLogger('EditorInteractionSystem');
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * Editor Interaction System
  * 负责编辑模式下的鼠标交互：点击选中、拖拽移动、右键菜单
@@ -24,6 +26,7 @@ export const EditorInteractionSystem: ISystem<SystemContextBase> & {
     findEntityAt(x: number, y: number): IEntity | null;
 } = {
     name: 'editor-interaction',
+    executionPolicy: ExecutionPolicy.EditorOnly,
 
     // 注意：这个 selectedEntity 仅作为内部记录，外部应以 editorManager.selectedEntity 为准
     selectedEntity: null,

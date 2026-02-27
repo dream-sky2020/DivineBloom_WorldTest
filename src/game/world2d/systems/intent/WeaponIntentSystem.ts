@@ -41,6 +41,8 @@ function resolveOwnerEntity(weaponEntity: IEntity): IEntity | null {
     return null;
 }
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * WeaponIntentSystem
  * 基于输入与感知结果生成武器意图。
@@ -50,6 +52,7 @@ export const WeaponIntentSystem: ISystem & {
     lastFacingDirection: { x: number; y: number };
 } = {
     name: 'weapon-intent',
+    executionPolicy: ExecutionPolicy.RunningOnly,
     autoAttackEnabled: false,
     lastFacingDirection: { x: 1, y: 0 },
 

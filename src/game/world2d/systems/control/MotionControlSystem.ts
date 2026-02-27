@@ -2,6 +2,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { world } from '@world2d/runtime/WorldEcsRuntime';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 // --------------------------------------------------------------------------
 // Math Helpers
 // --------------------------------------------------------------------------
@@ -37,6 +39,7 @@ const MathUtils = {
  */
 export const MotionControlSystem: ISystem = {
   name: 'motion-control',
+  executionPolicy: ExecutionPolicy.RunningOnly,
 
   update(dt: number) {
     const entities = world.with('motion', 'transform');

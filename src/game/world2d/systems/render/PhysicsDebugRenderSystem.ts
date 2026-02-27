@@ -3,12 +3,15 @@ import { ShapeType } from '@world2d/definitions/enums/Shape';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * 物理调试渲染系统
  * 绘制实体的自定义碰撞体形状
  */
 export const PhysicsDebugRenderSystem: ISystem & { LAYER: number } = {
     name: 'physics-debug-render',
+    executionPolicy: ExecutionPolicy.RunningOnly,
     LAYER: 110, // 渲染在最顶层
 
     draw(renderer: any) {

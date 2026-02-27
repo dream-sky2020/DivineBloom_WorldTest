@@ -3,6 +3,8 @@ import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { ISystem } from '@definitions/interface/ISystem';
 import { damageQueue, world } from '@world2d/runtime/WorldEcsRuntime';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('DamageApplySystem');
 
 type TargetDamageAggregate = {
@@ -27,6 +29,7 @@ function indexHealthEntities(): Map<string, IEntity> {
  */
 export const DamageApplySystem: ISystem = {
   name: 'damage-apply',
+  executionPolicy: ExecutionPolicy.RunningOnly,
 
   update(_dt: number) {
     const drained = damageQueue.drain();

@@ -6,12 +6,15 @@ import { PlayerIntent } from '@components';
 
 const logger = createLogger('PlayerIntentSystem');
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * Player Intent System
  * 负责解析原始输入 (RawInput) 并转化为玩家意图 (PlayerIntent)
  */
 export const PlayerIntentSystem: ISystem = {
     name: 'player-intent',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt: number) {
         const intentEntities = world.with('rawInput');

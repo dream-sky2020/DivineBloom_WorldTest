@@ -10,6 +10,8 @@ import { EnemyAIIntent } from '@components';
 
 const logger = createLogger('EnemyAIIntentSystem');
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 // State Map
 const STATES: Record<string, any> = {
     'wander': WanderState,
@@ -24,6 +26,7 @@ const STATES: Record<string, any> = {
  */
 export const EnemyAIIntentSystem: ISystem = {
     name: 'enemy-ai-intent',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt: number) {
         const enemyEntities = world.with('enemy', 'transform', 'velocity', 'aiState', 'aiConfig');

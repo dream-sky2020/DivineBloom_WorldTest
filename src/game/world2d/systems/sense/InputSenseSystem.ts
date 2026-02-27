@@ -8,6 +8,8 @@ import { getFrameContext } from '../../bridge/ExternalBridge';
 
 const logger = createLogger('InputSenseSystem');
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * Input Sense System
  * 负责读取硬件输入 (Keyboard/Gamepad) 并记录为原始输入组件 (RawInput)
@@ -15,6 +17,7 @@ const logger = createLogger('InputSenseSystem');
  */
 export const InputSenseSystem: ISystem<SystemContextBase> = {
     name: 'input-sense',
+    executionPolicy: ExecutionPolicy.Always,
 
     update(dt: number, _ctx?: SystemContextBase) {
         const frameContext = getFrameContext();

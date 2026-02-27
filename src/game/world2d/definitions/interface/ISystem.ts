@@ -1,10 +1,16 @@
 import type { SystemContextBase } from './SystemContext';
+import { ExecutionPolicy } from '../enums/ExecutionPolicy';
 
 export interface ISystem<TContext = SystemContextBase> {
     /**
      * 系统名称 (用于注册和调试)
      */
     readonly name: string;
+
+    /**
+     * 执行策略
+     */
+    readonly executionPolicy?: ExecutionPolicy;
 
     /**
      * 系统更新方法

@@ -3,12 +3,15 @@ import { ShapeType } from '@world2d/definitions/enums/Shape';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * DetectAreaRenderSystem
  * 负责绘制检测区域 (Debug / Editor Mode)
  */
 export const DetectAreaRenderSystem: ISystem & { LAYER: number } = {
     name: 'detect-area-render',
+    executionPolicy: ExecutionPolicy.RunningOnly,
     // 定义渲染层级 (Z-Index) - Debug 层通常最高
     LAYER: 100,
 

@@ -3,6 +3,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { getEntityId, IEntity } from '@definitions/interface/IEntity';
 import { WeaponSense } from '@components';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 type NearbyEnemy = {
     id: string;
     entity: IEntity;
@@ -34,6 +36,7 @@ function estimateWeaponSenseRadius(entity: IEntity) {
  */
 export const WeaponSenseSystem: ISystem = {
     name: 'weapon-sense',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(_dt: number) {
         const monsters = world.with('monster', 'transform');

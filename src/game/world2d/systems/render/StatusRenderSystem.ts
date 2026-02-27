@@ -5,6 +5,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { createLogger } from '@/utils/logger';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('StatusRenderSystem');
 
 /**
@@ -14,6 +16,7 @@ const logger = createLogger('StatusRenderSystem');
  */
 export const StatusRenderSystem: ISystem & { LAYER: number } = {
     name: 'status-render',
+    executionPolicy: ExecutionPolicy.Always,
     // 定义渲染层级 (Z-Index)
     LAYER: 30,
 

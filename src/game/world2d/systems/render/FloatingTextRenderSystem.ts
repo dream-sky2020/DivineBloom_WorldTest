@@ -1,12 +1,15 @@
 import { ISystem } from '@definitions/interface/ISystem';
 import { floatingTextQueue } from '@world2d/runtime/WorldEcsRuntime';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * FloatingTextRenderSystem
  * 负责渲染 world 中的飘字缓冲数据。
  */
 export const FloatingTextRenderSystem: ISystem & { LAYER: number } = {
   name: 'floating-text-render',
+  executionPolicy: ExecutionPolicy.Always,
   LAYER: 40,
 
   draw(renderer: any) {

@@ -3,6 +3,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { createLogger } from '@/utils/logger';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('EnemyControlSystem');
 
 /**
@@ -12,6 +14,7 @@ const logger = createLogger('EnemyControlSystem');
  */
 export const EnemyControlSystem: ISystem = {
     name: 'enemy-control',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt: number) {
         const controlEntities = world.with('enemy', 'velocity', 'aiState', 'aiConfig');

@@ -11,6 +11,8 @@ import { GameManager } from './GameManager'
 import type { SystemContextBase } from '@definitions/interface/SystemContext'
 import { setFrameContext, setHostState, setRuntimeService, setSceneState } from './bridge/ExternalBridge'
 import { buildWorldSceneSystems } from './WorldScenePipelineConfig'
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy'
+import { ISystem } from '@definitions/interface/ISystem'
 
 const logger = createLogger('WorldScene')
 
@@ -197,9 +199,14 @@ export class WorldScene {
             mapData: this.mapData
         }
         const hostState = gameManager?.state
+        const isPaused = hostState?.isPaused || false;
+        // 这里的 isHardPause 需要 GameEngine 支持 manualStep 标志，目前暂时没有，默认为 false
+        // 如果想要支持硬暂停，可以从 gameManager 或 engine 获取
+        const isHardPause = false; 
+
         setHostState({
             system: hostState?.system,
-            isPaused: hostState?.isPaused,
+            isPaused: isPaused,
             isInitialized: true
         })
         setSceneState({
@@ -225,62 +232,98 @@ export class WorldScene {
         setRuntimeService('sceneManager', sceneManager)
         setRuntimeService('worldStore', worldStore)
 
-        // 1. 始终运行的系统 (动画、时间等)
-        this.systems.always.visualRender?.update(dt, baseCtx)
-        this.systems.always.time?.update(dt, baseCtx)
-        floatingTextQueue.update(dt)
+        // 核心：基于 ExecutionPolicy 的通用执行器
+        const executeSystem = (system: ISystem) => {
+            if (!system.update) return;
 
-        // 2. 编辑器模式逻辑
-        if (this.editMode) {
-            // 编辑器感官 (Input + Mouse)
-            this.systems.editor.sense.forEach((s: any) => s.update(dt, baseCtx))
-            // 编辑器交互 (Drag/Select)
-            this.systems.editor.interaction.forEach((s: any) => s.update(dt, baseCtx))
+            const policy = system.executionPolicy;
+
+            // 1. HardStop: 硬暂停时必须停止 (如时间流逝)
+            if (policy === ExecutionPolicy.HardStop && isHardPause) {
+                return;
+            }
+
+            // 2. RunningOnly: 软暂停时也停止 (如游戏逻辑)
+            if (policy === ExecutionPolicy.RunningOnly && (isPaused || isHardPause || this.isTransitioning)) {
+                return;
+            }
+
+            // 3. EditorOnly: 仅在编辑模式下运行
+            if (policy === ExecutionPolicy.EditorOnly && !this.editMode) {
+                return;
+            }
+
+            // 4. Always: 只要不是 HardStop 且被 HardPause 拦截，就运行
+            // (如果没有 policy 默认为 Always，除非有特殊逻辑)
+            
+            // 执行系统
+            system.update(dt, baseCtx);
+        };
+
+        // --- 1. 始终运行的系统 (如输入感知、渲染准备) ---
+        // 注意：InputSense 即使是 Always，在逻辑上也不应该在暂停时产生 Game Play 输入，
+        // 但 InputSense 本身只负责"读取硬件状态"，是否响应由 Intent 系统决定 (RunningOnly)。
+        this.systems.always.visualRender && executeSystem(this.systems.always.visualRender);
+        this.systems.always.time && executeSystem(this.systems.always.time);
+        this.systems.always.inputSense && executeSystem(this.systems.always.inputSense);
+        this.systems.always.execute && executeSystem(this.systems.always.execute); // Command 处理
+
+        // 浮动文字队列更新 (非 System，直接调用)
+        if (!isPaused && !isHardPause) {
+             floatingTextQueue.update(dt);
         }
 
-        // 3. 编辑器命令处理 (始终执行，不受暂停影响)
-        // 这样可以确保编辑器的删除、保存等操作能够立即响应
-        this.systems.always.execute?.update(dt, baseCtx)
+        // --- 2. 编辑器系统 ---
+        // executeSystem 内部会检查 EditorOnly 和 this.editMode
+        this.systems.editor.sense.forEach(executeSystem);
+        this.systems.editor.interaction.forEach(executeSystem);
 
-        // 4. 基础游戏逻辑 (受暂停影响)
-        const isPaused = this.stateProvider.gameManager && this.stateProvider.gameManager.state.isPaused
+        // --- 3. 游戏核心逻辑 ---
+        // 依次执行各个阶段，executeSystem 会自动处理 RunningOnly 过滤
+        this.systems.logicPhaseOrder.forEach((phase: any) => {
+            this.systems.logic[phase].forEach(executeSystem)
+        })
 
-        if (!isPaused && !this.isTransitioning) {
-            // 如果不在编辑模式，才更新常规输入感知
-            if (!this.editMode) {
-                this.systems.always.inputSense?.update(dt, baseCtx)
-            }
+        this.systems.logic.lifecycle.forEach(executeSystem);
+        this.systems.logic.execution.forEach(executeSystem);
 
-            // 核心逻辑阶段驱动
-            this.systems.logicPhaseOrder.forEach((phase: any) => {
-                this.systems.logic[phase].forEach((system: any) => {
-                    system.update(dt, baseCtx)
-                })
-            })
+        // --- 4. 物理与相机 ---
+        // 准备物理上下文 (包含 mapBounds)
+        const sceneConfigEntity = world.with('sceneConfig').first;
+        const mapWidth = sceneConfigEntity ? sceneConfigEntity.sceneConfig.width : (this.mapData.width || 800);
+        const mapHeight = sceneConfigEntity ? sceneConfigEntity.sceneConfig.height : (this.mapData.height || 600);
+        
+        const physicsOptions = {
+            ...baseCtx,
+            mapBounds: { width: mapWidth, height: mapHeight }
+        }
+        // 更新 bounds 到全局状态
+        setSceneState({ mapBounds: physicsOptions.mapBounds })
+        setFrameContext({ mapBounds: physicsOptions.mapBounds })
 
-            // 生命周期管理阶段
-            this.systems.logic.lifecycle.forEach((system: any) => system.update(dt, baseCtx))
+        // 执行物理系统
+        this.systems.logic.physics.forEach((system: ISystem) => {
+             // 物理系统需要特殊的 context (包含 mapBounds)
+             // 我们手动检查 policy，然后调用 update
+             if (!system.update) return;
+             const policy = system.executionPolicy;
+             if (policy === ExecutionPolicy.RunningOnly && (isPaused || isHardPause || this.isTransitioning)) return;
+             system.update(dt, physicsOptions);
+        });
 
-            // 物理阶段 (优先从 SceneConfig 组件读取动态数据)
-            const sceneConfigEntity = world.with('sceneConfig').first;
-            const mapWidth = sceneConfigEntity ? sceneConfigEntity.sceneConfig.width : (this.mapData.width || 800);
-            const mapHeight = sceneConfigEntity ? sceneConfigEntity.sceneConfig.height : (this.mapData.height || 600);
-
-            const physicsOptions = {
-                ...baseCtx,
-                mapBounds: { width: mapWidth, height: mapHeight }
-            }
-            setSceneState({ mapBounds: physicsOptions.mapBounds })
-            setFrameContext({ mapBounds: physicsOptions.mapBounds })
-            this.systems.logic.physics.forEach((system: any) => system.update(dt, physicsOptions))
-
-            // 5. 更新相机 (在物理和逻辑之后)
-            this.systems.always.camera?.update(dt, {
-                ...baseCtx,
-                viewportWidth: this.engine.width,
-                viewportHeight: this.engine.height,
-                mapBounds: { width: mapWidth, height: mapHeight }
-            })
+        // 执行相机 (Usually Always or RunningOnly)
+        // Camera 需要 physicsOptions (含 mapBounds) 和 viewport
+        const cameraCtx = {
+            ...baseCtx,
+            viewportWidth: this.engine.width,
+            viewportHeight: this.engine.height,
+            mapBounds: { width: mapWidth, height: mapHeight }
+        };
+        if (this.systems.always.camera) {
+             // 手动调用以传递 cameraCtx
+             const sys = this.systems.always.camera;
+             // Camera is Always run, unless HardStopped (unlikely)
+             sys.update(dt, cameraCtx);
         }
 
         // 6. 场景管理 (始终运行以处理切换请求)

@@ -7,6 +7,8 @@ import { AISensory } from '@components';
 
 const logger = createLogger('AISenseSystem');
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 // Helper to get player
 const getPlayer = (): IEntity | null => {
     return world.with('player', 'transform').first as IEntity;
@@ -32,6 +34,7 @@ export const AISenseSystem: ISystem & {
     _updateSuspicion(entity: IEntity, sensory: any, aiConfig: any, checkInterval: number, dt: number): void;
 } = {
     name: 'ai-sense',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     /**
      * 初始化感知系统

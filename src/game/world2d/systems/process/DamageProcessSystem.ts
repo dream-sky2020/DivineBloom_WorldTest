@@ -17,6 +17,8 @@ type DamageRuntime = {
   minDamage?: number;
 };
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 function resolveTargetId(hitId: string, hitResult: any): string {
   if (typeof hitResult?.id === 'string' && hitResult.id.length > 0) return hitResult.id;
   return hitId;
@@ -38,6 +40,7 @@ function computeHitDamage(damage: DamageRuntime): number {
  */
 export const DamageProcessSystem: ISystem = {
   name: 'damage-process',
+  executionPolicy: ExecutionPolicy.RunningOnly,
 
   update(_dt: number) {
     const attackers = world.with('damageDetect', 'damage');

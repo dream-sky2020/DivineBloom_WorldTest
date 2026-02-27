@@ -124,12 +124,15 @@ const Steer = {
   }
 };
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * MotionIntentSystem
  * 小脑：负责感知环境，计算合力，输出期望速度。
  */
 export const MotionIntentSystem: ISystem = {
   name: 'motion-intent',
+  executionPolicy: ExecutionPolicy.RunningOnly,
 
   update(dt: number) {
     const entities = Array.from(world.with('motion', 'transform'));

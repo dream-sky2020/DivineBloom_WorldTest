@@ -3,6 +3,8 @@ import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('LifeTimeSystem');
 
 /**
@@ -11,6 +13,7 @@ const logger = createLogger('LifeTimeSystem');
  */
 export const LifeTimeSystem: ISystem & { requestRemoval(entity: IEntity): void } = {
     name: 'lifetime',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt: number) {
         const lifeTimeEntities = world.with('lifeTime');

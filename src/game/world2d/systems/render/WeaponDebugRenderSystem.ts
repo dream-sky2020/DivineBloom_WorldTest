@@ -3,6 +3,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { getWeaponFireDirection } from '@entities/WeaponEntity';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * Weapon Debug Render System
  * 绘制武器发射方向箭头
@@ -10,6 +12,7 @@ import { getWeaponFireDirection } from '@entities/WeaponEntity';
  */
 export const WeaponDebugRenderSystem: ISystem & { LAYER: number } = {
     name: 'weapon-debug-render',
+    executionPolicy: ExecutionPolicy.RunningOnly,
     LAYER: 115,
 
     draw(renderer: any) {

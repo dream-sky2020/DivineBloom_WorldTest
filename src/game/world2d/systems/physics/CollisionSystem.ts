@@ -5,6 +5,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import type { SystemContextBase } from '@definitions/interface/SystemContext';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * 自定义碰撞处理系统
  * 负责检测实体间重叠并进行位置修正（Resolution）
@@ -18,6 +20,7 @@ export const CollisionSystem: ISystem<SystemContextBase> & {
     _resolveCollision(entityA: IEntity, entityB: IEntity, mtv: any): void;
 } = {
     name: 'collision',
+    executionPolicy: ExecutionPolicy.RunningOnly,
     // 迭代次数，防止物体在角落抖动
     ITERATIONS: 2,
 

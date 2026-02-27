@@ -3,6 +3,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { createLogger } from '@/utils/logger';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('PlayerControlSystem');
 
 /**
@@ -11,6 +13,7 @@ const logger = createLogger('PlayerControlSystem');
  */
 export const PlayerControlSystem: ISystem = {
     name: 'player-control',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt: number) {
         const controlEntities = world.with('playerIntent', 'velocity');

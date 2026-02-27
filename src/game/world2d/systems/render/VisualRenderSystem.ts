@@ -6,6 +6,8 @@ import { IEntity } from '@definitions/interface/IEntity';
 
 const logger = createLogger('VisualRenderSystem');
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * Sprite Render System
  * 负责渲染：实体 Sprite (角色, 道具等)
@@ -21,6 +23,7 @@ export const VisualRenderSystem: ISystem & {
     _drawTexture(renderer: any, sprite: any, entity: IEntity, transform: any): void;
 } = {
     name: 'visual-render',
+    executionPolicy: ExecutionPolicy.Always,
     // 定义渲染层级 (Z-Index)
     // 渲染底层 (Layer 10)，包含背景和实体，需要 Y 轴排序
     // 之前是 20，现在改为 10 以便让调试层 (12, 15) 能显示在其上方

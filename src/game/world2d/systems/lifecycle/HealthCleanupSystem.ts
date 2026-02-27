@@ -3,12 +3,15 @@ import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('HealthCleanupSystem');
 
 export const HealthCleanupSystem: ISystem & {
     removeEntityTree(entity: IEntity, visited?: WeakSet<object>): void;
 } = {
     name: 'health-cleanup',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(_dt: number) {
         const healthEntities = world.with('health');

@@ -4,6 +4,8 @@ import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { BulletEntity } from '@entities';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 const logger = createLogger('WeaponControlSystem');
 
 function normalizeDirection(dir: { x: number; y: number }, fallback = { x: 1, y: 0 }) {
@@ -18,6 +20,7 @@ function normalizeDirection(dir: { x: number; y: number }, fallback = { x: 1, y:
  */
 export const WeaponControlSystem: ISystem = {
     name: 'weapon-control',
+    executionPolicy: ExecutionPolicy.RunningOnly,
 
     update(dt: number) {
         const weaponEntities = world.with('weapon', 'weaponIntent', 'transform');

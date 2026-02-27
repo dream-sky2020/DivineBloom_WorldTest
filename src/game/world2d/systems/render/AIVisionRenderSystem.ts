@@ -4,6 +4,8 @@ import { drawVision } from '@world2d/ECSCalculateTool/ECSSceneGizmosRendererCalc
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 type VisionStyleKey = 'chase' | 'flee' | 'default';
 
 type VisionStyle = {
@@ -104,6 +106,7 @@ function drawVisionPath(
  */
 export const AIVisionRenderSystem: ISystem & { LAYER: number } = {
     name: 'ai-vision-render',
+    executionPolicy: ExecutionPolicy.RunningOnly,
     // 定义渲染层级 (Z-Index)
     LAYER: 15,
 

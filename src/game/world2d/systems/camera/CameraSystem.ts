@@ -4,6 +4,8 @@ import { IEntity } from '@definitions/interface/IEntity';
 import type { MapBounds, SystemContextBase } from '@definitions/interface/SystemContext';
 import { getFrameContext } from '../../bridge/ExternalBridge';
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 interface CameraContext extends SystemContextBase {
     viewportWidth: number;
     viewportHeight: number;
@@ -26,6 +28,7 @@ const applyLerp = (camera: any, dt: number) => {
  */
 export const CameraSystem: ISystem<CameraContext> = {
     name: 'camera',
+    executionPolicy: ExecutionPolicy.Always,
 
     /**
      * @param dt 

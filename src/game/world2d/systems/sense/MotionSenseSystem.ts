@@ -26,12 +26,15 @@ function resolveEntityByToken(token: string | number): IEntity | null {
   return null;
 }
 
+import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
+
 /**
  * MotionSenseSystem
  * 负责确认 Motion 目标实体与目标位置，并写入 motion.runtime。
  */
 export const MotionSenseSystem: ISystem = {
   name: 'motion-sense',
+  executionPolicy: ExecutionPolicy.RunningOnly,
 
   update(_dt: number) {
     const entities = world.with('motion', 'transform');
