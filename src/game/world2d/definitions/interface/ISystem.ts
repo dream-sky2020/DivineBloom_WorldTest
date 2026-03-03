@@ -1,7 +1,7 @@
 import type { SystemContextBase } from './SystemContext';
 import { ExecutionPolicy } from '../enums/ExecutionPolicy';
 
-export interface ISystem<TContext = SystemContextBase> {
+export interface ISystem<TContext = SystemContextBase, TRenderer = unknown> {
     /**
      * 系统名称 (用于注册和调试)
      */
@@ -23,7 +23,7 @@ export interface ISystem<TContext = SystemContextBase> {
      * 系统渲染方法 (可选)
      * @param renderer 渲染器实例
      */
-    draw?(renderer?: any): void;
+    draw?(renderer?: TRenderer): void;
 
     /**
      * 系统初始化方法 (可选)

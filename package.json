@@ -14,6 +14,7 @@
         "build:steam": "cross-env TARGET=steam vite build --mode production",
         "build:all": "npm run clean:dist && run-s build:web build:ios build:android build:steam",
         "check:world2d-boundary": "node ./scripts/check-world2d-boundary.mjs",
+        "test:world2d-gateway": "node ./scripts/world2d-batch-test.mjs",
         "cap:sync:ios": "npm run build -- --target=ios && npx cap sync ios",
         "cap:sync:android": "npm run build -- --target=android && npx cap sync android",
         "cap:sync:all": "run-s cap:sync:ios cap:sync:android",
@@ -21,6 +22,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@capacitor-community/http": "^1.4.1",
         "@capacitor/app": "^8.0.1",
         "@capacitor/core": "^8.1.0",
         "@capacitor/device": "^8.0.0",
@@ -33,12 +35,14 @@
         "@capacitor/splash-screen": "^8.0.0",
         "@capacitor/status-bar": "^8.0.0",
         "@capacitor/toast": "^8.0.0",
-        "@capacitor-community/http": "^1.4.1",
+        "break_infinity.js": "^2.2.0",
         "consola": "^3.4.2",
         "miniplex": "^2.0.0",
         "pinia": "^3.0.4",
+        "selfsigned": "^5.5.0",
         "vue": "^3.4.0",
         "vue-i18n": "^9.14.5",
+        "ws": "^8.19.0",
         "zod": "^4.3.5"
     },
     "devDependencies": {
@@ -51,8 +55,10 @@
         "electron": "^37.5.1",
         "electron-builder": "^26.0.12",
         "npm-run-all": "^4.1.5",
+        "playwright": "^1.55.0",
         "rimraf": "^6.0.1",
         "typescript": "^5.9.3",
-        "vite": "^5.4.21"
+        "vite": "^5.4.21",
+        "vitest": "^3.2.4"
     }
 }

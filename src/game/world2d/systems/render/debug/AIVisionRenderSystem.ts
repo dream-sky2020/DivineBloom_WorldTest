@@ -3,6 +3,10 @@ import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { drawVision } from '@world2d/ECSCalculateTool/ECSSceneGizmosRendererCalculateTool';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreen } from '../../../render/core/CameraTransform';
+import { isPointVisible } from '../../../render/core/Culling';
+import { DebugPalette } from '../../../render/styles/DebugPalette';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
 import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
 
@@ -28,22 +32,22 @@ type VisionDrawItem = {
 
 const VISION_STYLES: Record<VisionStyleKey, VisionStyle> = {
     chase: {
-        fillColor: 'rgb(239, 68, 68)',
-        fillAlpha: 0.25,
-        strokeStyle: 'rgba(239, 68, 68, 0.95)',
-        strokeWidth: 2
+        fillColor: DebugPalette.vision.chaseFillColor,
+        fillAlpha: DebugPalette.vision.chaseFillAlpha,
+        strokeStyle: DebugPalette.vision.chaseStrokeColor,
+        strokeWidth: DebugPalette.vision.strokeWidth
     },
     flee: {
-        fillColor: 'rgb(25, 25, 112)',
-        fillAlpha: 0.25,
-        strokeStyle: 'rgba(25, 25, 112, 0.95)',
-        strokeWidth: 2
+        fillColor: DebugPalette.vision.fleeFillColor,
+        fillAlpha: DebugPalette.vision.fleeFillAlpha,
+        strokeStyle: DebugPalette.vision.fleeStrokeColor,
+        strokeWidth: DebugPalette.vision.strokeWidth
     },
     default: {
-        fillColor: 'rgb(234, 179, 8)',
-        fillAlpha: 0.15,
-        strokeStyle: 'rgba(234, 179, 8, 0.9)',
-        strokeWidth: 2
+        fillColor: DebugPalette.vision.defaultFillColor,
+        fillAlpha: DebugPalette.vision.defaultFillAlpha,
+        strokeStyle: DebugPalette.vision.defaultStrokeColor,
+        strokeWidth: DebugPalette.vision.strokeWidth
     }
 };
 
@@ -110,7 +114,7 @@ export const AIVisionRenderSystem: ISystem & { LAYER: number } = {
     // 定义渲染层级 (Z-Index)
     LAYER: 15,
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         if (!renderer || !renderer.ctx || !renderer.camera) return;
 
         const ctx = renderer.ctx;
@@ -118,19 +122,12 @@ export const AIVisionRenderSystem: ISystem & { LAYER: number } = {
         const viewW = renderer.width || 0;
         const viewH = renderer.height || 0;
         const cullMargin = 200; // 视野范围可能较大，剔除边缘放宽
+        const viewport = { width: viewW, height: viewH };
 
         const groupedDrawItems: Record<VisionStyleKey, VisionDrawItem[]> = {
             chase: [],
             flee: [],
             default: []
-        };
-
-        const isVisible = (pos: any) => {
-            if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') return false;
-            return !(pos.x < camera.x - cullMargin ||
-                pos.x > camera.x + viewW + cullMargin ||
-                pos.y < camera.y - cullMargin ||
-                pos.y > camera.y + viewH + cullMargin);
         };
 
         const visionEntities = world.with('transform', 'aiConfig', 'aiState');
@@ -140,17 +137,14 @@ export const AIVisionRenderSystem: ISystem & { LAYER: number } = {
             if (e.aiConfig.hideVisionRender) continue;
 
             // 剔除屏幕外的
-            if (!isVisible(e.transform)) continue;
+            if (!isPointVisible(e.transform.x, e.transform.y, camera, viewport, cullMargin)) continue;
 
             // 如果处于晕眩状态，通常不绘制视野，或者视野失效
             // 这里由设计决定，暂时保持原逻辑：晕眩时不画视野
             if (e.aiState.state === 'stunned') continue;
 
             // 转换世界坐标到屏幕坐标 (Screen Space)
-            const screenPos = {
-                x: e.transform.x - camera.x,
-                y: e.transform.y - camera.y
-            };
+            const screenPos = worldToScreen(e.transform, camera);
 
             const { visionRadius, visionType, visionAngle, visionProximity } = e.aiConfig;
             const { facing, state } = e.aiState;

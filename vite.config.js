@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [vue()],
+    optimizeDeps: {
+      include: ['break_infinity.js']
+    },
     define: {
       __TARGET__: JSON.stringify(target),
     },
@@ -32,7 +35,8 @@ export default defineConfig(({ mode }) => {
         '@components': path.resolve(__dirname, './src/game/world2d/definitions/components'),
         '@entities': path.resolve(__dirname, './src/game/world2d/definitions/entities'),
         '@definitions': path.resolve(__dirname, './src/game/world2d/definitions'),
-        '@systems': path.resolve(__dirname, './src/game/world2d/systems')
+        '@systems': path.resolve(__dirname, './src/game/world2d/systems'),
+        break_infinity: 'break_infinity.js'
       }
     }
   }

@@ -4,6 +4,9 @@ import { drawSuspicion, drawAlert, drawStunned } from '@world2d/ECSCalculateTool
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
 import { createLogger } from '@/utils/logger';
+import { worldToScreen } from '../../../render/core/CameraTransform';
+import { isPointVisible } from '../../../render/core/Culling';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
 import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
 
@@ -20,7 +23,7 @@ export const StatusRenderSystem: ISystem & { LAYER: number } = {
     // 定义渲染层级 (Z-Index)
     LAYER: 30,
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         // Defensive Check: Renderer
         if (!renderer || !renderer.ctx || !renderer.camera) {
             logger.error('[StatusRenderSystem] Invalid renderer instance!');
@@ -32,14 +35,7 @@ export const StatusRenderSystem: ISystem & { LAYER: number } = {
         const viewW = renderer.width || 0;
         const viewH = renderer.height || 0;
         const cullMargin = 100;
-
-        const isVisible = (pos: any) => {
-            if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') return false;
-            return !(pos.x < camera.x - cullMargin ||
-                pos.x > camera.x + viewW + cullMargin ||
-                pos.y < camera.y - cullMargin ||
-                pos.y > camera.y + viewH + cullMargin);
-        };
+        const viewport = { width: viewW, height: viewH };
 
         const statusEntities = world.with('transform', 'aiState');
 
@@ -55,15 +51,12 @@ export const StatusRenderSystem: ISystem & { LAYER: number } = {
                 continue;
             }
 
-            if (!isVisible(e.transform)) continue;
+            if (!isPointVisible(e.transform.x, e.transform.y, camera, viewport, cullMargin)) continue;
 
             const { state, suspicion } = e.aiState;
 
             // 转换世界坐标到屏幕坐标 (Screen Space)
-            const screenPos = {
-                x: e.transform.x - camera.x,
-                y: e.transform.y - camera.y
-            };
+            const screenPos = worldToScreen(e.transform, camera);
 
             // 1. Suspicion (?)
             if (suspicion > 0) {

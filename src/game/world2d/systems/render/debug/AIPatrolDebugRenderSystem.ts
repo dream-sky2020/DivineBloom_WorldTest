@@ -1,6 +1,10 @@
 import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreenXY } from '../../../render/core/CameraTransform';
+import { isPointVisible } from '../../../render/core/Culling';
+import { DebugPalette } from '../../../render/styles/DebugPalette';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
 /**
  * AI Patrol Debug Render System
@@ -12,7 +16,7 @@ export const AIPatrolDebugRenderSystem: ISystem & { LAYER: number } = {
     // 调试层级，位于视野 (15) 之下，背景 (10) 之上
     LAYER: 12,
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         if (!renderer || !renderer.ctx || !renderer.camera) return;
 
         const ctx = renderer.ctx;
@@ -20,6 +24,7 @@ export const AIPatrolDebugRenderSystem: ISystem & { LAYER: number } = {
         const viewW = renderer.width || 0;
         const viewH = renderer.height || 0;
         const cullMargin = 300;
+        const viewport = { width: viewW, height: viewH };
 
         const aiEntities = world.with('aiConfig', 'transform');
         for (const entity of aiEntities) {
@@ -35,23 +40,21 @@ export const AIPatrolDebugRenderSystem: ISystem & { LAYER: number } = {
             const homeY = aiConfig.homePosition.y;
 
             // 剔除屏幕外的
-            if (homeX < camera.x - cullMargin ||
-                homeX > camera.x + viewW + cullMargin ||
-                homeY < camera.y - cullMargin ||
-                homeY > camera.y + viewH + cullMargin) {
+            if (!isPointVisible(homeX, homeY, camera, viewport, cullMargin)) {
                 continue;
             }
 
-            const screenHomeX = homeX - camera.x;
-            const screenHomeY = homeY - camera.y;
+            const screenHome = worldToScreenXY(homeX, homeY, camera);
+            const screenHomeX = screenHome.x;
+            const screenHomeY = screenHome.y;
 
             ctx.save();
 
             // 1. 绘制巡逻范围虚线圆
             ctx.beginPath();
-            ctx.setLineDash([5, 5]);
+            ctx.setLineDash([...DebugPalette.aiPatrol.rangeDash]);
             ctx.arc(screenHomeX, screenHomeY, aiConfig.patrolRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)'; // 绿色 (green-500)
+            ctx.strokeStyle = DebugPalette.aiPatrol.rangeStroke;
             ctx.lineWidth = 1;
             ctx.stroke();
 
@@ -59,18 +62,19 @@ export const AIPatrolDebugRenderSystem: ISystem & { LAYER: number } = {
             ctx.beginPath();
             ctx.setLineDash([]);
             ctx.arc(screenHomeX, screenHomeY, 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(34, 197, 94, 0.8)';
+            ctx.fillStyle = DebugPalette.aiPatrol.homeFill;
             ctx.fill();
 
             // 3. 绘制从 AI 到家的连接线，直观显示距离
-            const screenAiX = transform.x - camera.x;
-            const screenAiY = transform.y - camera.y;
+            const screenAi = worldToScreenXY(transform.x, transform.y, camera);
+            const screenAiX = screenAi.x;
+            const screenAiY = screenAi.y;
 
             ctx.beginPath();
             ctx.moveTo(screenHomeX, screenHomeY);
             ctx.lineTo(screenAiX, screenAiY);
-            ctx.strokeStyle = 'rgba(34, 197, 94, 0.2)';
-            ctx.setLineDash([2, 2]);
+            ctx.strokeStyle = DebugPalette.aiPatrol.linkStroke;
+            ctx.setLineDash([...DebugPalette.aiPatrol.linkDash]);
             ctx.stroke();
 
             // 4. 绘制 AI 的移动意图向量 (moveDir)
@@ -82,7 +86,7 @@ export const AIPatrolDebugRenderSystem: ISystem & { LAYER: number } = {
                     ctx.setLineDash([]);
                     ctx.moveTo(screenAiX, screenAiY);
                     ctx.lineTo(screenAiX + moveX * 30, screenAiY + moveY * 30);
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.strokeStyle = DebugPalette.aiPatrol.moveDirStroke;
                     ctx.lineWidth = 2;
                     ctx.stroke();
                 }
@@ -91,14 +95,15 @@ export const AIPatrolDebugRenderSystem: ISystem & { LAYER: number } = {
             // 5. 绘制感知到的捷径 (Portal)
             if (e.aiSensory && e.aiSensory.bestPortal) {
                 const portalPos = e.aiSensory.bestPortal.pos;
-                const portalX = portalPos.x - camera.x;
-                const portalY = portalPos.y - camera.y;
+                const screenPortal = worldToScreenXY(portalPos.x, portalPos.y, camera);
+                const portalX = screenPortal.x;
+                const portalY = screenPortal.y;
 
                 ctx.beginPath();
                 ctx.moveTo(screenAiX, screenAiY);
                 ctx.lineTo(portalX, portalY);
-                ctx.strokeStyle = 'rgba(147, 51, 234, 0.5)'; // 紫色
-                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = DebugPalette.aiPatrol.portalStroke;
+                ctx.setLineDash([...DebugPalette.aiPatrol.portalDash]);
                 ctx.stroke();
             }
 

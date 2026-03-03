@@ -10,6 +10,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
+    "types": ["vite/client", "vitest/globals", "node"],
     "skipLibCheck": true,
     "noEmit": true,
 
@@ -31,7 +32,8 @@
       "@entities": ["src/game/world2d/definitions/entities/index.ts"],
       "@definitions/*": ["src/game/world2d/definitions/*"],
       "@definitions": ["src/game/world2d/definitions/index.js"],
-      "@systems/*": ["src/game/world2d/systems/*"]
+      "@systems/*": ["src/game/world2d/systems/*"],
+      "break_infinity": ["./node_modules/break_infinity.js"]
     }
   },
   "include": [

@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import './style.css'
 import App from './App.vue'
 import i18n from './i18n'
+import { initWorld2DElectronGatewayBridge } from './platform/electron/world2dGatewayBridge'
 
 const initApp = async () => {
     const pinia = createPinia()
@@ -11,6 +12,7 @@ const initApp = async () => {
     app.use(pinia)
     app.use(i18n)
     app.mount('#app')
+    initWorld2DElectronGatewayBridge()
 }
 
 initApp();

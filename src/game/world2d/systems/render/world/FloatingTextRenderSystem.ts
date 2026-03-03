@@ -1,5 +1,8 @@
 import { ISystem } from '@definitions/interface/ISystem';
 import { floatingTextQueue } from '@world2d/runtime/WorldEcsRuntime';
+import { worldToScreenXY } from '../../../render/core/CameraTransform';
+import { isPointVisible } from '../../../render/core/Culling';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
 import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
 
@@ -12,13 +15,14 @@ export const FloatingTextRenderSystem: ISystem & { LAYER: number } = {
   executionPolicy: ExecutionPolicy.Always,
   LAYER: 40,
 
-  draw(renderer: any) {
+  draw(renderer: RenderContext) {
     if (!renderer || !renderer.ctx || !renderer.camera) return;
     const ctx = renderer.ctx as CanvasRenderingContext2D;
     const camera = renderer.camera;
     const viewW = renderer.width || 0;
     const viewH = renderer.height || 0;
     const cullMargin = 80;
+    const viewport = { width: viewW, height: viewH };
 
     const items = floatingTextQueue.getActive();
     if (!Array.isArray(items) || items.length === 0) return;
@@ -26,17 +30,13 @@ export const FloatingTextRenderSystem: ISystem & { LAYER: number } = {
     for (const item of items) {
       if (!item || !item.active) continue;
 
-      if (
-        item.x < camera.x - cullMargin ||
-        item.x > camera.x + viewW + cullMargin ||
-        item.y < camera.y - cullMargin ||
-        item.y > camera.y + viewH + cullMargin
-      ) {
+      if (!isPointVisible(item.x, item.y, camera, viewport, cullMargin)) {
         continue;
       }
 
-      const screenX = item.x - camera.x;
-      const screenY = item.y - camera.y;
+      const screenPos = worldToScreenXY(item.x, item.y, camera);
+      const screenX = screenPos.x;
+      const screenY = screenPos.y;
       const fontSize = Math.max(10, Math.round(16 * (item.scale || 1)));
 
       ctx.save();

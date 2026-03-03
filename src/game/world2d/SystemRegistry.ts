@@ -25,7 +25,7 @@ import { WeaponControlSystem } from '@systems/control/WeaponControlSystem';
 import { DamageProcessSystem } from '@systems/process/DamageProcessSystem';
 
 // Editor
-import { EditorHighlightRenderSystem } from '@systems/editor/EditorHighlightRenderSystem';
+import { EditorHighlightRenderSystem } from '@systems/editor/render/EditorHighlightRenderSystem';
 import { EditorInteractionSystem } from '@systems/editor/EditorInteractionSystem';
 
 // Execute
@@ -50,18 +50,18 @@ import { MovementSystem } from '@systems/physics/MovementSystem';
 import { SyncTransformSystem } from '@systems/physics/SyncTransformSystem';
 
 // Render
-import { AIPatrolDebugRenderSystem } from '@systems/render/AIPatrolDebugRenderSystem';
-import { AIVisionRenderSystem } from '@systems/render/AIVisionRenderSystem';
+import { AIPatrolDebugRenderSystem } from '@systems/render/debug/AIPatrolDebugRenderSystem';
+import { AIVisionRenderSystem } from '@systems/render/debug/AIVisionRenderSystem';
 // import { BackgroundRenderSystem } from '@systems/render/BackgroundRenderSystem'; // Merged into VisualRenderSystem
-import { DetectAreaRenderSystem } from '@systems/render/DetectAreaRenderSystem';
-import { EditorGridRenderSystem } from '@systems/render/EditorGridRenderSystem';
-import { FloatingTextRenderSystem } from '@systems/render/FloatingTextRenderSystem';
-import { PhysicsDebugRenderSystem } from '@systems/render/PhysicsDebugRenderSystem';
-import { PortalDebugRenderSystem } from '@systems/render/PortalDebugRenderSystem';
-import { SpawnDebugRenderSystem } from '@systems/render/SpawnDebugRenderSystem';
-import { StatusRenderSystem } from '@systems/render/StatusRenderSystem';
-import { WeaponDebugRenderSystem } from '@systems/render/WeaponDebugRenderSystem';
-import { VisualRenderSystem } from '@systems/render/VisualRenderSystem';
+import { DetectAreaRenderSystem } from '@systems/render/debug/DetectAreaRenderSystem';
+import { EditorGridRenderSystem } from '@systems/editor/render/EditorGridRenderSystem';
+import { FloatingTextRenderSystem } from '@systems/render/world/FloatingTextRenderSystem';
+import { PhysicsDebugRenderSystem } from '@systems/render/debug/PhysicsDebugRenderSystem';
+import { PortalDebugRenderSystem } from '@systems/render/debug/PortalDebugRenderSystem';
+import { SpawnDebugRenderSystem } from '@systems/render/debug/SpawnDebugRenderSystem';
+import { StatusRenderSystem } from '@systems/render/world/StatusRenderSystem';
+import { WeaponDebugRenderSystem } from '@systems/render/debug/WeaponDebugRenderSystem';
+import { VisualRenderSystem } from '@systems/render/world/VisualRenderSystem';
 
 // Sense
 import { DamageDetectSenseSystem } from '@systems/sense/DamageDetectSenseSystem';
@@ -93,7 +93,7 @@ export const SystemType = {
  * 系统注册表配置
  * 映射系统 ID 到具体的系统实现
  */
-export const Registry: Record<string, any> = {
+export const Registry: Record<string, unknown> = {
     // --- Core Systems ---
     'time': TimeSystem,
     'input-sense': InputSenseSystem,
@@ -165,7 +165,7 @@ export const Registry: Record<string, any> = {
  * @param {...any} args 传递给构造函数的参数 (如果是类的话)
  * @returns {object} 系统对象
  */
-export function getSystem(id: string, ...args: any[]): any {
+export function getSystem<T = any>(id: string, ...args: unknown[]): T | null {
     const system = Registry[id];
     if (!system) {
         console.warn(`System with ID "${id}" not found in Registry.`);
@@ -173,12 +173,13 @@ export function getSystem(id: string, ...args: any[]): any {
     }
 
     // 如果系统是一个类，则实例化它
-    if (typeof system === 'function' && system.prototype && system.prototype.constructor) {
-        return new system(...args);
+    const maybeConstructor = system as { prototype?: { constructor?: unknown } };
+    if (typeof system === 'function' && 'prototype' in system && maybeConstructor.prototype?.constructor) {
+        return new (system as new (...ctorArgs: unknown[]) => T)(...args);
     }
 
     // 否则直接返回该对象
-    return system;
+    return system as T;
 }
 
 /**
@@ -186,6 +187,6 @@ export function getSystem(id: string, ...args: any[]): any {
  * @param {string[]} ids 系统 ID 数组
  * @returns {object[]} 系统对象数组
  */
-export function getSystems(ids: string[]): any[] {
-    return ids.map(id => getSystem(id)).filter(s => s !== null);
+export function getSystems<T = any>(ids: string[]): T[] {
+    return ids.map(id => getSystem<T>(id)).filter((s): s is T => s !== null);
 }

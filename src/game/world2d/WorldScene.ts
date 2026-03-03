@@ -5,34 +5,50 @@ import { GlobalEntity } from '@entities'
 import { editorManager } from '../editor/core/EditorCore'
 import { createLogger } from '@/utils/logger'
 import { GameEngine } from './GameEngine'
-import { Renderer2D } from './Renderer2D'
 import { SceneManager } from './SceneManager'
 import { GameManager } from './GameManager'
 import type { SystemContextBase } from '@definitions/interface/SystemContext'
 import { setFrameContext, setHostState, setRuntimeService, setSceneState } from './bridge/ExternalBridge'
-import { buildWorldSceneSystems } from './WorldScenePipelineConfig'
+import { buildWorldSceneSystems, type WorldSceneSystems } from './WorldScenePipelineConfig'
 import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy'
 import { ISystem } from '@definitions/interface/ISystem'
+import { RenderPipeline } from './render/pipeline'
+import type { CameraControllerLike, RenderContext } from './render/core'
 
 const logger = createLogger('WorldScene')
 
 export interface StateProvider {
     gameManager?: GameManager;
     sceneManager?: SceneManager;
-    worldStore?: any;
-    [key: string]: any;
+    worldStore?: unknown;
+    [key: string]: unknown;
 }
+
+type MapDataLike = {
+    id?: string;
+    width?: number;
+    height?: number;
+    [key: string]: unknown;
+};
+
+type PlayerLike = {
+    transform?: {
+        x: number;
+        y: number;
+    };
+};
 
 export class WorldScene {
     engine: GameEngine;
     stateProvider: StateProvider;
-    mapData: any;
+    mapData: MapDataLike | null;
     entryId: string;
-    systems: any; // Complex system structure
+    systems: WorldSceneSystems | null;
     lastDt: number;
-    player: any;
+    player: PlayerLike | null;
     editMode: boolean;
     isTransitioning: boolean = false;
+    renderPipeline: RenderPipeline | null;
 
     /**
      * @param {GameEngine} engine 
@@ -43,8 +59,8 @@ export class WorldScene {
      */
     constructor(
         engine: GameEngine,
-        initialState: any = null,
-        mapData: any = null,
+        initialState: unknown = null,
+        mapData: MapDataLike | null = null,
         entryId: string = 'default',
         stateProvider: StateProvider | null = null
     ) {
@@ -59,9 +75,10 @@ export class WorldScene {
 
         // 系统顺序与阶段由配置对象声明，WorldScene 只负责执行
         this.systems = buildWorldSceneSystems(getSystem)
+        this.renderPipeline = new RenderPipeline(this.systems.render)
 
         // 初始化 Environment System
-        this.systems.init.forEach((sys: any) => {
+        this.systems.init.forEach((sys) => {
             if (sys?.init) sys.init(this.mapData)
         })
 
@@ -84,7 +101,10 @@ export class WorldScene {
      * 对渲染管线按 LAYER 排序
      */
     _sortRenderPipeline() {
-        this.systems.render.sort((a: any, b: any) => (a?.LAYER || 0) - (b?.LAYER || 0))
+        if (!this.systems || !this.renderPipeline) return
+        this.renderPipeline.setPasses(this.systems.render)
+        this.renderPipeline.sort()
+        this.systems.render = this.renderPipeline.getPasses()
     }
 
     _initGlobalEntities() {
@@ -100,8 +120,9 @@ export class WorldScene {
     /**
      * Map Loaded Callback
      */
-    onMapLoaded(mapData: any) {
-        this.systems.init.forEach((sys: any) => {
+    onMapLoaded(mapData: MapDataLike | null) {
+        if (!this.systems) return
+        this.systems.init.forEach((sys) => {
             if (sys?.init) sys.init(mapData)
         })
 
@@ -112,11 +133,13 @@ export class WorldScene {
      * 进入编辑模式
      */
     enterEditMode() {
+        if (!this.systems) return
+        const systems = this.systems
         this.editMode = true
         // 将编辑器渲染系统加入主管线
-        this.systems.editor.render.forEach((sys: any) => {
-            if (!this.systems.render.includes(sys)) {
-                this.systems.render.push(sys)
+        systems.editor.render.forEach((sys) => {
+            if (!systems.render.includes(sys)) {
+                systems.render.push(sys)
             }
         })
         this._sortRenderPipeline()
@@ -126,12 +149,17 @@ export class WorldScene {
      * 退出编辑模式
      */
     exitEditMode() {
+        if (!this.systems) return
+        const systems = this.systems
         this.editMode = false
         // 从主管线移除编辑器渲染系统
-        this.systems.render = this.systems.render.filter((s: any) => !this.systems.editor.render.includes(s))
+        systems.render = systems.render.filter((s) => !systems.editor.render.includes(s))
+        this._sortRenderPipeline()
 
         // 重置交互状态
-        const editorInteraction = this.systems.editor.interaction[0]
+        const editorInteraction = systems.editor.interaction[0] as
+            | (ISystem & { selectedEntity?: unknown; isDragging?: boolean })
+            | undefined
         if (editorInteraction) {
             editorInteraction.selectedEntity = null
             editorInteraction.isDragging = false
@@ -172,10 +200,8 @@ export class WorldScene {
         this.mapData = null
 
         // 2. 清理系统
-        this.systems.logic = null
-        this.systems.render = null
-        this.systems.editor = null
         this.systems = null
+        this.renderPipeline = null
 
         // 3. 清理 ECS 世界 (如果这是当前唯一的场景)
         clearWorld()
@@ -185,6 +211,8 @@ export class WorldScene {
      * @param {number} dt 
      */
     update(dt: number) {
+        if (!this.systems) return
+        const systems = this.systems
         this.lastDt = dt
         const gameManager = this.stateProvider.gameManager
         const sceneManager = this.stateProvider.sceneManager
@@ -209,8 +237,9 @@ export class WorldScene {
             isPaused: isPaused,
             isInitialized: true
         })
+        const mapId = typeof this.mapData?.id === 'string' ? this.mapData.id : undefined
         setSceneState({
-            mapId: this.mapData?.id,
+            mapId,
             entryId: this.entryId,
             editMode: this.editMode,
             isTransitioning: this.isTransitioning,
@@ -263,10 +292,10 @@ export class WorldScene {
         // --- 1. 始终运行的系统 (如输入感知、渲染准备) ---
         // 注意：InputSense 即使是 Always，在逻辑上也不应该在暂停时产生 Game Play 输入，
         // 但 InputSense 本身只负责"读取硬件状态"，是否响应由 Intent 系统决定 (RunningOnly)。
-        this.systems.always.visualRender && executeSystem(this.systems.always.visualRender);
-        this.systems.always.time && executeSystem(this.systems.always.time);
-        this.systems.always.inputSense && executeSystem(this.systems.always.inputSense);
-        this.systems.always.execute && executeSystem(this.systems.always.execute); // Command 处理
+        systems.always.visualRender && executeSystem(systems.always.visualRender);
+        systems.always.time && executeSystem(systems.always.time);
+        systems.always.inputSense && executeSystem(systems.always.inputSense);
+        systems.always.execute && executeSystem(systems.always.execute); // Command 处理
 
         // 浮动文字队列更新 (非 System，直接调用)
         if (!isPaused && !isHardPause) {
@@ -275,23 +304,23 @@ export class WorldScene {
 
         // --- 2. 编辑器系统 ---
         // executeSystem 内部会检查 EditorOnly 和 this.editMode
-        this.systems.editor.sense.forEach(executeSystem);
-        this.systems.editor.interaction.forEach(executeSystem);
+        systems.editor.sense.forEach(executeSystem);
+        systems.editor.interaction.forEach(executeSystem);
 
         // --- 3. 游戏核心逻辑 ---
         // 依次执行各个阶段，executeSystem 会自动处理 RunningOnly 过滤
-        this.systems.logicPhaseOrder.forEach((phase: any) => {
-            this.systems.logic[phase].forEach(executeSystem)
+        systems.logicPhaseOrder.forEach((phase) => {
+            systems.logic[phase].forEach(executeSystem)
         })
 
-        this.systems.logic.lifecycle.forEach(executeSystem);
-        this.systems.logic.execution.forEach(executeSystem);
+        systems.logic.lifecycle.forEach(executeSystem);
+        systems.logic.execution.forEach(executeSystem);
 
         // --- 4. 物理与相机 ---
         // 准备物理上下文 (包含 mapBounds)
         const sceneConfigEntity = world.with('sceneConfig').first;
-        const mapWidth = sceneConfigEntity ? sceneConfigEntity.sceneConfig.width : (this.mapData.width || 800);
-        const mapHeight = sceneConfigEntity ? sceneConfigEntity.sceneConfig.height : (this.mapData.height || 600);
+        const mapWidth = sceneConfigEntity ? sceneConfigEntity.sceneConfig.width : (Number(this.mapData?.width) || 800);
+        const mapHeight = sceneConfigEntity ? sceneConfigEntity.sceneConfig.height : (Number(this.mapData?.height) || 600);
         
         const physicsOptions = {
             ...baseCtx,
@@ -302,7 +331,7 @@ export class WorldScene {
         setFrameContext({ mapBounds: physicsOptions.mapBounds })
 
         // 执行物理系统
-        this.systems.logic.physics.forEach((system: ISystem) => {
+        systems.logic.physics.forEach((system: ISystem) => {
              // 物理系统需要特殊的 context (包含 mapBounds)
              // 我们手动检查 policy，然后调用 update
              if (!system.update) return;
@@ -319,11 +348,11 @@ export class WorldScene {
             viewportHeight: this.engine.height,
             mapBounds: { width: mapWidth, height: mapHeight }
         };
-        if (this.systems.always.camera) {
+        if (systems.always.camera) {
              // 手动调用以传递 cameraCtx
-             const sys = this.systems.always.camera;
+             const sys = systems.always.camera;
              // Camera is Always run, unless HardStopped (unlikely)
-             sys.update(dt, cameraCtx);
+             if (sys.update) sys.update(dt, cameraCtx);
         }
 
         // 6. 场景管理 (始终运行以处理切换请求)
@@ -345,21 +374,15 @@ export class WorldScene {
         }
     }
 
-    /**
-     * @param {Renderer2D} renderer 
-     */
-    draw(renderer: Renderer2D) {
+    draw(renderer: RenderContext & CameraControllerLike) {
+        if (!this.renderPipeline) return
         // 同步相机状态到渲染器
         const globalEntity = world.with('globalManager').first
         if (globalEntity && globalEntity.camera) {
             renderer.setCamera(globalEntity.camera.x, globalEntity.camera.y)
         }
 
-        // 自动渲染管线驱动
-        for (const system of this.systems.render) {
-            if (system.draw) {
-                system.draw(renderer)
-            }
-        }
+        // 构造渲染上下文并交由统一管线执行
+        this.renderPipeline.render(renderer)
     }
 }

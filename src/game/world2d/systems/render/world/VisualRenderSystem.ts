@@ -3,6 +3,9 @@ import { SpriteMode } from '@world2d/definitions/enums/SpriteMode';
 import { createLogger } from '@/utils/logger';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreenXY } from '../../../render/core/CameraTransform';
+import { isCircleVisible, isPointVisible, isRectVisible } from '../../../render/core/Culling';
+import type { RenderContext, SpriteLike, TransformLike } from '../../../render/core/RenderTypes';
 
 const logger = createLogger('VisualRenderSystem');
 
@@ -15,12 +18,12 @@ import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
  */
 export const VisualRenderSystem: ISystem & {
     LAYER: number;
-    drawVisual(renderer: any, entity: IEntity): void;
-    _drawRect(ctx: any, sprite: any, entity: IEntity, x: number, y: number): void;
-    _drawCircle(ctx: any, sprite: any, x: number, y: number): void;
-    _drawText(ctx: any, sprite: any, x: number, y: number): void;
-    _drawRepeat(renderer: any, sprite: any, entity: IEntity, x: number, y: number): void;
-    _drawTexture(renderer: any, sprite: any, entity: IEntity, transform: any): void;
+    drawVisual(renderer: RenderContext, entity: IEntity): void;
+    _drawRect(ctx: CanvasRenderingContext2D, sprite: SpriteLike, entity: IEntity, x: number, y: number): void;
+    _drawCircle(ctx: CanvasRenderingContext2D, sprite: SpriteLike, x: number, y: number): void;
+    _drawText(ctx: CanvasRenderingContext2D, sprite: SpriteLike, x: number, y: number): void;
+    _drawRepeat(renderer: RenderContext, sprite: SpriteLike, entity: IEntity, x: number, y: number): void;
+    _drawTexture(renderer: RenderContext, sprite: SpriteLike, entity: IEntity, transform: TransformLike): void;
 } = {
     name: 'visual-render',
     executionPolicy: ExecutionPolicy.Always,
@@ -33,7 +36,7 @@ export const VisualRenderSystem: ISystem & {
         // 目前暂无实时更新逻辑 (如动画更新已移除)
     },
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         // 1. 收集实体
         const entities: IEntity[] = [];
         const renderEntities = world.with('transform');
@@ -61,6 +64,7 @@ export const VisualRenderSystem: ISystem & {
         if (!camera) return;
 
         const cullMargin = 100;
+        const viewport = { width: viewW, height: viewH };
         const isVisible = (entity: IEntity) => {
             const pos = entity.transform;
             if (!pos) return false;
@@ -70,33 +74,15 @@ export const VisualRenderSystem: ISystem & {
 
             if (sprite) {
                 if (sprite.mode === SpriteMode.CIRCLE && sprite.radius) {
-                    const r = sprite.radius;
-                    return !(
-                        baseX + r < camera.x - cullMargin ||
-                        baseX - r > camera.x + viewW + cullMargin ||
-                        baseY + r < camera.y - cullMargin ||
-                        baseY - r > camera.y + viewH + cullMargin
-                    );
+                    return isCircleVisible(baseX, baseY, sprite.radius, camera, viewport, cullMargin);
                 }
 
                 if (sprite.width && sprite.height) {
-                    const left = baseX;
-                    const right = baseX + sprite.width;
-                    const top = baseY;
-                    const bottom = baseY + sprite.height;
-                    return !(
-                        right < camera.x - cullMargin ||
-                        left > camera.x + viewW + cullMargin ||
-                        bottom < camera.y - cullMargin ||
-                        top > camera.y + viewH + cullMargin
-                    );
+                    return isRectVisible(baseX, baseY, sprite.width, sprite.height, camera, viewport, cullMargin);
                 }
             }
 
-            return !(baseX < camera.x - cullMargin ||
-                baseX > camera.x + viewW + cullMargin ||
-                baseY < camera.y - cullMargin ||
-                baseY > camera.y + viewH + cullMargin);
+            return isPointVisible(baseX, baseY, camera, viewport, cullMargin);
         };
 
         for (const entity of entities) {
@@ -105,7 +91,7 @@ export const VisualRenderSystem: ISystem & {
         }
     },
 
-    drawVisual(renderer: any, entity: IEntity) {
+    drawVisual(renderer: RenderContext, entity: IEntity) {
         const sprite = entity.sprite || entity.visual;
         const { transform } = entity;
 
@@ -113,8 +99,13 @@ export const VisualRenderSystem: ISystem & {
 
         const ctx = renderer.ctx;
         const camera = renderer.camera;
-        const drawX = transform.x + (sprite.offsetX || 0) - (camera?.x || 0);
-        const drawY = transform.y + (sprite.offsetY || 0) - (camera?.y || 0);
+        const screenPos = worldToScreenXY(
+            transform.x + (sprite.offsetX || 0),
+            transform.y + (sprite.offsetY || 0),
+            camera || { x: 0, y: 0 }
+        );
+        const drawX = screenPos.x;
+        const drawY = screenPos.y;
 
         ctx.save();
         ctx.globalAlpha = sprite.opacity !== undefined ? sprite.opacity : 1.0;
@@ -147,20 +138,21 @@ export const VisualRenderSystem: ISystem & {
         ctx.restore();
     },
 
-    _drawRect(ctx: any, sprite: any, entity: IEntity, x: number, y: number) {
+    _drawRect(ctx: CanvasRenderingContext2D, sprite: SpriteLike, entity: IEntity, x: number, y: number) {
         ctx.fillStyle = sprite.tint || 'magenta';
         ctx.fillRect(x, y, sprite.width || 100, sprite.height || 100);
     },
 
-    _drawCircle(ctx: any, sprite: any, x: number, y: number) {
-        const radius = sprite.radius || sprite.width / 2 || 10;
+    _drawCircle(ctx: CanvasRenderingContext2D, sprite: SpriteLike, x: number, y: number) {
+        const width = sprite.width ?? 0;
+        const radius = sprite.radius || width / 2 || 10;
         ctx.fillStyle = sprite.tint || 'magenta';
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
     },
 
-    _drawText(ctx: any, sprite: any, x: number, y: number) {
+    _drawText(ctx: CanvasRenderingContext2D, sprite: SpriteLike, x: number, y: number) {
         if (!sprite.text) return;
         ctx.fillStyle = sprite.tint || 'white';
         ctx.font = `${sprite.fontSize || 16}px ${sprite.fontFamily || 'Arial'}`;
@@ -168,7 +160,7 @@ export const VisualRenderSystem: ISystem & {
         ctx.fillText(sprite.text, x, y);
     },
 
-    _drawRepeat(renderer: any, sprite: any, entity: IEntity, x: number, y: number) {
+    _drawRepeat(renderer: RenderContext, sprite: SpriteLike, entity: IEntity, x: number, y: number) {
         const ctx = renderer.ctx;
         const width = sprite.width || 100;
         const height = sprite.height || 100;
@@ -209,7 +201,7 @@ export const VisualRenderSystem: ISystem & {
         }
     },
 
-    _drawTexture(renderer: any, sprite: any, entity: IEntity, transform: any) {
+    _drawTexture(renderer: RenderContext, sprite: SpriteLike, entity: IEntity, transform: TransformLike) {
         if (!sprite.id) return;
 
         const texture = renderer.assetManager.getTexture(sprite.id);
@@ -227,6 +219,7 @@ export const VisualRenderSystem: ISystem & {
         
         // 简化版：直接绘制整张贴图，默认居中对齐
         const spriteDef = {
+            imageId: sprite.id || '',
             sx: 0, sy: 0, 
             sw: texture.width, sh: texture.height,
             ax: 0.5, ay: 0.5

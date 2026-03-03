@@ -2,6 +2,9 @@ import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ShapeType } from '@world2d/definitions/enums/Shape';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreenXY } from '../../../render/core/CameraTransform';
+import { DebugPalette } from '../../../render/styles/DebugPalette';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
 import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
 
@@ -15,11 +18,11 @@ export const DetectAreaRenderSystem: ISystem & { LAYER: number } = {
     // 定义渲染层级 (Z-Index) - Debug 层通常最高
     LAYER: 100,
 
-    init(mapData?: any) {
+    init(mapData?: unknown) {
         // 保留接口一致性，但不再依赖 mapData 绘制
     },
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         // Defensive check
         if (!renderer || !renderer.ctx) return;
 
@@ -35,27 +38,32 @@ export const DetectAreaRenderSystem: ISystem & { LAYER: number } = {
 
             // 计算中心点 (加上偏移) - 并转换为屏幕坐标
             // [UPDATED] 从 shape 获取偏移
-            const centerX = (transform.x + (shape.offsetX || 0)) - camera.x;
-            const centerY = (transform.y + (shape.offsetY || 0)) - camera.y;
+            const center = worldToScreenXY(
+                transform.x + (shape.offsetX || 0),
+                transform.y + (shape.offsetY || 0),
+                camera
+            );
+            const centerX = center.x;
+            const centerY = center.y;
 
             // 设置绘制样式
             // 根据是否有检测结果改变颜色 (如果有 detected result 则变红，否则保持默认)
             const isTriggered = detectArea.results && Array.isArray(detectArea.results) && detectArea.results.length > 0;
 
             if (isTriggered) {
-                ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)'; // red-500
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+                ctx.strokeStyle = DebugPalette.detectArea.triggeredStroke;
+                ctx.fillStyle = DebugPalette.detectArea.triggeredFill;
             } else if (detectArea.debugColor) {
                 // 优先使用组件定义的调试颜色
                 ctx.strokeStyle = detectArea.debugColor;
                 // 自动处理填充色透明度
                 ctx.fillStyle = detectArea.debugColor.replace(/[\d.]+\)$/g, '0.1)');
             } else {
-                ctx.strokeStyle = 'rgba(34, 211, 238, 0.6)'; // cyan-400
-                ctx.fillStyle = 'rgba(34, 211, 238, 0.1)';
+                ctx.strokeStyle = DebugPalette.detectArea.defaultStroke;
+                ctx.fillStyle = DebugPalette.detectArea.defaultFill;
             }
 
-            ctx.lineWidth = 1;
+            ctx.lineWidth = DebugPalette.detectArea.lineWidth;
 
             // [UPDATED] 从 shape 获取几何信息
             if (shape.type === ShapeType.CIRCLE || shape.type === ShapeType.POINT) {

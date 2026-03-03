@@ -7,7 +7,7 @@ import { useGameStore } from '@/stores/game'
 import { dialoguesDb } from '@schema/dialogues'
 import { createLogger } from '@/utils/logger'
 import { editorManager } from '../editor/core/EditorCore'
-import { Renderer2D } from './Renderer2D'
+import type { CameraControllerLike, RenderDeviceLike } from './render/core'
 
 const logger = createLogger('GameManager')
 
@@ -342,7 +342,7 @@ export class GameManager {
         }
     }
 
-    draw(renderer: Renderer2D) {
+    draw(renderer: RenderDeviceLike & CameraControllerLike) {
         // Always draw world scene as background
         if (this.currentScene.value) {
             this.currentScene.value.draw(renderer)

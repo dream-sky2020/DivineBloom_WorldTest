@@ -1,11 +1,20 @@
 import { ISystem } from '@definitions/interface/ISystem';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
 /**
  * Editor Grid Render System
  * 负责在编辑模式下渲染参考网格
  * 层级：最高层 (Layer 1000)
  */
-export const EditorGridRenderSystem: ISystem & { LAYER: number; config: any } = {
+type GridRenderConfig = {
+    gridSize: number;
+    lineColor: string;
+    boldLineColor: string;
+    boldEvery: number;
+    show: boolean;
+};
+
+export const EditorGridRenderSystem: ISystem & { LAYER: number; config: GridRenderConfig } = {
     name: 'editor-grid-render',
     LAYER: 1000,
 
@@ -17,7 +26,7 @@ export const EditorGridRenderSystem: ISystem & { LAYER: number; config: any } = 
         show: true
     },
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         if (!this.config.show) return;
 
         const { ctx, camera, width, height } = renderer;

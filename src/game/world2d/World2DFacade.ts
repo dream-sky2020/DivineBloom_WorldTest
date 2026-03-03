@@ -16,6 +16,7 @@ import { ScenarioLoader } from './ScenarioLoader'
 import { entityTemplateRegistry } from '@definitions/internal/EntityTemplateRegistry'
 import { createLogger } from '@/utils/logger'
 import { getEntityId } from '@definitions/interface/IEntity'
+import { resolveWorld2DCommMode, type World2DCommMode } from './bridge/CommMode'
 import {
     clearHostRuntimeState as clearHostRuntimeStateBridge,
     drainCommands as drainExternalCommands,
@@ -28,6 +29,7 @@ import {
     getExternalState as getExternalStateSnapshot,
     getViewState as getViewStateSnapshot,
     registerStateSource as registerExternalStateSource,
+    setCommandInbox as setCommandInboxBridge,
     setFrameContext as setFrameContextPatch,
     setHostState as setHostStatePatch,
     setRuntimeService as setRuntimeServiceBridge,
@@ -40,6 +42,7 @@ import type {
     ExternalState,
     FrameContextState,
     HostState,
+    ICommandInbox,
     RuntimeServices,
     SceneState,
     ViewState,
@@ -50,6 +53,7 @@ export type {
     ExternalState,
     FrameContextState,
     HostState,
+    ICommandInbox,
     RuntimeServices,
     SceneState,
     ViewState,
@@ -58,15 +62,77 @@ export type {
 
 const logger = createLogger('World2DFacade')
 
+export interface RuntimeSnapshot {
+    timestamp: number;
+    reason: string;
+    commMode: World2DCommMode;
+    hostState: HostState;
+    sceneState: SceneState;
+    viewState: ViewState;
+    externalState: ExternalState;
+    debugInfo: Record<string, any> | null;
+}
+
 /**
  * World2D 统一外部接口类
  */
 class World2DFacade {
     _gameManager: typeof gameManager;
+    private runtimeSnapshotListeners = new Map<number, (snapshot: RuntimeSnapshot) => void>()
+    private runtimeSnapshotSeq = 0
 
     constructor() {
         // 内部管理器引用（不暴露给外部）
         this._gameManager = gameManager
+    }
+
+    private getCommMode(): World2DCommMode {
+        return resolveWorld2DCommMode()
+    }
+
+    private assertLocalApiAllowed(apiName: string) {
+        if (this.getCommMode() === 'remote-only') {
+            throw new Error(`[World2DFacade] ${apiName} is disabled in remote-only mode`)
+        }
+    }
+
+    private createRuntimeSnapshot(reason: string): RuntimeSnapshot {
+        let debugInfo: Record<string, any> | null = null
+        try {
+            debugInfo = this.getDebugInfo()
+        } catch {
+            debugInfo = null
+        }
+
+        return {
+            timestamp: Date.now(),
+            reason,
+            commMode: this.getCommMode(),
+            hostState: this.getHostState(),
+            sceneState: this.getSceneState(),
+            viewState: this.getViewState(),
+            externalState: this.getExternalState(),
+            debugInfo
+        }
+    }
+
+    private emitRuntimeSnapshot(reason: string) {
+        if (!this.runtimeSnapshotListeners.size) return
+        const snapshot = this.createRuntimeSnapshot(reason)
+        for (const [, listener] of this.runtimeSnapshotListeners) {
+            listener(snapshot)
+        }
+    }
+
+    subscribeRuntimeSnapshot(listener: (snapshot: RuntimeSnapshot) => void, emitInitial = true) {
+        const id = ++this.runtimeSnapshotSeq
+        this.runtimeSnapshotListeners.set(id, listener)
+        if (emitInitial) {
+            listener(this.createRuntimeSnapshot('subscribe'))
+        }
+        return () => {
+            this.runtimeSnapshotListeners.delete(id)
+        }
     }
 
     // ==================== 生命周期管理 ====================
@@ -85,6 +151,7 @@ class World2DFacade {
             system: this._gameManager.state.system,
             isPaused: this._gameManager.state.isPaused
         })
+        this.emitRuntimeSnapshot('init')
     }
 
     /**
@@ -111,6 +178,7 @@ class World2DFacade {
      */
     pause() {
         this._gameManager.pause()
+        this.emitRuntimeSnapshot('pause')
     }
 
     /**
@@ -119,6 +187,7 @@ class World2DFacade {
      */
     resume() {
         this._gameManager.resume()
+        this.emitRuntimeSnapshot('resume')
     }
 
     /**
@@ -129,6 +198,7 @@ class World2DFacade {
         logger.info('Destroying World2D system')
         this._gameManager.destroy()
         clearHostRuntimeStateBridge()
+        this.emitRuntimeSnapshot('destroy')
     }
 
     // ==================== 场景管理 ====================
@@ -239,7 +309,9 @@ class World2DFacade {
      * 注册外部状态源（UI/Store）
      */
     registerStateSource(sourceId: string, getter: () => Partial<ExternalState> | null | undefined) {
+        this.assertLocalApiAllowed('registerStateSource')
         registerExternalStateSource(sourceId, getter)
+        this.emitRuntimeSnapshot('register-state-source')
     }
 
     /**
@@ -247,13 +319,16 @@ class World2DFacade {
      */
     unregisterStateSource(sourceId: string) {
         unregisterExternalStateSource(sourceId)
+        this.emitRuntimeSnapshot('unregister-state-source')
     }
 
     /**
      * 直接写入外部输入态（增量）
      */
     setExternalState(patch: Partial<ExternalState>) {
+        this.assertLocalApiAllowed('setExternalState')
         setExternalStatePatch(patch)
+        this.emitRuntimeSnapshot('set-external-state')
     }
 
     /**
@@ -267,7 +342,17 @@ class World2DFacade {
      * 写入强动作命令（外部入口）
      */
     enqueueCommand(cmd: World2DCommand) {
+        this.assertLocalApiAllowed('enqueueCommand')
         enqueueExternalCommand(cmd)
+        this.emitRuntimeSnapshot('enqueue-command')
+    }
+
+    /**
+     * 网关命令入口（不受 remote-only 限制）
+     */
+    enqueueGatewayCommand(cmd: World2DCommand) {
+        enqueueExternalCommand(cmd)
+        this.emitRuntimeSnapshot('enqueue-gateway-command')
     }
 
     /**
@@ -275,6 +360,13 @@ class World2DFacade {
      */
     drainCommands(maxPerFrame: number = Number.POSITIVE_INFINITY) {
         return drainExternalCommands(maxPerFrame)
+    }
+
+    /**
+     * 设置命令收件通道（用于替换默认内存队列）
+     */
+    setCommandInbox(inbox: ICommandInbox | null | undefined) {
+        setCommandInboxBridge(inbox)
     }
 
     /**
@@ -289,6 +381,7 @@ class World2DFacade {
      */
     setViewState(patch: Partial<ViewState>) {
         setViewStatePatch(patch)
+        this.emitRuntimeSnapshot('set-view-state')
     }
 
     /**
@@ -296,6 +389,7 @@ class World2DFacade {
      */
     setHostState(patch: Partial<HostState>) {
         setHostStatePatch(patch)
+        this.emitRuntimeSnapshot('set-host-state')
     }
 
     /**
@@ -310,6 +404,7 @@ class World2DFacade {
      */
     setSceneState(patch: Partial<SceneState>) {
         setSceneStatePatch(patch)
+        this.emitRuntimeSnapshot('set-scene-state')
     }
 
     /**

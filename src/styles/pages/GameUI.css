@@ -167,6 +167,11 @@
     contain: strict;
 }
 
+.canvas-container.immersive-mode {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
 .layout-spacer {
     flex: 1;
     min-width: 0;
@@ -189,6 +194,12 @@
     font-family: var(--font-main);
     color: #fff;
     contain: layout size;
+}
+
+#game-canvas.fullscreen-canvas {
+    width: 100%;
+    height: 100%;
+    transform: none !important;
 }
 
 /* Global Canvas (The Actual WebGL/2D Canvas) */

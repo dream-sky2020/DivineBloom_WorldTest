@@ -1,6 +1,9 @@
 import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreenXY } from '../../../render/core/CameraTransform';
+import { DebugPalette } from '../../../render/styles/DebugPalette';
+import type { CameraLike, RenderContext } from '../../../render/core/RenderTypes';
 
 /**
  * Portal Debug Render System
@@ -9,18 +12,18 @@ import { IEntity } from '@definitions/interface/IEntity';
  */
 export const PortalDebugRenderSystem: ISystem & {
     LAYER: number;
-    _drawPortalAreas(ctx: any, camera: any): void;
-    _drawDestinations(ctx: any, camera: any): void;
-    _drawPortalConnections(ctx: any, camera: any): void;
+    _drawPortalAreas(ctx: CanvasRenderingContext2D, camera: CameraLike): void;
+    _drawDestinations(ctx: CanvasRenderingContext2D, camera: CameraLike): void;
+    _drawPortalConnections(ctx: CanvasRenderingContext2D, camera: CameraLike): void;
 } = {
     name: 'portal-debug-render',
     LAYER: 105,
 
-    init(mapData?: any) {
+    init(mapData?: unknown) {
         // 保留接口
     },
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         if (!renderer || !renderer.ctx) return;
 
         const ctx = renderer.ctx;
@@ -39,7 +42,7 @@ export const PortalDebugRenderSystem: ISystem & {
     /**
      * 渲染传送区域（portal sensor shape）
      */
-    _drawPortalAreas(ctx: any, camera: any) {
+    _drawPortalAreas(ctx: CanvasRenderingContext2D, camera: CameraLike) {
         // 以 portalDetect 为准绘制传送区域，和 PortalDetectSenseSystem 对齐
         const detectors = world.with('portalDetect', 'shape', 'transform');
         for (const entity of detectors) {
@@ -47,15 +50,20 @@ export const PortalDebugRenderSystem: ISystem & {
             const { shape, transform } = e;
             if (!shape || !transform) continue;
 
-            const centerX = (transform.x + (shape.offsetX || 0)) - camera.x;
-            const centerY = (transform.y + (shape.offsetY || 0)) - camera.y;
+            const center = worldToScreenXY(
+                transform.x + (shape.offsetX || 0),
+                transform.y + (shape.offsetY || 0),
+                camera
+            );
+            const centerX = center.x;
+            const centerY = center.y;
             const isTriggered = !!(e.portalDetect?.results && e.portalDetect.results.length > 0);
 
             ctx.save();
             // 高对比调试色：触发=红，未触发=青，避免紫色系不易分辨
-            ctx.strokeStyle = isTriggered ? '#ff1f45' : '#00e5ff';
-            ctx.fillStyle = isTriggered ? 'rgba(255, 31, 69, 0.35)' : 'rgba(0, 229, 255, 0.26)';
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = isTriggered ? DebugPalette.portal.triggered : DebugPalette.portal.idle;
+            ctx.fillStyle = isTriggered ? DebugPalette.portal.triggeredFill : DebugPalette.portal.idleFill;
+            ctx.lineWidth = DebugPalette.portal.destinationStrokeWidth;
             ctx.setLineDash([]);
 
             // AABB / OBB
@@ -92,7 +100,7 @@ export const PortalDebugRenderSystem: ISystem & {
     /**
      * 渲染所有目的地实体标记
      */
-    _drawDestinations(ctx: any, camera: any) {
+    _drawDestinations(ctx: CanvasRenderingContext2D, camera: CameraLike) {
         // 查询所有目的地实体
         const destinations = world.with('destinationId', 'transform');
         for (const dest of destinations) {
@@ -100,21 +108,22 @@ export const PortalDebugRenderSystem: ISystem & {
             const { transform, visual, destinationId, name } = e;
             if (!transform) continue;
 
-            const x = transform.x - camera.x;
-            const y = transform.y - camera.y;
+            const screenPos = worldToScreenXY(transform.x, transform.y, camera);
+            const x = screenPos.x;
+            const y = screenPos.y;
 
             // 目的地统一高亮黄，优先可读性；不再受原 visual 偏紫配色影响
-            const color = '#ffd400';
+            const color = DebugPalette.portal.destinationColor;
             const size = visual?.size || 20;
 
             ctx.save();
             // 绘制目的地标记
             ctx.beginPath();
             ctx.arc(x, y, size / 2, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 212, 0, 0.32)';
+            ctx.fillStyle = DebugPalette.portal.destinationFill;
             ctx.fill();
             ctx.strokeStyle = color;
-            ctx.lineWidth = 3;
+            ctx.lineWidth = DebugPalette.portal.destinationStrokeWidth;
             ctx.stroke();
 
             // 绘制中心十字
@@ -126,8 +135,8 @@ export const PortalDebugRenderSystem: ISystem & {
 
             // 绘制文字
             // 黑边+黄字，亮背景下也清晰
-            ctx.strokeStyle = '#111111';
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = DebugPalette.portal.destinationTextOutline;
+            ctx.lineWidth = DebugPalette.portal.destinationStrokeWidth;
             ctx.fillStyle = color;
             ctx.font = 'bold 12px Arial';
             ctx.textAlign = 'center';
@@ -140,7 +149,7 @@ export const PortalDebugRenderSystem: ISystem & {
     /**
      * 渲染从传送门到其目的地的连接线
      */
-    _drawPortalConnections(ctx: any, camera: any) {
+    _drawPortalConnections(ctx: CanvasRenderingContext2D, camera: CameraLike) {
         // 查询所有带有 Portal 数据和位置的实体（新结构下通常是 sensor 子节点）
         const portals = world.with('portal', 'transform');
         // 查询所有目的地实体，用于连接线终点查找
@@ -163,8 +172,8 @@ export const PortalDebugRenderSystem: ISystem & {
             const isTriggered = !!(e.portalDetect?.results && e.portalDetect.results.length > 0);
             // 连接线：触发中=红，destinationId=绿，坐标传送=橙
             const debugColor = isTriggered
-                ? '#ff1f45'
-                : (destinationId != null ? '#22c55e' : '#ff8a00');
+                ? DebugPalette.portal.triggered
+                : (destinationId != null ? DebugPalette.portal.lineToDestination : DebugPalette.portal.lineToCoord);
 
             // 2. 确定终点
             let destX: number | undefined;
@@ -184,23 +193,27 @@ export const PortalDebugRenderSystem: ISystem & {
             if (destX == null || destY == null) continue;
 
             // 3. 绘制连接线
-            const sX = startX - camera.x, sY = startY - camera.y;
-            const tX = destX - camera.x, tY = destY - camera.y;
+            const screenStart = worldToScreenXY(startX, startY, camera);
+            const screenTarget = worldToScreenXY(destX, destY, camera);
+            const sX = screenStart.x;
+            const sY = screenStart.y;
+            const tX = screenTarget.x;
+            const tY = screenTarget.y;
 
             ctx.save();
             ctx.beginPath();
-            ctx.setLineDash([8, 4]);
+            ctx.setLineDash([...DebugPalette.portal.lineDash]);
             ctx.moveTo(sX, sY);
             ctx.lineTo(tX, tY);
 
             // 优先使用实体自带的 debugColor，否则使用默认紫色
             ctx.strokeStyle = debugColor;
-            ctx.lineWidth = 3;
+            ctx.lineWidth = DebugPalette.portal.destinationStrokeWidth;
             ctx.stroke();
 
             // 4. 如果是旧式坐标传送，在终点画个 X
             if (!destinationId) {
-                const xs = 10;
+                const xs = DebugPalette.portal.crossSize;
                 ctx.setLineDash([]);
                 ctx.beginPath();
                 ctx.moveTo(tX - xs, tY - xs); ctx.lineTo(tX + xs, tY + xs);

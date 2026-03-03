@@ -1,3 +1,5 @@
+import { InMemoryCommandInbox, type ICommandInbox } from '../bridge/CommandInbox'
+
 export interface ExternalState {
     [key: string]: any;
 }
@@ -68,7 +70,7 @@ export class WorldChannelRuntime {
     private sceneState: SceneState = {}
     private frameContext: FrameContextState = {}
     private services: RuntimeServices = {}
-    private readonly commandQueue: World2DCommand[] = []
+    private commandInbox: ICommandInbox = new InMemoryCommandInbox()
 
     registerStateSource(sourceId: string, getter: StateSourceGetter) {
         if (!sourceId || typeof getter !== 'function') return
@@ -96,20 +98,19 @@ export class WorldChannelRuntime {
     }
 
     enqueueCommand(cmd: World2DCommand) {
-        if (!cmd || !cmd.type) return
-        this.commandQueue.push({
-            ...cmd,
-            meta: {
-                timestamp: Date.now(),
-                ...(cmd.meta || {})
-            }
-        })
+        this.commandInbox.push(cmd)
     }
 
     drainCommands(maxPerFrame: number = Number.POSITIVE_INFINITY) {
-        if (!this.commandQueue.length) return []
-        const count = Math.min(this.commandQueue.length, Math.max(0, maxPerFrame))
-        return this.commandQueue.splice(0, count)
+        return this.commandInbox.drain(maxPerFrame)
+    }
+
+    setCommandInbox(inbox: ICommandInbox | null | undefined) {
+        if (!inbox) {
+            this.commandInbox = new InMemoryCommandInbox()
+            return
+        }
+        this.commandInbox = inbox
     }
 
     getViewState() {

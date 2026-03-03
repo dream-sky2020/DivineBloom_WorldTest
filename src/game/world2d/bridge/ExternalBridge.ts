@@ -8,6 +8,7 @@ import {
     type ViewState,
     type World2DCommand
 } from '../runtime/WorldChannelRuntime'
+import type { ICommandInbox } from './CommandInbox'
 
 export type {
     ExternalState,
@@ -18,6 +19,7 @@ export type {
     ViewState,
     World2DCommand
 } from '../runtime/WorldChannelRuntime'
+export type { ICommandInbox } from './CommandInbox'
 
 type StateSourceGetter = () => Partial<ExternalState> | null | undefined
 
@@ -39,6 +41,10 @@ export function getExternalState() {
 
 export function enqueueCommand(cmd: World2DCommand) {
     worldChannelRuntime.enqueueCommand(cmd)
+}
+
+export function setCommandInbox(inbox: ICommandInbox | null | undefined) {
+    worldChannelRuntime.setCommandInbox(inbox)
 }
 
 export function drainCommands(maxPerFrame: number = Number.POSITIVE_INFINITY) {

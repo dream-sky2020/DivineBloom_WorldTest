@@ -1,22 +1,31 @@
 import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreen } from '../../../render/core/CameraTransform';
+import type { XY } from '../../../render/core/RenderTypes';
+import { DebugPalette } from '../../../render/styles/DebugPalette';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
-type XY = { x: number; y: number };
+type EntityWithTargetCandidates = {
+    motion?: { runtime?: { targetPos?: Partial<XY> } };
+    aiState?: { targetPos?: Partial<XY> };
+    targetPos?: Partial<XY>;
+    target?: { transform?: Partial<XY> };
+};
 
-function toNumber(value: any, fallback: number): number {
+function toNumber(value: unknown, fallback: number): number {
     const n = Number(value);
     return Number.isFinite(n) ? n : fallback;
 }
 
-function getSelfPosition(entity: any): XY {
+function getSelfPosition(entity: Partial<{ transform: Partial<XY> }>): XY {
     return {
         x: toNumber(entity?.transform?.x, 0),
         y: toNumber(entity?.transform?.y, 0)
     };
 }
 
-function getTargetPosition(entity: any, fallback: XY): XY {
+function getTargetPosition(entity: EntityWithTargetCandidates, fallback: XY): XY {
     const candidates = [
         entity?.motion?.runtime?.targetPos,
         entity?.aiState?.targetPos,
@@ -41,7 +50,7 @@ export const SpawnDebugRenderSystem: ISystem & { LAYER: number } = {
     name: 'spawn-debug-render',
     LAYER: 104,
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         if (!renderer || !renderer.ctx) return;
 
         const ctx = renderer.ctx;
@@ -64,14 +73,15 @@ export const SpawnDebugRenderSystem: ISystem & { LAYER: number } = {
                         ? getTargetPosition(e, selfPos)
                         : selfPos;
 
-            const sx = center.x - camera.x;
-            const sy = center.y - camera.y;
+            const screenCenter = worldToScreen(center, camera);
+            const sx = screenCenter.x;
+            const sy = screenCenter.y;
 
             ctx.save();
-            ctx.strokeStyle = spawn.enabled ? 'rgba(34, 197, 94, 0.9)' : 'rgba(107, 114, 128, 0.9)';
-            ctx.fillStyle = spawn.enabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(107, 114, 128, 0.16)';
+            ctx.strokeStyle = spawn.enabled ? DebugPalette.spawn.enabledStroke : DebugPalette.spawn.disabledStroke;
+            ctx.fillStyle = spawn.enabled ? DebugPalette.spawn.enabledFill : DebugPalette.spawn.disabledFill;
             ctx.lineWidth = 1.5;
-            ctx.setLineDash([6, 4]);
+            ctx.setLineDash([...DebugPalette.spawn.mainDash]);
 
             if (mode === 'randomRadius') {
                 const radius = Math.max(0, toNumber(spawn?.spawnPosition?.radius, 120));
@@ -103,9 +113,10 @@ export const SpawnDebugRenderSystem: ISystem & { LAYER: number } = {
 
             // offset / target 模式下画一条到自身的参考线
             if (mode === 'offset' || mode === 'target') {
-                const ox = selfPos.x - camera.x;
-                const oy = selfPos.y - camera.y;
-                ctx.setLineDash([3, 3]);
+                const selfScreen = worldToScreen(selfPos, camera);
+                const ox = selfScreen.x;
+                const oy = selfScreen.y;
+                ctx.setLineDash([...DebugPalette.spawn.refDash]);
                 ctx.beginPath();
                 ctx.moveTo(ox, oy);
                 ctx.lineTo(sx, sy);
@@ -114,7 +125,7 @@ export const SpawnDebugRenderSystem: ISystem & { LAYER: number } = {
 
             // 标签
             ctx.setLineDash([]);
-            ctx.fillStyle = spawn.enabled ? '#22c55e' : '#6b7280';
+            ctx.fillStyle = spawn.enabled ? DebugPalette.spawn.labelEnabled : DebugPalette.spawn.labelDisabled;
             ctx.font = '11px Arial';
             ctx.textAlign = 'left';
             ctx.fillText(`Spawn: ${mode}`, sx + 8, sy - 8);

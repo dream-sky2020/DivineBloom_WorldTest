@@ -6,6 +6,7 @@
   },
   "files": [
     "platform/electron/main.cjs",
+    "platform/electron/preload.cjs",
     "dist/steam/**/*"
   ]
 }

@@ -1,11 +1,11 @@
 import { AssetManager } from './resources/AssetManager'
 import { ResourcePipeline } from './resources/ResourcePipeline'
 import { ResourceDeclaration } from './resources/ResourceDeclaration'
-import { Renderer2D, makeSprite } from './Renderer2D'
+import { CanvasRenderDevice } from './render/device'
+import { makeSprite } from './render/sprites'
 import { InputManager } from './InputManager'
 
-// Re-export for backward compatibility
-export { Renderer2D, makeSprite, InputManager }
+export { CanvasRenderDevice, makeSprite, InputManager }
 
 /**
  * 游戏引擎核心类
@@ -15,7 +15,7 @@ export class GameEngine {
     ctx: CanvasRenderingContext2D;
     assets: AssetManager;
     input: InputManager;
-    renderer: Renderer2D;
+    renderer: CanvasRenderDevice;
     resources: {
         pipeline: ResourcePipeline;
         declarations: typeof ResourceDeclaration;
@@ -26,7 +26,7 @@ export class GameEngine {
     width: number;
     height: number;
     onUpdate: (dt: number) => void;
-    onDraw: (renderer: Renderer2D) => void;
+    onDraw: (renderer: CanvasRenderDevice) => void;
     resizeObserver: ResizeObserver | null;
 
     constructor(canvas: HTMLCanvasElement) {
@@ -36,7 +36,7 @@ export class GameEngine {
         // 初始化子系统
         this.assets = new AssetManager()
         this.input = new InputManager(this.canvas)
-        this.renderer = new Renderer2D(this.ctx, this.assets)
+        this.renderer = new CanvasRenderDevice(this.ctx, this.assets)
 
         // 🎯 新增：现代化资源管理系统
         this.resources = {

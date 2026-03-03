@@ -1,9 +1,16 @@
-import { EditorInteractionSystem } from './EditorInteractionSystem';
+import { EditorInteractionSystem } from '../EditorInteractionSystem';
 import { world } from '@world2d/runtime/WorldEcsRuntime';
-import { editorManager } from '../../../editor/core/EditorCore';
+import { editorManager } from '../../../../editor/core/EditorCore';
 import { toRaw } from 'vue';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreenXY } from '../../../render/core/CameraTransform';
+import { isPointVisible } from '../../../render/core/Culling';
+import type { RenderContext } from '../../../render/core/RenderTypes';
+
+function hasGlobalManager(entity: unknown): entity is { globalManager: unknown } {
+    return !!entity && typeof entity === 'object' && 'globalManager' in entity;
+}
 
 type EditorHighlightRenderSystemType = ISystem & {
     LAYER: number;
@@ -33,7 +40,7 @@ export const EditorHighlightRenderSystem: EditorHighlightRenderSystemType = {
     name: 'editor-highlight-render',
     LAYER: 1001, // 略高于网格
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         const { ctx, camera } = renderer;
         const entities = world;
 
@@ -49,7 +56,7 @@ export const EditorHighlightRenderSystem: EditorHighlightRenderSystemType = {
 
             // 如果没有位置，只在选中时特殊处理
             if (!rawEntity.transform) {
-                if (isSelected && (rawEntity as any).globalManager) {
+                if (isSelected && hasGlobalManager(rawEntity)) {
                     // 全局管理实体在选中时，在左上角绘制一个固定标识
                     this._drawGlobalIndicator(ctx, isDragging);
                 }
@@ -60,15 +67,15 @@ export const EditorHighlightRenderSystem: EditorHighlightRenderSystemType = {
             const bounds = EditorInteractionSystem.getEntityBounds(rawEntity);
             if (!bounds) continue;
 
-            const screenX = bounds.left - camera.x;
-            const screenY = bounds.top - camera.y;
+            const screenPos = worldToScreenXY(bounds.left, bounds.top, camera);
+            const screenX = screenPos.x;
+            const screenY = screenPos.y;
 
             // 剔除屏幕外 (稍微多留一点边距)
             const viewW = renderer.width || 2000;
             const viewH = renderer.height || 2000;
 
-            if (screenX < -500 || screenX > viewW + 500 ||
-                screenY < -500 || screenY > viewH + 500) continue;
+            if (!isPointVisible(bounds.left, bounds.top, camera, { width: viewW, height: viewH }, 500)) continue;
 
             let label = rawEntity.name || rawEntity.type || 'Entity';
             this._drawBox(ctx, screenX, screenY, bounds.w, bounds.h, isSelected, isDragging, label, rawEntity.transform.x, rawEntity.transform.y);

@@ -2,6 +2,9 @@ import { world } from '@world2d/runtime/WorldEcsRuntime';
 import { ShapeType } from '@world2d/definitions/enums/Shape';
 import { ISystem } from '@definitions/interface/ISystem';
 import { IEntity } from '@definitions/interface/IEntity';
+import { worldToScreenXY } from '../../../render/core/CameraTransform';
+import { DebugPalette } from '../../../render/styles/DebugPalette';
+import type { RenderContext } from '../../../render/core/RenderTypes';
 
 import { ExecutionPolicy } from '@world2d/definitions/enums/ExecutionPolicy';
 
@@ -14,7 +17,7 @@ export const PhysicsDebugRenderSystem: ISystem & { LAYER: number } = {
     executionPolicy: ExecutionPolicy.RunningOnly,
     LAYER: 110, // 渲染在最顶层
 
-    draw(renderer: any) {
+    draw(renderer: RenderContext) {
         const { ctx, camera } = renderer;
         if (!ctx || !camera) return;
 
@@ -31,14 +34,19 @@ export const PhysicsDebugRenderSystem: ISystem & { LAYER: number } = {
             if (!transform || !shape || !collider) continue;
 
             // 计算世界坐标 (使用 shape.offsetX/Y)
-            const x = transform.x + (shape.offsetX || 0) - camera.x;
-            const y = transform.y + (shape.offsetY || 0) - camera.y;
+            const center = worldToScreenXY(
+                transform.x + (shape.offsetX || 0),
+                transform.y + (shape.offsetY || 0),
+                camera
+            );
+            const x = center.x;
+            const y = center.y;
 
             // 样式设置: 红色表示静态，青色表示动态
-            ctx.strokeStyle = collider.isStatic ? 'rgba(255, 0, 0, 0.8)' : 'rgba(0, 255, 255, 0.8)';
-            ctx.fillStyle = collider.isStatic ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 255, 0.2)';
+            ctx.strokeStyle = collider.isStatic ? DebugPalette.physics.staticStroke : DebugPalette.physics.dynamicStroke;
+            ctx.fillStyle = collider.isStatic ? DebugPalette.physics.staticFill : DebugPalette.physics.dynamicFill;
 
-            ctx.lineWidth = 1;
+            ctx.lineWidth = DebugPalette.physics.lineWidth;
 
             ctx.beginPath();
 
