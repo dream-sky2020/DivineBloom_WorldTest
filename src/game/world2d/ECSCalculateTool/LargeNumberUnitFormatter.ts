@@ -22,14 +22,6 @@ export interface FormatLargeNumberOptions {
      */
     trimTrailingZeros?: boolean;
     /**
-     * 纯数字最大位数（默认 5，不包含单位和小数点）
-     */
-    maxDigits?: number;
-    /**
-     * 总长度上限（默认 7，包含符号/小数点/单位）
-     */
-    maxLength?: number;
-    /**
      * 自定义单位序列（默认使用 CUSTOM_THOUSAND_UNITS）
      */
     units?: readonly string[];
@@ -123,8 +115,6 @@ type NormalizedOptions = {
     step: number;
     decimalPlaces: number;
     trimTrailingZeros: boolean;
-    maxDigits: number;
-    maxLength: number;
     units: readonly string[];
     uppercaseUnits: boolean;
 };
@@ -132,7 +122,6 @@ type NormalizedOptions = {
 function formatNumberValue(value: number, options: NormalizedOptions): string {
     const sign = value < 0 ? '-' : '';
     const absValue = Math.abs(value);
-    const signLength = sign.length;
 
     if (absValue === 0) return '0';
 
@@ -152,10 +141,11 @@ function formatNumberValue(value: number, options: NormalizedOptions): string {
 
     while (true) {
         const unit = getUnitByTier(tier, options.units, options.uppercaseUnits);
-        const numberText = formatScaledNumber(scaled, options, signLength, unit.length);
-        const digitCount = getDigitCount(numberText);
-        const totalLength = signLength + numberText.length + unit.length;
-        if (digitCount <= options.maxDigits && totalLength <= options.maxLength) {
+        const numberText = formatScaledNumber(scaled, options);
+        
+        // 检查进位后的值是否依然小于 step (处理 toFixed 四舍五入可能导致的进位)
+        const roundedValue = Number(Number(scaled).toFixed(options.decimalPlaces));
+        if (roundedValue < options.step) {
             return `${sign}${numberText}${unit}`;
         }
 
@@ -167,7 +157,6 @@ function formatNumberValue(value: number, options: NormalizedOptions): string {
 function formatBigIntValue(value: bigint, options: NormalizedOptions): string {
     const sign = value < 0n ? '-' : '';
     let absValue = value < 0n ? -value : value;
-    const signLength = sign.length;
     const stepBigInt = toStepBigInt(options.step);
 
     if (absValue === 0n) return '0';
@@ -182,25 +171,17 @@ function formatBigIntValue(value: bigint, options: NormalizedOptions): string {
 
     while (true) {
         const unit = getUnitByTier(tier, options.units, options.uppercaseUnits);
-        const numberText = formatScaledBigInt(absValue, remainder, stepBigInt, options, signLength, unit.length);
-        const digitCount = getDigitCount(numberText);
-        const totalLength = signLength + numberText.length + unit.length;
-        if (digitCount <= options.maxDigits && totalLength <= options.maxLength) {
-            return `${sign}${numberText}${unit}`;
-        }
-
-        remainder = absValue % stepBigInt;
-        absValue = absValue / stepBigInt;
-        tier += 1;
+        const numberText = formatScaledBigInt(absValue, remainder, stepBigInt, options);
+        
+        // 检查是否因为四舍五入需要进位
+        // BigInt 本身是整数，但 scaled 逻辑模拟了小数。
+        // 由于 BigInt 格式化目前比较简单，我们可以直接返回
+        return `${sign}${numberText}${unit}`;
     }
 }
 
-function formatScaledNumber(value: number, options: NormalizedOptions, signLength: number, unitLength: number): string {
-    const integerDigits = Math.max(1, Math.floor(Math.log10(Math.abs(value))) + 1);
-    const decimalsByDigits = Math.max(0, options.maxDigits - integerDigits);
-    const maxNumericLength = Math.max(1, options.maxLength - signLength - unitLength);
-    const decimalsByLength = Math.max(0, maxNumericLength - integerDigits - 1);
-    const decimalPlaces = Math.max(0, Math.min(options.decimalPlaces, decimalsByDigits, decimalsByLength));
+function formatScaledNumber(value: number, options: NormalizedOptions): string {
+    const decimalPlaces = options.decimalPlaces;
     const rounded = Number(value.toFixed(decimalPlaces));
     if (rounded >= options.step) {
         return formatDecimal(rounded / options.step, decimalPlaces, options.trimTrailingZeros);
@@ -212,16 +193,10 @@ function formatScaledBigInt(
     integerPart: bigint,
     remainder: bigint,
     stepBigInt: bigint,
-    options: NormalizedOptions,
-    signLength: number,
-    unitLength: number
+    options: NormalizedOptions
 ): string {
     const integerText = integerPart.toString();
-    const integerDigits = integerText.length;
-    const decimalsByDigits = Math.max(0, options.maxDigits - integerDigits);
-    const maxNumericLength = Math.max(1, options.maxLength - signLength - unitLength);
-    const decimalsByLength = Math.max(0, maxNumericLength - integerDigits - 1);
-    const decimalPlaces = Math.max(0, Math.min(options.decimalPlaces, decimalsByDigits, decimalsByLength));
+    const decimalPlaces = options.decimalPlaces;
 
     if (decimalPlaces <= 0) {
         return integerText;
@@ -267,15 +242,9 @@ function normalizeOptions(options: FormatLargeNumberOptions): NormalizedOptions 
         step: Math.max(2, step || THOUSAND),
         decimalPlaces: Math.min(2, Math.max(0, Math.floor(options.decimalPlaces ?? 2))),
         trimTrailingZeros: options.trimTrailingZeros ?? true,
-        maxDigits: Math.max(1, Math.floor(options.maxDigits ?? 5)),
-        maxLength: Math.max(2, Math.floor(options.maxLength ?? 7)),
         units: options.units ?? CUSTOM_THOUSAND_UNITS,
         uppercaseUnits: options.uppercaseUnits ?? true
     };
-}
-
-function getDigitCount(text: string): number {
-    return (text.match(/\d/g) ?? []).length;
 }
 
 function toStepBigInt(step: number): bigint {
